@@ -264,7 +264,6 @@ boxFromSchema (BS boxId (funName,fun,numSlots) slotsList joints) = do
   slots <- foldr f (Just $ mkSlots numSlots) slotsList 
   return $ ( boxId , Box slots joints fun funName )
 
-
 Just prog1 = fromProgSchema [
   BS 1 plus [(0,IntSlot 2),(1,IntSlot 3)] [(2,0)] ,
   BS 2 ide  [ ]                           [(3,0)] ,
@@ -280,7 +279,6 @@ Just prog2 = fromProgSchema [
   BS 4 copy  [ ]                                     [(1,0),(5,0)] ,
   BS 5 copy  [ ]                                     [(1,1),(3,1)] 
  ]
-
 
 stepsProg :: Prog -> Int -> [Prog]
 stepsProg p (-1) = []
