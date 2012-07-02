@@ -7,7 +7,9 @@ type Map k a = Map.Map k a
 
 
 {-- TODO : kouká se na to jako na frontu ale operace sou neefektivní : (++) pro zařazení na konec 
-           zajistit, aby nešlo že jsou dvě mouchy v jedný pozici najednou --}
+           zajistit, aby nešlo že jsou dvě mouchy v jedný pozici najednou 
+           pořádně ošetřit FreeSlot
+--}
 
 type BoxId = Int
 type SlotPort = Int
@@ -129,19 +131,25 @@ fullStepAgent a@(Agent prog s e g l)
     then ( a , [prog] )
     else let (a',p)   = stepAgent a 
              (a'',ps) = fullStepAgent a'
-          in (a'',p:ps)  
+          in (a'',p++ps)  
 
-stepAgent :: Agent -> ( Agent , Prog )
+stepAgent :: Agent -> ( Agent , [Prog] )
 stepAgent ( Agent prog s e g l)
- = (doEGoal $ Agent (stepProg prog) s e g l , prog )
+ = let prog' = stepProg prog
+    in (doEGoal $ Agent prog' s e g l , [prog,prog'] ) -- because doEGoal may also changes prog by cuting the effectors
 
 doEGoal' = liftPos doEGoal
 doEGoal :: Agent -> Agent
-doEGoal a@(Agent prog _ effs _ _) 
-  = moveGoal a dirs 
+doEGoal a@(Agent prog s effs g l) 
+  = moveGoal (Agent prog' s effs g l) dirs 
  where
- dirs = map (\(DirSlot d)->d) $ filter (\v->case v of DirSlot _ -> True ; _ -> False ) vals
- vals = catMaybes $ map (\addr->getSlot addr prog ) $ map snd $ filter (\(efType,_)-> efType == EGoal ) effs
+ addrs        = map snd $ filter (\(efType,_)-> efType == EGoal ) effs
+ (vals,prog') = foldr (\ad (xs,pr) -> let (x,pr') = cutSlot ad pr in (x:xs,pr') ) ([],prog) addrs
+ dirs         = map (\(DirSlot d)->d) $ filter (\v->case v of DirSlot _ -> True ; _ -> False ) $ catMaybes vals
+ 
+
+
+
 
 doSTouch :: Map Pos [Obj] -> (Pos,Agent) -> (Pos,Agent)
 doSTouch objMap ( pos , a@(Agent prog sensors e g l ) )
@@ -315,6 +323,19 @@ getSlot :: SlotAddr -> Prog -> Maybe Slot
 getSlot (boxId,port) (Prog boxMap _) = do
  (Box (Slots slotMap _ _) _ _ _) <- Map.lookup boxId boxMap
  Map.lookup port slotMap 
+
+cutSlot ::  SlotAddr -> Prog -> ( Maybe Slot , Prog )
+cutSlot addr prog = case cutSlot' addr prog of
+  Just ( slot , prog' ) -> ( Just slot , prog' )
+  Nothing               -> ( Nothing   , prog  ) 
+ where
+  cutSlot' :: SlotAddr -> Prog -> Maybe ( Slot , Prog )
+  cutSlot' (boxId,port) (Prog boxMap fulls) = do
+   box@(Box (Slots slotMap num free) _ _ _) <- Map.lookup boxId boxMap
+   retSlot <- Map.lookup port slotMap
+   let slotMap' = Map.delete port slotMap
+   let box' = setSlots box (Slots slotMap' num (free+1) ) 
+   return $ ( retSlot , Prog (Map.insert boxId box' boxMap) (if free==0 then fulls \\ [boxId] else fulls) )
 
 insertToSensor :: Slot -> (BoxId,SlotPort) -> Prog -> Prog
 insertToSensor val addr@(boxId,_) (Prog boxMap fulls) 
