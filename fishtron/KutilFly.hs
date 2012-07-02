@@ -96,8 +96,6 @@ steps'' :: World ->  Int -> [World]
 steps'' w 0 = []
 steps'' w n = w : steps'' (stepWorld w) (n-1)
 
-
-
 stepWorld :: World -> World
 stepWorld (World objMap _ ) 
   = World objMap' progss'
@@ -108,10 +106,8 @@ stepWorld (World objMap _ )
  flies4 = map (agentNextPos objMap) flies3
  objMap' = foldr (uncurry insertToListMap) Map.empty $ map (\(pos,fly)->(pos,OFly fly)) flies4 ++ otherObjs
 
-
 liftPos :: (Agent -> Agent) -> ((Pos,Agent) -> (Pos,Agent))
 liftPos f (pos,agent) = (pos, f agent) 
-
 
 moveGoal :: Agent -> [Dir] -> Agent
 moveGoal (Agent p s e goal (lastMove,_) ) dirs
