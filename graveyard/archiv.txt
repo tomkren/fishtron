@@ -1,0 +1,328 @@
+-- 18.3.2012 --------------------------------------------------------------------------------------------------------------------
+
+{-- DIST.HS--------------------
+
+--, Dist( ) 
+--, mkDist
+--, mkDist'
+--, distTake
+--, distTakeBySize
+--, distGet
+--, distGen
+--, distSize
+--, distMax
+
+data Dist a = Dist StdGen Double (DTree a) 
+data DTree a =  DLeaf a | DNode Double (DTree a) (DTree a) deriving (Show)
+
+distGen :: Dist a -> StdGen
+distGen (Dist gen _ _) = gen
+
+distMax :: Dist a -> (a,Double)
+distMax (Dist _ q tree) = let (a,v) = distMax' 0 100 tree in (a,q*v)
+  where
+  distMax' min max (DLeaf a)          = (a,max-min)
+  distMax' min max (DNode mark t1 t2) = if val1 > val2 then r1 else r2 
+    where
+    r1@(a1 , val1) = distMax' min mark t1  
+    r2@(a2 , val2) = distMax' mark max t2  
+
+
+distSize :: Dist a -> Int
+distSize (Dist _ _ tree) = size tree
+  where
+  size (DLeaf _) = 1
+  size (DNode _ t1 t2) = size t1 + size t2
+
+getDTree :: Dist a -> DTree a
+getDTree (Dist _ _ tree) = tree
+
+
+mkDist :: StdGen -> [(a,Double)] -> Dist a
+mkDist gen xs = let (fxs,sum) = f xs in Dist gen (sum/100.0) $ tree3 $ tree1 $ fxs
+  where
+  tree3 :: [(DTree a,Double)] -> DTree a
+  tree3 [(d,_)]  = d
+  tree3 xs@(_:_) = tree3 $ tree2 xs 
+  tree2 ::  [(DTree a,Double)] -> [(DTree a,Double)]
+  tree2 xs = case xs of
+    []                     -> []
+    [x]                    -> [x]
+    ((d1,v1):(d2,v2):rest) -> (DNode v1 d1 d2 ,v2) : (tree2 rest)
+  tree1 :: [(a,Double)] -> [(DTree a,Double)]
+  tree1 = map (\(a,v) -> (DLeaf a , v) ) 
+  f :: [(a,Double)] -> ([(a,Double)],Double)
+  f xs = let (xs',sum) = f' 0 xs in ( map (\(a,v)->(a,v*(100.0/sum))) xs' , sum )
+    where
+    f' acc []     = ([],acc)
+    f' acc (x@(a,v):xs) = let (xs',acc') = f' (acc + v) xs in ((a,(acc + v)) : xs' , acc' )   
+
+mkDist' :: Int -> [(a,Double)] -> Dist a
+mkDist' seed =  mkDist (mkStdGen seed) 
+
+distTake :: Int -> Dist a -> ( [a] , Dist a )
+distTake 0 d = ( []   , d   )
+distTake n d = ( x:xs , d'' )
+  where
+  (x , d' ) = distGet         d
+  (xs, d'') = distTake (n-1)  d'
+
+distTakeBySize :: Dist a -> ( [a] , Dist a )
+distTakeBySize dist = distTake (distSize dist) dist
+
+distGet :: Dist a -> ( a , Dist a )
+distGet (Dist gen q tree) = ( dTreeGet tree x , Dist gen' q tree ) 
+  where (x,gen') = randomR (0.0,100.0) gen
+
+showDist :: (Show a) => Dist a -> String
+showDist d@(Dist _ q tree) = (showDTree 0 100 q tree) ++ 
+  "\n---------------------------------------------------\n" ++
+  ( let (a,v) = distMax d in show a ++ " ... " ++ show (v/q) ++ "%  ="++ show v ) ++
+  "\n---------------------------------------------------\n"
+
+
+instance (Show a) => Show (Dist a) where
+  show = showDist
+--}
+
+{--
+-- old GP core --------------------------------
+
+testCase1 = putList $ map distMax $ take 10 $ gp env1 (int:->int) ff1 100 
+
+gp :: Env -> Typ -> (TTerm->FitVal) -> Int -> [Dist TTerm]
+gp env typ fitness popSize = pop0 : gp' lihen0 pop0
+  where
+  gen    = mkStdGen 42424242
+  pop0   = mkDist gen $ mapFitness fitness $ take popSize $ dk env typ
+  lihen0 = mkLihen env 
+  gp' :: Lihen -> Dist TTerm -> [Dist TTerm]
+  gp' lihen pop = let (pop',lihen') = gpStep lihen fitness pop in pop' : (gp' lihen' pop') 
+
+gpStep :: Lihen -> (TTerm->FitVal) -> Dist TTerm -> (Dist TTerm,Lihen)
+gpStep lihen fitness pop1 = ( mkDist gen' $ mapFitness fitness children , lihen' )  
+  where
+  (winners,pop1')        = distTakeBySize pop1
+  gen                    = distGen pop1'
+  (children,gen',lihen') = xovers' gen lihen winners
+--}
+
+{--
+
+--- old crossover verze 0.1 ----
+
+
+testXover :: (RandomGen g) => g -> [TTerm] -> [(TTerm,TTerm,TTerm,TTerm)]
+testXover gen (t1:t2:ts) = let ((t1',t2'),gen') = (xover gen t1 t2) in
+  (t1,t2,t1',t2') : testXover gen' ts
+
+xovers :: (RandomGen g) => g -> [TTerm] -> ([TTerm],g)
+xovers gen []         = ([] ,gen)
+xovers gen [t]        = ([t],gen)
+xovers gen (t1:t2:ts) = (t1':t2':ts' , gen'' )
+  where 
+  ((t1',t2'),gen') = xover gen t1 t2 
+  (ts',gen'')      = xovers gen' ts 
+
+xover :: (RandomGen g) => g -> TTerm -> TTerm -> ((TTerm,TTerm),g)
+xover gen t1 t2 = ( crossover (fst winner) (snd winner) , gen' )
+  where
+  candidates = compatibleSubterms t1 t2
+  size = length candidates
+  (i , gen' ) =  randomR (0,size-1) gen
+  winner = candidates !! i
+
+crossover :: TTermZipper -> TTermZipper -> ( TTerm , TTerm )
+crossover (t1,ds1) (t2,ds2) = ( tzGoTop (t2,ds1) , tzGoTop (t1,ds2) )
+
+
+
+
+treatFVs :: Lihen -> TTerm -> (TTerm,Lihen)
+treatFVs lihen t = f lihen (fv' t) t
+  where
+  f lihen []               t = (t,lihen)
+  f lihen ((fv,fvTyp):fvs) t = f lihen' fvs (subs fv t mutant)  
+    where
+    ( mutant , lihen' ) = giveBirth fvTyp lihen
+
+----------
+
+xxover :: (RandomGen g) => g -> Lihen -> TTerm -> TTerm -> [(TTerm,TTerm)]
+xxover  gen lihen t1 t2 = 
+  map (\(tt1,tt2)->let (r1,r2,_,_) = crossover' gen lihen tt1 tt2 
+                   in  (r1,r2)) $ compatibleSubterms t1 t2
+
+failus  = putList $ xxover (mkStdGen 0) (mkLihen env1) t1 t1
+
+
+--}
+
+
+{--
+
+--- old crossover verze 0.2 ----
+
+type Lihen = (Map.Map Typ [TTerm] , Env )
+
+mkLihen :: Env -> Lihen
+mkLihen env = ( Map.empty , env )
+
+giveBirth :: Typ -> Lihen -> ( TTerm , Lihen) 
+giveBirth typ ( db , env ) = case Map.lookup typ db of
+  Nothing     -> let (x:xs) = dk env typ in 
+                 ( x , (Map.insert typ xs db , env) )
+  Just (x:xs) -> ( x , (Map.insert typ xs db , env) )
+  
+
+giveBirth' :: Typ -> State Lihen TTerm -- Lihen -> ( TTerm , Lihen) 
+giveBirth' typ = state $ \ ( db , env ) -> 
+  case Map.lookup typ db of
+    Nothing     -> let (x:xs) = dk env typ in 
+                   ( x , (Map.insert typ xs db , env) )
+    Just (x:xs) -> ( x , (Map.insert typ xs db , env) )
+
+
+
+treatFVs' :: (RandomGen g) => g -> Lihen ->  TTermZipper  -> (TTerm,g,Lihen)
+treatFVs' gen lihen (t,ds) = f gen lihen (fv' t) t
+  where
+  f :: (RandomGen g) => g -> Lihen ->  [(Symbol,Typ)] -> TTerm  -> (TTerm,g,Lihen)
+  f gen lihen []               t = (t,gen,lihen)
+  f gen lihen ((fv,fvTyp):fvs) t 
+    | null kompats = f gen  lihen' fvs (subs fv t mutant)
+    | otherwise    = f gen' lihen  fvs (subs fv t vazana)
+    where
+    kompats = kompatVazany fvTyp (findVazany ds)
+    ( mutant , lihen' ) = giveBirth fvTyp lihen
+    (i , gen' ) = randomR (0,(length kompats) - 1) gen
+    vazana      = Var (kompats !! i) fvTyp
+
+
+crossover' :: (RandomGen g) => g -> Lihen -> TTermZipper -> TTermZipper -> ( TTerm , TTerm , g , Lihen )
+crossover' gen lihen (t1,ds1) (t2,ds2) = ( tzGoTop (t2',ds1) , tzGoTop (t1',ds2) , gen'' , lihen'' )
+  where
+  ( t1' , gen' , lihen'  ) = treatFVs' gen  lihen  (t1,ds2)
+  ( t2' , gen'', lihen'' ) = treatFVs' gen' lihen' (t2,ds1)
+   
+xover' :: (RandomGen g) => g -> Lihen -> TTerm -> TTerm -> (TTerm,TTerm,g,Lihen)
+xover' gen lihen t1 t2 = crossover' gen' lihen (fst winner) (snd winner)
+  where
+  candidates = compatibleSubterms t1 t2
+  size = length candidates
+  (i , gen' ) =  randomR (0,size-1) gen
+  winner = candidates !! i
+
+
+xovers' :: (RandomGen g) => g -> Lihen -> [TTerm] -> ([TTerm],g,Lihen)
+xovers' gen lihen []         = ([] ,gen,lihen)
+xovers' gen lihen [t]        = ([t],gen,lihen)
+xovers' gen lihen (t1:t2:ts) = (t1':t2':ts' , gen'',lihen'' )
+  where 
+  (t1',t2',gen',lihen') = xover' gen lihen t1 t2 
+  (ts',gen'',lihen'')   = xovers' gen' lihen' ts 
+
+
+
+--}
+
+
+{--
+-- unused utils --
+
+hasTTermNete :: TTerm -> Bool
+hasTTermNete = isJust . findNete'
+
+--}
+
+
+
+----------------------------------------------------------------------------------------------------------------------
+
+
+-- converting TTerms back to Haskell -------------------------------------------
+
+{--
+
+int  = (0::Int,0::Int,int')
+bool = (False,False,bool')
+
+ff1' :: (Int -> Int) -> FitVal
+ff1' f = fromIntegral (abs $ f 42) 
+
+testus =  putList $ fst $ distTake 20 $ evalu1 ( int --> int ) ff1'
+
+evalu1 :: (Typeable a,Typeable b,Show a,Show b) => 
+          ( a->b , b , Typ ) -> ((a->b)->FitVal) -> Dist TTerm
+evalu1 (hAB,hB,typ) fitness = mkDist' distSeed $ map (\(f,t) -> (t,fitness f)) xs
+  where
+  xs    = map (\t -> ( mk1 (hAB , hB) t , t ) ) terms
+  terms = take popSize $ dk env1 typ
+  popSize  = 100
+  distSeed = 424242
+
+infixr 7 -->
+(-->) :: (a1,t1,Typ) -> (a2,t2,Typ) -> ( a1->a2  , t2 ,Typ )
+(a1,_,typ1) --> (a2,t2,typ2) = ( \_->a2 , t2 , typ1 :-> typ2 )
+
+infixr 7 ->>
+(->>) :: a -> b -> ( a->b )
+a ->> b = ( \_->b )
+
+glue :: (Typeable a , Show a ) => TTerm -> a -> TTerm
+glue f x = App f (toTTerm x typ1) typ2 where ( typ1 :-> typ2 ) = ttermTyp f
+
+extr :: (Typeable a) => a -> TTerm -> a
+extr _ (Val _ dyn _) = fromJust $ fromDynamic dyn 
+
+nofo :: TTerm -> TTerm
+nofo t = let (Right t') = nf beta 10000 t in t'
+
+
+
+nápad: zaèít v haxu s velkym poètem argumentù a nìjak to oøíznout
+
+mk :: (Typeable a,Typeable b) => [Dynamic] -> TTerm -> a -> b 
+mk [typp] t      = (\x -> extr (fromJust $ fromDynamic typp) $ nofo $ t )
+mk [typ1,typ2] t = (\x -> fromJust $ fromDynamic typ2 )
+
+mk [] t0 6
+
+
+mk (ty:tys) t = eqa a b f
+  where
+  a = (fromJust $ fromDynamic ty) 
+  b = f a
+  f = (\x -> mk tys (glue t x) )  
+
+
+eqa :: a -> b -> (a->b) -> (a->b)
+eqa _ _ x = x
+
+
+mk0 (_,ret) t = extr ret $ nofo t
+mk1 (_,ret) = par3 (mk0 (ret,ret)) glue
+mk2 (_,ret) = par6 (mk0 (ret,ret)) par3 glue glue
+mk3 (_,ret) =par9 (mk0 (ret,ret)) par6 glue par3 glue glue
+mk4 (_,ret) = par12 (mk0 (ret,ret)) par9 glue par6 glue par3 glue glue
+mk5 (_,ret) = par15 (mk0 (ret,ret)) par12 glue par9 glue par6 glue par3 glue glue
+mk6 (_,ret) = par18 (mk0 (ret,ret)) par15 glue par12 glue par9 glue par6 glue par3 glue glue
+mk7 (_,ret) = par21 (mk0 (ret,ret)) par18 glue par15 glue par12 glue par9 glue par6 glue par3 glue glue
+
+par3  x   y1 y2 y3                                   
+    = x ( y1 y2 y3 )
+par6  x   y1 y2 y3 y4 y5 y6                          
+    = x ( y1 y2 y3 y4 y5 y6 )
+par9  x   y1 y2 y3 y4 y5 y6 y7 y8 y9                 
+    = x ( y1 y2 y3 y4 y5 y6 y7 y8 y9 )
+par12 x   y1 y2 y3 y4 y5 y6 y7 y8 y9 y10 y11 y12     
+    = x ( y1 y2 y3 y4 y5 y6 y7 y8 y9 y10 y11 y12 )
+par15 x   y1 y2 y3 y4 y5 y6 y7 y8 y9 y10 y11 y12 y13 y14 y15 
+    = x ( y1 y2 y3 y4 y5 y6 y7 y8 y9 y10 y11 y12 y13 y14 y15 )
+par18 x   y1 y2 y3 y4 y5 y6 y7 y8 y9 y10 y11 y12 y13 y14 y15 y16 y17 y18
+    = x ( y1 y2 y3 y4 y5 y6 y7 y8 y9 y10 y11 y12 y13 y14 y15 y16 y17 y18 )
+par21 x   y1 y2 y3 y4 y5 y6 y7 y8 y9 y10 y11 y12 y13 y14 y15 y16 y17 y18 y19 y20 y21
+    = x ( y1 y2 y3 y4 y5 y6 y7 y8 y9 y10 y11 y12 y13 y14 y15 y16 y17 y18 y19 y20 y21 )
+
+--}
+
