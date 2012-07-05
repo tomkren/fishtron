@@ -1,33 +1,34 @@
--- Util obsahuje obecné funkce funkce nad standardními typy.
+-- Util obsahuje obecnÃ© funkce funkce nad standardnÃ­mi typy.
 
 module Util
 ( putList
 , maximas
 , newSymbol
+, nthWord
 , (+++)
 ) where
 
 import Data.List
 
 
--- "Zøetìzení funkcí"
+-- "ZÅ™etÄ›zenÃ­ funkcÃ­"
 (+++) :: (a->[b]) -> (a->[b]) -> (a->[b])
 (f +++ g) x = f x ++ g x
 infixr 7 +++
 
--- Pro pøehledné vykreslení seznamu, záznam na øádek
+-- Pro pÅ™ehlednÃ© vykreslenÃ­ seznamu, zÃ¡znam na Å™Ã¡dek
 putList :: (Show a) => [a] -> IO ()
 putList [] = putStrLn "[]"
 putList xs = foldr1 (>>) (map (putStrLn.show) xs) 
 
--- Vrací rostoucí seznam dosavadních maxim v seznamu
+-- VracÃ­ rostoucÃ­ seznam dosavadnÃ­ch maxim v seznamu
 maximas :: Ord a => [a] -> [a]
 maximas (x:xs) = x : f x xs
   where
   f _   []     = []
   f max (x:xs) = if x > max then x : f x xs else f max xs
 
--- Pro již použitá slova vrací první takové, které je od všech rozdílné
+-- Pro jiÅ¾ pouÅ¾itÃ¡ slova vracÃ­ prvnÃ­ takovÃ©, kterÃ© je od vÅ¡ech rozdÃ­lnÃ©
 newSymbol :: [String] -> String
 newSymbol vns = snd . head $ dropWhile (\(x,y)->x==y) 
   (zip ((sortBy nameOrdering vns') ++ repeat "") (map (nthWord abeceda) [1..]))
@@ -35,7 +36,7 @@ newSymbol vns = snd . head $ dropWhile (\(x,y)->x==y)
   vns' = filter (all (`elem` abeceda )) vns 
   abeceda = ['a'..'z']
 
--- Uspoøádání primárnì podle délky, sekundárnì podle abecedy.
+-- UspoÅ™Ã¡dÃ¡nÃ­ primÃ¡rnÃ¬ podle dÃ©lky, sekundÃ¡rnÃ¬ podle abecedy.
 nameOrdering :: Ord a => [a] -> [a] -> Ordering
 nameOrdering x y
     | lo /= EQ  = lo
@@ -43,14 +44,14 @@ nameOrdering x y
     where
     lo = lenOrdering x y
 
--- Uspoøádání podle délky.
+-- UspoÅ™Ã¡dÃ¡nÃ­ podle dÃ©lky.
 lenOrdering :: [a] -> [a] -> Ordering
 lenOrdering []     []      = EQ
 lenOrdering []     _       = LT
 lenOrdering _      []      = GT
 lenOrdering (_:xs) (_:ys)  = lenOrdering xs ys
 
--- Vrací n-té slovo (napsané abecedou `abc`) ve výše zmínìném nameOrdering.
+-- VracÃ­ n-tÃ© slovo (napsanÃ© abecedou `abc`) ve vÃ½Å¡e zmÃ­nÄ›nÃ©m nameOrdering.
 nthWord :: [Char] -> Integer -> String
 nthWord abc n 
 	| n == 0    = ""

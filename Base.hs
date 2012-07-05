@@ -54,6 +54,8 @@ module Base
 , breakType  , findNete   , numNetes , symbolToTTerm 
 , matchSufix , tzGoTop    , tzDown   , tzLeft        
 , tzRight    , ttzTyp     , hasNete  , mkContextCar
+
+,Context
 ) where
 
 --module Types () where
