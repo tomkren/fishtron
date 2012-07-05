@@ -6,6 +6,8 @@ module Util
 , newSymbol
 , nthWord
 , (+++)
+, fill , fillStr
+, Queue , emptyQueue , insertQueue , popQueue
 ) where
 
 import Data.List
@@ -68,5 +70,29 @@ nthWord abc n
 		pismeno :: Integer -> Char
 		pismeno n = abc !! (fromInteger n)
 
+fill :: [(Int,a)] -> (Int,Int) -> a -> [(Int,a)]
+fill [] (i,j) val = map (\n->(n,val)) [i..j]
+fill xx@((k,x):xs) (i,j) x' 
+ | k > i     = (i,x') : fill xx (i+1,j) x'
+ | otherwise = (k,x ) : fill xs (i+1,j) x'  
+
+fillStr :: Int -> String -> String
+fillStr len str = let l = length str in str ++ [' '|_<-[0..len-l-1]] 
+
+data Queue a = Queue [a] [a] 
+
+instance Show a => Show (Queue a) where
+ show (Queue xs ys) = (++) "queue " $ show $ ys ++ (reverse xs)
+
+emptyQueue :: Queue a
+emptyQueue = Queue [] []
+
+insertQueue :: a -> Queue a -> Queue a
+insertQueue x (Queue xs ys) = Queue (x:xs) ys
+
+popQueue :: Queue a -> Maybe (a, Queue a)
+popQueue ( Queue [] []     ) = Nothing
+popQueue ( Queue xs []     ) = Just (y , Queue [] ys ) where (y:ys) = reverse xs
+popQueue ( Queue xs (y:ys) ) = Just (y , Queue xs ys )
 
 

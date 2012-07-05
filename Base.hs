@@ -55,7 +55,7 @@ module Base
 , matchSufix , tzGoTop    , tzDown   , tzLeft        
 , tzRight    , ttzTyp     , hasNete  , mkContextCar
 
-,Context
+,Context,typeArgs
 ) where
 
 --module Types () where
@@ -141,9 +141,58 @@ instance Show TTerm where
         lam' v (Lam v' m' _) = v ++ " " ++ lam' v' m'
         lam' v m             = v ++ "." ++ show' m
 
-instance Show Typ where
-  show (Typ t)   = t
-  show (a :-> b) = "(" ++ show a ++ "->" ++ show b ++ ")"
+instance Show Typ where show = showTyp
+
+showTyp'' :: Typ -> String
+showTyp'' t =  foldr (\t acc-> showTyp t ++ "->" ++ acc ) alpha ts
+ where (ts,alpha) = typeArgs t
+
+showTyp :: Typ -> String
+showTyp t | isTypNum t = show $ typeRank t
+          | otherwise  = showTyp' t 
+-- | Just (n,k) <- isTypNK t = show n ++ "_" ++ show k
+          
+showTyp' :: Typ -> String
+showTyp' (Typ t) = t
+showTyp' (a :-> b) = "(" ++ showTyp a ++ "->" ++ showTyp b ++ ")"
+
+isTypFromNulls :: Typ -> Bool
+isTypFromNulls t = case t of
+ Typ "0" -> True
+ Typ _   -> False
+ a :-> Typ "0" -> isTypFromNulls a
+ _ -> False 
+
+isTypNum :: Typ -> Bool
+isTypNum t = if isTypFromNulls t then f t else False
+ where 
+  f t = case t of
+   Typ _         -> True
+   a :-> (Typ _) -> f a
+   _             -> False
+
+isTypNK :: Typ -> Maybe (Int,Int)
+isTypNK t = if isTypFromNulls t then f t else Nothing
+ where
+  f t = case t of
+   Typ _   -> Nothing
+   a :-> b -> if isTypNum a then g b (typeRank a) 1 else Nothing
+  g t n k = case t of
+   Typ _   -> Just (n,k)
+   a :-> b -> if isTypNum a && n == typeRank a then g b n (k+1) else Nothing   
+
+   
+
+typeRank :: Typ -> Int
+typeRank t = case t of
+  Typ _   -> 0
+  a :-> b -> max (1 + typeRank a) (typeRank b) 
+
+typeArgs :: Typ -> ([Typ],Symbol)
+typeArgs typ = case typ of
+ Typ alpha -> ([],alpha)
+ (a :-> b) -> let (  as, alpha) = typeArgs b
+               in (a:as, alpha)
 
 instance Eq TTerm where
   ( Var x _  ) == ( Var y _  ) = x == y
