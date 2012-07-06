@@ -3,11 +3,11 @@
 module Util
 ( putList
 , maximas
-, newSymbol
+, newSymbol , newSymbol'
 , nthWord
 , (+++)
 , fill , fillStr
-, Queue , emptyQueue , insertQueue , popQueue
+, Queue , emptyQueue , insertQueue , insertsQueue , popQueue , nullQueue , singletonQueue
 ) where
 
 import Data.List
@@ -32,11 +32,13 @@ maximas (x:xs) = x : f x xs
 
 -- Pro již použitá slova vrací první takové, které je od všech rozdílné
 newSymbol :: [String] -> String
-newSymbol vns = snd . head $ dropWhile (\(x,y)->x==y) 
-  (zip ((sortBy nameOrdering vns') ++ repeat "") (map (nthWord abeceda) [1..]))
-  where
+newSymbol = newSymbol' ['a'..'z'] 
+
+newSymbol' :: [Char] -> [String] -> String
+newSymbol' abeceda vns = snd . head $ dropWhile (\(x,y)->x==y) 
+   (zip ((sortBy nameOrdering vns') ++ repeat "") (map (nthWord abeceda) [1..]))
+ where
   vns' = filter (all (`elem` abeceda )) vns 
-  abeceda = ['a'..'z']
 
 -- Uspořádání primárnì podle délky, sekundárnì podle abecedy.
 nameOrdering :: Ord a => [a] -> [a] -> Ordering
@@ -84,11 +86,22 @@ data Queue a = Queue [a] [a]
 instance Show a => Show (Queue a) where
  show (Queue xs ys) = (++) "queue " $ show $ ys ++ (reverse xs)
 
+nullQueue :: Queue a -> Bool
+nullQueue (Queue [] []) = True
+nullQueue _ = False
+
 emptyQueue :: Queue a
 emptyQueue = Queue [] []
 
+singletonQueue :: a -> Queue a
+singletonQueue x = Queue [x] []
+
 insertQueue :: a -> Queue a -> Queue a
 insertQueue x (Queue xs ys) = Queue (x:xs) ys
+
+insertsQueue :: [a] -> Queue a -> Queue a
+insertsQueue xs' (Queue xs ys) = Queue (xs' ++ xs) ys
+
 
 popQueue :: Queue a -> Maybe (a, Queue a)
 popQueue ( Queue [] []     ) = Nothing
