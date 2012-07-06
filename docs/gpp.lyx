@@ -1,0 +1,1810 @@
+#LyX 1.6.9 created this file. For more info see http://www.lyx.org/
+\lyxformat 345
+\begin_document
+\begin_header
+\textclass article
+\begin_preamble
+\usepackage{a4wide}
+\usepackage[left=4cm]{geometry}
+\usepackage{lmodern}
+\usepackage[T1]{fontenc}
+\AtBeginDocument{%
+\addto\captionsczech{%
+\renewcommand{\refname}{Reference}%
+}}
+\end_preamble
+\use_default_options true
+\language czech
+\inputencoding auto
+\font_roman default
+\font_sans default
+\font_typewriter default
+\font_default_family default
+\font_sc false
+\font_osf false
+\font_sf_scale 100
+\font_tt_scale 100
+
+\graphics default
+\paperfontsize default
+\spacing single
+\use_hyperref false
+\papersize default
+\use_geometry false
+\use_amsmath 1
+\use_esint 1
+\cite_engine basic
+\use_bibtopic false
+\paperorientation portrait
+\secnumdepth 3
+\tocdepth 3
+\paragraph_separation indent
+\defskip medskip
+\quotes_language english
+\papercolumns 1
+\papersides 1
+\paperpagestyle default
+\tracking_changes false
+\output_changes false
+\author "" 
+\author "" 
+\end_header
+
+\begin_body
+
+\begin_layout Title
+Termití algoritmus
+\end_layout
+
+\begin_layout Author
+Tomáš Křen
+\end_layout
+
+\begin_layout Part
+Poznámky pro ujasnění si věcí
+\end_layout
+
+\begin_layout Section
+Úvod do problému
+\end_layout
+
+\begin_layout Subsection
+Úvaha nad stavem v umělé inteligenci
+\end_layout
+
+\begin_layout Standard
+Proč píšu tuhle sekci? Abych si ujasnil a ukázal z čeho pramení moje chápaní
+ umělé inteligence a hlavně dal do kontextu mojí metodu.
+ Nevadí když se to dotkne nevysvětlených věcí, které se podrobněji rozebírají
+ dále; v tuto chvíli je to spíš místo pro mé vlastní vyjasnění si názorů
+ než něco úvodního pro další čtenáře, tzn.
+ spíš úvod pro mě.
+\end_layout
+
+\begin_layout Itemize
+Nabyl jsem dojmu, že v současné umělé inteligenci je chuť řešit především
+ konkrétní problémy.
+ 
+\end_layout
+
+\begin_layout Itemize
+Vidím dvě školy, dva směry : [Proč to ale zmiňuju?] 
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+[N]ATURE: EVA, NS / inspirace přírodou / určitá víra v emergenci / metoda
+ 
+\begin_inset Quotes eld
+\end_inset
+
+zahradník
+\begin_inset Quotes erd
+\end_inset
+
+
+\end_layout
+
+\begin_layout Itemize
+[R]ESASON: bartákovská umělá inteligence / inspirace logickým uvažováním
+ / chuť vše racionálně podchytit / metoda 
+\begin_inset Quotes eld
+\end_inset
+
+hodinář
+\begin_inset Quotes erd
+\end_inset
+
+
+\end_layout
+
+\end_deeper
+\begin_layout Itemize
+[Je zde vhodné zmínit myšlenku skloubení 
+\begin_inset Quotes eld
+\end_inset
+
+hodináře
+\begin_inset Quotes erd
+\end_inset
+
+ a 
+\begin_inset Quotes eld
+\end_inset
+
+zahradníka
+\begin_inset Quotes erd
+\end_inset
+
+ ?]
+\end_layout
+
+\begin_layout Itemize
+Na [N] je kladen tlak, musí dokazovat, že to co studuje k něčemu je a není
+ to 
+\begin_inset Quotes eld
+\end_inset
+
+šarlatánství
+\begin_inset Quotes erd
+\end_inset
+
+, a tak tíhne k řešení konkrétních problémů.
+ Tím mám na mysli scénář: vezmi jeden konkrétní problém a vyřeš ho pomocí
+ nějaké [N] metody.
+ Konkrétně pro EVA a NS (zjednodušeně):
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+u EVA: převeď problém na nějakou reprezentaci řešení a fitness funkci a
+ 
+\begin_inset Quotes eld
+\end_inset
+
+pusť na to evoluci
+\begin_inset Quotes erd
+\end_inset
+
+.
+ Na konci máme vyšlechjtěné řešení.
+\end_layout
+
+\begin_layout Itemize
+u NS: formuluj co je vstup a výstup (jak je interpretovat jako vektor reálných
+ čísel), chytře zvol architekturu sítě a použij nějaký algoritmus na určení
+ vah hran.
+ Nakonci máme pevnou neuronovou síť, která řeší náš problém.
+\end_layout
+
+\end_deeper
+\begin_layout Itemize
+Laik by v kontrastu k 
+\begin_inset Quotes eld
+\end_inset
+
+řešení konkrétních problémů
+\begin_inset Quotes erd
+\end_inset
+
+ naopak čekal od [N] zdokonalujícího se agenta.
+ To je hezky představitelné v případě NS; zde by to mohla být například
+ síť, která se učí během svého používání koncovým uživatelem.
+ Pro laika je sklamáním, když se dozví, že NS jsou pevně zadrátované a jejich
+ učení je otázkou jejich tvorby, ne otázkou jejich života.
+\end_layout
+
+\begin_layout Itemize
+Aspekt [N] 
+\begin_inset Quotes eld
+\end_inset
+
+metaheuristika + spousta parametrů = AI
+\begin_inset Quotes erd
+\end_inset
+
+
+\end_layout
+
+\begin_layout Itemize
+Jak na to jde genetické programování.
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+Klasicky: zakódujeme řešení ; GP: řešení je vždy program - respektive vždy
+ používáme zakódování řešení problému jménem 
+\begin_inset Quotes eld
+\end_inset
+
+program
+\begin_inset Quotes erd
+\end_inset
+
+
+\end_layout
+
+\begin_layout Itemize
+Koza: z kozy je nevíc patrné, že se sanží o co nejbrutálnější ořezání všech
+ nepotřebných parametrů, respektive vypichuje to, že jich je málo (...)
+\end_layout
+
+\end_deeper
+\begin_layout Itemize
+Co zbývá za parametry v genetickém programování, které je nutné zadat pro
+ převedení problému na úlohu genetického programování.
+\end_layout
+
+\begin_layout Itemize
+Jak tento přístup souvisí s přístupem vyřeš jeden problém? (důležité přesně
+ specifikovat tuto otázku) Odpověď: Málo parametrů, z toho jen dva podstatné:
+ sada funkcí a terminálů + fitness funkce.
+ Čím je méně parametrů pro nastavení, tí je větší šance, že nějakým rozumným
+ způsobem problém zobecníme tím že charakterizujeme nový problém týkající
+ se právě nastavení těchto parametrů.
+\end_layout
+
+\begin_layout Itemize
+Čili o co se nám jedná v obecném smyslu? Všimli jsme si, že problémy typicky
+ řešíme převedením problému na problém určení parametrů nějaké metaheuristiky.
+ 
+\end_layout
+
+\begin_layout Subsection
+\begin_inset Quotes eld
+\end_inset
+
+Typ jako nositel informace
+\begin_inset Quotes erd
+\end_inset
+
+
+\begin_inset CommandInset label
+LatexCommand label
+name "sub:Typ-jako-nositel"
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+To je sekce, kterou nevim jak uchopit formálně.
+\end_layout
+
+\begin_layout Itemize
+Jde mi o to vypíchnout čím nám ulehčují typy při řešení problému 
+\begin_inset Quotes eld
+\end_inset
+
+napsat program
+\begin_inset Quotes erd
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Itemize
+A když už bude tohle jakž takž popsáno, obhájit to, že TA to chytře využívá.
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+Hypotéza, že typy podstatně ulehčují tvorbu smysluplných náhodných programů.
+\end_layout
+
+\end_deeper
+\begin_layout Subsection
+Úvod do Termitího algoritmu
+\end_layout
+
+\begin_layout Standard
+V této sekci by se měl diskutovat termití algoritmus v kontextu předchozích
+ úvah.
+ (Protože ty tam jsou, aby uvedli tuto sekci.)
+\end_layout
+
+\begin_layout Standard
+Můžu ale tuhle sekci napsat jakoby bez přílišnýho důrazu na návaznost na
+ předchozí věci - ty potom ale upravit tak aby to hezky navazovalo.
+\end_layout
+
+\begin_layout Itemize
+Podstatná rozhodnutí při GP a jejich odraz v TA:
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+volba fitness funkce / fitness funkce je nyní chápána jako zadání problému,
+ vstup TA (což je jen formální změna samozřejmě, ale je to svým způsobem
+ podstatná změna v přístupu)
+\end_layout
+
+\begin_layout Itemize
+volba stavebních funkcí a terminálů / odpada - respektive je pro všechny
+ problémy jednotná.
+ Může být dodatečně rozšiřována
+\end_layout
+
+\begin_layout Itemize
+volba množstevních parametrů: jedinců v generaci a počet generací
+\end_layout
+
+\begin_layout Itemize
+algoritmus generování počátečních jedinců
+\end_layout
+
+\begin_layout Itemize
+metoda křížení a mutace
+\end_layout
+
+\end_deeper
+\begin_layout Itemize
+TA chápeme, spíše než jako šablonu pro řešení problémů, jako dynamický systém,
+ který se zdokonaluje v řešení s každým dalším řešeným problémem.
+ [Ačkoli jsem o tomu doteď nekladl takovou váhu, je to patrně důležitá poznámka
+ jasně odlišující TA od alespoň mě známých typicky používaných systémů v
+ [N].]
+\end_layout
+
+\begin_layout Section
+Prostudovat
+\end_layout
+
+\begin_layout Itemize
+
+\series bold
+Jaké jsou v současnosti výsledky v odvětví 
+\begin_inset Quotes eld
+\end_inset
+
+typované genetické programování
+\begin_inset Quotes erd
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Itemize
+Najít nějaký hezký text o užitečnosti typů, ze kterého půjde vzít inspiraci
+ pro 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "sub:Typ-jako-nositel"
+
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Itemize
+Jak je to v současnosti v AI s kombením [N] a kontinuálním zdokonalováním
+ systému? Zdá se, že se hrotí hlavně 
+\begin_inset Quotes eld
+\end_inset
+
+řešení jednoho problému
+\begin_inset Quotes erd
+\end_inset
+
+, ale zdá se nejvíc podezdřelé, že by se to nehrotilo, žejo.
+ Takže otázka je 
+\series bold
+Jak se to odvětzví jmenuje?
+\end_layout
+
+\begin_layout Section
+Rozbor 
+\begin_inset Quotes eld
+\end_inset
+
+Způsob nepodstatný, hlavní že metahustý
+\begin_inset Quotes erd
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Zde bych chtěl mimo jiné elaborovat obhajobu toho, že to co dělám není arbitrárn
+í ve svém vulgárním smyslu.
+ Že je to naopak arbitrární v nevyhnutelném smyslu.
+\end_layout
+
+\begin_layout Itemize
+Zde mi jde o to rozebrat ten dávný rozpor, který mám s Triščem.
+ 
+\end_layout
+
+\begin_layout Itemize
+Tohle je jeden aspekt toho problému, ale ne kompletně:
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+Já mám strategii: sešítkařit -> postavit stroj -> sešítkařit za pomoci stroje
+ -> postavit další stroj -> ...
+\end_layout
+
+\begin_layout Itemize
+Trišč má strategii: sešítkařit do úplného pochopení -> až pak postavit stroj
+\end_layout
+
+\end_deeper
+\begin_layout Itemize
+Zbývá ten aspekt, je jedno jakej stroj teď stavim, ale už sem vymyslel něco
+ a je to v podvědomý, a teď to vyndám ven a budu mít stroj.
+ Pak teprve má smysl začít formální teorii všeho, až budu mít v ruce krystal,
+ který můžu studovat a vím že je v něm dost husťárny celýho světa na to,
+ abych měl vůbec šanci něco neobjeveného objevit.
+ 
+\end_layout
+
+\begin_layout Itemize
+(Navíc tehle rozpor je na vyšší úrovni harmonie.
+ Vzájemě se doplňuje, vzájemně se outsourcuje.
+ )
+\end_layout
+
+\begin_layout Itemize
+(Nějak rozmyslet analogii s tim, že 
+\begin_inset Quotes eld
+\end_inset
+
+je jedno jakou používám metriku, stačí když mám aspoň ňákou debilní a pak
+ dou kouzla
+\begin_inset Quotes erd
+\end_inset
+
+.)
+\end_layout
+
+\begin_layout Itemize
+Jedna z arbitrárností, ze který se chci vyspovídat je: Proč použít zrovna
+ GP? Pokus o odpověď je: Stejně tak bych se mohl ptát, proč použít počítač,
+ proč se raději ze všeho nejdřív nevrhnout na studium kvantovejch počítačů/nanot
+echnologie a postavit manifestaci efektvity a abstraktní síly dokonale.
+ GP je 
+\series bold
+mocný nástroj
+\series default
+ z rodu metaheuristik emergentní školy umělé inteligence.
+ Jasným cílem je udělat emergentní systém, proto je pochopitelné proč vztáhnout
+ ruku právě po GP.
+ GP je dále nejobecnější v tom (lehce povrchním) smyslu, že z 
+\begin_inset Quotes eld
+\end_inset
+
+přírodní říše
+\begin_inset Quotes erd
+\end_inset
+
+ si bere jako inspiraci právě ten nejabstraktnější (nejnearbitrárnější)
+ princyp, totiž princyp přirozeného výběru.
+ Ostatní dělají: NS - kopie infrastruktury mozku (navíc s nebezpečně reálnou
+ šancí, že kopírujeme jen dráty a zapomínáme na program), ACO - kopie jednoho
+ sice velmi zajímavého, ale přesto parciálního fenomenu.
+ Není zde cílem zpochybňovat efektivitu nebo tvrdit že tyto argumenty jsou
+ hluboké, naopak jde o to jen nastínit estetický podtext pocitu, že GP je
+ něčím nearbitrární.
+ Dále to, že operuje v doméně 
+\series bold
+programů
+\series default
+ je velice sympatické - zbavujeme se tak protivné 
+\begin_inset Quotes eld
+\end_inset
+
+páskovitosti turingova stroje
+\begin_inset Quotes erd
+\end_inset
+
+ - čili ve světle obecnosti možného použití programů (jakožto kusů textu
+ nějakého programovacího jazyka) nejsme svázani s jakoukoli abstrakcí (tabulka,
+ páska, ...) - znovu zdůrazněme, že toto je hlavně estetický apel, vždyť celý
+ tento odstavec je spověď před arbitrem estetiky, ne pravdivosti.
+\end_layout
+
+\begin_layout Itemize
+-> Koukejme se proto na TA jako na co možná nejpřímější pokus o rozšíření
+ mocného nástroje na práci s emergencí (=GP) o to že:
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+bude propojovat jednotlivé běhy řešených úloh tak, aby nové běhy mohli využít
+ ty staré [KONTINUALITA]
+\end_layout
+
+\begin_layout Itemize
+bude se koukat na fitness funkci jako na zadání [JEDNOTNÝ JAZYK]
+\end_layout
+
+\begin_layout Itemize
+odstraní nutnost při zadání problému specifikovat sadu stavebních bloků
+ pro programy [REDUKCE PARAMETRŮ]
+\end_layout
+
+\begin_layout Itemize
+bude obsahovat techniky sebezdokonalení dosahované skrze nahlížení na tento
+ problém jako na jeden z možných problémů, který by mohl řešit [SEBEKONSTRUKCE]
+\end_layout
+
+\end_deeper
+\begin_layout Itemize
+[TODO] Podívejme se znovu na 4 předchozí body a obhajme, proč dostali právě
+ takovéto charakteristiky.
+ Dale pak rozveďme proč jsou tyto věci důležité:
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+[KONTINUALITA] 
+\end_layout
+
+\begin_layout Itemize
+[JEDNOTNÝ JAZYK]
+\end_layout
+
+\begin_layout Itemize
+[REDUKCE PARAMETRŮ]
+\end_layout
+
+\begin_layout Itemize
+[SEBEKONSTRUKCE]
+\end_layout
+
+\end_deeper
+\begin_layout Itemize
+Jeden z pocitů, kterej mi pasuje na strunu 
+\begin_inset Quotes eld
+\end_inset
+
+obhajoba okolo arbitrárnosti
+\begin_inset Quotes erd
+\end_inset
+
+ je pocit, kdy si připadám jako jeden z těch termitů.
+ Jakobych popisoval sám sebe, jakobych ze sebe doloval slova jak popsat
+ sám sebe.
+ A já o sobě vím, že sem arbitrární, sem opice symbol arbitrártnosti.
+ Ale opice popisující sama sebe už neni tak arbitrární obraz.
+ Nutně sem si zvolil cestur arbitrarity, protože jsem si zvolil cestu popisu
+ sama sebe ve srozumitelném a konstruktivním jazyku.
+ Jako když si představim co bych chtěl od svejch vývorů tak to, aby sepisovali
+ takovýhle traktáty a tak napůl chaotickym a napůl systematickym způsobem,
+ jakym to dělám já.
+ Nutný je zachovat si kritičnost, snažit se vědět proč sem položil každej
+ další pojem a na co to byla reakce, vidět z čeho ty pojmy původně vyrostly.
+ 
+\end_layout
+
+\begin_layout Section
+Metadata a další poznámky
+\end_layout
+
+\begin_layout Subsection
+Jak se to bude oficiálně jmenovat?
+\end_layout
+
+\begin_layout Itemize
+Termití algoritmus
+\end_layout
+
+\begin_layout Itemize
+Meta-optimalizační rozšíření genetického programování
+\end_layout
+
+\begin_layout Itemize
+Rozšíření genetického programování o (...)
+\end_layout
+
+\begin_layout Subsection
+Jak to psát?
+\end_layout
+
+\begin_layout Itemize
+Je lepší snažit se rovnou psát celistvý text nebo sepisovat body a ty až
+ následně pojit do hladších uskupení v celistvém textu (něco jako Katova
+ metoda, když skádá písničky).
+\end_layout
+
+\begin_layout Itemize
+Asi je lepší se v tomto předběžném textu nekoncentzrovat na formálnost,
+ ale radši se snažit vypíchnout podstatu a moje pohnutky, tak aby prioritou
+ byla jasnost a ne 
+\begin_inset Quotes eld
+\end_inset
+
+akademická líbivost
+\begin_inset Quotes erd
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Itemize
+Asi neni důležitý klást důraz na formální členění na kapitoli a takový věci,
+ spíš je asi dobrý napsat co nejvíc kvalitních informaci co se mi toulá
+ neuceleně hlavbou.
+ Členění vyřešit potom.
+\end_layout
+
+\begin_layout Itemize
+Nebo skusit víc metod najednou a nebát se nekonzistence textu, tzn.
+ jedna část předokládá jednu strukturu, další ale tuto strukturu nabourává.
+ 
+\end_layout
+
+\begin_layout Itemize
+Možná je dobrá metoda dostat se do 
+\begin_inset Quotes eld
+\end_inset
+
+havlovských tranzů
+\begin_inset Quotes erd
+\end_inset
+
+ a prostě ze sebe pršet text, pak je ale nutný důraz na pozdější revize.
+\end_layout
+
+\begin_layout Itemize
+Je několik možností jak se k tomuhle textu postavit:
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+chápat to už jako psaní diplomky rovnou od začátku
+\end_layout
+
+\begin_layout Itemize
+chápat to jako psaní reklamy na diplomku, na kterou pak budu lovit vedoucího
+\end_layout
+
+\begin_layout Itemize
+chápat to mnohem víc osobně, jako organickou součást sešítku, s tou výhodou
+ že se ví že se z něj bude kopírovat přímo do dvou víše zumíněných 
+\begin_inset Quotes eld
+\end_inset
+
+dokumentů
+\begin_inset Quotes erd
+\end_inset
+
+, evidentně nejsympatičtější možnost, ale je nutno počítat s nebezpečenstvími,
+ která tento přístup tak ověřeně přináší (strach ze šílenství; nerozhodnutelnost
+ toho, zda se jedná o geniální dílo nebo o totální nesmysl).
+ Nemám tendenci pracovat se sešítkem, a efektivní možnost práce se sešítkem
+ je právě skrze editovatelnost kterou nabízí počítač oproti papíru.
+\end_layout
+
+\end_deeper
+\begin_layout Itemize
+V čem byl u bakalářky problém, odhlédne-li se od časových problémů a od
+ toho, co se nelíbilo oponentovi; tzn.
+ to co přišlo jako problém mě při tvoření textu? 
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+Pocit, že toho mám v hlavě mnohem víc, ale nedokážu to vyndat ven v dostatečně
+ strukturované podobě, tak aby to zapadlo do toho, co zrovna píšu.
+ 
+\begin_inset Formula $\rightarrow$
+\end_inset
+
+ Možné řešení: nebát se 
+\begin_inset Quotes eld
+\end_inset
+
+havel tranzů
+\begin_inset Quotes erd
+\end_inset
+
+ a mít toho hodně ne nutně formálně struktorovaného.
+ Nutně pak počítat s fázemi editace.
+ Něco takového říkal Žižek: nejdřív si jen píše myšlenky, to není psaní
+ knihy - a pak dělá editace, to není psaní knihy - a kniha je napsaná a
+ on ji nemusel psát.
+ Tento přístup NUTNĚ vyžaduje fázi editace, která když je ale přijatá srdečně,
+ může být příjemná (v kontrastu s tím, kdy je odbytá a člověk cítí zhnusení
+ už kvuli tomu, že ví, že jí evidentně odbývá.)
+\end_layout
+
+\end_deeper
+\begin_layout Subsection
+Strategie a hecování
+\end_layout
+
+\begin_layout Standard
+Tady budu rozebírat širší souvislosti, jak celou věc hrotit.
+ Určitě je rozumný nesoustředit se jen na samotný text, ale i na věci co
+ přesahujou do psaní programu, chození do školy, kecání o věcech s geekama.
+ Bez řádnýho podchycení však vše zůstává v doméně 
+\begin_inset Quotes eld
+\end_inset
+
+podvědomýho managera
+\begin_inset Quotes erd
+\end_inset
+
+, což neni obecně špatný, ale systematičnost by tomu rozhodně měla prospět
+ v pozitivnim směru se mi zdá.
+ Minimálně si myslim, že (jak řikal i Trišč) když se věci napíšou, tak si
+ podvědomí uleví, že je to napsaný a už s tim neotravuje furt dokola - bojim
+ se že často přemejšlim nad tim samym dokola, ale nikam se nepohnu; dokonce
+ to i přitom vim a řikám si, že to nevadí, pač je to produktivní forma relaxace,
+ která mi do podvědomí vpáčí ten danej problém v vhodnou dobu odpálí nějakej
+ nápad.
+ Jenže to zavání prokrastinací a výmluvama, je načase zkusit telešopingovou
+ proaktivitu.
+\end_layout
+
+\begin_layout Itemize
+Zeptat se fellas nebo internetu: 
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+Jak je to s 
+\begin_inset Quotes eld
+\end_inset
+
+kontinuálníma systémama
+\begin_inset Quotes erd
+\end_inset
+
+ vs.
+ 
+\begin_inset Quotes eld
+\end_inset
+
+v továrně to zdrátujou a hotovo
+\begin_inset Quotes erd
+\end_inset
+
+ - jak se to vůbec jmenuje a tak
+\end_layout
+
+\end_deeper
+\begin_layout Itemize
+Vypadá to, že pro zvládnutí Mgr.
+ ve dvou letech, je potřeba už v zimnim semestru prvního roku zverbovat
+ vedoucího.
+ Cíl, pokud mu nebude zabráněno, je získat jako vedoucího Nerudu.
+ Pro tenhle účel taky z velký části vůbec sepisuju tenhle text.
+ Proto by bylo rozumný aby cca na konci října byl už v nějaký rozumný fázy
+ hotovej.
+ 
+\end_layout
+
+\begin_layout Itemize
+Zatím skusím metodu:
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+první část dokumentu je můj sešítek
+\end_layout
+
+\begin_layout Itemize
+druhá část dokumerntu je současný oficiální text
+\end_layout
+
+\end_deeper
+\begin_layout Itemize
+Předběžná struktura textu (záměrně to píšu sem, aby to nemělo tendenci mě
+ ovlivňovat přes přílišnej pocit svázanosti):
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+(1a) Široce pojatej 
+\series bold
+úvod
+\series default
+ mající za cíl jasně vymezit moje úvahy, riskuju že to budou naivity, ale
+ v týhle fázi si to můžu dovolit.
+ Cílem je připravit půdu pro (2).
+\end_layout
+
+\begin_layout Itemize
+(1b) 
+\series bold
+Popis GP
+\series default
+ připravující půdu pro (2) ještě těsněji.
+ 
+\end_layout
+
+\begin_layout Itemize
+(2) Obecný 
+\series bold
+popis TA
+\series default
+.
+\end_layout
+
+\begin_layout Itemize
+(3) 
+\series bold
+Imlementační detaily
+\series default
+ - Haskell (proč ho použít,...) , jak jít na 
+\begin_inset Quotes eld
+\end_inset
+
+databázy cest
+\begin_inset Quotes erd
+\end_inset
+
+ a tak.
+\end_layout
+
+\begin_layout Itemize
+(4) Další asi neni potřeba, dyštak vypline časem.
+\end_layout
+
+\end_deeper
+\begin_layout Itemize
+Povzdech: Je tu evidentně potřeba hodně technicky precizní práce, ale mimo
+ to se jasně rýsuje možnost celou věc nějak pěkně 
+\begin_inset Quotes eld
+\end_inset
+
+fraktálně zaobalit
+\begin_inset Quotes erd
+\end_inset
+
+, což je naproti tomu technika vísostně sešítkářská.
+ Například pojmy
+\emph on
+ křížení
+\emph default
+ a 
+\emph on
+propojení dvou problémů
+\emph default
+ se zdaj podezřele podobný.
+ Ze sešítkářskýho hlediska se mi zdá podstatný vyhrotit 
+\series bold
+stroj času
+\series default
+.
+ A samozřejmě 
+\series bold
+metaklička
+\series default
+.
+ Jsem v jakýsi křeči.
+ Doufám, že už brzo se dokopu na tom pracovat celej den - cejtim jasně jak
+ moc je silná činost - ale mám nějakou touhu od ní furt odbíhat, snad je
+ to jen projev prokrastinace, možná vyčerpání, možná pud sebezáchovy chránící
+ před zešílenim nebo držící si nějakej metaoptimální odstup.
+ 
+\end_layout
+
+\begin_layout Subsubsection
+Plán
+\end_layout
+
+\begin_layout Standard
+Plán je ve třech rovinách: co psát, co kódovat a o čem brejnit.
+ Nejočekávanější výstup je teď text, ale ostatní dvě ženou vše včetně textu
+ kupředu a odstraňujou sifl z toho, že sem na tom dlouho nekódoval.
+\end_layout
+
+\begin_layout Itemize
+
+\series bold
+Co psát:
+\series default
+ 
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+Asi hlavní je postupně převádět osnovu do celistvýho textu, při tom se navíc
+ uvolní sposta věcí co zahrnout do osnovy.
+\end_layout
+
+\begin_layout Itemize
+Programátorskou dokumentaci.
+ Viz 
+\emph on
+co kódovat
+\emph default
+.
+\end_layout
+
+\end_deeper
+\begin_layout Itemize
+
+\series bold
+Co kódovat: 
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+Popsat zjednodušenej ale kompletní problém (v kontrastu k rozkouzkovanýmu
+ jak to je teď); tzn.
+ např funkci který předám db, fitness a termita a ona mi vrátí program vygenerov
+anej tim termitem.
+ Asi až budu mít tohle tak je rozumný začít dělat GP engine.
+\end_layout
+
+\begin_layout Itemize
+Dál pak je důležitý elegantně uchopit koncept kreditovanejch funkcí.
+\end_layout
+
+\end_deeper
+\begin_layout Itemize
+
+\series bold
+Co brejnit:
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+TA engine jakožto jedna bytost komunikující s dalšími stejného druhu, navzájem
+ se tvořící atd.
+ Jejich určující funkce = 
+\begin_inset Quotes eld
+\end_inset
+
+motivace
+\begin_inset Quotes erd
+\end_inset
+
+.
+ 
+\end_layout
+
+\end_deeper
+\begin_layout Part
+Celistvější text
+\end_layout
+
+\begin_layout Section
+Genetické programování
+\end_layout
+
+\begin_layout Standard
+Termití algoritmus navazuje na genetické programování; paradigma evolučních
+ algoritmů.
+ Proto se na něj podrobněji podíváme a poukážeme zvlášťe na ty aspekty,
+ které budou klíčové pro termití algoritmus.
+\end_layout
+
+\begin_layout Standard
+[Major TODO]
+\end_layout
+
+\begin_layout Section
+K čemu slouží typ?
+\end_layout
+
+\begin_layout Standard
+[Toto společně s ukázkou na to, proč se nám hezky hodí curryfikace můžeme
+ chápat jako část textu snažící se ukázat, že Haskell se vnucuje jako vhodný
+ kandidát pro implementaci TA.
+ ]
+\end_layout
+
+\begin_layout Standard
+Pojem 
+\emph on
+typ hodnoty
+\emph default
+ lze uchopit jistě z mnoha možných úhlů pohledu.
+ Následující úvaha se snaží ukázat jeden z možných přístupů, založený na
+ zakladě potřeby znát množinu korektních vstupních hodnot pro funkce a na
+ základě potřeby korektního skládání funkcí.
+\end_layout
+
+\begin_layout Standard
+V netypovaném lambda kalkulu je každá funkce (nebo ještě obecněji - každý
+ term) korektní vstup pro libovolnou další funkci.
+ Jenže předpisy funkcí běžně vytváříme tak, že mají smysl jen pro nějakou
+ množinu vstupů, tedy ne pro celé univerzum možných vstupů.
+ Konkrétně v lambda kalkulu, je běžné funkcí kódovat nějaký datový typ (numerály
+, boolovské hodnoty, atd.) a funkce s tímto datovým typem operující pak předpoklá
+dají toto zakódování a v rámci tohoto zakódování se chovají korektně.
+ Dáme-li jim však jako vstup něco, co není zakódováno tak, jak čekají, pak
+ jejich chování opustí záměr, se kterým byly tyto funkce definovány.
+\end_layout
+
+\begin_layout Standard
+V této perspektivě je tedy
+\emph on
+ typovanost 
+\emph default
+konstrukt umožňující specifikaci smysluplných vstupních hodnot.
+ Typ je množina hodnot.
+ Informace, že funkce se chová standardně pro vstupní hodnoty nějakého typu,
+ je pro nás užitečná.
+ Pokud chceme brát funkce jako 
+\begin_inset Quotes eld
+\end_inset
+
+first-class citizens
+\begin_inset Quotes erd
+\end_inset
+
+ (tzn.
+ zejména chceme aby funkce mohly být hodnotou předávanou jako vstupní hodnota
+ nějaké funkci), tak je podstatné definovat si pojem typ i pro funkce.
+ První věc, co by měl typ funkce obsahovat, je právě to, jakého typu je
+ její vstup.
+ Dále pak chceme dělat to, že pokud máme dvě funkce, tak chceme jen na základě
+ informace o tom, jakého jsou typu, určit zda je možné tyto dvě funkce korektně
+ 
+\emph on
+složit
+\emph default
+.
+ 
+\end_layout
+
+\begin_layout Standard
+Tzn.
+ máme:
+\end_layout
+
+\begin_layout Itemize
+
+\emph on
+f
+\emph default
+ se vstupním typem 
+\emph on
+A,
+\end_layout
+
+\begin_layout Itemize
+
+\emph on
+g
+\emph default
+ se vstupním typem 
+\emph on
+B.
+\end_layout
+
+\begin_layout Standard
+A chceme vědět, zda je 
+\begin_inset Formula $(g\circ f)$
+\end_inset
+
+ korektní funkce.
+ Ta je určitě korektní, pokud všechny výstupy 
+\emph on
+f 
+\emph default
+jsou typu 
+\emph on
+B
+\emph default
+.
+ Toto nahlédnutí nám dává tušit, že se nám hodí u funkce znát její 
+\emph on
+výstupní typ
+\emph default
+.
+ 
+\end_layout
+
+\begin_layout Standard
+Na základě těchto úvah dává hezký smysl definovat jako typ funkce dvojici
+ výše zmíněných typů (totiž 
+\emph on
+vstupní
+\emph default
+ a 
+\emph on
+výstupní typ
+\emph default
+) a značit tento typ (konkrétně pro funkci 
+\emph on
+f
+\emph default
+ z příkladu výše) 
+\begin_inset Formula $A\rightarrow B$
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Standard
+V GP je pro nás právě smysluplnost propojování funkcí a jejich vstupů velmi
+ vítaná, protože programi tvoříme náhodně.
+ [Tady si to zaslouží rozvíst, ukázat na to jak to se to řeší v KOZA1 a
+ že typovanost je defakto zobecnění všech takovejch konstruktů, když si
+ spravně napíšeme typy.
+ Typy jsou vlastně způsob jak si rozdělit práci mezi stroj/náhodu a hodináře-pro
+gramátorta: programátor se snaží řád propašovat skrze chytře zvolené typy
+ (a funkce které je použivájí) a stroj je pak těmato pravidlama omezován
+ ve svém jinak bujarém kombinování.
+ Ještě trochu jiný pohled na typ je skrz pojem plurality- podobně jako neterminá
+l skýtá mnoho možností na přepsání, tak typ skýtá mnoho možností na konkrétnější
+ dosazení do něj nějakou hodnotu toho typu, chtře napsaný typ je množina
+ hodnot které na daném místě dávají smysl.
+ Pluralita podobného ražení jako pluralita řešení v populaci GP.]
+\end_layout
+
+\begin_layout Section
+TA versus GP
+\end_layout
+
+\begin_layout Standard
+V klasickém GP (Koza) máme jako vstupní parametr algoritmu sadu 
+\begin_inset Formula $T\cup F$
+\end_inset
+
+.
+ Výběr této sady pak podstatně ovlivňuje konečný úspěch celého algoritmu.
+ Druhým podstatným parametrem GP je volba 
+\emph on
+fitness funkce
+\emph default
+.
+\end_layout
+
+\begin_layout Standard
+
+\emph on
+Cílem TA je vytvořit dynamický systém schopný řešit problémy jen na základě
+ jejich zadání a schopný využít 
+\begin_inset Quotes eld
+\end_inset
+
+zkušenosti
+\begin_inset Quotes erd
+\end_inset
+
+ nabyté při řešení předchozích problémů pro řešení problému aktuálního.
+\end_layout
+
+\begin_layout Standard
+\begin_inset VSpace medskip
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Schéma [slovo schéma nahradit nějakým slovním popisem]:
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula $solveProblem\;::\; TAMachine\rightarrow(a\rightarrow[0,1])\rightarrow(a,TAMachine)$
+\end_inset
+
+
+\end_layout
+
+\begin_layout Itemize
+TAMachine - 
+\begin_inset Quotes eld
+\end_inset
+
+databáze
+\begin_inset Quotes erd
+\end_inset
+
+ znalostí TA algoritmu (první výskyt je vstupní před vyřešením daného problému,
+ druhýá výskyt je výstupní rozšířená o nové 
+\begin_inset Quotes eld
+\end_inset
+
+zkušenosti
+\begin_inset Quotes erd
+\end_inset
+
+)
+\end_layout
+
+\begin_layout Itemize
+\begin_inset Formula $(a\rightarrow[0,1])$
+\end_inset
+
+ - fitness fce zadávající nový problém
+\end_layout
+
+\begin_layout Itemize
+
+\emph on
+a
+\emph default
+ - typ řešení problému
+\end_layout
+
+\begin_layout Standard
+\begin_inset VSpace medskip
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+První otázkou bude, jak se postavit k 
+\emph on
+fitness funkcím
+\emph default
+ a k 
+\begin_inset Formula $T\cup F$
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Standard
+K fitness funkci ae postavíme tak, že ji budeme chápat právě jako 
+\series bold
+zadání problému
+\series default
+.
+ Její typ je 
+\begin_inset Formula $(a\rightarrow[0,1])$
+\end_inset
+
+ kde A je nějaký typ řešení problému.
+ (Nebo méně restriktivně 
+\begin_inset Formula $(a\rightarrow\mathbb{R})$
+\end_inset
+
+.)
+\end_layout
+
+\begin_layout Section
+Podstatné pilíře vhodné k podrobnému rozvedení
+\end_layout
+
+\begin_layout Itemize
+Způsob jakým se 
+\series bold
+převede sada funkcí na gramatiku
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+Nedořešeno: jak reprezentovat nefunkční prvky sady, tzn.
+ např.
+ čísla
+\end_layout
+
+\end_deeper
+\begin_layout Itemize
+
+\series bold
+Termit
+\series default
+ - program, který z počátečního neterminálu gramatiky postupným přepisováním
+ vytvoří řetězec z gramatyky, neboli program poskládaný z původní sady funkcí.
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+Názvosloví:
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+Termit = 
+\emph on
+kód termita
+\emph default
+ (rozhodovací funkce, které pravidlo vybrat).
+\end_layout
+
+\begin_layout Itemize
+Cesta = 
+\emph on
+posloupnost rozhodnutí 
+\emph default
+manifestující se jako výsledný program (výtvor termita).
+\end_layout
+
+\begin_layout Itemize
+Kontext =
+\emph on
+ řetězec symbolů gramatiky
+\emph default
+, reprezentující rozepsaný (případně již hotový) program (výtvor termita).
+\end_layout
+
+\end_deeper
+\begin_layout Itemize
+Nedořešeno: jak se chovat k poplymorfickým funkcím ((a) možnost rozebrat
+ nápad že: z původní sady nějakým způsobem extrahujeme sadu všech možných
+ typů a pro všechny polymorfické funkce uděláme instance těchto typů, nebo
+ (b) tak, že při zadání polymorfické funkce rovnou zadáme množinu typů,
+ kterých může daná typová proměnná nabývat nebo (c) zamyslel se hlobějc
+ a říct si, že to uděláme co možná nejvíc jako je to v Haskellu, s tím že
+ to nějak elegantně našroubujem na náš případ)
+\end_layout
+
+\begin_layout Itemize
+Na základě čeho se
+\series bold
+ termit rozhoduje
+\series default
+, tzn.
+ jaká data systém termitovi poskytuje pro své rozhodování? Termit se nachází
+ se v určitém 
+\emph on
+neterminálu 
+\emph default
+a snaží se určit, které pravidlo gramatiky použije, tzn.
+ na co tento neterminál přepíše.
+ Výběru přepisovacího pravidla pro daný neterminál říkáme 
+\emph on
+rozhodnutí
+\emph default
+.
+ Termit se rozhoduje:
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+Na základě svého stavu:
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+Kontext 
+\end_layout
+
+\begin_layout Itemize
+Fitness (kterou řeší) 
+\end_layout
+
+\end_deeper
+\begin_layout Itemize
+Na základě rozhodnutí předchozích termitů v tomto neterminálu.
+ U každého rozhodnutí má k dispozici následující údaje:
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+
+\emph on
+Pravidlo gramatiky
+\emph default
+, které toto rozodnutí vybírá.
+\end_layout
+
+\begin_layout Itemize
+
+\emph on
+Čas
+\emph default
+, kdy bylo toto rozhodnutí učiněno.
+\end_layout
+
+\begin_layout Itemize
+
+\emph on
+Fitness funkci
+\emph default
+, kterou daný mravenec řešil.
+\end_layout
+
+\begin_layout Itemize
+
+\emph on
+Fitness hodnot(a/y)
+\emph default
+, kterou daný mravenec obdržel pro své výtvory.
+ Zde je mnoho možností co za takovouto hodnotu brát.
+ Rozhodně by to mělo být co zdědily jeho výtvory toho výtvoru na kterém
+ se podílel daný průchod - dané rozhodnutí.
+\end_layout
+
+\begin_layout Itemize
+
+\emph on
+Kontext
+\emph default
+, ve kterém k danému rozhodnutí došlo.
+\end_layout
+
+\end_deeper
+\begin_layout Itemize
+Pro porovnávání těchto faktorů má mravenec k dispozici metriky, funkce které
+ se mohou objevit v termitím kódu.
+ Rozeznáváme zvláště dva typy metriky:
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+
+\emph on
+Fitness metrika 
+\emph default
+- rozhoduje, zda jsou si dva problémy podobné na základě porovnání jejich
+ fitness funkcí.
+ Termit porovnává svůj kontext s kontextem cizího rozhodnutí.
+\end_layout
+
+\begin_layout Itemize
+
+\emph on
+Kontextová metrika 
+\emph default
+- rozohuje o tom jak jsou si dva kontexty podobné.
+ Termit porovnává svojí fitness a fitness u cizího rozhodnutí.
+\end_layout
+
+\end_deeper
+\end_deeper
+\begin_layout Itemize
+Při konstrukci termitů využít inspirace z ACO.
+\end_layout
+
+\end_deeper
+\begin_layout Itemize
+Podrobný rozbor 
+\series bold
+fitness metrik
+\series default
+.
+ 
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+Existuje jejich 
+\emph on
+škála, podle 
+\begin_inset Quotes eld
+\end_inset
+
+obecnosti
+\emph default
+
+\begin_inset Quotes erd
+\end_inset
+
+, výřez: 
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+porovnat četnost stavebních kamenů
+\end_layout
+
+\begin_layout Itemize
+porovnat sekvence stavebních kamenů (inspirace z statistický lingvistiky
+ atd.
+ takový ty bigramy trigramy)
+\end_layout
+
+\begin_layout Itemize
+porovnat fitness hodnoty pro různý vstupy
+\end_layout
+
+\end_deeper
+\begin_layout Itemize
+Následně je možné tyto metriky šlechtit - je ale podstatná otázka jak toto
+ šlechtění zahrnout inherentně do procesu, aniž by bylo potřeba pro to mít
+ speciální konstrukty.
+ Čili je patrně vhodné mít jako požadavek, to, že chceme aby se fitness
+ metriky samovolně šlechtili (tzn.
+ vznikali nové na základě starých) ale chceme aby tato vlastnost byla důsledkem
+ designu systému, který s tím 
+\begin_inset Quotes eld
+\end_inset
+
+jakoby nepočítá explicitně
+\begin_inset Quotes erd
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Itemize
+Možnost implementovat fitness metriky jako neuronové sítě - čekáme spojitou
+ ale netriviálně odhadnutelnou zákonitost -> NS..
+\end_layout
+
+\end_deeper
+\begin_layout Itemize
+Technika
+\series bold
+ stroj času
+\series default
+.
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+Rozebrat podorobně, něco už v sešitku (nebo mobilu určitě).
+ Jen si tu poznamenávám: 
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+motor pro vkládání už hotových řešení atd.
+ 
+\end_layout
+
+\end_deeper
+\end_deeper
+\begin_layout Itemize
+Technika vytváření nových problémů za cílem 
+\series bold
+propojit dva existující problémy
+\series default
+.
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+Skrze generování nových fitness funkcí (= zadání problémů), pomocí těch
+ dvou které chceme propojit.
+ [Dost pravděpodobně pasuje na techniku stroje času, prozkoumat!!]
+\end_layout
+
+\end_deeper
+\begin_layout Itemize
+Jak udělat 
+\series bold
+metakličku
+\series default
+?
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+Napadly mě dva základní přístupy, ideálně rozebrat oba podrobně a sjednotit
+ je:
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+(1) Systém položí sám sobě otázku, tu si zodpoví a na základě odpovědi upraví
+ sám sebe
+\end_layout
+
+\begin_layout Itemize
+(2) Nad celým systémem běží další GP kde jedinci jsou termiti a jednotlivé
+ problémy jsou fitness-cases nějaké fitness funkce.
+\end_layout
+
+\end_deeper
+\begin_layout Itemize
+Vrtaj dvě otázky, které si zaslouží odpověď ale je nutno toto téma pořádně
+ prozkoumat, než budou vůbec dostatečně formulovány:
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+Jak to hierarchizovat, zvlášť ve (2) se nabízí stavět postupně víc a víc
+ meta GP který řeší obdobný ale obecnější problém
+\end_layout
+
+\begin_layout Itemize
+Co s fitness funkcí jejíž by problémy byly fitness-cases - je vhodný udělat
+ konkurenci takovejch fitness funkcí? Existuje nějaká dostatečně nearbitrární
+ aby mohla bejt jediná? V (1) vyvstává pravděpodobně ekvivalentní problém
+ toho, jaké otázky by měli být kladeny.
+\end_layout
+
+\end_deeper
+\end_deeper
+\begin_layout Itemize
+Nedořešeno: Výpočtový 
+\series bold
+kredity
+\series default
+.
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+Vhodné vyřešit na začátku kódování, protože je záhodno aby to byl co možná
+ nejvíc co to pude samozřejmej prvek - umožní to potom efektivně zvládat
+ efektivitu, tak jak to dokáže trh.
+\end_layout
+
+\end_deeper
+\begin_layout Itemize
+Možnost zahrnout do TA programy s ohodnocenejma hranama ve stromečku, kteréžto
+ reprezentují pevnost daného spojení při mutaci/křížení.
+\end_layout
+
+\begin_layout Itemize
+
+\series bold
+Které problémy řešit?
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+Lineární programování
+\end_layout
+
+\begin_layout Itemize
+
+\emph on
+Omezující podmínky
+\end_layout
+
+\begin_layout Itemize
+Zobecněný mravenec hledající potravu
+\end_layout
+
+\begin_layout Itemize
+Go
+\end_layout
+
+\begin_layout Itemize
+Problémy řešené v Kozovy
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+Ze začátku např zkusit generování 
+\emph on
+funkčních vzorečků pro sadu bodů
+\end_layout
+
+\end_deeper
+\begin_layout Itemize
+Generování 
+\begin_inset Quotes eld
+\end_inset
+
+umění
+\begin_inset Quotes erd
+\end_inset
+
+
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+Generování písniček
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+Jako původní inteligentní pianko: na vstupu uživatel zadá jednododuchou
+ melodii -> program má za úkol na toto téma složit nějakou písničku
+\end_layout
+
+\end_deeper
+\begin_layout Itemize
+Malování obrázků
+\end_layout
+
+\end_deeper
+\begin_layout Itemize
+Generování 
+\begin_inset Quotes eld
+\end_inset
+
+kritiků umění
+\begin_inset Quotes erd
+\end_inset
+
+
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+Případně kritik kritiků, nebo lépe zobecnit problém této řady.
+\end_layout
+
+\end_deeper
+\begin_layout Itemize
+Generování 
+\begin_inset Quotes eld
+\end_inset
+
+motivačních funkcí
+\begin_inset Quotes erd
+\end_inset
+
+ pro celé TA systémy.
+\end_layout
+
+\end_deeper
+\begin_layout Itemize
+
+\series bold
+Nápady během
+\series default
+ sepisování této osnovy:
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+Podrobné studium selfreferenční aplikace nám může dát informace jak vůbec
+ členit a jaké operace jsou vhodné při normálním problému, který je položen
+ systému.
+\end_layout
+
+\begin_layout Itemize
+Co kdyby si systém během doby, kdy mu nikdo neklade otázky, kladl otázky
+ sám?? 
+\end_layout
+
+\begin_layout Itemize
+Co kdyby nad společnym věděnim (tzn ta db kde jsou všechny rozhodnutí všech
+ mravenců) byla množina bytostí které by byli reprezentovány jako aktuální
+ množina mravenců který nasazuje na problémy??
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+Potom na fitness, jejíž fitness-cases by byli jednotlivý problémy, by se
+ dalo koukat jako na motivaci těchto bytostí.
+\end_layout
+
+\begin_layout Itemize
+Nebo na motivaci by se dalo koukat jako na to co určuje jaký otázky si to
+ položí, když to neni tázaný zvenku a může se to ptát samo.
+\end_layout
+
+\begin_layout Itemize
+Jak tyhle dvě věci dát do elegantní souvislosti? 
+\end_layout
+
+\end_deeper
+\end_deeper
+\begin_layout Section
+Populace TA-bytostí jakožto jedinců
+\end_layout
+
+\begin_layout Standard
+\begin_inset listings
+inline false
+status open
+
+\begin_layout Plain Layout
+
+data Termit      = ???
+\end_layout
+
+\begin_layout Plain Layout
+
+data Result      = ???
+\end_layout
+
+\begin_layout Plain Layout
+
+type Problem     = Result -> [0,1]
+\end_layout
+
+\begin_layout Plain Layout
+
+type SolveFun    = TAMachine -> Problem -> ( Result , TAMachine )
+\end_layout
+
+\begin_layout Plain Layout
+
+data TAMachine   = TAMachine [Termit] SolveFun
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+solveProblem :: SolveFun
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Part
+Programátorská dokumentace
+\end_layout
+
+\end_body
+\end_document
