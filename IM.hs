@@ -13,9 +13,29 @@ import Util
 --data NodeId = TypId Typ | TokenId Int 
 
 
+mkTaxi :: IM -> Taxi
+mkTaxi (IM t ctx im) = Taxi [] [TTyp t] ctx
 
+stepTaxi :: IMMap -> Taxi -> Either [Token] [Taxi]
+stepTaxi im (Taxi ret []     _   ) = Left $ reverse ret
+stepTaxi im (Taxi ret (x:xs) ctx ) = case x of
+ TTyp t -> Right [ Taxi ret (toks++xs) ctx | toks <- succss im ctx t ]
+ _      -> Right [ Taxi (x:ret) xs ctx ]
 
--- data Taxi = Taxi [Crub] (Queue Typ) Context  
+{-
+proveLol :: Context -> Typ -> [String]
+proveLol ctx t = 
+ where
+  iM@(IM _ _im) = mkIM ctx t
+  taxi = mkTaxi iM
+-}
+
+succss :: IMMap -> Context -> Typ -> [[Token]]
+succss im ctx typ = case Map.lookup typ im of
+ Nothing -> error "unexpected nothing"
+ Just edges -> map (\(tok,ts)->tok:(map TTyp ts)) edges
+
+data Taxi = Taxi [Token] [Token]  Context  
 
 
 type PreIMMap = Map Typ ( [(Token, [Typ] )] , Context )
@@ -24,12 +44,16 @@ type IMMap    = Map Typ [(Token, [Typ] )]
 data PreIM    = PreIM Typ PreIMMap  
 type Stack    = [ ( Typ , Context ) ]
 
-data IM = IM Typ IMMap
+data IM = IM Typ Context IMMap
 
 instance Show IM where show = showIM
 
 data Token = TLam [(Symbol,Typ)] 
            | TVar  Symbol Typ 
+           | TParL
+           | TParR
+           | TTyp Typ
+           | TVar2 Symbol Int Typ
 
 instance Show Token where show = showToken
 
@@ -61,7 +85,7 @@ tt n k = foldr (\_ acc -> t (n-1) :-> acc ) t0 [1..k]
 contx1 = [("0",o),("a",o),("inc",t1),("+",t1_2 )]
 
 showIM :: IM -> String
-showIM (IM typ im) = (++) (hLine ++ show typ ++ "\n" ++ hLine) $ concatMap f $ Map.toDescList im
+showIM (IM typ _ im) = (++) (hLine ++ show typ ++ "\n" ++ hLine) $ concatMap f $ Map.toDescList im
  where
   hLine = (replicate 60 '-') ++ "\n" 
   f :: ( Typ , [(Token, [Typ] )] ) -> String
@@ -73,7 +97,7 @@ showIM (IM typ im) = (++) (hLine ++ show typ ++ "\n" ++ hLine) $ concatMap f $ M
 mkIM :: Context -> Typ -> IM
 mkIM ctx t 
  = let (PreIM _ mi) = mkPre ctx t  
-    in IM t $ Map.fromList $ map (\(t,(xs,_))->(t,xs)) $ Map.toList mi
+    in IM t ctx $ Map.fromList $ map (\(t,(xs,_))->(t,xs)) $ Map.toList mi
 
 mkPre :: Context -> Typ -> PreIM
 mkPre contx typ = PreIM typ $ mkPre' [(typ,contx)] Map.empty
