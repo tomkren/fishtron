@@ -1,6 +1,8 @@
 fishtron
 ========
 
+![](http://github.com/tomkren/fishtron/raw/master/docs/logo.png)
+
 What is it?
 -----------
 
