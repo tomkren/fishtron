@@ -1,8 +1,6 @@
 fishtron
 ========
 
-![](http://github.com/tomkren/fishtron/raw/master/docs/logo.png)
-
 What is it?
 -----------
 
@@ -18,6 +16,8 @@ If you want to see something running:
 You need to install PSQueue package by `cabal install psqueue`
 
 Runs OK on Haskell Platform.
+
+![](http://github.com/tomkren/fishtron/raw/master/docs/logo.png)
 
 In czech only
 =============
