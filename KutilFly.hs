@@ -3,6 +3,7 @@ module KutilFly where
 import Data.Maybe
 import Data.List
 import qualified Data.Map as Map
+--import Map (Map)
 type Map k a = Map.Map k a
 
 
@@ -10,6 +11,45 @@ type Map k a = Map.Map k a
            zajistit, aby nešlo že jsou dvě mouchy v jedný pozici najednou 
            pořádně ošetřit FreeSlot
 --}
+
+data XML = Tag String [(String,String)] [XML]
+         | Text String
+
+instance Show XML where show = showXML
+
+
+showXML :: XML -> String
+showXML xml = case xml of
+  Text str -> str
+  Tag tag atts [] 
+   -> "<"++tag++" "++(showAtts atts)++" />" 
+  Tag tag atts inside 
+   -> "<"++tag++" "++(showAtts atts)++">"++(showInside inside)++"\n</"++tag++">" 
+ where
+  showAtts   = concatMap (\(key,val)->" "++key++"="++"\""++val++"\"")
+  showInside = concatMap (\xml-> '\n' : showXML xml  )
+
+worldToXML :: World -> XML
+worldToXML (World objMap _) 
+  = Tag "kutil" [] $ concatMap (\(pos,objs)->map (\o-> objToXML pos o ) objs) (Map.toAscList objMap) 
+
+objToXML :: Pos -> Obj -> XML
+objToXML pos obj = case obj of
+  OWall 
+   -> Tag "object" [("pos",fromGridPos pos),
+                    ("shape","rectangle 32 32"),
+                    ("physical","true"),
+                    ("attached","true") ] [] 
+  OFly (Agent prog sens effs goal (lastMove,wasTold) ) 
+   -> Tag "object" [("type","fly"),
+                    ("pos",fromGridPos pos),
+                    ("goal",(\(x,y)->show x ++ " "++ show y) goal),
+                    ("bgcolor","80 80 80"),
+                    ("physical","true")] []
+   
+fromGridPos :: Pos -> String
+fromGridPos (x,y) = (show $ 16+32*x) ++ " " ++ (show $ 16+32*y)
+
 
 type BoxId = Int
 type SlotPort = Int
