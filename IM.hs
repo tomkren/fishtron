@@ -8,6 +8,11 @@ import Data.Maybe
 import Base
 import Util
 
+generate :: Int -> Context -> Typ -> IO ()
+generate limit ctx t = do 
+  mapM putStrLn $ take limit $ proveStrs ctx t 
+  return () 
+
 -- types ------------------------------------------------------------
 
 data IM = IM Typ Context IMMap
@@ -54,13 +59,13 @@ t n = (t $ n-1) :-> t0
 tt :: Int -> Int -> Typ  
 tt n k = foldr (\_ acc -> t (n-1) :-> acc ) t0 [1..k]
 
-contx1 = [("0",o),("a",o),("inc",t1),("+",t1_2 )]
+contx1 = [("0",o),("succ",t1),("+",t1_2 ),("*",t1_2 )]
 
 -- generating terms by IM --------------------------------------------
 
 proveStrs :: Context -> Typ -> [String]
 proveStrs ctx t 
-  = map (\toks-> concatMap show toks) $ prove' $ singletonQueue taxi
+  = (:) (show iM) $ map (\toks-> concatMap show toks) $ prove' $ singletonQueue taxi
  where
   iM@(IM _ _ im) = mkIM ctx t
   taxi = mkTaxi iM
@@ -74,7 +79,7 @@ proveStrs ctx t
 
 
 mkTaxi :: IM -> Taxi
-mkTaxi (IM t ctx im) = Taxi [] [T2Typ t] $ map (\(x,_)->(x,0)) ctx
+mkTaxi (IM t ctx im) = Taxi [] [T2Typ t] $ map (\(x,_)->(x,1)) ctx
 
 nextTaxis' :: IMMap -> Taxi -> Either [Token2] [Taxi]
 nextTaxis' im taxi = case taxi of
