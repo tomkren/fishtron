@@ -94,8 +94,28 @@ isMoving _ (Ob ObFish _ _ _ _) = False
 isMoving posMap (Ob t shape (sigsDown,_,_,_) pos _)
  = and [ isNothing r | r <- map (\sig-> Map.lookup (plus2D sig pos) posMap ) sigsDown  ]
 
-isMovableRight :: PosMap -> ObMap -> Ob -> Bool
-isMovableRight =undefined
+isMovable :: [ObId] -> PosMap -> ObMap -> Ob -> Dir -> Bool
+isMovable _ _ _ (Ob ObFix  _ _ _ _) _ = False
+isMovable _ _ _ (Ob ObFish _ _ _ _) _ = False
+isMovable okZavaz posMap obMap ob dir 
+ = case (getZavazi posMap ob dir) \\ okZavaz of
+  []    -> True
+  zavaz -> and $ map (\z->isMovable (zavaz++okZavaz) posMap obMap (fromJust $ Map.lookup z obMap ) dir ) zavaz 
+
+       
+
+
+byDir :: Dir -> (a,a,a,a) -> a
+byDir dir (d,u,r,l) = case dir of
+ DDown -> d
+ DUp -> u
+ DRight -> r
+ DLeft -> l
+
+getZavazi :: PosMap -> Ob -> Dir -> [ObId]
+getZavazi posMap (Ob _ _ sigs pos _ ) dir 
+ = nub $ catMaybes $ map (\ p -> let pos' = plus2D p pos in Map.lookup pos' posMap ) $ byDir dir sigs
+ 
 
 movingSignifs :: Shape -> [Pos]
 movingSignifs shape
@@ -117,7 +137,8 @@ mkSignifs shape = ( getSigs DDown  ps ,
 getSigs :: Dir -> [Pos] -> [Pos]
 getSigs _ [] = []
 getSigs dir ps 
-  = if dir == DUp || dir == DDown 
+  = map (\p-> plus2D p ( byDir dir ((0,-1) , (0,1) , (1,0) , (-1,0)) ) ) $ 
+    if dir == DUp || dir == DDown 
      then grs1 [] hlines 
      else grs2 [] vlines
  where
@@ -169,6 +190,11 @@ ahoj = [
  "       AAA          OOOOO    JJJ  " ,
  "         AA                       " ,
  "$$$$$$$$$          $$$$$$$$$$$$$$$"]
+
+exSea@(Sea exPosMap exObMap exMoving exRectangle ) = mkSea ahoj
+exObLst = Map.toAscList exObMap
+exA = snd $ exObLst !! 0
+exO = snd $ exObLst !! 1
 
 zvon = [
   [ ],
