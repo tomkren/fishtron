@@ -17,13 +17,23 @@ type Pos   = (Int,Int)
 type HLine = (Int,Int)
 type ObId  = Int
 type Px = Char
-type Signifs = [Pos]
+
+type Sigs = [Pos]
+
+type SigsDown  = Sigs
+type SigsUp    = Sigs
+type SigsRight = Sigs
+type SigsLeft  = Sigs
+
+type Signifs = (SigsDown, SigsUp, SigsRight, SigsLeft)
 
 data Ob = Ob ObType Shape Signifs Pos Px -- Pos je dolního levýho rohu 
 
 data ObType = ObFix | ObStd | ObFish deriving (Show)
 
 type Shape = [[ HLine ]] 
+
+data Dir = DUp | DDown | DLeft | DRight deriving (Show,Eq)
 
 instance Show Ob  where show = showOb
 instance Show Sea where show = showSea
@@ -81,8 +91,11 @@ mkMoving posMap obMap = map fst $ filter (\(_,ob)->isMoving posMap ob) $ Map.toL
 isMoving :: PosMap -> Ob -> Bool
 isMoving _ (Ob ObFix  _ _ _ _) = False
 isMoving _ (Ob ObFish _ _ _ _) = False
-isMoving posMap (Ob t shape signifs pos _)
- = and [ isNothing r | r <- map (\sig-> Map.lookup (plus2D sig pos) posMap ) signifs  ]
+isMoving posMap (Ob t shape (sigsDown,_,_,_) pos _)
+ = and [ isNothing r | r <- map (\sig-> Map.lookup (plus2D sig pos) posMap ) sigsDown  ]
+
+isMovableRight :: PosMap -> ObMap -> Ob -> Bool
+isMovableRight =undefined
 
 movingSignifs :: Shape -> [Pos]
 movingSignifs shape
@@ -94,11 +107,56 @@ movingSignifs shape
    = (zip (act \\ lst) (repeat y) ) ++ 
      (movingSignifs' (y+1) act rest)
 
+mkSignifs :: Shape -> ([Pos],[Pos],[Pos],[Pos])
+mkSignifs shape = ( getSigs DDown  ps ,
+                    getSigs DUp    ps ,
+                    getSigs DRight ps ,
+                    getSigs DLeft  ps )
+ where ps = toPoses shape  
 
+getSigs :: Dir -> [Pos] -> [Pos]
+getSigs _ [] = []
+getSigs dir ps 
+  = if dir == DUp || dir == DDown 
+     then grs1 [] hlines 
+     else grs2 [] vlines
+ where
+  grs1 :: [Pos] -> [[Pos]] -> [Pos]
+  grs1 _   [] = []
+  grs1 lst (act:rest) = (minus1 act lst) ++ (grs1 act rest)
+
+  grs2 :: [Pos] -> [[Pos]] -> [Pos]
+  grs2 _   [] = []
+  grs2 lst (act:rest) = (minus2 act lst) ++ (grs2 act rest)
+    
+  minus1 :: [Pos] -> [Pos] -> [Pos]
+  minus1 [] _ = []
+  minus1 act@((_,y):_) lst = map (\x->(x,y)) $ (map fst act) \\ (map fst lst)
+
+  minus2 :: [Pos] -> [Pos] -> [Pos]
+  minus2 [] _ = []
+  minus2 act@((x,_):_) lst = map (\y->(x,y)) $ (map snd act) \\ (map snd lst)
+
+  xs = map fst ps
+  ys = map snd ps
+  xMax = maximum $ xs 
+  xMin = minimum $ xs
+  yMax = maximum $ ys 
+  yMin = minimum $ ys
+  list = case dir of
+    DRight -> [xMax,xMax-1..xMin]
+    DLeft  -> [xMin..xMax]
+    DUp    -> [yMax,yMax-1..yMin]
+    DDown  -> [yMin..yMax]
+  vlines , hlines :: [[Pos]]
+  vlines = zipWith (\x ps-> (filter (\(x',_)->x==x') ps)  ) list (repeat ps)
+  hlines = zipWith (\y ps-> (filter (\(_,y')->y==y') ps)  ) list (repeat ps)
 
 toInts :: [[HLine]] -> [[Int]]
 toInts = map $ concatMap $ \ (s,f) -> [s..f] 
 
+toPoses :: [[HLine]] -> [Pos]
+toPoses shape = concat $ zipWith (\xs y -> map (\x->(x,y)) xs) (toInts shape) [0..] 
 
 
 ahoj = [ 
@@ -126,8 +184,24 @@ inChars :: [String] -> [Char]
 inChars strs = (nub $ concat strs) \\ [' ']
 
 showOb :: Ob -> String
-showOb (Ob t sh _ pos px) 
+showOb (Ob t sh (sd,su,sr,sl) pos px) 
  = "\n" ++ (showShape px sh)++ show pos ++ " " ++ (show t) 
+   ++ (showPoses sd) ++ (showPoses su) ++ (showPoses sr)++ (showPoses sl)  
+
+showPoses :: [Pos] -> String
+showPoses [] = ""
+showPoses ps 
+  = (:) '\n' $ concatMap (\ps-> (map (\pos->case Map.lookup pos pmap of Nothing -> ' ' ; _ -> px) ps)++"\n" ) 
+    [ [(x,y) | x <- [xMin..xMax] ] | y' <- [(-yMax)..(-yMin)] , let y = -y' ] 
+ where 
+  px = '#'
+  pmap = Map.fromList $ zip ps (repeat ())
+  xMax = maximum $ map fst ps
+  yMax = maximum $ map snd ps
+  xMin = minimum $ map fst ps
+  yMin = minimum $ map snd ps
+
+
 
 showShape :: Px -> Shape -> String
 showShape px ss = concatMap f' $ reverse ss
@@ -143,7 +217,7 @@ mkOb :: [String] -> Px -> Maybe Ob
 mkOb strs px = do
  let sh = map (\str -> reverse $ f' $ foldl f [(0,0)] str) $ strs
  (pos,sh') <- shift sh
- return $ Ob (case px of '$' -> ObFix ; _ -> ObStd) sh' (movingSignifs sh') pos px
+ return $ Ob (case px of '$' -> ObFix ; _ -> ObStd) sh' (mkSignifs sh') pos px
  where
 
   shift :: [[HLine]] -> Maybe ( Pos , [[HLine]] )
