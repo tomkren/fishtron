@@ -3,8 +3,8 @@ module KutilFly where
 import Data.Maybe
 import Data.List
 import qualified Data.Map as Map
---import Map (Map)
-type Map k a = Map.Map k a
+import Data.Map (Map)
+--type Map k a = Map.Map k a
 
 
 {-- TODO : kouká se na to jako na frontu ale operace sou neefektivní : (++) pro zařazení na konec 
