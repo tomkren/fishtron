@@ -4,7 +4,7 @@ import Data.Maybe
 import Data.List
 import qualified Data.Map as Map
 import Data.Map (Map)
---type Map k a = Map.Map k a
+import Util
 
 
 {-- TODO : kouká se na to jako na frontu ale operace sou neefektivní : (++) pro zařazení na konec 
@@ -239,16 +239,6 @@ separateFlies objMap = foldr ff ([],[]) $ Map.toList objMap
   OFly agent -> ( (pos,agent):acc1 ,           acc2 )   
   obj        -> (             acc1 , (pos,obj):acc2 )
  
-insertToListMap :: (Ord k) => k -> a -> Map k [a] -> Map k [a]
-insertToListMap key val listMap 
- = Map.insertWith (\[x] xs -> x:xs) key [val] listMap 
-
-lookupInListMap :: (Ord k) => k -> Map k [a] -> [a]
-lookupInListMap key listMap 
- = case Map.lookup key listMap of
-  Nothing -> []
-  Just xs -> xs
-
 fromWordlSchema :: WorldSchema -> Maybe World
 fromWordlSchema objSchemas = do 
   objMap <- foldr f (Just Map.empty) objSchemas
@@ -492,15 +482,6 @@ showSlot x = case x of
   BoolSlot b -> show b
   DirSlot  d -> show d
   ListSlot ss-> show ss
-
-fill :: [(Int,a)] -> (Int,Int) -> a -> [(Int,a)]
-fill [] (i,j) val = map (\n->(n,val)) [i..j]
-fill xx@((k,x):xs) (i,j) x' 
- | k > i     = (i,x') : fill xx (i+1,j) x'
- | otherwise = (k,x ) : fill xs (i+1,j) x'  
-
-fillStr :: Int -> String -> String
-fillStr len str = let l = length str in str ++ [' '|_<-[0..len-l-1]] 
 
 fpow :: (a->a) -> Int -> (a->a) 
 fpow f 0 x = x

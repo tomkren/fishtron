@@ -8,15 +8,17 @@ import Util
 
 type PosMap    = Map Pos  ObId
 type ObMap     = Map ObId Ob
+type MultiObMap= Map ObId ObId
 type Moving    = [ObId]
 type Rectangle = (Pos,Pos)
 
-data Sea = Sea PosMap ObMap Moving Rectangle
+data Sea = Sea PosMap ObMap Moving Rectangle FishId
 
-type Pos   = (Int,Int)
-type HLine = (Int,Int)
-type ObId  = Int
-type Px = Char
+type Pos      = (Int,Int)
+type HLine    = (Int,Int)
+type ObId   = Int
+type Px     = Char
+type FishId = Maybe ObId
 
 type Sigs = [Pos]
 
@@ -38,20 +40,58 @@ data Dir = DUp | DDown | DLeft | DRight deriving (Show,Eq)
 instance Show Ob  where show = showOb
 instance Show Sea where show = showSea
 
-steps :: Sea -> [Sea]
-steps sea@(Sea _ _ [] _) = [sea]
-steps sea = sea : (steps $ step sea)
+steps :: Sea -> [Dir] -> [Sea]
+steps sea dirs 
+ = let seas = fallSteps sea
+       sea' = last seas
+    in undefined
 
-step :: Sea -> Sea
-step sea@(Sea _ _ [] _) = sea  
-step (Sea posMap obMap moving rec) 
-  = Sea posMap' obMap' (mkMoving posMap' obMap') rec 
+fishStep :: Sea -> Dir -> Sea
+fishStep sea@(Sea posMap obMap _ _ m_fid) dir 
+ = case m_fid of
+  Nothing  -> sea
+  Just fid -> 
+   let fish@(Ob _ _ signifs pos _) = fromJust $ Map.lookup fid obMap
+       fish' =  updatePos fish dir 
+    in undefined
+
+updatePos :: Ob -> Dir -> Ob
+updatePos (Ob t sh signifs pos px) dir 
+ = Ob t sh signifs (pos `plus2D` (dirDelta dir)) px
+
+fallSteps :: Sea -> [Sea]
+fallSteps sea@(Sea _ _ [] _ _) = [sea]
+fallSteps sea = sea : (fallSteps $ fallStep sea)
+
+fallStep :: Sea -> Sea 
+fallStep sea 
+ = let (Sea posMap obMap _ rec fid) = last $ subSteps sea
+    in Sea posMap obMap (mkMoving posMap obMap) rec fid
+
+subSteps :: Sea -> [Sea]
+subSteps sea@(Sea _ _ [] _ _) = [sea]
+subSteps sea = subSteps' [] sea
+ where
+  subSteps' :: [ObId] -> Sea -> [Sea]
+  subSteps' _ sea@(Sea _ _ [] _ _) = [sea]
+  subSteps' moved sea 
+   = let (sea',moved') = subStep sea moved 
+      in sea : ( subSteps' moved' sea' )
+
+subStep :: Sea -> [ObId] -> (Sea,[ObId])
+subStep sea@(Sea _ _ [] _ _) moved = (sea,moved) 
+subStep (Sea posMap obMap moving rec fid) moved  
+  = let moved' = moving ++ moved 
+     in ( Sea posMap' obMap' (mkMoving2 moved' posMap' obMap') rec fid , moved' )
  where 
-  obMap'  = foldr (\obId acc -> Map.adjust (\(Ob t sh si pos px)->Ob t sh si (plus2D pos (0,-1)) px ) obId acc ) obMap moving
-  posMap' = mkPosMap obMap' -- UNEFFECTIVE !!! TODO
+  moveIt :: ObId -> ObMap -> ObMap
+  moveIt obId acc = Map.adjust (\(Ob t sh si pos px)->Ob t sh si (plus2D pos (0,-1)) px ) obId acc 
+  obMap'  = foldr moveIt obMap moving
+  posMap' = mkPosMap obMap' -- UNEFFECTIVE !!! TODO  
+
 
 showSea :: Sea -> String
-showSea (Sea posMap obMap _  ((x1,y1),(x2,y2)) )
+showSea (Sea posMap obMap _  ((x1,y1),(x2,y2)) _ )
  = (:) '\n' $ concat [ [ px | 
         x <- [x1..x2] , 
         let obId = Map.lookup (x,y) posMap ,
@@ -83,10 +123,21 @@ mkSea strs
  = let obs    = mkObs strs 
        obMap  = mkObMap obs
        posMap = mkPosMap obMap
-    in Sea posMap obMap (mkMoving posMap obMap) (getRectanFromStrs strs)
+    in Sea posMap obMap (mkMoving posMap obMap) (getRectanFromStrs strs) (findFish obMap)
+
+findFish :: ObMap -> Maybe ObId
+findFish obMap = f $ Map.toList obMap
+ where 
+  f [] = Nothing
+  f ((oid,Ob ObFish _ _ _ _):_) = Just oid
+  f (_:xs) = f xs 
 
 mkMoving :: PosMap -> ObMap -> [ObId]
 mkMoving posMap obMap = map fst $ filter (\(_,ob)->isMoving posMap ob) $ Map.toList obMap
+
+mkMoving2 :: [ObId] -> PosMap -> ObMap -> [ObId]
+mkMoving2 moved posMap obMap 
+ = map fst $ filter (\(obId,ob)-> ( not $ obId `elem` moved ) && (isMoving posMap ob)  ) $ Map.toList obMap
 
 isMoving :: PosMap -> Ob -> Bool
 isMoving _ (Ob ObFix  _ _ _ _) = False
@@ -102,8 +153,35 @@ isMovable okZavaz posMap obMap ob dir
   []    -> True
   zavaz -> and $ map (\z->isMovable (zavaz++okZavaz) posMap obMap (fromJust $ Map.lookup z obMap ) dir ) zavaz 
 
-       
 
+findMultiobjects :: Dir -> Sea -> [[ObId]]
+findMultiobjects dir sea = map snd $ Map.toList $ f $ Map.toList $ findMultiobjects' dir sea
+ where 
+  f :: (Ord a) => [(a,a)] -> Map a [a]
+  f xs = foldr (\ (obId,mulId) acc -> insertToListMap mulId obId acc ) Map.empty xs
+
+findMultiobjects' :: Dir -> Sea -> MultiObMap
+findMultiobjects' dir sea@(Sea _ obMap _ _ _ )
+  = let rels = f $ findMultiobjects'' dir sea
+        ff a acc = fromJust $ Map.lookup a acc
+     in foldl (\acc (a,b)-> let mi = min (ff a acc) (ff b acc) in Map.insert a mi (Map.insert b mi acc) ) 
+              (Map.fromList [ (oid,oid) | oid <- map fst $ Map.toList obMap ] ) 
+              rels
+ where
+  f :: (Ord a) => [(a,a)] -> [(a,a)]
+  f xs = sort $ map g xs
+   where 
+    g x@(a,b) = if a < b then x else (b,a)
+
+findMultiobjects'' :: Dir -> Sea -> [(ObId,ObId)] -- MultiObMap
+findMultiobjects'' dir (Sea posMap obMap moving rec _) 
+  = nub $ concatMap (\ x -> holdedBy dir x posMap ) obs 
+ where obs = Map.toAscList obMap
+
+
+holdedBy :: Dir -> (ObId,Ob) -> PosMap -> [(ObId,ObId)]
+holdedBy dir (obId,ob) posMap 
+  = map (\oid->(oid,obId)) $ catMaybes $ map (\pos-> Map.lookup pos posMap ) $ getSignifs dir ob 
 
 byDir :: Dir -> (a,a,a,a) -> a
 byDir dir (d,u,r,l) = case dir of
@@ -134,10 +212,20 @@ mkSignifs shape = ( getSigs DDown  ps ,
                     getSigs DLeft  ps )
  where ps = toPoses shape  
 
+getSignifs :: Dir -> Ob -> [Pos]
+getSignifs dir (Ob _ _ signifs pos _ ) = map (`plus2D` pos) $ byDir dir signifs
+
+dirDelta :: Dir -> Pos
+dirDelta dir = case dir of
+ DDown  -> ( 0,-1) 
+ DUp    -> ( 0, 1)
+ DRight -> ( 1, 0)
+ DLeft  -> (-1, 0)
+ 
 getSigs :: Dir -> [Pos] -> [Pos]
 getSigs _ [] = []
 getSigs dir ps 
-  = map (\p-> plus2D p ( byDir dir ((0,-1) , (0,1) , (1,0) , (-1,0)) ) ) $ 
+  = map (\p-> plus2D p $ dirDelta dir ) $ 
     if dir == DUp || dir == DDown 
      then grs1 [] hlines 
      else grs2 [] vlines
@@ -180,6 +268,23 @@ toPoses :: [[HLine]] -> [Pos]
 toPoses shape = concat $ zipWith (\xs y -> map (\x->(x,y)) xs) (toInts shape) [0..] 
 
 
+lvl0@(Sea l0_posMap l0_obMap l0_moving l0_rec l0_fid ) = mkSea [
+ "                         ",
+ "                         ",
+ "        aaaa    11       ",
+ "        b                ",
+ "        cc$$       fff   ",
+ "        d       eee  f   ",
+ "                eee      ",
+ "                         ",
+ "                         ",
+ "  $$$$$$$$$$$$$$$$$$$$$  ",
+ "                         ",
+ "                         "
+ ]
+
+lvl_0 = Map.toAscList l0_obMap
+
 ahoj = [ 
  "   AAA              OOOOO       J " ,
  "  A   A   H     H  O   $ O      J " ,
@@ -190,8 +295,8 @@ ahoj = [
  "       AAA          OOOOO    JJJ  " ,
  "         AA                       " ,
  "$$$$$$$$$          $$$$$$$$$$$$$$$"]
-
-exSea@(Sea exPosMap exObMap exMoving exRectangle ) = mkSea ahoj
+--0123456789012345678901234567890123456789
+exSea@(Sea exPosMap exObMap exMoving exRectangle exFid) = mkSea ahoj
 exObLst = Map.toAscList exObMap
 exA = snd $ exObLst !! 0
 exO = snd $ exObLst !! 1
@@ -243,8 +348,12 @@ mkOb :: [String] -> Px -> Maybe Ob
 mkOb strs px = do
  let sh = map (\str -> reverse $ f' $ foldl f [(0,0)] str) $ strs
  (pos,sh') <- shift sh
- return $ Ob (case px of '$' -> ObFix ; _ -> ObStd) sh' (mkSignifs sh') pos px
+ return $ Ob obType sh' (mkSignifs sh') pos px
  where
+  obType = case px of 
+   '$' -> ObFix
+   '1' -> ObFish 
+   _   -> ObStd
 
   shift :: [[HLine]] -> Maybe ( Pos , [[HLine]] )
   shift ss = do

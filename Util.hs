@@ -2,6 +2,7 @@
 
 module Util
 ( putList
+, insertToListMap , lookupInListMap
 , maximas
 , newSymbol , newSymbol'
 , nthWord
@@ -11,7 +12,8 @@ module Util
 ) where
 
 import Data.List
-
+import qualified Data.Map as Map
+import Data.Map (Map)
 
 -- "Zřetězení funkcí"
 (+++) :: (a->[b]) -> (a->[b]) -> (a->[b])
@@ -22,6 +24,16 @@ infixr 7 +++
 putList :: (Show a) => [a] -> IO ()
 putList [] = putStrLn "[]"
 putList xs = foldr1 (>>) (map (putStrLn.show) xs) 
+
+insertToListMap :: (Ord k) => k -> a -> Map k [a] -> Map k [a]
+insertToListMap key val listMap 
+ = Map.insertWith (\[x] xs -> x:xs) key [val] listMap 
+
+lookupInListMap :: (Ord k) => k -> Map k [a] -> [a]
+lookupInListMap key listMap 
+ = case Map.lookup key listMap of
+  Nothing -> []
+  Just xs -> xs
 
 -- Vrací rostoucí seznam dosavadních maxim v seznamu
 maximas :: Ord a => [a] -> [a]
