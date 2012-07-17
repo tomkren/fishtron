@@ -31,22 +31,92 @@ showXML xml = case xml of
 
 worldToXML :: World -> XML
 worldToXML (World objMap _) 
-  = Tag "kutil" [] $ concatMap (\(pos,objs)->map (\o-> objToXML pos o ) objs) (Map.toAscList objMap) 
+  = Tag "kutil" [] $ map (\(i,(pos,o))-> objToXML i pos o ) (zip [1..] (flattt $ Map.toAscList objMap) ) 
 
-objToXML :: Pos -> Obj -> XML
-objToXML pos obj = case obj of
+objToXML :: Int -> Pos -> Obj -> XML
+objToXML objId pos obj = case obj of
   OWall 
-   -> Tag "object" [("pos",fromGridPos pos),
+   -> Tag "object" [("id","$"++show objId),
+                    ("pos",fromGridPos pos),
                     ("shape","rectangle 32 32"),
                     ("physical","true"),
                     ("attached","true") ] [] 
   OFly (Agent prog sens effs goal (lastMove,wasTold) ) 
-   -> Tag "object" [("type","fly"),
+   -> Tag "object" [("id","$"++show objId),
+                    ("type","fly"),
                     ("pos",fromGridPos pos),
-                    ("goal",(\(x,y)->show x ++ " "++ show y) goal),
+                    ("goal", showXY goal),
                     ("bgcolor","80 80 80"),
-                    ("physical","true")] []
-   
+                    ("physical","true")] $
+                   insideToXML objId prog sens effs
+
+showXY :: Pos -> String
+showXY (x,y) = show x ++ " " ++ show y
+
+{--
+
+<object type="fly" id="$97" pos="336 48" bgcolor="80 80 80" physical="true" goal="4 8">
+    <object type="function" id="$97_2" pos="0 128" target="$97_3:0 $97_4:0" val="copy"/>
+    <object type="function" id="$97_3" pos="0 192" val="flyCmd"/>
+    <object type="function" id="$97_4" pos="0 256" val="flyCmd"/>
+    <object type="goalSensor" id="$97_1" pos="0 64" target="$97_2:0" val="goalSensor"/>
+</object>
+
+
+--}
+
+
+insideToXML :: Int -> Prog -> Sensors -> Effectors -> [XML]
+insideToXML flyID prog sens effs = map f $ insideToXML' prog sens effs
+ where
+  f :: (BoxId,Box,BoxComment) -> XML
+  f (bid , box , bc ) 
+    = Tag "object" [ ("type" , objType) , ("id",objId) , ("pos", objPos) , ("val",objVal) , ("target",target) ] [] 
+   where
+    ( objType , objVal ) = get_type_val box bc
+    objId  = "$" ++ show flyID ++ "_" ++ show bid
+    objPos = showXY (0,64*bid)
+    target = getTarget flyID box 
+
+getTarget :: Int -> Box -> String
+getTarget flyID (Box _ addrs _ _)
+ = intercalate " " $ map (\(boxId,slotPort)-> "$" ++ show flyID ++ "_" ++ show boxId ++ ":" ++ show slotPort ) addrs
+
+get_type_val :: Box -> BoxComment -> ( String , String )
+get_type_val (Box _ _ _ funName) bc = case bc of
+  BCNil        -> ( "function"   , funName       )
+  IsEff EGoal  -> ( "function"   , "flyCmd"      )
+  IsSen SApple -> ( "function"   , "appleSensor" )
+  IsSen SGoal  -> ( "goalSensor" , "goalSensor"  )
+  IsSen STouch -> ( "touchSensor", "touchSensor" )
+
+
+insideToXML' :: Prog -> Sensors -> Effectors -> [(BoxId,Box,BoxComment)]
+insideToXML' (Prog boxMap _) sensMap effsList 
+  = map (\(boxId,box) -> ( boxId,box, f boxId )  ) $ Map.toAscList boxMap 
+ where 
+  f :: BoxId -> BoxComment
+  f boxId = case g boxId (flattt $ Map.toList sensMap) of
+    Just sensorType -> IsSen sensorType
+    Nothing -> case g boxId effsList of
+      Just effType -> IsEff effType
+      Nothing -> BCNil
+
+  g :: BoxId -> [(t,(BoxId,a))] -> Maybe t
+  g bid xs = case filter (\(_,(bid',_)) -> bid == bid' ) xs of
+    []    -> Nothing
+    ((t,_):_) -> Just t
+
+
+
+flattt :: [(a,[b])] -> [(a,b)]
+flattt xs = concatMap (\(a,bs)-> map (\b->(a,b)) bs ) xs 
+  
+data BoxComment = BCNil 
+                | IsEff EffectorType 
+                | IsSen SensorType
+
+
 fromGridPos :: Pos -> String
 fromGridPos (x,y) = (show $ 16+32*x) ++ " " ++ (show $ 16+32*y)
 
@@ -108,17 +178,18 @@ Just world1 = fromWordlSchema [
 fly1 =
  Fly (1,1) (4,3) 
   [ (SGoal, (1,0) ) , (STouch, (3,0) ) ]
-  [ (EGoal, (2,0) ) , (EGoal ,  (4,0) ) ]
+  [ (EGoal, (2,0) ) , (EGoal ,  (5,0) ) ]
   [ 
     BS 1 ide     [] [(2,0)], 
     BS 2 ide     [] [],
-    BS 3 rot180  [] [(4,0)],
-    BS 4 ide     [] [] 
+    BS 3 ide     [] [(4,0)],
+    BS 4 rot180  [] [(5,0)],
+    BS 5 ide     [] [] 
   ]
 
 fly2 = 
  Fly (10,1) (4,8) 
-  [ (SGoal,(1,0)) , (STouch,(5,1))]
+  [ (SGoal,(1,0)) ]
   [ (EGoal,(3,0)) , (EGoal,(4,0))  ]
   [ 
     BS 1 ide  [] [(2,0)],
