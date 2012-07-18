@@ -17,6 +17,13 @@ data XML = Tag String [(String,String)] [XML]
 
 instance Show XML where show = showXML
 
+saveToKutil :: World -> IO ()
+saveToKutil = saveWorld "../kutil/from-fishtron.xml"
+
+saveWorld :: FilePath -> World -> IO ()
+saveWorld path world = writeFile path $
+ "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" ++
+ show (worldToXML world) 
 
 showXML :: XML -> String
 showXML xml = case xml of
@@ -35,35 +42,21 @@ worldToXML (World objMap _)
 
 objToXML :: Int -> Pos -> Obj -> XML
 objToXML objId pos obj = case obj of
-  OWall 
-   -> Tag "object" [("id","$"++show objId),
-                    ("pos",fromGridPos pos),
-                    ("shape","rectangle 32 32"),
-                    ("physical","true"),
-                    ("attached","true") ] [] 
-  OFly (Agent prog sens effs goal (lastMove,wasTold) ) 
-   -> Tag "object" [("id","$"++show objId),
-                    ("type","fly"),
-                    ("pos",fromGridPos pos),
-                    ("goal", showXY goal),
-                    ("bgcolor","80 80 80"),
-                    ("physical","true")] $
-                   insideToXML objId prog sens effs
+  OWall -> Tag "object" [ ("id","$"++show objId), ("pos",fromGridPos pos),
+   ("shape","rectangle 32 32"), ("physical","true"), ("attached","true") ] [] 
+  
+  OApple -> Tag "object" [ ("id","$"++show objId), ("type","apple"),
+   ("pos",fromGridPos pos), ("physical","true"), ("attached","true") ] []
+  
+  OFly (Agent prog sens effs goal (lastMove,wasTold) ) -> 
+   Tag "object" [("id","$"++show objId), ("type","fly"), ("pos",fromGridPos pos),
+    ("goal", showXY goal), ("bgcolor","80 80 80"), ("physical","true")] $
+     insideToXML objId prog sens effs
+
+-- <object type="apple" id="$173" pos="106 88" physical="true" attached="true"/>
 
 showXY :: Pos -> String
 showXY (x,y) = show x ++ " " ++ show y
-
-{--
-
-<object type="fly" id="$97" pos="336 48" bgcolor="80 80 80" physical="true" goal="4 8">
-    <object type="function" id="$97_2" pos="0 128" target="$97_3:0 $97_4:0" val="copy"/>
-    <object type="function" id="$97_3" pos="0 192" val="flyCmd"/>
-    <object type="function" id="$97_4" pos="0 256" val="flyCmd"/>
-    <object type="goalSensor" id="$97_1" pos="0 64" target="$97_2:0" val="goalSensor"/>
-</object>
-
-
---}
 
 
 insideToXML :: Int -> Prog -> Sensors -> Effectors -> [XML]
@@ -158,16 +151,34 @@ type SensorsSchema = [(SensorType,SlotAddr)]
 
 
 data World = World (Map Pos [Obj]) [[Prog]]    
-data Obj = OFly Agent | OWall
+data Obj = OFly Agent | OWall | OApple
 
 type WorldSchema = [ObjSchema]
 data ObjSchema   = Fly Pos Goal SensorsSchema Effectors ProgSchema 
-                 | Wall Pos
+                 | Wall  Pos
+                 | Apple Pos
                  | LongWall Pos Pos
 
 
+nearestApple :: Pos -> World -> Dir
+nearestApple pos w = case sort $ map (dist pos) $ applePoses w of
+ []  -> DRandom
+ x:_ -> undefined
+
+applePoses :: World -> [Pos]
+applePoses (World objMap _) 
+ = map fst $ filter (\(_,obs) -> or $ map isApple obs ) $ Map.toList objMap  
+
+isApple :: Obj -> Bool
+isApple OApple = True
+isApple _      = False
+
+dist :: Pos -> Pos -> Double
+dist (x1,y1) (x2,y2) = sqrt $ (d2 x1 x2) + (d2 y1 y2)
+ where d2 a b = let c=a-b in fromIntegral $ c*c
+
 Just world1 = fromWordlSchema [
-  Wall (-7,-3) ,
+  Apple (-7,-2) ,
   LongWall (-18,-18) (-18,18) ,
   LongWall (-18,-18) (18,-18) ,
   LongWall (-18,18) (18,18) ,
@@ -213,11 +224,11 @@ stepWorld :: World -> World
 stepWorld (World objMap _ ) 
   = World objMap' progss'
  where
- (flies,otherObjs) = separateFlies objMap
- flies2 = map ( (doSTouch objMap) . doSGoal ) flies
- (flies3 , progss') = unzip $ map fullStepAgent' flies2
- flies4 = map (agentNextPos objMap) flies3
- objMap' = foldr (uncurry insertToListMap) Map.empty $ map (\(pos,fly)->(pos,OFly fly)) flies4 ++ otherObjs
+  (flies,otherObjs) = separateFlies objMap
+  flies2 = map ( (doSTouch objMap) . doSGoal ) flies
+  (flies3 , progss') = unzip $ map fullStepAgent' flies2
+  flies4 = map (agentNextPos objMap) flies3
+  objMap' = foldr (uncurry insertToListMap) Map.empty $ map (\(pos,fly)->(pos,OFly fly)) flies4 ++ otherObjs
 
 liftPos :: (Agent -> Agent) -> ((Pos,Agent) -> (Pos,Agent))
 liftPos f (pos,agent) = (pos, f agent) 
@@ -331,7 +342,8 @@ fromObjSchema x = case x of
     prog <- fromProgSchema progSch
     let agent = Agent prog (fromSensorsSchema senSch) effs goal (DRight,False)
     return [( OFly agent , pos )]
-  Wall pos -> Just [( OWall , pos )]
+  Wall  pos -> Just [( OWall , pos )]
+  Apple pos -> Just [( OApple, pos )]
   LongWall pos1 pos2 -> Just $ map (\pos -> ( OWall , pos ) ) $ mkLine pos1 pos2
 
 
@@ -397,8 +409,9 @@ stepsProg p n    = p : stepsProg (stepProg p) (n-1)
 stepProg :: Prog -> Prog
 stepProg p@(Prog boxMap queue) = case queue of
   [] -> p
-  fullBox:queue' -> let (boxMap',newFulls) = fire boxMap fullBox 
-                     in Prog boxMap' $ queue' ++ newFulls 
+  fullBox:queue' -> 
+   let (boxMap',newFulls) = fire boxMap fullBox 
+    in Prog boxMap' $ queue' ++ newFulls 
 
 fire :: Map BoxId Box -> BoxId -> (Map BoxId Box,[BoxId])
 fire boxMap boxId1 = case Map.lookup boxId1 boxMap of
@@ -513,7 +526,8 @@ showWorld pos@(posX,posY) (World objMap progss)
  poss :: [[Pos]]
  poss  = [[(x,y)|x<-[(posX-xHalf)..(posX+xHalf)]]|y<-[(posY-yHalf)..(posY+yHalf)]] 
  draw obj = case obj of 
-  OWall -> 'W' 
+  OWall  -> 'W'
+  OApple -> 'A' 
   OFly _ -> 'F' 
  draw' pos@(px,py) = case lookupInListMap pos objMap of 
   [] -> if pos `elem` goals then 'x' else 
