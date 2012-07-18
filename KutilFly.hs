@@ -160,10 +160,21 @@ data ObjSchema   = Fly Pos Goal SensorsSchema Effectors ProgSchema
                  | LongWall Pos Pos
 
 
-nearestApple :: Pos -> World -> Dir
-nearestApple pos w = case sort $ map (dist pos) $ applePoses w of
- []  -> DRandom
- x:_ -> undefined
+nearestApple :: World -> Pos -> Maybe Dir
+nearestApple w pos = case sort $ map (\pos'->(dist pos pos',pos')) $ applePoses w of
+ []         -> Nothing
+ (_,pos'):_ -> Just $ dirByRelativePos pos pos' 
+
+dirByRelativePos :: Pos -> Pos -> Dir
+dirByRelativePos dirMy dirHer 
+  |   dx  > dy && (-dx) > dy = DUp
+  |   dx  > dy               = DRight
+  | (-dx) > dy               = DLeft
+  | otherwise                = DDown
+ where (dx,dy) = dirHer `minus` dirMy
+
+minus :: Pos -> Pos -> Pos
+minus (x1,y1) (x2,y2) = (x1-x2,y1-y2) 
 
 applePoses :: World -> [Pos]
 applePoses (World objMap _) 
