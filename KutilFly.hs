@@ -79,7 +79,7 @@ get_type_val :: Box -> BoxComment -> ( String , String )
 get_type_val (Box _ _ _ funName) bc = case bc of
   BCNil        -> ( "function"   , funName       )
   IsEff EGoal  -> ( "function"   , "flyCmd"      )
-  IsSen SApple -> ( "function"   , "appleSensor" )
+ -- IsSen SApple -> ( "function"   , "appleSensor" )
   IsSen SGoal  -> ( "goalSensor" , "goalSensor"  )
   IsSen STouch -> ( "touchSensor", "touchSensor" )
 
@@ -118,7 +118,8 @@ type BoxId = Int
 type SlotPort = Int
 type NumSlots = Int
 type NumFreeSlots = Int
-type BoxFun = [Slot] -> Maybe [Slot]
+data BoxFun = Fun ([Slot] -> Maybe [Slot])
+            | SensorFun ( (World,Pos) -> [Slot] -> Maybe [Slot])
 type Pos = (Int,Int)
 type ObjId = Int
 type FunName = String
@@ -137,7 +138,7 @@ data BoxSchema  = BS BoxId FunSchema [(SlotPort,Slot)] [(BoxId,SlotPort)]
 
 type SlotAddr = (BoxId,SlotPort)
 
-data SensorType   = SApple | SGoal | STouch deriving (Eq , Ord)
+data SensorType   = SGoal | STouch deriving (Eq , Ord) -- SApple | 
 data EffectorType = EGoal deriving (Eq , Ord)
 
 data Agent = Agent Prog Sensors Effectors Goal (LastMove,WasTold)
@@ -159,42 +160,13 @@ data ObjSchema   = Fly Pos Goal SensorsSchema Effectors ProgSchema
                  | Apple Pos
                  | LongWall Pos Pos
 
-
-nearestApple :: World -> Pos -> Maybe Dir
-nearestApple w pos = case sort $ map (\pos'->(dist pos pos',pos')) $ applePoses w of
- []         -> Nothing
- (_,pos'):_ -> Just $ dirByRelativePos pos pos' 
-
-dirByRelativePos :: Pos -> Pos -> Dir
-dirByRelativePos dirMy dirHer 
-  |   dx  > dy && (-dx) > dy = DUp
-  |   dx  > dy               = DRight
-  | (-dx) > dy               = DLeft
-  | otherwise                = DDown
- where (dx,dy) = dirHer `minus` dirMy
-
-minus :: Pos -> Pos -> Pos
-minus (x1,y1) (x2,y2) = (x1-x2,y1-y2) 
-
-applePoses :: World -> [Pos]
-applePoses (World objMap _) 
- = map fst $ filter (\(_,obs) -> or $ map isApple obs ) $ Map.toList objMap  
-
-isApple :: Obj -> Bool
-isApple OApple = True
-isApple _      = False
-
-dist :: Pos -> Pos -> Double
-dist (x1,y1) (x2,y2) = sqrt $ (d2 x1 x2) + (d2 y1 y2)
- where d2 a b = let c=a-b in fromIntegral $ c*c
-
 Just world1 = fromWordlSchema [
   Apple (-7,-2) ,
   LongWall (-18,-18) (-18,18) ,
   LongWall (-18,-18) (18,-18) ,
   LongWall (-18,18) (18,18) ,
   LongWall (18,-18) (18,18) ,
-  fly1,fly2
+  fly1,fly2,fly3
  ]
 
 fly1 =
@@ -220,6 +192,16 @@ fly2 =
     BS 4 ide  [] []
   ]
 
+fly3 = 
+ Fly (5,-10) (3,-8) 
+  [ (SGoal,(1,0)) ]
+  [ (EGoal,(3,0)) ]
+  [ 
+    BS 1 ide         [] [(2,0)],
+    BS 2 appleSensor [] [(3,0)],
+    BS 3 ide         [] []
+  ]
+
 steps :: World -> Int -> Int -> [World]
 steps w n n' = steps'' (steps' w n) n'  
 
@@ -232,12 +214,12 @@ steps'' w 0 = []
 steps'' w n = w : steps'' (stepWorld w) (n-1)
 
 stepWorld :: World -> World
-stepWorld (World objMap _ ) 
+stepWorld w@(World objMap _ ) 
   = World objMap' progss'
  where
   (flies,otherObjs) = separateFlies objMap
   flies2 = map ( (doSTouch objMap) . doSGoal ) flies
-  (flies3 , progss') = unzip $ map fullStepAgent' flies2
+  (flies3 , progss') = unzip $ map (fullStepAgent' w) flies2
   flies4 = map (agentNextPos objMap) flies3
   objMap' = foldr (uncurry insertToListMap) Map.empty $ map (\(pos,fly)->(pos,OFly fly)) flies4 ++ otherObjs
 
@@ -256,19 +238,19 @@ move dir (x,y) = case dir of
   DRight  -> (x+1,y  )
   DRandom -> error "DRandom zatim neimplementovan"
 
-fullStepAgent' :: (Pos,Agent) -> ( (Pos,Agent) , [Prog] )
-fullStepAgent' (pos,ag) = let (ag',pgs) = fullStepAgent ag in ( (pos,ag') , pgs )
-fullStepAgent :: Agent -> ( Agent , [Prog] )
-fullStepAgent a@(Agent prog s e g l)
+fullStepAgent' :: World -> (Pos,Agent) -> ( (Pos,Agent) , [Prog] )
+fullStepAgent' w (pos,ag) = let (ag',pgs) = fullStepAgent (w,pos) ag in ( (pos,ag') , pgs )
+fullStepAgent :: (World,Pos) -> Agent -> ( Agent , [Prog] )
+fullStepAgent wPosData a@(Agent prog s e g l)
  = if isQueueEmpty prog 
     then ( a , [prog] )
-    else let (a',p)   = stepAgent a 
-             (a'',ps) = fullStepAgent a'
+    else let (a',p)   = stepAgent wPosData a 
+             (a'',ps) = fullStepAgent wPosData a'
           in (a'',p++ps)  
 
-stepAgent :: Agent -> ( Agent , [Prog] )
-stepAgent ( Agent prog s e g l)
- = let prog' = stepProg prog
+stepAgent :: (World,Pos) -> Agent -> ( Agent , [Prog] )
+stepAgent wPosData ( Agent prog s e g l)
+ = let prog' = stepProg wPosData prog
     in (doEGoal $ Agent prog' s e g l , [prog,prog'] ) -- because doEGoal may also changes prog by cuting the effectors
 
 doEGoal' = liftPos doEGoal
@@ -280,10 +262,6 @@ doEGoal a@(Agent prog s effs g l)
  (vals,prog') = foldr (\ad (xs,pr) -> let (x,pr') = cutSlot ad pr in (x:xs,pr') ) ([],prog) addrs
  dirs         = map (\(DirSlot d)->d) $ filter (\v->case v of DirSlot _ -> True ; _ -> False ) $ catMaybes vals
  
-
-
-
-
 doSTouch :: Map Pos [Obj] -> (Pos,Agent) -> (Pos,Agent)
 doSTouch objMap ( pos , a@(Agent prog sensors e g l ) )
   = ( pos , case touchDir objMap pos of 
@@ -412,22 +390,26 @@ Just prog2 = fromProgSchema [
   BS 5 copy  [ ]                                     [(1,1),(3,1)] 
  ]
 
+
+--TODO - udělat chytře wPosData aby to šlo pouštět i bez ebednutí ve světu
+--       tzn aby nebylo nutný mít progr v rámci nějakýho světa
+{--
 stepsProg :: Prog -> Int -> [Prog]
 stepsProg p (-1) = []
 stepsProg p n    = p : stepsProg (stepProg p) (n-1)
+--}
 
-
-stepProg :: Prog -> Prog
-stepProg p@(Prog boxMap queue) = case queue of
+stepProg :: (World,Pos) -> Prog -> Prog
+stepProg wPosData p@(Prog boxMap queue) = case queue of
   [] -> p
   fullBox:queue' -> 
-   let (boxMap',newFulls) = fire boxMap fullBox 
+   let (boxMap',newFulls) = fire wPosData boxMap fullBox 
     in Prog boxMap' $ queue' ++ newFulls 
 
-fire :: Map BoxId Box -> BoxId -> (Map BoxId Box,[BoxId])
-fire boxMap boxId1 = case Map.lookup boxId1 boxMap of
+fire :: (World,Pos) -> Map BoxId Box -> BoxId -> (Map BoxId Box,[BoxId])
+fire wPosData boxMap boxId1 = case Map.lookup boxId1 boxMap of
   Nothing -> (boxMap',[])
-  Just box1@(Box _ joints _ _) -> case fire' box1 of
+  Just box1@(Box _ joints _ _) -> case fire' wPosData box1 of
     Nothing -> (boxMap',[])
     Just rets -> foldr f (boxMap',[]) $ zip joints rets   
  where
@@ -439,9 +421,13 @@ fire boxMap boxId1 = case Map.lookup boxId1 boxMap of
     Nothing -> acc
     Just slots' -> (Map.insert boxId2 (setSlots box2 slots') boxMap, 
                     if areSlotsFull slots' then boxId2:fulls else fulls )
- fire' :: Box -> Maybe [Slot]
- fire' (Box (Slots slotMap _ free) js fun _) 
-  | free == 0 = fun . map snd $ Map.toAscList slotMap
+ fire' :: (World,Pos) -> Box -> Maybe [Slot]
+ fire' wPosData (Box (Slots slotMap _ free) js boxFun _) 
+  | free == 0 = 
+     let inputs = map snd $ Map.toAscList slotMap
+      in case boxFun of
+          Fun fun        -> fun inputs           
+          SensorFun sFun -> sFun wPosData inputs  
   | otherwise = Nothing  
 
 getSlot :: SlotAddr -> Prog -> Maybe Slot
@@ -583,32 +569,32 @@ fpow :: (a->a) -> Int -> (a->a)
 fpow f 0 x = x
 fpow f n x = f $ fpow f (n-1) x
 
-plus  = ("plus" , plus'  , 2)
+plus  = ("plus" , Fun plus'  , 2)
 plus' :: [Slot] -> Maybe [Slot]
 plus' [IntSlot x , IntSlot y] = Just $ [IntSlot $ x + y]
 plus' _ = Nothing
  
-ide   = ("id"   , ide'   , 1)
+ide   = ("id" , Fun ide'   , 1)
 ide' :: [Slot] -> Maybe [Slot]
 ide' [x] = Just $ [x]
 ide' _ = Nothing
 
-copy  = ("copy" , copy'  , 1)
+copy  = ("copy" , Fun copy'  , 1)
 copy' :: [Slot] -> Maybe [Slot]
 copy' [x] = Just [x,x] 
 copy' _   = Nothing
 
-rot = ("rot" , rot' , 2)
+rot = ("rot" , Fun rot' , 2)
 rot' :: [Slot] -> Maybe [Slot]
 rot' [DirSlot d1,DirSlot d2] = Just [DirSlot $ dRot d1 d2]
 rot' _ = Nothing
 
-rotCW = ("rotCW", rotCW' , 1)
+rotCW = ("rotCW", Fun rotCW' , 1)
 rotCW' :: [Slot] -> Maybe [Slot]
 rotCW' [DirSlot d] = Just [DirSlot $ dRotCW d]
 rotCW' _ = Nothing
 
-rot180 = ("rot180", rot180' , 1)
+rot180 = ("rot180", Fun rot180' , 1)
 rot180' :: [Slot] -> Maybe [Slot]
 rot180' [DirSlot d] = Just [DirSlot $ dRot180 d]
 rot180' _ = Nothing
@@ -640,3 +626,37 @@ dRot DDown   = dRot180
 dRot DRight  = dRotCW
 dRot DLeft   = dRotCCW
 dRot DRandom = (\_->DRandom) 
+
+appleSensor = ("appleSensor" , SensorFun appleSensor' , 1)
+appleSensor' :: (World,Pos) -> [Slot] -> Maybe [Slot]
+appleSensor' (world,pos) _ = case nearestApple world pos of
+ Nothing  -> Just [DirSlot DRandom]
+ Just dir -> Just [DirSlot dir]
+
+nearestApple :: World -> Pos -> Maybe Dir
+nearestApple w pos = case sort $ map (\pos'->(dist pos pos',pos')) $ applePoses w of
+ []         -> Nothing
+ (_,pos'):_ -> Just $ dirByRelativePos pos pos' 
+
+dirByRelativePos :: Pos -> Pos -> Dir
+dirByRelativePos dirMy dirHer 
+  |   dx  > dy && (-dx) > dy = DUp
+  |   dx  > dy               = DRight
+  | (-dx) > dy               = DLeft
+  | otherwise                = DDown
+ where (dx,dy) = dirHer `minus` dirMy
+
+minus :: Pos -> Pos -> Pos
+minus (x1,y1) (x2,y2) = (x1-x2,y1-y2) 
+
+applePoses :: World -> [Pos]
+applePoses (World objMap _) 
+ = map fst $ filter (\(_,obs) -> or $ map isApple obs ) $ Map.toList objMap  
+
+isApple :: Obj -> Bool
+isApple OApple = True
+isApple _      = False
+
+dist :: Pos -> Pos -> Double
+dist (x1,y1) (x2,y2) = sqrt $ (d2 x1 x2) + (d2 y1 y2)
+ where d2 a b = let c=a-b in fromIntegral $ c*c 
