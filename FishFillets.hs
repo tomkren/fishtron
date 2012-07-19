@@ -117,13 +117,13 @@ subStep :: Sea -> [ObId] -> (Sea,[ObId])
 subStep sea@(Sea _ _ [] _ _ _) moved = (sea,moved) 
 subStep (Sea posMap obMap moving rec fid status) moved  
   = let moved' = moving ++ moved 
-     in ( Sea posMap' obMap' (mkMoving2 moved' posMap' obMap') rec fid status , moved' )
+     in ( Sea posMap' obMap' (mkMoving2 moved' posMap' obMap') rec fid status' , moved' )
  where 
   moveIt :: ObId -> ObMap -> ObMap
   moveIt obId acc = Map.adjust (\(Ob t sh si pos px)->Ob t sh si (plus2D pos (0,-1)) px ) obId acc 
   obMap'  = foldr moveIt obMap moving
   posMap' = mkPosMap obMap' -- UNEFFECTIVE !!! TODO  
-
+  status' = updateStatus posMap' obMap' moving status
 
 showSea :: Sea -> String
 showSea (Sea posMap obMap _  ((x1,y1),(x2,y2)) _ status)
@@ -168,18 +168,61 @@ findFish obMap = f $ Map.toList obMap
   f ((oid,Ob ObFish _ _ _ _):_) = Just oid
   f (_:xs) = f xs 
 
+--resolveMoving :: PosMap -> ObMap -> ( [ObId] ,  )
+
 mkMoving :: PosMap -> ObMap -> [ObId]
-mkMoving posMap obMap = map fst $ filter (\(_,ob)->isMoving posMap ob) $ Map.toList obMap
+mkMoving posMap obMap = map fst $ filter (\(_,ob)->isMoving posMap obMap ob) $ Map.toList obMap
 
 mkMoving2 :: [ObId] -> PosMap -> ObMap -> [ObId]
 mkMoving2 moved posMap obMap 
- = map fst $ filter (\(obId,ob)-> ( not $ obId `elem` moved ) && (isMoving posMap ob)  ) $ Map.toList obMap
+ = map fst $ filter (\(obId,ob)-> ( not $ obId `elem` moved ) && (isMoving posMap obMap ob)  ) $ Map.toList obMap
 
-isMoving :: PosMap -> Ob -> Bool
-isMoving _ (Ob ObFix  _ _ _ _) = False
-isMoving _ (Ob ObFish _ _ _ _) = False
-isMoving posMap (Ob t shape (sigsDown,_,_,_) pos _)
- = and [ isNothing r | r <- map (\sig-> Map.lookup (plus2D sig pos) posMap ) sigsDown  ]
+
+updateStatus :: PosMap -> ObMap -> [ObId] -> GameStatus -> GameStatus
+updateStatus posMap obMap movingToCheck status 
+ = if isKilling posMap obMap movingToCheck 
+    then GameOver else status
+
+
+-- vezmeme seznam hejbacích z minulýho kola a testnem esli to nekillí rybu už v pohlí pozici
+isKilling :: PosMap -> ObMap -> [ObId] -> Bool
+isKilling posMap obMap movingToCheck 
+  = or $ map (isKilling' posMap obMap) obs 
+ where obs = catMaybes $ map (\oid->Map.lookup oid obMap) movingToCheck  
+
+isKilling' :: PosMap -> ObMap -> Ob -> Bool
+isKilling' posMap obMap ob@(Ob _ _ (sigsDown,_,_,_) pos _)  
+ =   (or [ isFishPos posMap obMap pos' | pos' <- map (\ sig -> sig `plus2D` pos ) sigsDown ])
+  && (isMovoid posMap obMap ob)
+
+isFishPos :: PosMap -> ObMap -> Pos -> Bool
+isFishPos posMap obMap pos 
+ = case Map.lookup pos posMap of
+    Nothing -> False
+    Just oid -> isFishId obMap oid
+
+isFishId :: ObMap -> ObId -> Bool
+isFishId obMap oid 
+ = case Map.lookup oid obMap of 
+    Just (Ob ObFish _ _ _ _) -> True
+    _ -> False
+
+
+isMoving :: PosMap -> ObMap -> Ob -> Bool
+isMoving _ _ (Ob ObFix  _ _ _ _) = False
+isMoving _ _ (Ob ObFish _ _ _ _) = False
+isMoving posMap obMap (Ob t shape (sigsDown,_,_,_) pos _)
+  = and [ isNothing r | r <- map (\sig-> Map.lookup (plus2D sig pos) posMap ) sigsDown  ]
+
+isMovoid :: PosMap -> ObMap -> Ob -> Bool
+isMovoid _ _ (Ob ObFix  _ _ _ _) = False
+isMovoid _ _ (Ob ObFish _ _ _ _) = False
+isMovoid posMap obMap (Ob t shape (sigsDown,_,_,_) pos _)
+  = and [ isNotBarier r | r <- map (\sig-> Map.lookup (plus2D sig pos) posMap ) sigsDown  ]
+ where 
+  isNotBarier (Just oid) = isFishId obMap oid
+  isNotBarier Nothing    = True
+
 
 getMovables :: PosMap -> ObMap -> [ObId] -> Dir -> Maybe [ObId]
 getMovables posMap obMap ids dir 
@@ -296,11 +339,11 @@ toPoses shape = concat $ zipWith (\xs y -> map (\x->(x,y)) xs) (toInts shape) [0
 
 lvl0@(Sea l0_posMap l0_obMap l0_moving l0_rec l0_fid _) = mkSea [
  "                         ",
- "       ss                ",
+ "       ss            g   ",
  "     $ saaaa             ",
  "        b                ",
- "        cc$$11     fff   ",
- "        d       eee  f   ",
+ "        cc$$       ffff  ",
+ "        d       eeef11   ",
  "                eee      ",
  "                         ",
  "                         ",
