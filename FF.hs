@@ -13,8 +13,8 @@ lvl0@(Sea l0_posMap l0_obMap l0_moving l0_rec l0_fid _) = mkSea [
  "     $ saaaa             ",
  "        b                ",
  "        cc$$       ffff  ",
- "        d       eeef11   ",
- "   h            eee      ",
+ "        d       eeef$   ",
+ "   h            eee 11   ",
  "   h    33               ",
  "   h    w                ",
  "  $$$$$$$$$$$$$$$$$$$$$  ",
@@ -91,6 +91,7 @@ data MovingStatus = Mov | MayMov | Stop
 
 type PosMap = Map Pos  ObId
 type ObMap  = Map ObId Ob
+type Maps   = (PosMap,ObMap)
 type Moving = [ObId]
 type Rectangle = (Pos,Pos)
 type Fishes = [ObId]
@@ -114,15 +115,23 @@ data Cmd = U | D | L | R | Us Int | Ds Int | Ls Int | Rs Int
 
 -- FALL STEPing --
 
+fallSteps :: Sea -> [Sea]
+fallSteps sea = case getMoving sea of
+ [] -> [sea]
+ _  ->  sea : (fallSteps $ fallStep sea)
 
 fallStep :: Sea -> Sea
 fallStep (Sea posMap obMap moving rec fishes status) = 
- let (posMap',obMap') = foldr (move DDown) (posMap,obMap) moving 
-     moving'          = updateMoving posMap' obMap' moving
-     status'          = status -- TODO
-  in Sea posMap' obMap' moving' rec fishes status' 
+ let maps@(posMap',obMap') = foldr (move DDown) (posMap,obMap) moving 
+     moving'               = updateMoving maps moving
+     status'               = status -- TODO
+     stoppeds              = moving \\ moving'
+     pxs                   = map (pxByObId obMap)
+  in trace (show ( pxs stoppeds ,
+                   pxs $ getKilledFishes maps stoppeds)) 
+   $ Sea posMap' obMap' moving' rec fishes status' 
 
-move :: Dir -> ObId -> (PosMap,ObMap) -> (PosMap,ObMap)
+move :: Dir -> ObId -> Maps -> (PosMap,ObMap)
 move dir oid (posMap,obMap) = ( posMap'' , obMap' )
  where
   obMap'        = Map.adjust ( adjustPos dir ) oid obMap 
@@ -136,22 +145,44 @@ move dir oid (posMap,obMap) = ( posMap'' , obMap' )
   mapDeletus :: ObId -> Pos -> PosMap -> PosMap 
   mapDeletus oid = Map.update (\oid'-> if oid' == oid then Nothing else Just oid' ) 
 
-
-updateMoving :: PosMap -> ObMap -> [ObId] -> [ObId]
-updateMoving posMap obMap moving = 
+updateMoving :: Maps -> [ObId] -> [ObId]
+updateMoving maps@(posMap,obMap) moving = 
   let (hotovo,moving') = updateMoving' moving moving True []
-   in if hotovo then moving' else updateMoving posMap obMap moving'   
+   in if hotovo then moving' else updateMoving maps moving'   
  where
   updateMoving' :: [ObId] -> [ObId] -> Bool -> [ObId] -> (Bool,[ObId])
   updateMoving' []         _      hotovo acc = (hotovo,acc)
   updateMoving' (oid:rest) moving hotovo acc
-   | isFixedNow posMap obMap oid moving 
+   | isFixedNow maps oid moving 
                = updateMoving' rest (moving\\[oid]) False  acc 
    | otherwise = updateMoving' rest  moving         hotovo (oid:acc) 
 
-  isFixedNow :: PosMap -> ObMap -> ObId -> [ObId] -> Bool
-  isFixedNow posMap obMap oid moving 
-   = not . null $ (neighbors DDown posMap obMap oid) \\ moving
+  isFixedNow :: Maps -> ObId -> [ObId] -> Bool
+  isFixedNow maps oid moving 
+   = not . null $ (neighbors DDown maps oid) \\ moving
+
+getKilledFishes :: Maps -> [ObId] -> [ObId]
+getKilledFishes maps@(_,obMap) stoppeds =
+ filter (isFish' obMap) $ deepNeigbors DDown maps stoppeds
+
+
+-- neighbors --
+
+
+deepNeigbors :: Dir -> Maps -> [ObId] -> [ObId]
+deepNeigbors dir maps oids = deepNeigbors' dir maps [] oids
+ where
+  deepNeigbors' :: Dir -> Maps -> [ObId] -> [ObId] -> [ObId]
+  deepNeigbors' _   _    acc []     = acc
+  deepNeigbors' dir maps acc (x:xs) = 
+   let childs  = neighbors dir maps x
+       childs' = childs \\ acc
+    in deepNeigbors' dir maps (x:acc) (childs'++xs)
+
+neighbors :: Dir -> Maps -> ObId -> [ObId]
+neighbors dir (posMap,obMap) oid
+  = nub . catMaybes . map (\pos-> Map.lookup pos posMap ) $ 
+    getSigPoses dir (fromJust $ Map.lookup oid obMap ) 
 
 
 -- MAKING SEA --
@@ -162,7 +193,7 @@ mkSea strs
   = let obs    = mkObs strs 
         obMap  = mkObMap obs
         posMap = mkPosMap obMap
-     in Sea posMap obMap (mkMoving posMap obMap) (getRectanFromStrs strs) (findFishes obMap) Normal
+     in Sea posMap obMap (mkMoving (posMap,obMap)) (getRectanFromStrs strs) (findFishes obMap) Normal
  where
   mkObMap :: [Ob] -> ObMap  
   mkObMap obs = Map.fromList $ zip [1..] obs
@@ -179,27 +210,14 @@ mkSea strs
   findFishes obMap
    = map fst $ filter (\(_,ob)-> isFish ob ) $ Map.toList obMap
   
-mkMoving :: PosMap -> ObMap -> [ObId]
-mkMoving posMap obMap 
+mkMoving :: Maps -> [ObId]
+mkMoving maps@(_,obMap) 
   = [1..Map.size obMap] \\ fixeds
- where fixeds = getFixeds DUp posMap obMap [] $ wallsAndFishes obMap 
+ where fixeds = deepNeigbors DUp maps $ wallsAndFishes obMap 
 
 wallsAndFishes :: ObMap -> [ObId]
 wallsAndFishes obMap 
  = map fst $ filter (\(_,ob)-> isWall ob || isFish ob ) $ Map.toList obMap 
-
-getFixeds :: Dir -> PosMap -> ObMap -> [ObId] -> [ObId] -> [ObId]
-getFixeds _   _      _     acc []     = acc
-getFixeds dir posMap obMap acc (x:xs) = 
- let childs  = neighbors dir posMap obMap x
-     childs' = childs \\ acc
-  in getFixeds dir posMap obMap (x:acc) (childs'++xs)
-
-neighbors :: Dir -> PosMap -> ObMap -> ObId -> [ObId]
-neighbors dir posMap obMap oid
-  = nub . catMaybes . map (\pos-> Map.lookup pos posMap ) $ 
-    getSigPoses dir (fromJust $ Map.lookup oid obMap ) 
-
 
 
 -- MAKING OBJECTS --
@@ -324,9 +342,18 @@ adjustPos dir (Ob t sh sigs pos px)
 
 -- General over ObId ---
 
-pxByObId :: ObMap -> ObId -> Px
-pxByObId obMap oid = getPx $ fromJust $ Map.lookup oid obMap
+getOb :: ObMap -> ObId -> Ob
+getOb obMap oid = fromJust $ Map.lookup oid obMap
 
+pxByObId :: ObMap -> ObId -> Px
+pxByObId obMap = getPx . (getOb obMap)
+
+isFish' , isWall' :: ObMap -> ObId -> Bool
+isFish' = liftToObId isFish 
+isWall' = liftToObId isWall  
+
+liftToObId :: (Ob -> a) -> (ObMap -> ObId -> a)
+liftToObId f obMap = f . (getOb obMap)
 
 -- GENERAL GENERAL --
 
@@ -393,10 +420,13 @@ showOb (Ob t sh (sd,su,sr,sl) pos px)
 showPoses :: [Pos] -> String
 showPoses [] = ""
 showPoses ps 
-  = (:) '\n' $ concatMap (\ps-> (map (\pos->case Map.lookup pos pmap of Nothing -> ' ' ; _ -> px) ps)++"\n" ) 
+  = (:) '\n' $ concatMap (\ps-> (map pxForPos ps)++"\n" ) 
     [ [(x,y) | x <- [xMin..xMax] ] | y' <- [(-yMax)..(-yMin)] , let y = -y' ] 
  where 
   px = '#'
+  pxForPos pos = case Map.lookup pos pmap of 
+   Nothing -> ' '
+   _       -> px
   pmap = Map.fromList $ zip ps (repeat ())
   xMax = maximum $ map fst ps
   yMax = maximum $ map snd ps
