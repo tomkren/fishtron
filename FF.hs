@@ -7,13 +7,26 @@ import Util
 import Debug.Trace
 
 
+l1 = mkSea [
+ "                      ",
+ "          b           ",
+ "                      ",
+ "       aaaaa          ",
+ "       11           ",
+ "        $              ",
+ "                      ",
+ "                      ",
+ "                      ",
+ "                      "
+ ]
+
 lvl0@(Sea l0_posMap l0_obMap l0_moving l0_rec l0_fid _) = mkSea [
  "        s                ",
  "       ss            g   ",
  "     $ saaaa             ",
  "        b                ",
  "        cc$$       ffff  ",
- "        d       eeef$   ",
+ "        d       eeef$    ",
  "   h            eee 11   ",
  "   h    33               ",
  "   h    w                ",
@@ -162,21 +175,38 @@ updateMoving maps@(posMap,obMap) moving =
    = not . null $ (neighbors DDown maps oid) \\ moving
 
 getKilledFishes :: Maps -> [ObId] -> [ObId]
-getKilledFishes maps@(_,obMap) stoppeds =
- filter (isFish' obMap) $ deepNeigbors DDown maps stoppeds
+getKilledFishes maps@(_,obMap) stoppeds 
+  = if null walls then fishes else [] 
+ where
+  dns    = halfDeepNeigbors DDown maps stoppeds
+  walls  = filter (isWall' obMap) $ dns 
+  fishes = filter (isFish' obMap) $ dns
 
 
 -- neighbors --
 
-
 deepNeigbors :: Dir -> Maps -> [ObId] -> [ObId]
-deepNeigbors dir maps oids = deepNeigbors' dir maps [] oids
+deepNeigbors dir maps@(_,obMap) oids 
+  = deepNeigbors' dir maps [] oids
  where
   deepNeigbors' :: Dir -> Maps -> [ObId] -> [ObId] -> [ObId]
   deepNeigbors' _   _    acc []     = acc
   deepNeigbors' dir maps acc (x:xs) = 
    let childs  = neighbors dir maps x
        childs' = childs \\ acc
+    in deepNeigbors' dir maps (x:acc) (childs'++xs)
+
+
+
+halfDeepNeigbors :: Dir -> Maps -> [ObId] -> [ObId]
+halfDeepNeigbors dir maps@(_,obMap) oids 
+  = deepNeigbors' dir maps [] oids
+ where
+  deepNeigbors' :: Dir -> Maps -> [ObId] -> [ObId] -> [ObId]
+  deepNeigbors' _   _    acc []     = acc
+  deepNeigbors' dir maps acc (x:xs) = 
+   let childs  = neighbors dir maps x
+       childs' = filter (not . isWallOrFish' obMap) $ childs \\ acc
     in deepNeigbors' dir maps (x:acc) (childs'++xs)
 
 neighbors :: Dir -> Maps -> ObId -> [ObId]
@@ -213,11 +243,11 @@ mkSea strs
 mkMoving :: Maps -> [ObId]
 mkMoving maps@(_,obMap) 
   = [1..Map.size obMap] \\ fixeds
- where fixeds = deepNeigbors DUp maps $ wallsAndFishes obMap 
+ where fixeds = halfDeepNeigbors DUp maps $ wallsAndFishes obMap 
 
 wallsAndFishes :: ObMap -> [ObId]
 wallsAndFishes obMap 
- = map fst $ filter (\(_,ob)-> isWall ob || isFish ob ) $ Map.toList obMap 
+ = map fst $ filter (\(_,ob)-> isWallOrFish ob ) $ Map.toList obMap 
 
 
 -- MAKING OBJECTS --
@@ -335,6 +365,9 @@ isWall ob = case getObType ob of
  ObFix -> True
  _ -> False
 
+isWallOrFish :: Ob -> Bool
+isWallOrFish ob = isWall ob || isFish ob
+
 adjustPos :: Dir -> Ob -> Ob
 adjustPos dir (Ob t sh sigs pos px) 
  = Ob t sh sigs (pos `plus2D` dirDelta dir ) px
@@ -348,9 +381,10 @@ getOb obMap oid = fromJust $ Map.lookup oid obMap
 pxByObId :: ObMap -> ObId -> Px
 pxByObId obMap = getPx . (getOb obMap)
 
-isFish' , isWall' :: ObMap -> ObId -> Bool
-isFish' = liftToObId isFish 
-isWall' = liftToObId isWall  
+isFish' , isWall' , isWallOrFish' :: ObMap -> ObId -> Bool
+isFish'       = liftToObId isFish 
+isWall'       = liftToObId isWall  
+isWallOrFish' = liftToObId isWallOrFish
 
 liftToObId :: (Ob -> a) -> (ObMap -> ObId -> a)
 liftToObId f obMap = f . (getOb obMap)
