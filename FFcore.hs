@@ -1,183 +1,38 @@
-module FF where
+module FFcore 
+( mkSea
+, steps
+, play
+, playSolution
+, solutionLen
+, Sea ()
+, Cmd (..)
+) where
+
 import qualified Data.Map as Map
 import Data.Map (Map)
 import Data.List
 import Data.Char
 import Data.Maybe
-import Util
 import Debug.Trace
-
-
-l1 = mkSea [
- "                     ",
- "         b           ",
- "                      ",
- "      aaaaa          ",
- "       11           ",
- "       $$              ",
- "                      ",
- "                      ",
- "                      ",
- "                      "
- ]
-
-l2 = mkSea [
-  "                      ",
-  "      bbb             ",
-  "      b                ",       
-  "       11             ",
-  "                      ",
-  "                      ",
-  "                      ",
-  "                      ",
-  "                      "
-  ]
-
-l3 = mkSea [
-  "        kk             ",
-  "        aa              ",
-  "        a              ",
-  "        aa11          ",
-  "        a$            ",       
-  "        az             ",
-  "        a             ",
-  "        a$$             ",
-  "        ay            ",
-  "        axx              ",
-  "        aa              ",
-  "                      ",
-  "$$$$$$$$$$$$$$$$$$$$$$"
-  ]
-
-l4 = mkSea [
-  "                    ",
-  "                    ",
-  "                    ",
-  "                    ",
-  "                    ",
-  "                    ",
-  "       11a           ",
-  "       aaa             ",
-  "       22a             ",
-  "                    ",
-  "$$$$$$$$$$$$$$$$$$$$$$"
-  ]
-
-l5 = mkSea [
-  "        c            ",
-  "                       ",
-  "       aaa             ",
-  "       22a             ",
-  "        b            ",
-  "$$$$$$$$$$$$$$$$$$$$$$"
-  ]
-
-l6 = mkSea [
-  "                       ",
-  "       aaa             ",
-  "       22a             ",
-  "         b            ",
-  "$$$$$$$$$$$$$$$$$$$$$$"
-  ]
-
-l7 = mkSea [
-  "                       ",
-  "       aaa             ",
-  "       22a             ",
-  "          b            ",
-  "$$$$$$$$$$$$$$$$$$$$$$"
-  ]
-
-l8 = mkSea [
-  "                       ",
-  "                       ",
-  "       aaa A             ",
-  "       11a A             ",
-  "$$$$$$$$$$$$$$$$$$$$$$"
-  ]
-
-l9 = mkSea [
-  "                      ",
-  "                 222  ",
-  "           AAAAA 222  ",
-  "       11  a   b      ",
-  "$$$$$$$$$$$$$$$$$$$$$$"
-  ]
-
-l0@(Sea l0_posMap l0_obMap l0_moving l0_rec l0_fid _) = mkSea [
- "        s                ",
- "       ss            g   ",
- "     $ saaaa             ",
- "        b                ",
- "        cc$$       ffff  ",
- "        d       eeef11     ",
- "   h            eee     ",
- "   h    33               ",
- "   h    w                ",
- "  $$$$$$$$$$$$$$$$$$$$$  ",
- "                         ",
- "                         "
- ]
-lvl_0 = Map.toAscList l0_obMap
-
-lvl1@(Sea l1_posMap l1_obMap l1_moving l1_rec l1_fid _) = mkSea [
- "$$$$$$$$$$$$$$$$$  ",
- "$11     cc      $  ",
- "$     bbb    a  $  ",
- "$$$ $ b   $$$$  $  ",
- " e$ $ $$$$$$$$  $  ",
- " f$ $$$$$$$$$$  $  ",
- " f              $  ",
- " $$$  $$$$$$$$  $  ",
- " $$$         $  $$$",
- " $$$          g   $",
- "$$$$$$$$$$$$$$$$$$$"]
-
--- test1 = steps lvl1 sol1
-
-sol1 = [Rs 14,D,Ls 10,Rs 10,Ds 4,Ls 16]
-
-ahoj = [ 
- "   AAA              OOOOO       J " ,
- "  A   A   H     H  O   $ O      J " ,
- " A     A  H     H  O     O      J " ,
- " AAAAAAA  HHHHHHH  O     O      J " ,
- " A     A  H     H  O     O      J " ,
- " A     A           O     O  J   J " ,
- "       AAA          OOOOO    JJJ  " ,
- "         AA                       " ,
- "$$$$$$$$$          $$$$$$$$$$$$$$$"]
---0123456789012345678901234567890123456789
-exSea@(Sea exPosMap exObMap exMoving exRectangle exFid _) = mkSea ahoj
-exObLst = Map.toAscList exObMap
-exA = snd $ exObLst !! 0
-exO = snd $ exObLst !! 1
-
-zvon = [
-  [ ],
-  [(3,5)],
-  [(2,2),(6,6)],
-  [(1,7)],
-  [(0,8)],
-  [(2,3),(6,7)]
- ]
-
---------------------------------------------------------------------
+import Control.Monad
 
 data Ob = Ob
  { getObType       :: ObType  
  , getShape        :: Shape   
  , getSignifs      :: Signifs 
- , getPos          :: Pos    
+ , getPos          :: Maybe Pos    
  , getPx           :: Px }   
 
 data Sea = Sea
- { getPosMap     :: PosMap 
- , getObMap      :: ObMap 
- , getMoving     :: Moving
- , getRectangle  :: Rectangle 
- , getFishes     :: Fishes
- , getGameStatus :: GameStatus }
+ { getPosMap      :: PosMap 
+ , getObMap       :: ObMap 
+ , getMoving      :: Moving
+ , getRectangle   :: Rectangle 
+ , getFishes      :: Fishes
+ , getGameStatus  :: GameStatus }
+
+instance Eq  Sea where (==)    = seaEq
+instance Ord Sea where compare = seaCompare 
 
 data ObType = ObFix | ObStd | ObSteel | ObFish FishType deriving (Show)
 data GameStatus = Normal | GameOver | YouWin deriving (Eq)
@@ -192,6 +47,7 @@ type Maps   = (PosMap,ObMap)
 type Moving = [ObId]
 type Rectangle = (Pos,Pos)
 type Fishes = [ObId]
+type Deleted= [ObId]
 type ObId   = Int
 type Px     = Char
 type Pos      = (Int,Int)
@@ -207,9 +63,122 @@ type Shape = [[ HLine ]]
 type HLine = (Int,Int)
 
 data Dir = DUp | DDown | DLeft | DRight deriving (Show,Eq)
-data Cmd = S | U | D | L | R | Us Int | Ds Int | Ls Int | Rs Int
+data Cmd = S | U | D | L | R | Us Int | Ds Int | Ls Int | Rs Int deriving (Show,Eq)
+
+-- work in proogress .... --
+
+solutionLen :: [Cmd] -> Int
+solutionLen cmds = (1+) $ sum $ map cmdLen cmds
+ where
+  cmdLen cmd = case cmd of
+   S -> 1
+   U -> 1
+   D -> 1
+   L -> 1
+   R -> 1 
+   Us n -> n
+   Ds n -> n
+   Ls n -> n
+   Rs n -> n
+
+playSolution :: Sea -> [Cmd] -> IO ()
+playSolution sea cmds =  
+ forM_ (steps sea cmds) $ \ sea -> do
+  putStrLn $ show sea
+  getChar
+
+play :: Sea -> IO [Cmd]
+play sea = do 
+  sea' <- printSteps sea [] 
+  play' [] sea'
+ where 
+  play' :: [Cmd] -> Sea -> IO [Cmd]
+  play' acc sea 
+   | isGameEnd sea = return $ compressSolution $ reverse acc
+   | otherwise = do 
+    ch <- getChar
+    case charToCmd ch of 
+     Nothing  -> play' acc sea 
+     Just cmd -> do 
+      sea' <- printSteps sea [cmd] 
+      play' (cmd:acc) sea'
+
+  printSea :: Sea -> IO () 
+  printSea sea = putStrLn $ show sea
+
+  printSteps :: Sea -> [Cmd] -> IO Sea
+  printSteps sea cmds = do
+   let seas = steps sea cmds
+   forM_ ((if null cmds then id else tail) seas) printSea
+   return $ last seas  
+
+  compressSolution :: [Cmd] -> [Cmd]
+  compressSolution = compressSolution' (S,0)
+   where
+    compressSolution' :: (Cmd,Int) -> [Cmd] -> [Cmd]
+    compressSolution' (lastCmd,num) []     = fromBasicCmd lastCmd num
+    compressSolution' (lastCmd,num) (x:xs) = case x of
+     S   ->  (fromBasicCmd lastCmd num) ++ ( S : compressSolution' (S,0) xs)
+     cmd -> 
+      if cmd == lastCmd 
+       then                                 compressSolution' (lastCmd , num+1) xs
+       else (fromBasicCmd lastCmd num) ++ ( compressSolution' (cmd     , 1    ) xs )
+  
+    fromBasicCmd :: Cmd -> Int -> [Cmd]
+    fromBasicCmd _   0 = []
+    fromBasicCmd cmd 1 = [cmd] 
+    fromBasicCmd cmd n = case cmd of
+     U -> [Us n]
+     D -> [Ds n]
+     L -> [Ls n]
+     R -> [Rs n] 
+  
+  charToCmd :: Char -> Maybe Cmd
+  charToCmd ch = case ch of
+   'w' -> Just U
+   's' -> Just D
+   'a' -> Just L
+   'd' -> Just R
+   ' ' -> Just S
+   _   -> Nothing 
 
 
+{-- i se simulací otačení rybky což je zbytečný nakonec .......
+
+solutionLen' :: (Bool,Bool) -> [Cmd] -> Int
+solutionLen' (smallRight,bigRight) cmds 
+  = (\(_,_,_,i)->i) $ foldl cmdLen (smallRight,bigRight,True,0) $ expand cmds
+ where
+  expand :: [Cmd] -> [Cmd]
+  expand = concatMap f
+  f :: Cmd -> [Cmd]
+  f cmd = case cmd of
+   Us n -> replicate n U
+   Ds n -> replicate n D
+   Ls n -> replicate n L
+   Rs n -> replicate n R
+   _    -> [cmd] 
+  cmdLen :: (Bool,Bool,Bool,Int) -> Cmd -> (Bool,Bool,Bool,Int)
+  cmdLen           (sr   , br    ,    st,n  ) cmd = case cmd of
+   S ->            (sr   , br    ,not st,n+1 )
+   U ->            (sr   , br    ,    st,n+1 )
+   D ->            (sr   , br    ,    st,n+1 )
+   L -> if st then (False, br    ,    st,n+(if sr then 2 else 1) )
+              else (sr   , False ,    st,n+(if br then 2 else 1) ) 
+   R -> if st then (True , br    ,    st,n+(if sr then 1 else 2) ) 
+              else (sr   , True  ,    st,n+(if br then 1 else 2) )
+--}
+
+-- Sea EQ & ORD
+
+seaEq :: Sea -> Sea -> Bool
+seaEq s1 s2 = EQ == seaCompare s1 s2
+
+seaCompare :: Sea -> Sea -> Ordering
+seaCompare s1 s2 = compare (f s1) (f s2)
+ where
+  f :: Sea -> [(ObId,Maybe Pos)]
+  f sea = map ( \ (oid,ob) -> (oid,getPos ob) ) $ Map.toAscList $ getObMap sea
 
 -- fish STEPing --
 
@@ -218,14 +187,14 @@ steps sea cmds = fishSteps sea $ concatMap toDir cmds
 
 fishSteps :: Sea -> [Either () Dir] -> [Sea]
 fishSteps sea ds 
- | isGameOver sea = [sea]
+ | isGameEnd sea = [sea]
  | otherwise = case ds of
   [] -> fallSteps sea
   (dir:dirs) ->
    let seas = fallSteps sea
        lSea = last seas
        sea' = fishStep lSea dir
-    in seas ++ ( if isGameOver lSea then [] else fishSteps sea' dirs  )
+    in seas ++ ( if isGameEnd lSea then [] else fishSteps sea' dirs  )
 
 
 fishStep :: Sea -> Either () Dir -> Sea
@@ -236,18 +205,18 @@ fishStep sea@(Sea posMap obMap [] rec fishes@(fishId:restFishes) status) eDir =
     case getMovables dir maps fishId of
      Nothing -> sea
      Just pusheds -> 
-      let maps'@(posMap',obMap') = foldr (move dir) maps pusheds
-          moving'                = mkMoving maps'   -- TODO    U N E F F E C T I V E
-          ( obMap'' , status' )  = updateKilling dir maps' status pusheds fishes
-          status''               = if (status' == Normal) && (isGoal obMap'' rec fishId) 
-                                   then YouWin else status' 
-       in Sea posMap' obMap'' moving' rec fishes status'' 
+      let maps'@(posMap',obMap')    = foldr (move dir) maps pusheds
+          moving'                   = mkMoving maps'   -- TODO    U N E F F E C T I V E
+          ( obMap'' , status' )     = updateKilling dir maps' status pusheds fishes
+          (maps'',fishes',status'') = updateWinning maps' rec fishes status'
+          (posMap'',obMap''')       = maps''  
+       in Sea posMap'' obMap''' moving' rec fishes' status'' 
  where
   maps = (posMap,obMap)
 
 getMovables :: Dir -> Maps -> ObId -> Maybe [ObId]
 getMovables dir maps@(_,obMap) fishId = 
-  let (normal,walls,fishes) = halfDeepNeigbors2 dir maps fishId  
+  let (normal,walls,fishes) = halfDeepNeigbors dir maps fishId  
    in case (walls,fishes) of
     ([],[fishId']) -> 
      if (fishId == fishId') && (checkForSteel fishId normal )   
@@ -280,27 +249,24 @@ isSpineKilled maps pusheds fishId =
 
 isSteelKilled :: Maps -> ObId -> Bool
 isSteelKilled maps@(_,obMap) fishId =
- let (aboveSpine,_,_) = halfDeepNeigbors2 DUp maps fishId
+ let (aboveSpine,_,_) = halfDeepNeigbors DUp maps fishId
      steels           = filter (isSteel' obMap) aboveSpine
      badSteels        = filter (not . (isFixedByWall maps)) steels
   in not $ null badSteels
 
 isFixedByWall :: Maps -> ObId -> Bool
 isFixedByWall maps oid =  not $ null walls 
- where (_,walls,_) = halfDeepNeigbors2 DDown maps oid
+ where (_,walls,_) = halfDeepNeigbors DDown maps oid
 
-
-{--
-updateWinning :: Maps -> Rectangle -> GameStatus -> Fishes -> (Maps,GameStatus,Fishes)
-updateWinning maps@(posMap,obMap) rec status fishes@(fishId:restFishes) 
+updateWinning :: Maps -> Rectangle -> Fishes -> GameStatus -> (Maps,Fishes,GameStatus)
+updateWinning maps@(posMap,obMap) rec fishes@(fishId:restFishes) status  
  | (status == Normal) && (isGoal obMap rec fishId) = 
-   let 
-
-   bude potřeba předelat mkMoving kvuli odebírání oběktů ze scény
-   protože je tam to [1..size] pač se mkMovingvolá při každym pohnutí
-
-   současný winninig stačí libovolná rybka venku 
---}
+   let posMap' = foldr Map.delete posMap $ posesOfOb' obMap fishId
+       obMap'  = Map.adjust setPosToNothing fishId obMap
+       status' | null restFishes = YouWin
+               | otherwise       = status 
+    in ( (posMap' , obMap') , restFishes , status'  )
+ | otherwise = (maps,fishes,status)
 
 isGoal :: ObMap -> Rectangle -> ObId -> Bool
 isGoal obMap rec fishId =
@@ -315,17 +281,14 @@ isGoal obMap rec fishId =
    |  x2 <= x  = True
    |  y2 <= y  = True
    | otherwise = False 
-  
-
 
 
 -- FALL STEPing --
 
 
-
 fallSteps :: Sea -> [Sea]
 fallSteps sea 
- | isGameOver sea = [sea]
+ | isGameEnd sea = [sea]
  | otherwise = case getMoving sea of
   [] -> [sea]
   _  ->  sea : (fallSteps $ fallStep sea)
@@ -335,7 +298,7 @@ fallStep (Sea posMap obMap moving rec fishes status) =
    let maps'@(posMap',obMap') = foldr (move DDown) (posMap,obMap) moving 
        moving'                = updateMoving maps' moving
        stoppeds               = moving \\ moving'
-       killedFishes           = getKilledFishes2 maps' stoppeds
+       killedFishes           = getKilledFishes maps' stoppeds
        status'                = if null killedFishes then status else GameOver -- status -- TODO
        obMap''                = foldr kill obMap' killedFishes
     in trace (show ( pxs stoppeds , pxs killedFishes )) 
@@ -378,21 +341,12 @@ updateMoving maps@(posMap,obMap) moving =
    = not . null $ (neighbors DDown maps oid) \\ moving
 
 getKilledFishes :: Maps -> [ObId] -> [ObId]
-getKilledFishes maps@(_,obMap) stoppeds 
-  = if null walls then fishes else [] 
+getKilledFishes maps
+  = concatMap getKilledFishes' 
  where
-  dns    = halfDeepNeigbors DDown maps stoppeds
-  walls  = filter (isWall' obMap) $ dns 
-  fishes = filter (isFish' obMap) $ dns
-
-
-getKilledFishes2 :: Maps -> [ObId] -> [ObId]
-getKilledFishes2 maps
-  = concatMap getKilledFishes2' 
- where
-  getKilledFishes2' :: ObId -> [ObId]
-  getKilledFishes2' stopped =
-   let (_,walls,fishes) = halfDeepNeigbors2 DDown maps stopped
+  getKilledFishes' :: ObId -> [ObId]
+  getKilledFishes' stopped =
+   let (_,walls,fishes) = halfDeepNeigbors DDown maps stopped
     in if null walls then fishes else []
  
 -- neighbors --
@@ -408,8 +362,9 @@ deepNeigbors dir maps@(_,obMap) oids
        childs' = childs \\ acc
     in deepNeigbors' dir maps (x:acc) (childs'++xs)
 
-halfDeepNeigbors :: Dir -> Maps -> [ObId] -> [ObId]
-halfDeepNeigbors dir maps@(_,obMap) oids 
+
+halfDeepNeigbors_old :: Dir -> Maps -> [ObId] -> [ObId]
+halfDeepNeigbors_old dir maps@(_,obMap) oids 
   = deepNeigbors' dir maps [] oids
  where
   deepNeigbors' :: Dir -> Maps -> [ObId] -> [ObId] -> [ObId]
@@ -421,6 +376,7 @@ halfDeepNeigbors dir maps@(_,obMap) oids
         | isWallOrFish' obMap x = filter (not . isWallOrFish' obMap) $ childs'
         | otherwise = childs' 
     in deepNeigbors' dir maps (x:acc) (childs''++xs)
+
 
 neighbors :: Dir -> Maps -> ObId -> [ObId]
 neighbors dir (posMap,obMap) oid
@@ -440,33 +396,9 @@ obSort obMap = foldr f ([],[],[])
     ObFish _ -> (     ns ,     ws , oid:fs )
    where ob = getOb obMap oid 
 
-{--
-halfDeepNeigbors3 :: Dir -> Maps -> ObId -> ([ObId],[ObId],[ObId]) -- (normal,walls,fishes)
-halfDeepNeigbors3 dir maps@(_,obMap) oid 
-  = deepNeigbors' dir maps ([],[],[]) [oid]
- where
-  deepNeigbors' :: Dir -> Maps -> ([ObId],[ObId],[ObId]) -> [ObId] -> ([ObId],[ObId],[ObId])
-  deepNeigbors' _   _    acc                       []     = acc
-  deepNeigbors' dir maps acc@(normal,walls,fishes) (x:xs) = 
-   let (isW,isF) = isWall_isFish' obMap x
-       childs    = neighbors dir maps x
-       childs'   =  childs \\ (flattenAcc acc)
-       childs'' 
-        | isW || isF = filter (not . isWallOrFish' obMap) $ childs'
-        | otherwise  = childs'
-       acc'
-        | isW       = (  normal,x:walls,  fishes)
-        | isF       = (  normal,  walls,x:fishes) 
-        | otherwise = (x:normal,  walls,  fishes) 
-    in deepNeigbors' dir maps acc' (childs''++xs)
 
-  flattenAcc :: ([a],[a],[a]) -> [a]
-  flattenAcc (normal,walls,fishes) = fishes ++ ( walls ++ normal )
---}
-
-
-halfDeepNeigbors2 :: Dir -> Maps -> ObId -> ([ObId],[ObId],[ObId]) -- (normal,walls,fishes)
-halfDeepNeigbors2 dir maps@(_,obMap) firstOid 
+halfDeepNeigbors :: Dir -> Maps -> ObId -> ([ObId],[ObId],[ObId]) -- (normal,walls,fishes)
+halfDeepNeigbors dir maps@(_,obMap) firstOid 
   = deepNeigbors' dir maps ([],[],[]) [firstOid]
  where
   deepNeigbors' :: Dir -> Maps -> ([ObId],[ObId],[ObId]) -> [ObId] -> ([ObId],[ObId],[ObId])
@@ -483,8 +415,8 @@ halfDeepNeigbors2 dir maps@(_,obMap) firstOid
         | otherwise = (x:normal,  walls,  fishes) 
     in deepNeigbors' dir maps acc' (childs'++xs)
 
-  flattenAcc :: ([a],[a],[a]) -> [a]
-  flattenAcc (normal,walls,fishes) = fishes ++ ( walls ++ normal )
+flattenAcc :: ([a],[a],[a]) -> [a]
+flattenAcc (normal,walls,fishes) = fishes ++ ( walls ++ normal )
 
 
 -- MAKING SEA --
@@ -510,16 +442,23 @@ mkSea strs
 
   findFishes :: ObMap -> [ObId]
   findFishes obMap
-   = map fst $ filter (\(_,ob)-> isFish ob ) $ Map.toList obMap
+   = reverse $ map fst $ filter (\(_,ob)-> isFish ob ) $ Map.toList obMap
   
 mkMoving :: Maps -> [ObId]
-mkMoving maps@(_,obMap) 
-  = [1..Map.size obMap] \\ fixeds
- where fixeds = halfDeepNeigbors DUp maps $ wallsAndFishes obMap 
+mkMoving maps@(_,obMap)
+  = undeleteds \\ fixeds
+ where 
+  undeleteds = getUndeletedIds obMap
+  fixeds     = halfDeepNeigbors_old DUp maps $ wallsAndFishes obMap 
 
 wallsAndFishes :: ObMap -> [ObId]
 wallsAndFishes obMap 
- = map fst $ filter (\(_,ob)-> isWallOrFish ob ) $ Map.toList obMap 
+ = map fst $ filter (\(_,ob)-> (isWallOrFish ob) && (isJust $ getPos ob) ) $ Map.toList obMap 
+
+getUndeletedIds :: ObMap -> [ObId]
+getUndeletedIds obMap
+ = map fst $ filter (\(_,ob)-> isJust $ getPos ob ) $ Map.toList obMap 
+
 
 
 -- MAKING OBJECTS --
@@ -531,12 +470,12 @@ mkOb :: [String] -> Px -> Maybe Ob
 mkOb strs px = do
  let sh = map (\str -> reverse $ f' $ foldl f [(0,0)] str) $ strs
  (pos,sh') <- shift sh
- return $ Ob obType sh' (mkSignifs sh') pos px
+ return $ Ob obType sh' (mkSignifs sh') (Just pos) px
  where
   obType = case px of 
    '$' -> ObFix
-   '1' -> ObFish SmallFish
-   '2' -> ObFish BigFish 
+   '~' -> ObFish SmallFish
+   '#' -> ObFish BigFish 
    _   -> if isUpper px then ObSteel else ObStd
 
   shift :: [[HLine]] -> Maybe ( Pos , [[HLine]] )
@@ -620,11 +559,11 @@ mkSignifs shape = ( getSigs DDown  ps ,
 -- GENERAL OVER OBs --
 
 getSigPoses :: Dir -> Ob -> [Pos]
-getSigPoses dir (Ob _ _ signifs pos _ ) = map (`plus2D` pos) $ byDir dir signifs
+getSigPoses dir (Ob _ _ signifs (Just pos) _ ) = map (`plus2D` pos) $ byDir dir signifs
 
 
 posesOfOb :: Ob -> [Pos]
-posesOfOb (Ob _ sh _ (posX,posY) _) 
+posesOfOb (Ob _ sh _ (Just (posX,posY)) _) 
  = concatMap (\(y,hls)-> concatMap (\(s,f) -> [(posX+x,posY+y)| x <- [s..f] ] ) hls ) $ zip [0..] sh 
 
 isFish :: Ob -> Bool
@@ -644,13 +583,17 @@ isWall_isFish :: Ob -> (Bool,Bool)
 isWall_isFish ob = ( isWall ob , isFish ob )
 
 adjustPos :: Dir -> Ob -> Ob
-adjustPos dir (Ob t sh sigs pos px) 
- = Ob t sh sigs (pos `plus2D` dirDelta dir ) px
+adjustPos dir (Ob t sh sigs (Just pos) px) 
+ = Ob t sh sigs (Just $ pos `plus2D` dirDelta dir ) px
 
 killFish :: Ob -> Ob
 killFish (Ob (ObFish _) sh sigs pos px ) 
  = Ob (ObFish DeadFish) sh sigs pos px
 killFish _ = error "Killing not-fish is illegal!"
+
+setPosToNothing :: Ob -> Ob
+setPosToNothing (Ob t sh sigs _ px ) =
+ Ob t sh sigs Nothing px 
 
 isDeadFish :: Ob -> Bool
 isDeadFish ob = case getObType ob of
@@ -682,14 +625,17 @@ isWallOrFish' = liftToObId isWallOrFish
 isWall_isFish'= liftToObId isWall_isFish
 isBigFish'    = liftToObId isBigFish
 isSteel'      = liftToObId isSteel
+posesOfOb'    = liftToObId posesOfOb
 
 liftToObId :: (Ob -> a) -> (ObMap -> ObId -> a)
 liftToObId f obMap = f . (getOb obMap)
 
 -- general over sea --
 
-isGameOver :: Sea -> Bool
-isGameOver sea = GameOver == getGameStatus sea
+isGameEnd :: Sea -> Bool
+isGameEnd sea = 
+  let s = getGameStatus sea
+   in (GameOver == s) || (YouWin == s)
 
 -- GENERAL GENERAL --
 
@@ -748,7 +694,10 @@ toDir' cmd = case cmd of
 
 
 instance Show Ob  where show = showOb
-instance Show Sea where show = showSea
+instance Show Sea where show = showSea'
+
+showSea' :: Sea -> String
+showSea' sea = intersperse ' ' $ showSea sea
 
 showSea :: Sea -> String
 showSea sea@(Sea posMap obMap _  ((x1,y1),(x2,y2)) _ status)
@@ -777,7 +726,7 @@ showPoses ps
   = (:) '\n' $ concatMap (\ps-> (map pxForPos ps)++"\n" ) 
     [ [(x,y) | x <- [xMin..xMax] ] | y' <- [(-yMax)..(-yMin)] , let y = -y' ] 
  where 
-  px = '#'
+  px = '+'
   pxForPos pos = case Map.lookup pos pmap of 
    Nothing -> ' '
    _       -> px
@@ -798,5 +747,189 @@ showShape px ss = concatMap f' $ reverse ss
   f ((s1,f1):(x@(s2,_)):xs) = (replicate (f1-s1+1) px) ++ (replicate (s2-f1-1) ' ') ++ (f $ x:xs)
 
 
+
+-- TEST SEAS ----------------------------------------------------------------------------------------
+
+ff1' = mkSea [
+ "           $               ",
+ "           $$O$$           ",
+ "            $O$            ",
+ "            $O$            ",
+ "            $O$            ",
+ "            $O$            ",
+ "            $O$            ",
+ "        $$$$$O$            ",
+ "    $$$$$     $$$          ",
+ " $$$$           $$$$       ",
+ "$$                 $$$     ",
+ "$                    $     ",
+ "$                    $$    ",
+ "$                     $$   ",
+ "$                      $$$ ",
+ "$                        $$",
+ "$                          ",
+ "$    a~~~        ####c     ",
+ "$    addd bbbbbbb####c     ",
+ "$$   aaaa  b   b  cccc     ",
+ " $$  a  a  b   b  c  c   $$",
+ "  $$$a  a  b   b  c  c  $$ ",
+ "    $$$$$$$$$$$$$$$$$$$$$  "
+ ]
+
+l1 = mkSea [
+ "                     ",
+ "         b           ",
+ "                      ",
+ "      aaaaa          ",
+ "       ~~           ",
+ "       $$              ",
+ "                      ",
+ "                      ",
+ "                      ",
+ "                      "
+ ]
+
+l2 = mkSea [
+  "                      ",
+  "      bbb             ",
+  "      b                ",       
+  "       ~~             ",
+  "                      ",
+  "                      ",
+  "                      ",
+  "                      ",
+  "                      "
+  ]
+
+l3 = mkSea [
+  "        kk             ",
+  "        aa              ",
+  "        a              ",
+  "        aa~~          ",
+  "        a$            ",       
+  "        az             ",
+  "        a             ",
+  "        a$$             ",
+  "        ay            ",
+  "        axx              ",
+  "        aa              ",
+  "                      ",
+  "$$$$$$$$$$$$$$$$$$$$$$"
+  ]
+
+l4 = mkSea [
+  "                    ",
+  "                    ",
+  "                    ",
+  "                    ",
+  "                    ",
+  "                    ",
+  "       ~~a           ",
+  "       aaa             ",
+  "       ##a             ",
+  "                    ",
+  "$$$$$$$$$$$$$$$$$$$$$$"
+  ]
+
+l5 = mkSea [
+  "        c            ",
+  "                       ",
+  "       aaa             ",
+  "       ##a             ",
+  "        b            ",
+  "$$$$$$$$$$$$$$$$$$$$$$"
+  ]
+
+l6 = mkSea [
+  "                       ",
+  "       aaa             ",
+  "       ##a             ",
+  "         b            ",
+  "$$$$$$$$$$$$$$$$$$$$$$"
+  ]
+
+l7 = mkSea [
+  "                       ",
+  "       aaa             ",
+  "       ##a             ",
+  "          b            ",
+  "$$$$$$$$$$$$$$$$$$$$$$"
+  ]
+
+l8 = mkSea [
+  "                       ",
+  "                       ",
+  "       aaa A             ",
+  "       ~~a A             ",
+  "$$$$$$$$$$$$$$$$$$$$$$"
+  ]
+
+l9 = mkSea [
+  "                      ",
+  "                 ###  ",
+  "           AAAAA ###  ",
+  "       ~~  a   b      ",
+  "$$$$$$$$$$$$$$$$$$$$$$"
+  ]
+
+l0@(Sea l0_posMap l0_obMap l0_moving l0_rec l0_fid _) = mkSea [
+ "        s                ",
+ "       ss            g   ",
+ "     $ saaaa             ",
+ "        b                ",
+ "        cc$$       ffff  ",
+ "        d       eeef~~     ",
+ "   h            eee     ",
+ "   h    33               ",
+ "   h    w                ",
+ "  $$$$$$$$$$$$$$$$$$$$$  ",
+ "                         ",
+ "                         "
+ ]
+lvl_0 = Map.toAscList l0_obMap
+
+lvl1@(Sea l1_posMap l1_obMap l1_moving l1_rec l1_fid _) = mkSea [
+ "$$$$$$$$$$$$$$$$$  ",
+ "$~~     cc      $  ",
+ "$     bbb    a  $  ",
+ "$$$ $ b   $$$$  $  ",
+ " e$ $ $$$$$$$$  $  ",
+ " f$ $$$$$$$$$$  $  ",
+ " f              $  ",
+ " $$$  $$$$$$$$  $  ",
+ " $$$         $  $$$",
+ " $$$          g   $",
+ "$$$$$$$$$$$$$$$$$$$"]
+
+-- test1 = steps lvl1 sol1
+
+sol1 = [Rs 14,D,Ls 10,Rs 10,Ds 4,Ls 16]
+
+ahoj = [ 
+ "   AAA              OOOOO       J " ,
+ "  A   A   H     H  O   $ O      J " ,
+ " A     A  H     H  O     O      J " ,
+ " AAAAAAA  HHHHHHH  O     O      J " ,
+ " A     A  H     H  O     O      J " ,
+ " A     A           O     O  J   J " ,
+ "       AAA          OOOOO    JJJ  " ,
+ "         AA                       " ,
+ "$$$$$$$$$          $$$$$$$$$$$$$$$"]
+--0123456789012345678901234567890123456789
+exSea@(Sea exPosMap exObMap exMoving exRectangle exFid _) = mkSea ahoj
+exObLst = Map.toAscList exObMap
+exA = snd $ exObLst !! 0
+exO = snd $ exObLst !! 1
+
+zvon = [
+  [ ],
+  [(3,5)],
+  [(2,2),(6,6)],
+  [(1,7)],
+  [(0,8)],
+  [(2,3),(6,7)]
+ ]
+
+--------------------------------------------------------------------
 
 
