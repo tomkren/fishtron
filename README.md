@@ -12,6 +12,7 @@ Seeing it
 If you want to see something running:
 * Load `Main.hs` in GHCi and write `testCase5` into interpreter.
 * Load `KutilFly.hs` in GHCi and write `steps world1 15 6` into interpreter.
+* Load `FF1.hs` in GHCi and write `playSolution ff1 sol1` into interpreter (and press Enter repeatedly).
 
 You need to install PSQueue package by `cabal install psqueue`
 
