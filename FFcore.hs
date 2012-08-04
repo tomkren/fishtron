@@ -208,7 +208,7 @@ fishStep sea@(Sea posMap obMap [] rec fishes@(fishId:restFishes) status) eDir =
       let maps'@(posMap',obMap')    = foldr (move dir) maps pusheds
           moving'                   = mkMoving maps'   -- TODO    U N E F F E C T I V E
           ( obMap'' , status' )     = updateKilling dir maps' status pusheds fishes
-          (maps'',fishes',status'') = updateWinning maps' rec fishes status'
+          (maps'',fishes',status'') = updateWinning (posMap',obMap'') rec fishes status'
           (posMap'',obMap''')       = maps''  
        in Sea posMap'' obMap''' moving' rec fishes' status'' 
  where
@@ -248,11 +248,13 @@ isSpineKilled maps pusheds fishId =
    in not $ null onSpine''
 
 isSteelKilled :: Maps -> ObId -> Bool
-isSteelKilled maps@(_,obMap) fishId =
- let (aboveSpine,_,_) = halfDeepNeigbors DUp maps fishId
-     steels           = filter (isSteel' obMap) aboveSpine
-     badSteels        = filter (not . (isFixedByWall maps)) steels
-  in not $ null badSteels
+isSteelKilled maps@(_,obMap) fishId 
+ | isBigFish' obMap fishId = False
+ | otherwise = 
+   let (aboveSpine,_,_) = halfDeepNeigbors DUp maps fishId
+       steels           = filter (isSteel' obMap) aboveSpine
+       badSteels        = filter (not . (isFixedByWall maps)) steels
+    in not $ null badSteels
 
 isFixedByWall :: Maps -> ObId -> Bool
 isFixedByWall maps oid =  not $ null walls 
@@ -710,7 +712,7 @@ showSea sea@(Sea posMap obMap _  ((x1,y1),(x2,y2)) _ status)
                   Nothing -> ' ' 
                   Just oid -> 
                    let Just ob@(Ob _ _ _ _ px) = Map.lookup oid obMap 
-                    in if isDeadFish ob then '#' else px 
+                    in if isDeadFish ob then '+' else px 
              ] ++ "\n" |
        my <- [(-y2)..(-y1)] , 
        let y = -my]
