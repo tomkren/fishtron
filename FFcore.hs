@@ -8,6 +8,10 @@ module FFcore
 , Cmd (..)
 ) where
 
+-- TODO proč tam proboha je uchovávaný to co bylo smazáno???
+--      myslym že je to uplně zbytečný.. ZMENIT!!!
+--      A taky když mizí ryba tak je třeba aktualizovat moving
+
 import qualified Data.Map as Map
 import Data.Map (Map)
 import Data.List
