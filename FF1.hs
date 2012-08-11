@@ -36,3 +36,5 @@ ff1 = mkSea [
 sol1 :: [Cmd]
 sol1 = [S,U,Ls 7,S,Us 4,Rs 13,Ds 3,Rs 3,D,L,Rs 3,U,Rs 11,D,Rs 2]
 
+
+

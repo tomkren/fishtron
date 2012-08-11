@@ -68,7 +68,7 @@ runTTAnt ttant = case (compute 100 $ ttant )::Either TTerm Ant of
 {-- --}
 
 
-testCaseAnt = map (runTTAnt.fst.fromJust.distMax) $ gp (mkStdGen 4242424) (dk' antEnv) ant ffAnt 500 10
+testCaseAnt = map (runTTAnt.fst.fromJust.distMax) $ gp (mkStdGen 4242424) (dk_ antEnv) ant ffAnt 500 10
 
 
 test = runAnt w winner

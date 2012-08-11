@@ -21,10 +21,10 @@ import System.Random
 -- test cases ------------------------------------------------------------------
 
 testCase5 = Ant.testCaseAnt
-testCase4 = putList $ map distMax $ gp (mkStdGen 424248)   (dk' env3) (listInt:->int)   (ffSum [0..10] )                  20  10
-testCase3 = putList $ map distMax $ gp (mkStdGen 42)       (dk' env2) (real:->real)     (ffInterp (\x->x*x+x+1) [0..10] ) 500 10
-testCase2 = putList $ map distMax $ gp (mkStdGen 42424242) (dk' env1) (int:->int:->int) ff2                               200 10
-testCase1 = putList $ map distMax $ gp (mkStdGen 42424242) (dk' env1) (int:->int)       ff1                               50  10
+testCase4 = putList $ map distMax $ gp (mkStdGen 424248)   (dk_ env3) (listInt:->int)   (ffSum [0..10] )                  20  10
+testCase3 = putList $ map distMax $ gp (mkStdGen 42)       (dk_ env2) (real:->real)     (ffInterp (\x->x*x+x+1) [0..10] ) 500 10
+testCase2 = putList $ map distMax $ gp (mkStdGen 42424242) (dk_ env1) (int:->int:->int) ff2                               200 10
+testCase1 = putList $ map distMax $ gp (mkStdGen 42424242) (dk_ env1) (int:->int)       ff1                               50  10
 
 testCase1B= putList $ map distMax $ gp (mkStdGen 42) (dk2 en1 (1,1)) (int:->int) ff1 50  10
 

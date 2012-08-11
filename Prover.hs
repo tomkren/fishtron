@@ -1,7 +1,7 @@
 module Prover 
 ( dk2
 , dk 
-, dk'
+, dk_
 , envii , en1
 ) where 
 
@@ -51,8 +51,8 @@ type CarLaw   = TTermCar -> Maybe [TTermCar] --TODO asi dat pryc to Maybe
  
 -- prover ----------------------------------------------------------------------
 
-dk' :: (RandomGen g) => Env -> g -> Typ -> ([TTerm],g)
-dk' env gen goal = ( dk' $ Q.singleton car numNete , gen )
+dk_ :: (RandomGen g) => Env -> g -> Typ -> ([TTerm],g)
+dk_ env gen goal = ( dk' $ Q.singleton car numNete , gen )
   where
   law  = mkCarLaw . mkTTermLaw $ axiomH +++ mpH +++ vodH  +++ (envAxiomH env)
   car@(_,_,numNete) = mkTTermCar $ Temp (goal,mkContextCar env)
