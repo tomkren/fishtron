@@ -9,11 +9,14 @@ module Util
 , (+++)
 , fill , fillStr
 , Queue , emptyQueue , insertQueue , insertsQueue , popQueue , nullQueue , singletonQueue
+, Rand  , randLift , getRandom , getRandomR , mkRand , runRand' , runRand
 ) where
 
 import Data.List
 import qualified Data.Map as Map
 import Data.Map (Map)
+import System.Random
+import Control.Monad.State
 
 -- "Zřetězení funkcí"
 (+++) :: (a->[b]) -> (a->[b]) -> (a->[b])
@@ -93,6 +96,8 @@ fill xx@((k,x):xs) (i,j) x'
 fillStr :: Int -> String -> String
 fillStr len str = let l = length str in str ++ [' '|_<-[0..len-l-1]] 
 
+-- queue ----------------------------------------------------------
+
 data Queue a = Queue [a] [a] 
 
 instance Show a => Show (Queue a) where
@@ -119,5 +124,36 @@ popQueue :: Queue a -> Maybe (a, Queue a)
 popQueue ( Queue [] []     ) = Nothing
 popQueue ( Queue xs []     ) = Just (y , Queue [] ys ) where (y:ys) = reverse xs
 popQueue ( Queue xs (y:ys) ) = Just (y , Queue xs ys )
+
+-- rand ----------------------------------------------------------------
+
+type Rand a = State StdGen a
+
+randLift :: (StdGen -> (a,StdGen)) -> Rand a
+randLift f = do
+ gen <- get
+ let (val,gen') = f gen
+ put gen'
+ return val
+
+getRandom :: Random a => Rand a
+getRandom = randLift random
+
+getRandomR :: Random a => (a,a) -> Rand a
+getRandomR range = randLift $ randomR range
+
+mkRand :: Int -> Rand ()
+mkRand i = put $ mkStdGen i 
+
+runRand' :: Int -> Rand a -> a
+runRand' i rand = fst $ runState rand (mkStdGen i)
+
+runRand :: Rand a -> IO a
+runRand rand = do
+ gen <- getStdGen
+ return . fst $ runState rand gen
+
+
+
 
 

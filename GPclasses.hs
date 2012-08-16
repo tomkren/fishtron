@@ -4,55 +4,45 @@
 
 import System.Random
 import Control.Monad.State
+import Util
+import Dist
 
-
-class Generable_old from by to where
- generateIt_old :: (RandomGen g) => g -> from -> by -> ( [to] , g )
-
-class Mutable_old a by where
- mutateIt_old :: (RandomGen g) => g -> a -> by -> ( a , g )
-
-class Xoverable_old a where
- xoverIt_old :: (RandomGen g) => g-> a -> a -> ( (a,a) , g )
-
-
-type Rand a = State StdGen a
-
-randLift :: Random a => (StdGen -> (a,StdGen)) -> Rand a
-randLift f = do
- gen <- get
- let (val,gen') = f gen
- put gen'
- return val
-
-getRandom :: Random a => Rand a
-getRandom = randLift random
-
-getRandomR :: Random a => (a,a) -> Rand a
-getRandomR range = randLift $ randomR range
-
-mkRand :: Int -> Rand ()
-mkRand i = put $ mkStdGen i 
 
 class Generable from by to where
   generateIt :: from -> by -> Rand [to]
 
 class Mutable a by where
- mutateIt :: a -> by -> Rand a 
+ mutateIt :: by -> a -> Rand a 
 
-gene :: Int -> Rand a -> a
-gene i rand = fst $ runState rand (mkStdGen i)
+class Crossable a by where
+ crossIt :: by -> a -> a -> Rand (a,a)  
 
+class ( Generable typ genOpt term , 
+        Mutable   term mutOpt , 
+        Crossable term crossOpt ) => 
+        Evolvable term typ genOpt mutOpt crossOpt eOpt 
+ where
+  evolveIt :: genOpt -> mutOpt -> crossOpt -> eOpt -> typ -> (term->FitVal) -> Rand [Dist term]
 
 type BitGenomType = Int
 type BitGenom     = [Bool] 
 type ProbBitMut   = Double
+type BitXoverOpt  = Int
 
-instance Generable_old BitGenomType () BitGenom where generateIt_old = cGenerate
-instance Mutable_old BitGenom ProbBitMut        where mutateIt_old   = cMutate 
+type Di a = (a,a) 
+
+
+-- spiš než tohle to dat do evolveOpt
+--type BitMutatOpt  = ( Prob , ProbBitMut   )
+--type BitXoverOpt  = ( Prob , BitGenomType )
+--type Prob = Double
+--type GenSize      = Int
+
+type FitVal       = Double
 
 instance Generable BitGenomType () BitGenom where generateIt t () = genBitGenoms t
-instance Mutable   BitGenom ProbBitMut      where mutateIt = mutBitGenom
+instance Mutable   BitGenom ProbBitMut      where mutateIt        = mutBitGenom
+instance Crossable BitGenom BitXoverOpt     where crossIt         = xoverBitGenom
 
 genBitGenoms :: BitGenomType -> Rand [BitGenom]
 genBitGenoms numBits = do
@@ -68,19 +58,61 @@ genBitGenom numBits
   rest <- genBitGenom (numBits-1)
   return $ bit : rest
 
-mutBitGenom :: BitGenom -> ProbBitMut -> Rand BitGenom
-mutBitGenom genom p = do
+mutBitGenom :: ProbBitMut -> BitGenom -> Rand BitGenom
+mutBitGenom p genom = do
  forM genom $ \ bit -> do
   p' <- getRandomR (0.0,1.0)
   return $ if p' < p then not bit else bit
 
+xoverBitGenom :: BitXoverOpt -> BitGenom -> BitGenom -> Rand (BitGenom,BitGenom)
+xoverBitGenom genomSize genom1 genom2 = do
+ cutPos <- getRandomR (0,genomSize)
+ let ( g1a , g1b ) = splitAt cutPos genom1
+ let ( g2a , g2b ) = splitAt cutPos genom2
+ return $ ( g1a ++ g2b , g2a ++ g1b )
 
-test :: (Generable typ env genom, Mutable genom mutOpt ) => Int -> typ -> env -> mutOpt -> Rand [[genom]]
-test generSize typ env mutOpt = do
- first <- generateIt typ env
- let first' = take generSize first
- rest  <- mutGenerations mutOpt first'
- return $ first' : rest
+
+sex :: ( Crossable genom opt ) => opt -> Di genom -> Di genom -> Rand (Di genom)
+sex opt dad@(deda1,babi1) mum@(deda2,babi2) = do
+ (sperm,_) <- crossIt opt deda1 babi1
+ (egg  ,_) <- crossIt opt deda2 babi2
+ return (sperm,egg) 
+
+
+sex2 :: ( Crossable genom opt ) => opt -> Di (Dist genom) -> Di (Dist genom) -> Rand (Di [genom])
+sex2 opt dad@(deda1,babi1) mum@(deda2,babi2) = do
+
+ fromD1 <- distTake_new (distSize deda1) deda1 
+ fromD2 <- distTake_new (distSize deda2) deda2
+ fromB1 <- distTake_new (distSize babi1) babi1 
+ fromB2 <- distTake_new (distSize babi2) babi2
+
+ sperms <- forM (zip fromD1 fromB1) (\(d1,b1) -> crossIt opt d1 b1)
+ eggs   <- forM (zip fromD2 fromB2) (\(d2,b2) -> crossIt opt d2 b2)
+ 
+ return ( map fst sperms , map fst eggs ) 
+
+
+meiosis :: ( Crossable genom opt ) => opt -> Di genom -> Rand [genom]
+meiosis opt (gDad,gMum) = do
+ (son1,son2) <- crossIt opt gDad gMum
+ (son3,son4) <- crossIt opt gDad gMum
+ return [son1,son2,son3,son4]
+
+
+{--
+gp :: (Generable typ env term , Mutable term mutOpt ) => Int -> Int -> typ -> env -> mutOpt -> (term->FitVal) -> Rand [Dist term]
+gp numGens genSize typ env mutOpt fitFun = undefined --do
+-- gen0 <- take genSize `liftM` generateIt typ env
+
+gpStep :: ( Mutable term mutOpt ) => mutOpt -> (term->FitVal) -> Dist term -> Rand (Dist term) 
+gpStep mutOpt fitFun gen = do
+  best     <- getBest
+  popSize  <- populationSize
+  parents  <- getWinners (popSize - 1)
+  children <- xovers parents
+  updatePopulation ff $ best:children
+--}
 
 mutGenerations :: (Mutable genom mutOpt ) => mutOpt -> [genom] -> Rand [[genom]]
 mutGenerations mutOpt gener = do
@@ -91,27 +123,6 @@ mutGenerations mutOpt gener = do
 mutGeneration :: (Mutable genom mutOpt ) => mutOpt -> [genom] -> Rand [genom]
 mutGeneration mutOpt gener = do
  forM gener $ \ genom -> 
-  mutateIt genom mutOpt
-
-
-cGenerate :: (RandomGen g) => g -> BitGenomType -> () -> ( [BitGenom] , g )
-cGenerate gen numBits () = 
-  let ( genom , gen'  ) = genBitGenom gen  numBits 
-      ( rest  , gen'' ) = cGenerate gen' numBits ()
-   in ( genom : rest , gen'' )
- where
-  genBitGenom :: (RandomGen g) => g -> BitGenomType -> ( [Bool] , g )
-  genBitGenom gen 0       = ( [] , gen )
-  genBitGenom gen numBits = 
-   let ( bit  , gen'  ) = random gen
-       ( rest , gen'' ) = genBitGenom gen' (numBits-1) 
-    in ( bit : rest , gen'' )
-
-cMutate :: (RandomGen g) => g -> BitGenom -> ProbBitMut -> ( BitGenom , g )
-cMutate gen genom p = foldr f ([],gen) genom  
- where 
-  f bit (acc,gen) = 
-   let (p',gen') = randomR (0.0,1.0) gen
-    in ( (if p' < p then not bit else bit):acc , gen' )  
+  mutateIt mutOpt genom
 
 

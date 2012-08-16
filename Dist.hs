@@ -58,6 +58,7 @@ module Dist
 , mkDist2
 , distMax
 , distTake
+, distTake_new
 , distCut
 , distObtain
 , distSize
@@ -65,6 +66,8 @@ module Dist
 
 import System.Random
 import Text.Printf
+
+import Util
 
 data Dist  a = Dist (DTree a) (Suma,Size) | DEmpty  
 data DTree a = DLeaf  (a,Double)
@@ -168,7 +171,9 @@ distObt' cutP gen dist
          then distPop' gen' dist 
          else let (ret,gen'') = distGet' gen' dist in Just (ret,dist,gen'')
 
- 
+distTake_new :: Int -> Dist a -> Rand [a]
+distTake_new n dist = randLift (\gen -> distTake gen n dist )
+
 distTake :: (RandomGen g) => g -> Int -> Dist a -> ( [a] , g )
 distTake gen 0 _ = ( []   , gen   )
 distTake gen n d = ( x:xs , gen'' )
