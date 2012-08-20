@@ -3,7 +3,7 @@
 module Util
 ( putList
 , insertToListMap , lookupInListMap
-, maximas
+, maximas , maximasBy
 , newSymbol , newSymbol'
 , nthWord
 , (+++)
@@ -44,6 +44,13 @@ maximas (x:xs) = x : f x xs
   where
   f _   []     = []
   f max (x:xs) = if x > max then x : f x xs else f max xs
+
+maximasBy :: (a->a->Bool) -> [a] -> [a]
+maximasBy lt (x:xs) = x : f x xs
+  where
+  f _    []     = []
+  f maxi (x:xs) = if maxi `lt` x then x : f x xs else f maxi xs
+
 
 -- Pro již použitá slova vrací první takové, které je od všech rozdílné
 newSymbol :: [String] -> String
@@ -157,14 +164,14 @@ infChainRand :: (a -> Rand a) -> a -> Rand [a]
 infChainRand f x = do
    gen <- get
    let (gen1,gen2) = split gen
-       ( xs , _  ) = runState ( infin2 f x ) gen1
+       ( xs , _  ) = runState ( inf f x ) gen1
    put gen2
    return $ x:xs
  where
-  infin2 :: (a -> Rand a) -> a -> Rand [a]
-  infin2 f x = do
+  inf :: (a -> Rand a) -> a -> Rand [a]
+  inf f x = do
    x' <- f x
-   xs <- infin2 f x'
+   xs <- inf f x'
    return $ x':xs 
 
 

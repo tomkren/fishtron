@@ -1,12 +1,22 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE TypeSynonymInstances  #-}
 {-# LANGUAGE FlexibleInstances     #-}
+{-# LANGUAGE TupleSections         #-}
 
 import System.Random
 import Control.Monad.State
 import Data.Maybe
 import Util
 import Dist
+
+type Problem term typ gOpt mOpt cOpt = ( PopSize, gOpt, mOpt, cOpt, typ, term->FitVal )
+
+type PopSize    = Int
+type NumGens    = Int
+type FitVal     = Double
+type Prob       = Double
+
+data GenOp term = MonoOp (term->Rand term) | DiOp (term->term->Rand(term,term))
 
 
 class Generable term typ opt where
@@ -18,13 +28,79 @@ class Mutable term opt where
 class Crossable term opt where
  crossIt :: opt -> term -> term -> Rand (term,term)  
 
-class ( Generable term typ genOpt  , 
-        Mutable   term mutOpt , 
-        Crossable term crossOpt ) => 
-        Evolvable term typ genOpt mutOpt crossOpt  -- eOpt 
- where
-  evolveIt :: GenSize -> genOpt -> mutOpt -> crossOpt -> typ -> (term->FitVal) -> Rand [Dist term]
+class Evolvable term typ gOpt mOpt cOpt where
+  evolveIt  :: Problem term typ gOpt mOpt cOpt -> Rand [Dist term]
+  
+instance (Generable term typ gOpt, Mutable term mOpt, Crossable term cOpt) => Evolvable term typ gOpt mOpt cOpt where
+ evolveIt ( popSize, gOpt, mOpt, cOpt, typ, ff ) = 
+  evolveBegin popSize gOpt typ ff >>= infChainRand (evolveStep mOpt cOpt ff)
 
+evolveBegin :: ( Generable term typ gOpt ) => PopSize -> gOpt -> typ -> (term->FitVal) -> Rand ( Dist term )
+evolveBegin popSize gOpt typ ff = 
+ (ffDist ff . take popSize) `liftM` generateIt typ gOpt
+
+evolveStep :: ( Mutable term mOpt , Crossable term cOpt ) => mOpt -> cOpt -> (term->FitVal) -> Dist term -> Rand (Dist term)
+evolveStep mOpt cOpt ff pop = 
+  ffDist ff `liftM` ( getWinners pop >>= performOps mOpt cOpt )
+
+ffDist :: (term->FitVal) -> [term] -> Dist term
+ffDist ff = mkDist . map (\t->(t,ff t)) 
+
+getWinners :: Dist term -> Rand ( term , [term] )
+getWinners pop = 
+  let Just (best,_) = distMax pop
+   in ( best , ) `liftM` distTake_new (distSize pop - 1) pop 
+
+performOps :: (Mutable term mOpt , Crossable term cOpt ) => mOpt -> cOpt -> (term,[term]) -> Rand [term]
+performOps mOpt cOpt (best,terms) = (best : ) `liftM` performOps' opDist terms
+ where
+  opDist = mkDist 
+   [ ( MonoOp return          , 33 )
+   , ( MonoOp (mutateIt mOpt) , 33 ) 
+   , ( DiOp   (crossIt  cOpt) , 33 ) ]
+  
+performOps' :: Dist (GenOp term) -> [term] -> Rand [term]
+performOps' _ [] = return [] 
+performOps' opDist terms@(t:ts) = do
+  op <- distGet opDist
+  case op of
+   MonoOp f -> do 
+    t'  <- f t
+    ts' <- performOps' opDist ts
+    return $ t' : ts'
+   DiOp f -> case terms of
+    [t] -> return [t]
+    (t1:t2:tt) -> do
+     (t1',t2') <- f t1 t2
+     tt'       <- performOps' opDist tt
+     return $ t1' : t2' : tt'
+
+putEvolve :: (Show term , Evolvable term typ gOpt mOpt cOpt) => Problem term typ gOpt mOpt cOpt -> IO()
+putEvolve problem =
+ liftM (map $ fromJust . distMax) (runRand $ evolveIt problem ) >>= putList
+
+putEvolveMaximas :: (Show term , Evolvable term typ gOpt mOpt cOpt) => Problem term typ gOpt mOpt cOpt -> IO()
+putEvolveMaximas problem =
+   liftM ( maximasBy (\(_,x) (_,y)->x<y) . (map $ fromJust . distMax ) ) (runRand $ evolveIt problem )  >>= putList
+
+
+-- BitGenom -----------------------------
+
+type BitGenomType = Int
+type BitGenom     = [Bool] 
+type ProbBitMut   = Double
+type BitXoverOpt  = Int
+
+instance Generable BitGenom BitGenomType () where generateIt n () = infiniteRand $ genBitGenom n
+instance Mutable   BitGenom ProbBitMut      where mutateIt        = mutBitGenom
+instance Crossable BitGenom BitXoverOpt     where crossIt         = xoverBitGenom
+
+bitProblem :: PopSize->BitGenomType->ProbBitMut->(BitGenom->FitVal)->Problem BitGenom BitGenomType () ProbBitMut BitXoverOpt
+bitProblem popSize genomSize probBitMut ff = 
+  ( popSize , () , probBitMut , genomSize , genomSize , ff  )  
+
+test  = runRand . evolveIt $ bitProblem 20 10 0.1 ff2
+test' = putEvolve          $ bitProblem 20 10 0.1 ff2
 
 ff1 :: BitGenom -> FitVal
 ff1 bits = let tNum = fromIntegral . length . filter id $ bits in tNum * tNum
@@ -32,121 +108,6 @@ ff1 bits = let tNum = fromIntegral . length . filter id $ bits in tNum * tNum
 ff2 :: BitGenom -> FitVal
 ff2 bits = let tNum = fromIntegral . length . filter (\(n,b)->if n `mod` 2 == 0 then b else not b) $ zip [0..] bits in tNum * tNum
 
-
-test  = runRand $ evolve 20 () (10::Int) (10::Int) ff2
-test' =        putEvolve 20 () (10::Int) (10::Int) ff2
-
-
-putEvolve :: ( Show term , Generable term typ gOpt , Crossable term cOpt ) => 
-             GenSize -> gOpt -> cOpt -> typ -> (term->FitVal) -> IO()
-putEvolve genSize gOpt cOpt typ ff =
- liftM (map $ fromJust . distMax) (runRand $ evolve genSize gOpt cOpt typ ff ) >>= putList
-
-
-
-evolve :: ( Generable term typ gOpt , Crossable term cOpt ) => 
-          GenSize -> gOpt -> cOpt -> typ -> (term->FitVal) -> Rand [Dist term]
-evolve genSize gOpt cOpt typ ff =  
- evolveBegin genSize gOpt typ ff >>= infChainRand (evolveStep cOpt ff)
-
-
-evolveBegin :: ( Generable term typ gOpt ) => GenSize -> gOpt -> typ -> (term->FitVal) -> Rand ( Dist term )
-evolveBegin genSize gOpt typ ff = 
- (ffDist ff . take genSize) `liftM` generateIt typ gOpt
-
-evolveStep :: ( Crossable term cOpt ) => cOpt -> (term->FitVal) -> Dist term -> Rand (Dist term)
-evolveStep cOpt ff pop = 
- ffDist ff `liftM` (crossThem cOpt =<< distTake_new (distSize pop) pop)
- 
-
-ffDist :: (term->FitVal) -> [term] -> Dist term
-ffDist ff = mkDist . map (\t->(t,ff t)) 
-
-crossThem :: (Crossable term opt) => opt -> [term] -> Rand [term]
-crossThem _   []  = return []
-crossThem _   [t] = return [t]
-crossThem opt (t1:t2:ts) = do
- (t1',t2') <- crossIt opt t1 t2
- ts'       <- crossThem opt ts 
- return $ t1' : t2' : ts'
-
-
-
-
-{--
-
-evolve :: ( Generable term typ genOpt  , Mutable   term mutOpt , Crossable term crossOpt ) => 
-          NumGens -> GenSize -> genOpt -> mutOpt -> crossOpt -> typ -> (term->FitVal) -> Rand [Dist term]
-evolve numGens gSize genOpt mutOpt crossOpt typ fitFun = do
-  genTerms <- take gSize `liftM` generateIt typ genOpt
-  steps numGens fitFun crossOpt $ mkDist $ mapFF genTerms
- where
-  mapFF = map (\ t ->( t , fitFun t ))
-
-
-  steps :: (Crossable term crossOpt) => NumGens -> (term->FitVal) -> crossOpt -> Dist term -> Rand [Dist term]
-  steps i ff crossOpt g = 
-    if i == 0 
-      then return []
-      else do 
-       g'   <- step ff crossOpt g
-       rest <- steps (i-1) ff crossOpt g' --g'
-       return $ g' : rest --return $ g : g' : rest 
-  
-   where
-  
-    step :: (Crossable term crossOpt) => (term->FitVal) -> crossOpt -> Dist term -> Rand (Dist term)
-    step ff crossOpt g = do
-     winners <- distTake_new gSize g
-     childs  <- crossThem crossOpt winners
-     return $ mkDist $ map (\ t ->( t , ff t ) ) childs
-
-test :: Rand [Dist BitGenom]
-test =  evolve ( 5  :: NumGens )
-               ( 10  :: GenSize ) 
-               () 
-               ( 0.1 :: ProbBitMut )
-               ( 4 :: BitXoverOpt )
-               ( 4 :: BitGenomType )
-               ( fromIntegral . length . filter id )
-
---}  
-
-
-
-
- 
-type BitGenomType = Int
-type BitGenom     = [Bool] 
-type ProbBitMut   = Double
-type BitXoverOpt  = Int
-
-type Di a = (a,a) 
-
-
--- spiš než tohle to dat do evolveOpt
---type BitMutatOpt  = ( Prob , ProbBitMut   )
---type BitXoverOpt  = ( Prob , BitGenomType )
---type Prob = Double
-
-type GenSize      = Int
-type NumGens      = Int
-type FitVal       = Double
-
-instance Generable BitGenom BitGenomType () where generateIt t () = genBitGenoms t
-instance Mutable   BitGenom ProbBitMut      where mutateIt        = mutBitGenom
-instance Crossable BitGenom BitXoverOpt     where crossIt         = xoverBitGenom
-
-{--
-genBitGenoms :: BitGenomType -> Rand [BitGenom]
-genBitGenoms numBits = do
- genom  <- genBitGenom  numBits
- genoms <- genBitGenoms numBits
- return $ genom : genoms
---}
-
-genBitGenoms :: BitGenomType -> Rand [BitGenom]
-genBitGenoms numBits = infiniteRand $ genBitGenom numBits
 
 genBitGenom :: BitGenomType -> Rand BitGenom
 genBitGenom numBits 
@@ -170,33 +131,9 @@ xoverBitGenom genomSize genom1 genom2 = do
  return $ ( g1a ++ g2b , g2a ++ g1b )
 
 
+-- experimental --------------------------
 
-
-{--
-gp :: (Generable typ env term , Mutable term mutOpt ) => Int -> Int -> typ -> env -> mutOpt -> (term->FitVal) -> Rand [Dist term]
-gp numGens genSize typ env mutOpt fitFun = undefined --do
--- gen0 <- take genSize `liftM` generateIt typ env
-
-gpStep :: ( Mutable term mutOpt ) => mutOpt -> (term->FitVal) -> Dist term -> Rand (Dist term) 
-gpStep mutOpt fitFun gen = do
-  best     <- getBest
-  popSize  <- populationSize
-  parents  <- getWinners (popSize - 1)
-  children <- xovers parents
-  updatePopulation ff $ best:children
---}
-
-mutGenerations :: (Mutable genom mutOpt ) => mutOpt -> [genom] -> Rand [[genom]]
-mutGenerations mutOpt gener = do
- gener' <- mutGeneration  mutOpt gener 
- rest   <- mutGenerations mutOpt gener'
- return $ gener' : rest
-
-mutGeneration :: (Mutable genom mutOpt ) => mutOpt -> [genom] -> Rand [genom]
-mutGeneration mutOpt gener = do
- forM gener $ \ genom -> 
-  mutateIt mutOpt genom
-
+type Di a = (a,a) 
 
 sex :: ( Crossable genom opt ) => opt -> Di genom -> Di genom -> Rand (Di genom)
 sex opt dad@(deda1,babi1) mum@(deda2,babi2) = do
@@ -224,3 +161,13 @@ meiosis opt (gDad,gMum) = do
  (son1,son2) <- crossIt opt gDad gMum
  (son3,son4) <- crossIt opt gDad gMum
  return [son1,son2,son3,son4]
+
+{--
+crossThem :: (Crossable term opt) => opt -> [term] -> Rand [term]
+crossThem _   []  = return []
+crossThem _   [t] = return [t]
+crossThem opt (t1:t2:ts) = do
+ (t1',t2') <- crossIt opt t1 t2
+ ts'       <- crossThem opt ts 
+ return $ t1' : t2' : ts'
+--}

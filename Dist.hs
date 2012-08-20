@@ -58,7 +58,7 @@ module Dist
 , mkDist2
 , distMax
 , distTake
-, distTake_new
+, distTake_new , distGet
 , distCut
 , distObtain
 , distSize
@@ -109,8 +109,8 @@ mkDist2 xs ys = case tree3 $ tree2 $ (tree1 xs) ++ (tree1' ys) of
 interv :: (Double,Double) -> Double -> Double
 interv (a,b) x = (b-a)*x + a
 
-distGet :: Dist a -> Double -> a
-distGet (Dist t _) = get t
+distGet' :: Dist a -> Double -> a
+distGet' (Dist t _) = get t
   where 
   get :: DTree a -> Double -> a
   get (DLeaf  (a,_) ) _ = a
@@ -152,8 +152,11 @@ randP :: (RandomGen g) => Double -> g -> (Bool,g)
 randP p gen = let (r,gen') = rand01 gen
                in ( r < p , gen') 
 
-distGet' :: (RandomGen g) => g -> Dist a -> ( a , g )
-distGet' gen dist = ( distGet dist x , gen' ) 
+distGet :: Dist a -> Rand a
+distGet d = randLift $ flip distGet_ d
+
+distGet_ :: (RandomGen g) => g -> Dist a -> ( a , g )
+distGet_ gen dist = ( distGet' dist x , gen' ) 
   where (x,gen') = rand01 gen
                             
 distPop' :: (RandomGen g) => g -> Dist a -> Maybe ( a , Dist a , g )
@@ -169,7 +172,7 @@ distObt' cutP gen dist
   = let ( doCut , gen' ) = randP cutP gen
      in if doCut 
          then distPop' gen' dist 
-         else let (ret,gen'') = distGet' gen' dist in Just (ret,dist,gen'')
+         else let (ret,gen'') = distGet_ gen' dist in Just (ret,dist,gen'')
 
 distTake_new :: Int -> Dist a -> Rand [a]
 distTake_new n dist = randLift (\gen -> distTake gen n dist )
@@ -178,7 +181,7 @@ distTake :: (RandomGen g) => g -> Int -> Dist a -> ( [a] , g )
 distTake gen 0 _ = ( []   , gen   )
 distTake gen n d = ( x:xs , gen'' )
   where
-  (x , gen' ) = distGet' gen         d
+  (x , gen' ) = distGet_ gen         d
   (xs, gen'') = distTake gen' (n-1)  d
 
 distCut :: (RandomGen g) => g -> Int -> Dist a -> ( [a] , Dist a , g )
