@@ -9,7 +9,7 @@ module Util
 , (+++)
 , fill , fillStr
 , Queue , emptyQueue , insertQueue , insertsQueue , popQueue , nullQueue , singletonQueue
-, Rand  , randLift , getRandom , getRandomR , mkRand , runRand' , runRand
+, Rand  , randLift , getRandom , getRandomR , mkRand , runRand' , runRand , infiniteRand, infChainRand
 ) where
 
 import Data.List
@@ -135,6 +135,43 @@ randLift f = do
  let (val,gen') = f gen
  put gen'
  return val
+
+-- ošetřuje aby při generování nekonečného seznamu nedošlo ke ztrátě generátoru
+-- myslím že to je ten problém který vykolejil GP.hs tenkrát..
+infiniteRand :: Rand a -> Rand [a]
+infiniteRand rand = do
+   gen <- get
+   let (gen1,gen2) = split gen
+       ( xs , _  ) = infin (runState rand) gen1
+   put gen2
+   return xs
+ where
+   infin :: (StdGen -> (a,StdGen)) -> (StdGen -> ([a],StdGen))
+   infin f gen = 
+    let ( x  , gen'  ) = f gen
+        ( xs , gen'' ) = infin f gen'
+     in ( x:xs , gen'' ) 
+
+
+infChainRand :: (a -> Rand a) -> a -> Rand [a]
+infChainRand f x = do
+   gen <- get
+   let (gen1,gen2) = split gen
+       ( xs , _  ) = runState ( infin2 f x ) gen1
+   put gen2
+   return $ x:xs
+ where
+  infin2 :: (a -> Rand a) -> a -> Rand [a]
+  infin2 f x = do
+   x' <- f x
+   xs <- infin2 f x'
+   return $ x':xs 
+
+
+test_infChainRand :: Rand [Int]
+test_infChainRand =  infChainRand  (\x-> (\r->x+2*r-1) `liftM` getRandomR (0,1)  ) (1000::Int)
+  
+ 
 
 getRandom :: Random a => Rand a
 getRandom = randLift random
