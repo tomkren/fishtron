@@ -9,7 +9,7 @@ module Util
 , (+++)
 , fill , fillStr
 , Queue , emptyQueue , insertQueue , insertsQueue , popQueue , nullQueue , singletonQueue
-, Rand  , randLift , getRandom , getRandomR , mkRand , runRand' , runRand , infiniteRand, infChainRand
+, Rand  , randLift , getRandom , getRandomR , mkRand , runRand' , runRand , infiniteRand, infChainRand , infRand , randCase
 ) where
 
 import Data.List
@@ -160,11 +160,29 @@ infiniteRand rand = do
      in ( x:xs , gen'' ) 
 
 
+infRand :: Rand a -> Rand [a]
+infRand rand = do
+   gen <- get
+   let (gen1,gen2) = split gen
+   put gen1
+   xs <- inf rand
+   put gen2
+   return xs
+ where
+  inf :: Rand a -> Rand [a]
+  inf r = do
+   x  <- r
+   xs <- inf r
+   return $ x:xs
+
+
 infChainRand :: (a -> Rand a) -> a -> Rand [a]
 infChainRand f x = do
    gen <- get
    let (gen1,gen2) = split gen
-       ( xs , _  ) = runState ( inf f x ) gen1
+   put gen1
+   xs <- inf f x
+--       ( xs , _  ) = runState ( inf f x ) gen1
    put gen2
    return $ x:xs
  where
@@ -178,7 +196,12 @@ infChainRand f x = do
 test_infChainRand :: Rand [Int]
 test_infChainRand =  infChainRand  (\x-> (\r->x+2*r-1) `liftM` getRandomR (0,1)  ) (1000::Int)
   
- 
+
+randCase :: Double -> a -> a -> Rand a
+randCase p ok ko = do
+ p' <- getRandomR (0.0 , 1.0)
+ return $ if p' < p then ok else ko
+
 
 getRandom :: Random a => Rand a
 getRandom = randLift random
