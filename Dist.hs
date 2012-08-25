@@ -56,6 +56,7 @@ module Dist
 ( Dist( )
 , mkDist  
 , mkDist2
+,  distToList 
 , distMax
 , distTake
 , distTake_new , distGet
@@ -80,6 +81,17 @@ type Percent = Double
 type CutP    = Double
 
 instance (Show a) => Show (Dist a) where show = showDist
+
+instance Functor Dist where
+  fmap f d = case d of
+   DEmpty -> DEmpty
+   Dist tree ss -> Dist (fmap f tree) ss
+
+instance Functor DTree where
+  fmap f t = case t of 
+   DLeaf  (x,val)   -> DLeaf  ( f x   , val )
+   DLeaf2 (g,val)   -> DLeaf2 ( f . g , val )
+   DNode mark t1 t2 -> DNode mark (fmap f t1) (fmap f t2) 
 
 mkDist :: [(a,Double)] -> Dist a
 mkDist xs = mkDist2 xs []
@@ -253,6 +265,27 @@ showDist (Dist t (sum,size)) = "\n" ++
                                     ++ " : " ++ showNice (part*100/sum) ++ "%" 
   showDTree part (DNode mark t1 t2)
    = (showDTree (part*mark) t1) ++ "\n" ++ (showDTree (part*(1-mark)) t2)   
+
+
+distToList :: Int -> Dist a -> [(a,Double)]
+distToList samplingNum d = case d of
+  DEmpty -> []
+  Dist t _ -> dTreeToList t
+ where
+  --sampling = 32.0
+  dTreeToList :: DTree a -> [(a,Double)]
+  dTreeToList t = case t of
+   DLeaf  x      -> [x]
+   DLeaf2 x      -> sampling samplingNum x
+   DNode _ t1 t2 -> dTreeToList t1 ++ dTreeToList t2   
+
+sampling :: Int -> (Double->a,Double) -> [(a,Double)]
+sampling num (f,val) = 
+ let delta = 1.0 / fromIntegral num
+     dVal  = val * delta
+     xs    = [ 0.0 , delta .. 1.0 ]
+  in [ ( f avg , dVal ) | (a,b) <- zip (init xs) (tail xs) , let avg = (a+b)/2 ]
+
 
 -- testovací data
 d1 = mkDist [('A',1),('B',2),('C',4),('D',8),('E',16)]

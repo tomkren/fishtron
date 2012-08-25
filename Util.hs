@@ -9,13 +9,15 @@ module Util
 , (+++)
 , fill , fillStr
 , Queue , emptyQueue , insertQueue , insertsQueue , popQueue , nullQueue , singletonQueue
-, Rand  , randLift , getRandom , getRandomR , mkRand , runRand' , runRand , infiniteRand, infChainRand , infRand , randCase
+, Rand  , randLift , getRandom , getRandomR , mkRand , runRand' , runRand , infiniteRand
+        , infChainRand , infRand , randCase, randIf ,getNormal
 ) where
 
 import Data.List
 import qualified Data.Map as Map
 import Data.Map (Map)
 import System.Random
+import Data.Random.Normal
 import Control.Monad.State
 
 -- "Zřetězení funkcí"
@@ -202,12 +204,20 @@ randCase p ok ko = do
  p' <- getRandomR (0.0 , 1.0)
  return $ if p' < p then ok else ko
 
+randIf :: Double -> Rand a -> Rand a -> Rand a
+randIf p ok ko = do
+ p' <- getRandomR (0.0 , 1.0)
+ if p' < p then ok else ko
+
 
 getRandom :: Random a => Rand a
 getRandom = randLift random
 
 getRandomR :: Random a => (a,a) -> Rand a
 getRandomR range = randLift $ randomR range
+
+getNormal :: (Random a, Floating a) => (a, a) -> Rand a
+getNormal params@( mean , stdDeviation ) = randLift $ normal' params
 
 mkRand :: Int -> Rand ()
 mkRand i = put $ mkStdGen i 
