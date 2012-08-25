@@ -3,10 +3,12 @@
 {-# LANGUAGE FlexibleInstances     #-}
 {-# LANGUAGE TupleSections         #-}
 
+module GPclasses where
+
 import System.Random
 import Control.Monad.State
 import Data.Maybe
-import Control.Monad.Writer
+
 import Util
 import Dist
 
@@ -18,8 +20,12 @@ data Problem term gOpt mOpt cOpt = Problem
  , gOpt    :: gOpt
  , mOpt    :: mOpt
  , cOpt    :: cOpt
- , fitFun  :: term->FitVal
+ , fitFun  :: term -> Rand FitVal
  }
+
+type FitFun term = term -> Rand FitVal
+
+type Credit = Double
 
 type PopSize    = Int
 type NumGens    = Int
@@ -31,15 +37,14 @@ type Mean   = Double
 type StdDev = Double
 
 
-
 data GenOpType  = Reproduction | Mutation | Crossover
 data GenOp term = MonoOp (term->Rand term) | DiOp (term->term->Rand(term,term))
 
 type EOpt = Dist GenOpType
 --data EOpt = EOpt { probRep :: Prob , probMut :: Prob , probCro :: Prob }
 
-mkEOpt :: Prob -> Prob -> Prob -> EOpt
-mkEOpt probRep probMut probCro = 
+mkEOpt :: (Prob,Prob,Prob) -> EOpt
+mkEOpt (probRep,probMut,probCro) = 
  mkDist [ ( Reproduction , probRep ) 
         , ( Mutation     , probMut )   
         , ( Crossover    , probCro ) ]
@@ -55,31 +60,42 @@ class Cros term opt where
  crossIt :: opt -> term -> term -> Rand (term,term)  
 
 class Evolvable term gOpt mOpt cOpt where
-  evolveIt  :: Problem term gOpt mOpt cOpt -> Rand [(Int,Dist term)]
+  evolveIt  :: Problem term gOpt mOpt cOpt -> Credit -> Rand [Dist term]
   
 instance (Gene term gOpt, Muta term mOpt, Cros term cOpt) => Evolvable term gOpt mOpt cOpt where
- evolveIt problem = 
-  zip [0..] `liftM` (evolveBegin problem >>= infChainRand (evolveStep problem) )
+ evolveIt problem credit = 
+  wrapper $ evolveBegin problem credit >>= infChainRand (evolveStep problem) 
 
-evolveBegin :: ( Gene term gOpt ) => Problem term gOpt mOpt cOpt -> Rand ( Dist term )
-evolveBegin p = 
- ( ffDist p . take (popSize p) ) `liftM` generateIt (gOpt p)
+wrapper :: Rand [(Dist term,a)] -> Rand [Dist term]
+wrapper rand = do
+ xs <- rand
+ return . takeWhile (not . distIsEmpty) . map fst $ xs 
 
-evolveStep :: ( Muta term mOpt , Cros term cOpt ) => Problem term gOpt mOpt cOpt -> Dist term -> Rand (Dist term)
-evolveStep p pop = 
-  ffDist p `liftM` ( getWinners pop >>= performOps p )
+evolveBegin :: ( Gene term gOpt ) => Problem term gOpt mOpt cOpt -> Credit -> Rand (Dist term,Credit)
+evolveBegin p credit = do
+ let toTake = min (popSize p) (floor credit) 
+ pop0 <- (take toTake `liftM` generateIt (gOpt p)) >>= evalFF p
+ return (pop0, credit - fromIntegral toTake )
 
-ffDist :: Problem term gOpt mOpt cOpt -> [term] -> Dist term
-ffDist p = mkDist . map (\t->(t,ff t)) 
+evolveStep :: ( Muta term mOpt , Cros term cOpt ) => Problem term gOpt mOpt cOpt -> (Dist term,Credit) -> Rand (Dist term,Credit)
+evolveStep p x@(_,credit) = do
+ pop <- ( getWinners x >>= performOps p ) >>= evalFF p
+ return (pop, credit - fromIntegral (distSize pop) )
+
+evalFF :: Problem term gOpt mOpt cOpt -> [term] -> Rand (Dist term)
+evalFF p ts = mkDist `liftM` mapM (\t->(t,) `liftM` ff t) ts
  where ff = fitFun p 
+--evalFF p = mkDist . map (\t->(t,ff t)) 
 
-getWinners :: Dist term -> Rand ( term , [term] )
-getWinners pop = 
+getWinners :: (Dist term,Credit) -> Rand ( [term] , [term] )
+getWinners (pop,credit) = 
   let Just (best,_) = distMax pop
-   in ( best , ) `liftM` distTake_new (distSize pop - 1) pop 
+      bests  = if credit >= 1 then [best] else []
+      toTake = (min (distSize pop) (floor credit) ) - length bests 
+   in ( bests , ) `liftM` distTake_new toTake pop 
 
-performOps :: (Muta term mOpt , Cros term cOpt ) => Problem term gOpt mOpt cOpt -> (term,[term]) -> Rand [term]
-performOps p (best,terms) = (best : ) `liftM` performOps' (mkOpDist p) terms  
+performOps :: (Muta term mOpt , Cros term cOpt ) => Problem term gOpt mOpt cOpt -> ([term],[term]) -> Rand [term]
+performOps p (best,terms) = (best ++ ) `liftM` performOps' (mkOpDist p) terms  
  where
   mkOpDist p = fmap (f p) (eOpt p)
   f p opType = case opType of
@@ -104,16 +120,19 @@ performOps p (best,terms) = (best : ) `liftM` performOps' (mkOpDist p) terms
        return $ t1' : t2' : tt'
 
 
+putEvolve :: (Show term , Evolvable term gOpt mOpt cOpt) => Credit -> Problem term gOpt mOpt cOpt -> IO()
+putEvolve credit problem =
+ liftM (map $ (\(i,d)->(i,fromJust . distMax $ d) ) ) (runRand $ (zip [0..]) `liftM` evolveIt problem credit ) >>= putList
 
-putEvolve :: (Show term , Evolvable term gOpt mOpt cOpt) => Problem term gOpt mOpt cOpt -> IO()
-putEvolve problem =
- liftM (map $ (\(i,d)->(i,fromJust . distMax $ d) ) ) (runRand $ evolveIt problem ) >>= putList
-
-putEvolveMaximas :: (Show term , Evolvable term gOpt mOpt cOpt) => Problem term gOpt mOpt cOpt -> IO()
-putEvolveMaximas problem =
-   liftM ( maximasBy (\(_,(_,x)) (_,(_,y))->x<y) . (map $ (\(i,d)->(i,fromJust . distMax $ d) ) ) ) (runRand $ evolveIt problem )  
-    >>= putList
-
+putEvolveMaximas :: (Show term , Evolvable term gOpt mOpt cOpt) => Credit -> Problem term gOpt mOpt cOpt -> IO ()
+putEvolveMaximas credit problem = do
+ ds <- runRand $ zip [0..] `liftM` evolveIt problem credit
+ let f (i,t) = ( i , fromJust.distMax$t)
+     bs = map f ds
+     g = snd . snd 
+     lt x y = (g x) < (g y)
+     ms = maximasBy lt bs
+ putList ms
 
 -- instances -----------------
 
@@ -134,84 +153,6 @@ instance (Gene t o) => Gene (Dist t) (DistGen o) where generateIt = distGen
 instance (Muta t o) => Muta (Dist t) (DistMut o) where mutateIt   = distMut
 instance (Cros t o) => Cros (Dist t) (DistCro o) where crossIt    = distCro
 
-
--- TODO : pochopit proč to tohle rozbylo: 
---distGen :: (Gene t o) => DistGen o -> Rand [Dist t]
---distGen (DiG_Uniform opt len) = 
--- let gOpt = LG_ ( PG_Both opt (DG_Uniform (0,1) ) ) len
---  in generateIt gOpt >>= mapM (return . mkDist) <---------------
- 
-
-
-data DistMut o = DiM_ o 
-data DistCro o = DiC_OnePoint o
-data DistGen o = DiG_Uniform o Len
-
-distGen :: (Gene t o) => DistGen o -> Rand [Dist t]
-distGen (DiG_Uniform opt len) = 
- let gOpt = LG_ ( PG_Both opt (DG_Uniform (0,1) ) ) len
-  in do 
-    xss <- generateIt gOpt 
-    return $ map mkDist xss
-
-
-distMut :: (Muta t o) => DistMut o -> Dist t -> Rand (Dist t)
-distMut (DiM_ opt) dist = 
- let mOpt = LM_OnePoint ( PM_Both opt (DM_Normal (0,1) ) ) (distSize dist)
-  in mkDist `liftM` mutateIt mOpt (distToList 1 dist)
-
-distCro :: (Cros t o) => DistCro o -> Dist t -> Dist t -> Rand ( Dist t , Dist t )
-distCro (DiC_OnePoint _) x y =
- let cOpt = LC_OnePoint () (distSize x)
-  in do
-   let x' = distToList 1 x
-       y' = distToList 1 y 
-   (a,b) <- crossIt cOpt x' y'
-   return ( mkDist a , mkDist b )   
-
-
-{--
-t4   = runRand $ (  (distGen (DiG_Uniform (DG_Normal (0,1) ) 10)  )::Rand [Dist Double] )
-
-
-tt4  = runRand $ evolveBegin prob4
-
-bug2 = runState (evolveBegin prob4) (mkStdGen 2)
-
-bug3 = runState (( ffDist prob4 . take (popSize prob4) ) `liftM` generateIt (gOpt prob4)) (mkStdGen 2)
-
-bug4 = runState ( ( take 3 ) `liftM` ((generateIt (gOpt prob4))::Rand [Dist Double] ) )  (mkStdGen 2)
-
-bug1 = flip runState (mkStdGen 42) $ do 
- pop0 <- evolveBegin prob4
- distTake_new 1 pop0
-
---getWinners pop
-ttt4 = runRand $ evolveStep prob4 =<< evolveBegin prob4
-
-prob3 =  
- let popSize = 200
-     len     = 100
-     eOpt    = mkEOpt 33 33 33
-     gOpt    = LG_         (PG_Both BG_    (DG_Normal (0,1)) ) len
-     mOpt    = LM_OnePoint (PM_Both BM_Not (DM_Normal (0,1)) ) len
-     cOpt    = LC_OnePoint (PC_Both BC_    DC_Avg            ) len -- tady muže bejt klidně () !!!
- in Problem popSize eOpt gOpt mOpt cOpt ff3
-
-
-prob4 :: Problem (Dist Double) (DistGen DoubleGen) () ()
-prob4 = 
- let popSize = 2
-     len     = 3
-     eOpt    = mkEOpt 33 0 0
-     gOpt    = DiG_Uniform (DG_Normal (0,1) ) len
-     mOpt    = () --DiM_ ( DM_Normal (0,1) )
-     cOpt    = () --DiC_OnePoint ()
-     ff :: Dist Double -> FitVal
-     ff _ = 1
-  in Problem popSize eOpt gOpt mOpt cOpt ff
---}
-
 instance Gene Bool   BoolGen   where generateIt = boolGen
 instance Muta Bool   BoolMut   where mutateIt   = boolMut 
 instance Cros Bool   BoolCro   where crossIt    = boolCro
@@ -220,7 +161,6 @@ instance Gene Double DoubleGen where generateIt = doubleGen
 instance Muta Double DoubleMut where mutateIt   = doubleMut 
 instance Cros Double DoubleCro where crossIt    = doubleCro
 
- 
 
 data PairGen o1 o2 = PG_Both o1 o2 
 data PairMut o1 o2 = PM_Both o1 o2
@@ -234,6 +174,10 @@ data ListCro opt   = LC_OnePoint  opt Len
           --       | LC_NPoint    opt Len
           --       | LC_NPoint'   opt Len
           --       | LC_AllPoint  opt Len
+
+data DistMut o     = DiM_ o 
+data DistCro o     = DiC_OnePoint o
+data DistGen o     = DiG_Uniform o Len
   
 data BoolGen       = BG_
 data BoolMut       = BM_Not
@@ -244,6 +188,7 @@ data DoubleGen     = DG_Uniform   (Double,Double)
                    | DG_Normal    (Mean,  StdDev)
 data DoubleMut     = DM_Uniform   (Double,Double)
                    | DM_Normal    (Mean,  StdDev)
+                   | DM_NormalAbs (Mean,  StdDev)
 data DoubleCro     = DC_Avg  
                    | DC_GeoAvg  
   
@@ -259,6 +204,7 @@ pairCro(PC_Both o1 o2) (x1,x2) (y1,y2) = do
  (a1,b1) <- crossIt o1 x1 y1
  (a2,b2) <- crossIt o2 x2 y2
  return $ ( (a1,b2) , (b1,a2) )
+
 
 listGen :: (Gene term opt) => ListGen opt -> Rand [[term]]
 listGen (LG_ opt len) = cutUpInflist len `liftM` generateIt opt 
@@ -277,9 +223,6 @@ listMut lm genom = case lm of
  LM_Prob opt len p -> 
   forM genom $ \ bit -> randIf p (mutateIt opt bit) (return bit)
 
-
-
-
 listCro :: (Cros term opt) => ListCro opt -> [term] -> [term] -> Rand ([term],[term])
 listCro lc x y = case lc of
  LC_OnePoint _ len -> do
@@ -287,6 +230,29 @@ listCro lc x y = case lc of
   let ( x1 , x2 ) = splitAt cutPos x
       ( y1 , y2 ) = splitAt cutPos y
   return $ ( x1 ++ y2 , y1 ++ x2 )
+
+
+distGen :: (Gene t o) => DistGen o -> Rand [Dist t]
+distGen (DiG_Uniform opt len) = 
+ let gOpt = LG_ ( PG_Both opt (DG_Uniform (0,1) ) ) len
+  in do 
+    xss <- generateIt gOpt 
+    return $ map mkDist xss
+
+
+distMut :: (Muta t o) => DistMut o -> Dist t -> Rand (Dist t)
+distMut (DiM_ opt) dist = 
+ let mOpt = LM_OnePoint ( PM_Both opt (DM_NormalAbs (0,1) ) ) (distSize dist)
+  in mkDist `liftM` mutateIt mOpt (distToList 1 dist)
+
+distCro :: (Cros t o) => DistCro o -> Dist t -> Dist t -> Rand ( Dist t , Dist t )
+distCro (DiC_OnePoint _) x y =
+ let cOpt = LC_OnePoint () (distSize x)
+  in do
+   let x' = distToList 1 x
+       y' = distToList 1 y 
+   (a,b) <- crossIt cOpt x' y'
+   return ( mkDist a , mkDist b )   
 
 
 boolGen :: BoolGen -> Rand [Bool]
@@ -300,6 +266,7 @@ boolMut bm x = case bm of
 boolCro :: BoolCro -> Bool -> Bool -> Rand (Bool,Bool)
 boolCro _ x y = return $ ( x && y , x || y )
 
+
 doubleGen :: DoubleGen -> Rand [Double]
 doubleGen dg = case dg of
  DG_Uniform range  -> infRand $ getRandomR range
@@ -307,8 +274,9 @@ doubleGen dg = case dg of
 
 doubleMut :: DoubleMut -> Double -> Rand Double
 doubleMut dm x = case dm of
- DM_Uniform range  -> (x+) `liftM` getRandomR range
- DM_Normal  params -> (x+) `liftM` getNormal  params
+ DM_Uniform   range  -> (x+)         `liftM` getRandomR range
+ DM_Normal    params -> (x+)         `liftM` getNormal  params
+ DM_NormalAbs params -> (abs . (x+)) `liftM` getNormal  params
 
 doubleCro :: DoubleCro -> Double -> Double -> Rand (Double,Double)
 doubleCro dc x y = case dc of
@@ -327,31 +295,97 @@ doubleCro dc x y = case dc of
 
 type BoolListProblem = Problem [Bool] (ListGen BoolGen) (ListMut BoolMut) (ListCro () )
 
-boolListProblem :: PopSize -> Len -> ([Bool]->FitVal) -> BoolListProblem
-boolListProblem popSize len ff = 
-  Problem popSize (mkEOpt 33 33 33) (LG_ BG_ len) (LM_OnePoint BM_Not len ) (LC_OnePoint () len) ff  
+boolListProblem :: (Double,Double,Double) -> PopSize -> Len -> ([Bool]->FitVal) -> BoolListProblem
+boolListProblem eParams popSize len ff = 
+  Problem popSize (mkEOpt eParams) (LG_ BG_ len) (LM_OnePoint BM_Not len ) (LC_OnePoint () len) (return . ff)  
   
 
-test = putEvolveMaximas $ boolListProblem 20 100 ff2
+
+test       = putEvolveMaximas 1000 $ boolListProblem (   33,   33,   33) 20 100 ff2 -- 49    , 56 
+testByMeta = putEvolveMaximas 1000 $ boolListProblem ( 1.93,94.85, 3.22) 2  100 ff2 --       , 98.01
+testByMeta2= putEvolveMaximas 1000 $ boolListProblem (8.921,87.83,3.245) 2  100 ff2 -- 98.01 , 90
+testByMeta3= putEvolveMaximas 1000 $ boolListProblem (5.040,94.56,0.396) 2  100 ff2 -- 
+testByMeta4= putEvolveMaximas 1000 $ boolListProblem (20.39,74.26,5.341) 3  100 ff2
+testByMeta5= putEvolveMaximas 1000 $ boolListProblem (6.962,88.36,4.680) 2  100 ff2 -- 96.04
+testByMeta6= putEvolveMaximas 1000 $ boolListProblem (0.489,98.82,0.692) 2  100 ff2
+testExtrapo= putEvolveMaximas 1000 $ boolListProblem (0    ,  100,    0) 2  100 ff2
+
+normalize :: Credit -> [Double] -> ( (Double,Double,Double) , Int )
+normalize credit [rep,mut,cro,gSize,gNum] =
+ let q = 100.0 / (rep+mut+cro)
+     popSize = round . sqrt $ credit * (gSize / gNum)
+  in ( (rep*q,mut*q,cro*q) , popSize )
 
 
-testFF3 = 
- let popSize = 200
-     len     = 100
-     eOpt    = mkEOpt 33 33 33
+test2_1 = test2 ( (   33,   33,   33) , 20 ) -- 46, 47, 41, 49
+test2_2 = test2 ( (5.819,85.73,8.442) ,  2 ) -- 77, 69, 64, 71
+test2_3 = test2 ( (7.827,87.79,4.378) ,  3 ) -- 74, 72, 77, 69, 62, 69
+
+test2 ( ePars , popSize ) = 
+ let len     = 100
+     eOpt    = mkEOpt ePars
      gOpt    = LG_         (PG_Both BG_    (DG_Normal (0,1)) ) len
      mOpt    = LM_OnePoint (PM_Both BM_Not (DM_Normal (0,1)) ) len
-     cOpt    = LC_OnePoint (PC_Both BC_    DC_Avg            ) len -- tady muže bejt klidně () !!!
-  in putEvolveMaximas $ Problem popSize eOpt gOpt mOpt cOpt ff3
+     cOpt    = LC_OnePoint ()                                  len 
+  in putEvolveMaximas 500 $ Problem popSize eOpt gOpt mOpt cOpt (return . ff3)
+
+metaTest2 = 
+ let len      = 100
+     gOpt     = LG_         (PG_Both BG_    (DG_Normal (0,1)) ) len
+     mOpt     = LM_OnePoint (PM_Both BM_Not (DM_Normal (0,1)) ) len  
+     cOpt     = LC_OnePoint ()                                  len
+     ff       = return . ff3
+     inCredit = 500
+  in putEvolveMaximas 25000 $ metaProblem (gOpt,mOpt,cOpt,ff,inCredit)
+
 
 testFF4 = 
  let popSize = 20
-     len     = 10
-     eOpt    = mkEOpt 33 0 0
+     len     = 2
+     eOpt    = mkEOpt (33,33,33)
      gOpt    = DiG_Uniform (DG_Normal (0,1) ) len
      mOpt    = DiM_ ( DM_Normal (0,1) )
      cOpt    = DiC_OnePoint ()
-  in putEvolve $ Problem popSize eOpt gOpt mOpt cOpt ff4
+  in putEvolveMaximas 20000 $ Problem popSize eOpt gOpt mOpt cOpt ff4' -- (return . ff4)
+
+type MetaProblem = Problem [Double] (ListGen DoubleGen) (ListMut DoubleMut) (ListCro ())
+type MetaParams t g m c = (g,m,c,FitFun t,Credit) 
+
+
+metaTest = 
+ let len      = 100
+     gOpt     = LG_ BG_ len  
+     mOpt     = LM_OnePoint BM_Not len  
+     cOpt     = LC_OnePoint () len
+     ff       = return . ff2
+     inCredit = 500
+  in putEvolveMaximas 25000 $ metaProblem (gOpt,mOpt,cOpt,ff,inCredit)
+
+metaProblem :: Evolvable t g m c => MetaParams t g m c -> MetaProblem
+metaProblem params =
+ let popSize = 20
+     len     = 5 -- == length [rep,mut,cro,gSize,gNum] 
+     eOpt    = mkEOpt (33,33,33)
+     gOpt    = LG_ ( DG_Uniform (0,1) ) len
+     mOpt    = LM_OnePoint ( DM_NormalAbs (0,1) ) len
+     cOpt    = LC_OnePoint () len
+  in Problem popSize eOpt gOpt mOpt cOpt (metaFF params) 
+ 
+metaFF :: Evolvable t g m c => MetaParams t g m c -> [Double] -> Rand FitVal
+metaFF (gOpt,mOpt,cOpt,ff,credit) [rep,mut,cro,gSize,gNum] = do 
+  ds <- evolveIt innerProblem credit
+  if null ds
+   then return 0
+   else let Just (_,ffVal) = distMax . last $ ds
+         in return ffVal
+ where 
+  innerProblem = 
+   let ratio   = gSize / gNum
+       popSize = round . sqrt $ credit * ratio
+       eOpt    = mkEOpt (rep,mut,cro)
+    in Problem popSize eOpt gOpt mOpt cOpt ff
+
+
 
 ff1 :: [Bool]-> FitVal
 ff1 bits = let tNum = dLen . filter id $ bits in tNum * tNum
@@ -370,105 +404,15 @@ ff3 xs =
 
 ff4 :: Dist Double -> FitVal
 ff4 d =  
- let xs = fst $ runState (distTake_new (2 * distSize d) d) (mkStdGen 42) 
+ let xs = fst $ runState (distTake_new (100 * distSize d) d) (mkStdGen 42) 
   in 1 / ( 1 + abs (sum xs) ) 
+
+ff4' :: Dist Double -> Rand FitVal
+ff4' d = do 
+ xs <- (distTake_new (5 * distSize d) d) 
+ return $ 1 / ( 1 + abs (sum xs) ) 
 
 
 dLen :: [a] -> Double
 dLen = fromIntegral . length 
 
--- writer experiments ----------------------
-
-type Mo a = WriterT [String] (State StdGen) a
-
-getRandom_ :: Random a => Mo a
-getRandom_ = lift getRandom
-
-getRandomR_ :: Random a => (a,a) -> Mo a
-getRandomR_ = lift . getRandomR
-
-infiniteRand_ :: Rand a -> Mo [a]
-infiniteRand_ = lift . infiniteRand
-
-log_ :: String -> Mo () 
-log_ str = tell [str]
-
-getGen :: Mo StdGen
-getGen = lift get
-
-putGen :: StdGen -> Mo ()
-putGen = lift . put
-
- 
--- Podle mě bude problém s nekonečnym logovánim....
-
-infChain :: (a -> Mo a) -> a -> Mo [a]
-infChain f x = do
-   gen <- getGen
-   let (gen1,gen2) = split gen
-   putGen gen1
-   xs <- inf f x 
-   putGen gen2
-   return $ x:xs
- where
-  inf :: (a -> Mo a) -> a -> Mo [a]
-  inf f x = do
-   x' <- f x
-   xs <- inf f x'
-   return $ x':xs 
-
-infSame :: Mo a -> Mo [a]
-infSame rand = do
-   gen <- getGen
-   let (gen1,gen2) = split gen
-   putGen gen1
-   xs <- inf rand
-   putGen gen2
-   return xs
- where
-  inf :: Mo a -> Mo [a]
-  inf r = do
-   x  <- r
-   xs <- inf r
-   return $ x:xs
-
--- experimental --------------------------
-
-type Di a = (a,a) 
-
-sex :: ( Cros genom opt ) => opt -> Di genom -> Di genom -> Rand (Di genom)
-sex opt dad@(deda1,babi1) mum@(deda2,babi2) = do
- (sperm,_) <- crossIt opt deda1 babi1
- (egg  ,_) <- crossIt opt deda2 babi2
- return (sperm,egg) 
-
-
-sex2 :: ( Cros genom opt ) => opt -> Di (Dist genom) -> Di (Dist genom) -> Rand (Di [genom])
-sex2 opt dad@(deda1,babi1) mum@(deda2,babi2) = do
-
- fromD1 <- distTake_new (distSize deda1) deda1 
- fromD2 <- distTake_new (distSize deda2) deda2
- fromB1 <- distTake_new (distSize babi1) babi1 
- fromB2 <- distTake_new (distSize babi2) babi2
-
- sperms <- forM (zip fromD1 fromB1) (\(d1,b1) -> crossIt opt d1 b1)
- eggs   <- forM (zip fromD2 fromB2) (\(d2,b2) -> crossIt opt d2 b2)
- 
- return ( map fst sperms , map fst eggs ) 
-
-
-meiosis :: ( Cros genom opt ) => opt -> Di genom -> Rand [genom]
-meiosis opt (gDad,gMum) = do
- (son1,son2) <- crossIt opt gDad gMum
- (son3,son4) <- crossIt opt gDad gMum
- return [son1,son2,son3,son4]
-
-{--
-crossThem :: (Cros term opt) => opt -> [term] -> Rand [term]
-crossThem _   []  = return []
-crossThem _   [t] = return [t]
-crossThem opt (t1:t2:ts) = do
- (t1',t2') <- crossIt opt t1 t2
- ts'       <- crossThem opt ts 
- return $ t1' : t2' : ts'
---}

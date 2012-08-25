@@ -27,8 +27,10 @@ infixr 7 +++
 
 -- Pro přehledné vykreslení seznamu, záznam na řádek
 putList :: (Show a) => [a] -> IO ()
-putList [] = putStrLn "[]"
-putList xs = foldr1 (>>) (map (putStrLn.show) xs) 
+putList []     = return ()
+putList (x:xs) = do
+ putStrLn . show $ x
+ putList xs 
 
 insertToListMap :: (Ord k) => k -> a -> Map k [a] -> Map k [a]
 insertToListMap key val listMap 
@@ -42,12 +44,14 @@ lookupInListMap key listMap
 
 -- Vrací rostoucí seznam dosavadních maxim v seznamu
 maximas :: Ord a => [a] -> [a]
+maximas []     = []
 maximas (x:xs) = x : f x xs
   where
   f _   []     = []
   f max (x:xs) = if x > max then x : f x xs else f max xs
 
 maximasBy :: (a->a->Bool) -> [a] -> [a]
+maximasBy _  []     = []
 maximasBy lt (x:xs) = x : f x xs
   where
   f _    []     = []

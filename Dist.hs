@@ -57,6 +57,7 @@ module Dist
 , mkDist  
 , mkDist2
 ,  distToList 
+,  distIsEmpty
 , distMax
 , distTake
 , distTake_new , distGet
@@ -92,6 +93,10 @@ instance Functor DTree where
    DLeaf  (x,val)   -> DLeaf  ( f x   , val )
    DLeaf2 (g,val)   -> DLeaf2 ( f . g , val )
    DNode mark t1 t2 -> DNode mark (fmap f t1) (fmap f t2) 
+
+distIsEmpty :: Dist a -> Bool
+distIsEmpty DEmpty = True
+distIsEmpty _ = False
 
 mkDist :: [(a,Double)] -> Dist a
 mkDist xs = mkDist2 xs []
