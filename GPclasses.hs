@@ -11,6 +11,7 @@ import Data.Maybe
 
 import Util
 import Dist
+import KozaTree
 
 --type Problem term gOpt mOpt cOpt = ( PopSize, EOpt, gOpt, mOpt, cOpt, term->FitVal )
 
@@ -136,6 +137,15 @@ putEvolveMaximas credit problem = do
 
 -- instances -----------------
 
+testGene :: (Show t, Gene t o) => t -> o -> IO [t]
+testGene _ o = do
+ ts <- runRand $ generateIt o
+ putList ts
+ return ts 
+
+as :: a
+as = undefined
+
 instance Gene t t  where generateIt x  = return $ repeat x
 instance Muta t () where mutateIt _ x  = return x
 instance Muta t t  where mutateIt o _  = return o
@@ -152,6 +162,40 @@ instance (Cros t o) => Cros [t]      (ListCro o) where crossIt    = listCro
 instance (Gene t o) => Gene (Dist t) (DistGen o) where generateIt = distGen
 instance (Muta t o) => Muta (Dist t) (DistMut o) where mutateIt   = distMut
 instance (Cros t o) => Cros (Dist t) (DistCro o) where crossIt    = distCro
+
+instance Gene KTree  KTreeGen  where generateIt = kTreeGen
+
+data KTreeGen = KG_Koza KEnv
+
+type KEnv = (KTerminals,KNonterminals)
+type KTerminals    = [String]
+type KNonterminals = [(String,Arity)]
+type Arity = Int
+
+testGen = (KG_Koza (["1","2"],[("+",2),("*",2),("inc",1)]))
+
+kTreeGen :: KTreeGen -> Rand [KTree]
+kTreeGen ( KG_Koza (tes,nes) ) = do
+  fullM <- getRandom
+  maxD  <- getRandomL [1..6]
+  infRand $ genOne 0 maxD fullM
+ where
+  ces = (map (\t->(t,0)) tes) ++ nes
+  genOne :: Int -> Int -> Bool -> Rand KTree
+  genOne depth maxDepth fullMet
+    | depth == 0        = nCase nes
+    | depth == maxDepth = tCase
+    | fullMet           = nCase nes
+    | otherwise         = nCase ces
+   where 
+    tCase = do 
+     name <- getRandomL tes
+     return $ KNode name [] 
+    nCase xs = do
+     (name,arity) <- getRandomL xs
+     ts <- mapM (\_->genOne (depth+1) maxDepth fullMet ) [1..arity]
+     return $ KNode name ts
+
 
 instance Gene Bool   BoolGen   where generateIt = boolGen
 instance Muta Bool   BoolMut   where mutateIt   = boolMut 

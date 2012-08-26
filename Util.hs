@@ -10,7 +10,7 @@ module Util
 , fill , fillStr
 , Queue , emptyQueue , insertQueue , insertsQueue , popQueue , nullQueue , singletonQueue
 , Rand  , randLift , getRandom , getRandomR , mkRand , runRand' , runRand , infiniteRand
-        , infChainRand , infRand , randCase, randIf ,getNormal
+        , infChainRand , infRand , randCase, randIf ,getNormal, getRandomL
 ) where
 
 import Data.List
@@ -219,6 +219,11 @@ getRandom = randLift random
 
 getRandomR :: Random a => (a,a) -> Rand a
 getRandomR range = randLift $ randomR range
+
+getRandomL :: [a] -> Rand a
+getRandomL xs = do
+ i <- getRandomR (0,length xs - 1)
+ return $ xs !! i
 
 getNormal :: (Random a, Floating a) => (a, a) -> Rand a
 getNormal params@( mean , stdDeviation ) = randLift $ normal' params
