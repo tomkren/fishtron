@@ -164,8 +164,10 @@ instance (Muta t o) => Muta (Dist t) (DistMut o) where mutateIt   = distMut
 instance (Cros t o) => Cros (Dist t) (DistCro o) where crossIt    = distCro
 
 instance Gene KTree  KTreeGen  where generateIt = kTreeGen
+instance Muta KTree  KTreeMut  where mutateIt   = kTreeMut
 
 data KTreeGen = KG_Koza KEnv
+data KTreeMut = KM_Koza KEnv
 
 type KEnv = (KTerminals,KNonterminals)
 type KTerminals    = [String]
@@ -174,11 +176,17 @@ type Arity = Int
 
 testGen = (KG_Koza (["1","2"],[("+",2),("*",2),("inc",1)]))
 
-kTreeGen :: KTreeGen -> Rand [KTree]
-kTreeGen opt = infRand $ kTreeGenOne opt 
+kTreeMut :: KTreeMut -> KTree -> Rand KTree
+kTreeMut (KM_Koza kEnv) tree = do
+ newSub <- kTreeGenOne kEnv
+ mutPos <- getRandomL $ kPoses tree
+ return . fst $ kChangeSubtree tree mutPos newSub
 
-kTreeGenOne :: KTreeGen -> Rand KTree
-kTreeGenOne ( KG_Koza (terminals,nonterminals) ) = do
+kTreeGen :: KTreeGen -> Rand [KTree]
+kTreeGen (KG_Koza kEnv) = infRand $ kTreeGenOne kEnv 
+
+kTreeGenOne :: KEnv -> Rand KTree
+kTreeGenOne (terminals,nonterminals) = do
   isFullMethod <- getRandom
   maximalDepth <- getRandomL [1..6]
   genOne 0 maximalDepth isFullMethod
