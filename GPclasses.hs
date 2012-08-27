@@ -175,26 +175,29 @@ type Arity = Int
 testGen = (KG_Koza (["1","2"],[("+",2),("*",2),("inc",1)]))
 
 kTreeGen :: KTreeGen -> Rand [KTree]
-kTreeGen ( KG_Koza (tes,nes) ) = do
-  fullM <- getRandom
-  maxD  <- getRandomL [1..6]
-  infRand $ genOne 0 maxD fullM
+kTreeGen opt = infRand $ kTreeGenOne opt 
+
+kTreeGenOne :: KTreeGen -> Rand KTree
+kTreeGenOne ( KG_Koza (terminals,nonterminals) ) = do
+  isFullMethod <- getRandom
+  maximalDepth <- getRandomL [1..6]
+  genOne 0 maximalDepth isFullMethod
  where
-  ces = (map (\t->(t,0)) tes) ++ nes
+  ts = map (\t->(t,0)) terminals
+  ns = nonterminals
+  cs = ts ++ ns
   genOne :: Int -> Int -> Bool -> Rand KTree
   genOne depth maxDepth fullMet
-    | depth == 0        = nCase nes
-    | depth == maxDepth = tCase
-    | fullMet           = nCase nes
-    | otherwise         = nCase ces
+    | depth == 0        = genOne' ns
+    | depth == maxDepth = genOne' ts
+    | fullMet           = genOne' ns
+    | otherwise         = genOne' cs
    where 
-    tCase = do 
-     name <- getRandomL tes
-     return $ KNode name [] 
-    nCase xs = do
+    genOne' :: [(String,Arity)] -> Rand KTree
+    genOne' xs = do
      (name,arity) <- getRandomL xs
-     ts <- mapM (\_->genOne (depth+1) maxDepth fullMet ) [1..arity]
-     return $ KNode name ts
+     trees <- mapM (\_->genOne (depth+1) maxDepth fullMet ) [1..arity]
+     return $ KNode name trees
 
 
 instance Gene Bool   BoolGen   where generateIt = boolGen
