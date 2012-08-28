@@ -13,6 +13,7 @@ import Data.Maybe
 import Data.Either
 import Control.Monad
 import Text.Parsec.Prim
+import Text.Parsec.Pos
 
 import Heval
 import Util
@@ -99,14 +100,21 @@ evalKTree t as = heval (show t) as
 -}
 
 
-data KToken = LPar | RPar | Symbol String deriving (Show,Eq)
+data Tok = LPar | RPar | Symbol String | End deriving (Show,Eq)
 
-kPars :: String -> Either ParseError [KToken]
+type Token = (SourcePos,Tok)
+data Tok2  = Identifier String
+          | Reserved String
+          | Symbol2 String
+          | Price Int
+          deriving Show
+
+kPars :: String -> Either ParseError KTree
 kPars str = do
- toks <- kToksParse str
- kExprParse toks
+  toks <- kToksParse str
+  kExprParse (toTokenus $ toks++[End])
 
-kToksParse :: String -> Either ParseError [KToken]
+kToksParse :: String -> Either ParseError [Tok]
 kToksParse str = parse toks' "(Token Error)" str 
  where
   sym   = Symbol `liftM` many1 ( noneOf " ()" )
@@ -123,16 +131,73 @@ kToksParse str = parse toks' "(Token Error)" str
    ts <- toks
    return $ t:ts 
 
-kExprParse :: [KToken] -> Either ParseError [KToken]
-kExprParse toks = parse expre "(Syntax Error)" toks
+type MyParser a = GenParser Token () a
 
-sat :: (KToken ->Bool) -> GenParser KToken st KToken
-sat p = do 
- toks <- getInput
- case toks of
-  [] -> parserFail "(fail)"
-  (tok:rest) -> 
-   if p tok then do {setInput rest ; return tok} else parserFail "(fail)"
+toTokenus :: [Tok] -> [Token]
+toTokenus ts = zip (map  (\i->setSourceColumn (initialPos "input") i ) [1..] ) ts
+
+kExprParse :: [Token] -> Either ParseError KTree
+kExprParse toks = parse input "(Syntax Error)" toks
+
+input :: MyParser KTree
+input = do
+  tree <- ex
+  end
+  return tree
+
+
+mytoken :: (Tok -> Maybe a) -> MyParser a
+mytoken test = token showToken posToken testToken
+ where 
+  showToken (pos,tok) = show tok
+  posToken  (pos,tok) = pos
+  testToken (pos,tok) = test tok
+
+
+symbo :: MyParser String
+symbo = mytoken $ \tok -> case tok of
+ Symbol name -> Just name
+ _ -> Nothing
+
+
+lpar :: MyParser ()
+lpar = mytoken $ \tok -> case tok of
+ LPar -> Just ()
+ _ -> Nothing
+
+rpar :: MyParser ()
+rpar = mytoken $ \tok -> case tok of
+ RPar -> Just ()
+ _ -> Nothing
+
+end :: MyParser ()
+end = mytoken $ \tok -> case tok of
+ End -> Just ()
+ _ -> Nothing
+
+ex :: MyParser KTree
+ex = ex1 <|> ex2
+
+ex1 :: MyParser KTree
+ex1 = do
+ str <- symbo 
+ return $ KNode str [] 
+
+ex2 :: MyParser KTree
+ex2 = do
+  lpar 
+  str <- symbo
+  ts <- many ex
+  rpar
+  return $ KNode str ts
+
+
+{--
+
+do
+  tree <- ex
+  end
+  return tree
 
 lpar :: GenParser KToken st KToken
 lpar = sat (==LPar)
@@ -140,15 +205,36 @@ lpar = sat (==LPar)
 rpar :: GenParser KToken st KToken
 rpar = sat (==RPar)
 
-symb :: GenParser
+end :: GenParser KToken st KToken
+end = sat (==End)
 
-ex1 :: GenParser KToken st [KToken]
+symb :: GenParser KToken st String
+symb = do
+ Symbol str <- sat (\x->case x of Symbol _ -> True ;_->False)
+ return str
+
+ex :: GenParser KToken st KTree
+ex = ex1 <|> ex2
+
+ex1 :: GenParser KToken st KTree
 ex1 = do 
+  str <- symb
+  return $ KNode str []
+
+
+ex2 :: GenParser KToken st KTree
+ex2 = do
   lpar 
-  many ex
-  rpar 
-  return ts
- 
+  str <- symb
+  ts <- many ex
+  rpar
+  return $ KNode str ts
+
+--}
+
+
+
+
 
 -- ---------
 
