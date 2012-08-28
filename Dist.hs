@@ -68,6 +68,7 @@ module Dist
 
 import System.Random
 import Text.Printf
+import Control.Monad.State
 
 import Util
 
@@ -169,7 +170,7 @@ randP :: (RandomGen g) => Double -> g -> (Bool,g)
 randP p gen = let (r,gen') = rand01 gen
                in ( r < p , gen') 
 
-distGet :: Dist a -> Rand a
+distGet ::  (RandomGen g , MonadState g m ) => Dist a -> m a
 distGet d = randLift $ flip distGet_ d
 
 distGet_ :: (RandomGen g) => g -> Dist a -> ( a , g )
@@ -191,7 +192,7 @@ distObt' cutP gen dist
          then distPop' gen' dist 
          else let (ret,gen'') = distGet_ gen' dist in Just (ret,dist,gen'')
 
-distTake_new :: Int -> Dist a -> Rand [a]
+distTake_new :: (RandomGen g , MonadState g m ) => Int -> Dist a -> m [a]
 distTake_new n dist = randLift (\gen -> distTake gen n dist )
 
 distTake :: (RandomGen g) => g -> Int -> Dist a -> ( [a] , g )
@@ -241,6 +242,7 @@ distMax (Dist t (sum,_)) = Just $ distMax' sum t
   
 distSize :: Dist a -> Int
 distSize (Dist _ (_,size)) = size
+distSize DEmpty = 0
 
 getDTree :: Dist a -> DTree a
 getDTree (Dist t _) = t

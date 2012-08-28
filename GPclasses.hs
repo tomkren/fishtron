@@ -8,23 +8,31 @@ module GPclasses where
 import System.Random
 import Control.Monad.State
 import Data.Maybe
+import Data.Typeable
 
 import Util
 import Dist
+import Heval
 import KozaTree
 
 --type Problem term gOpt mOpt cOpt = ( PopSize, EOpt, gOpt, mOpt, cOpt, term->FitVal )
 
-data Problem term gOpt mOpt cOpt = Problem
+data Problem term a gOpt mOpt cOpt = Problem
  { popSize :: PopSize
  , eOpt    :: EOpt
  , gOpt    :: gOpt
  , mOpt    :: mOpt
  , cOpt    :: cOpt
- , fitFun  :: term -> Rand FitVal
+ , fitFun  :: FitFun2 term a
+ , ass     :: a
  }
 
 type FitFun term = term -> Rand FitVal
+
+data FitFun2 term a = FF1 (term -> Rand FitVal)
+                    | FF2 (term->String) a (a->Rand FitVal)
+
+
 
 type Credit = Double
 
@@ -60,10 +68,10 @@ class Muta term opt where
 class Cros term opt where
  crossIt :: opt -> term -> term -> Rand (term,term)  
 
-class Evolvable term gOpt mOpt cOpt where
-  evolveIt  :: Problem term gOpt mOpt cOpt -> Credit -> Rand [Dist term]
+class Evolvable term a gOpt mOpt cOpt where
+  evolveIt  :: Problem term a gOpt mOpt cOpt -> Credit -> Rand [Dist term]
   
-instance (Gene term gOpt, Muta term mOpt, Cros term cOpt) => Evolvable term gOpt mOpt cOpt where
+instance (Gene term gOpt, Muta term mOpt, Cros term cOpt,Typeable a) => Evolvable term a gOpt mOpt cOpt where
  evolveIt problem credit = 
   wrapper $ evolveBegin problem credit >>= infChainRand (evolveStep problem) 
 
@@ -72,21 +80,25 @@ wrapper rand = do
  xs <- rand
  return . takeWhile (not . distIsEmpty) . map fst $ xs 
 
-evolveBegin :: ( Gene term gOpt ) => Problem term gOpt mOpt cOpt -> Credit -> Rand (Dist term,Credit)
+evolveBegin :: ( Gene term gOpt, Typeable a ) => Problem term a gOpt mOpt cOpt -> Credit -> Rand (Dist term,Credit)
 evolveBegin p credit = do
  let toTake = min (popSize p) (floor credit) 
  pop0 <- (take toTake `liftM` generateIt (gOpt p)) >>= evalFF p
  return (pop0, credit - fromIntegral toTake )
 
-evolveStep :: ( Muta term mOpt , Cros term cOpt ) => Problem term gOpt mOpt cOpt -> (Dist term,Credit) -> Rand (Dist term,Credit)
+evolveStep ::(Muta term mOpt,Cros term cOpt,Typeable a)=>Problem term a gOpt mOpt cOpt->(Dist term,Credit)->Rand (Dist term,Credit)
 evolveStep p x@(_,credit) = do
  pop <- ( getWinners x >>= performOps p ) >>= evalFF p
  return (pop, credit - fromIntegral (distSize pop) )
 
-evalFF :: Problem term gOpt mOpt cOpt -> [term] -> Rand (Dist term)
-evalFF p ts = mkDist `liftM` mapM (\t->(t,) `liftM` ff t) ts
- where ff = fitFun p 
---evalFF p = mkDist . map (\t->(t,ff t)) 
+evalFF :: (Typeable a) => Problem term a gOpt mOpt cOpt -> [term] -> Rand (Dist term)
+evalFF p ts = case fitFun p of
+ FF1 ff -> mkDist `liftM` mapM (\t->(t,) `liftM` ff t) ts
+ FF2 toStr a ff -> 
+  let strs = map toStr ts
+      as   = evals strs a
+   in mkDist `liftM` mapM (\(t,a)->(t,) `liftM` ff a) (zip ts as)
+
 
 getWinners :: (Dist term,Credit) -> Rand ( [term] , [term] )
 getWinners (pop,credit) = 
@@ -95,7 +107,7 @@ getWinners (pop,credit) =
       toTake = (min (distSize pop) (floor credit) ) - length bests 
    in ( bests , ) `liftM` distTake_new toTake pop 
 
-performOps :: (Muta term mOpt , Cros term cOpt ) => Problem term gOpt mOpt cOpt -> ([term],[term]) -> Rand [term]
+performOps :: (Muta term mOpt , Cros term cOpt ) => Problem term a gOpt mOpt cOpt -> ([term],[term]) -> Rand [term]
 performOps p (best,terms) = (best ++ ) `liftM` performOps' (mkOpDist p) terms  
  where
   mkOpDist p = fmap (f p) (eOpt p)
@@ -121,11 +133,11 @@ performOps p (best,terms) = (best ++ ) `liftM` performOps' (mkOpDist p) terms
        return $ t1' : t2' : tt'
 
 
-putEvolve :: (Show term , Evolvable term gOpt mOpt cOpt) => Credit -> Problem term gOpt mOpt cOpt -> IO()
+putEvolve :: (Show term , Evolvable term a gOpt mOpt cOpt) => Credit -> Problem term a gOpt mOpt cOpt -> IO()
 putEvolve credit problem =
  liftM (map $ (\(i,d)->(i,fromJust . distMax $ d) ) ) (runRand $ (zip [0..]) `liftM` evolveIt problem credit ) >>= putList
 
-putEvolveMaximas :: (Show term , Evolvable term gOpt mOpt cOpt) => Credit -> Problem term gOpt mOpt cOpt -> IO ()
+putEvolveMaximas :: (Show term , Evolvable term a gOpt mOpt cOpt) => Credit -> Problem term a gOpt mOpt cOpt -> IO ()
 putEvolveMaximas credit problem = do
  ds <- runRand $ zip [0..] `liftM` evolveIt problem credit
  let f (i,t) = ( i , fromJust.distMax$t)
@@ -137,14 +149,49 @@ putEvolveMaximas credit problem = do
 
 -- instances -----------------
 
+--as :: a
+--as = undefined
+
+data TermLog t = LogGenom t | LogLine1 | LogLine2 | LogLine3 
+
+instance Show t => Show (TermLog t) where
+ show l = case l of
+  LogGenom t -> show t
+  LogLine3 -> replicate 80 '#'
+  LogLine2 -> replicate 80 '='
+  LogLine1 -> replicate 80 '-'
+
 testGene :: (Show t, Gene t o) => t -> o -> IO [t]
 testGene _ o = do
  ts <- runRand $ generateIt o
  putList ts
  return ts 
 
-as :: a
-as = undefined
+testMuta :: (Show t, Gene t oGen, Muta t oMut) => t -> oGen -> oMut -> IO [TermLog t]
+testMuta _ oGen oMut = do
+ ts <- runRand $ generateIt oGen
+ ms <- runRand $ forM ts (\t-> mutateIt oMut t)  
+ let ls = concatMap (\(t,m) -> [LogGenom t , LogLine1 , LogGenom m , LogLine2] ) ( zip ts ms )
+ putList ls
+ return ls
+
+testCros :: (Show t, Gene t oGen, Cros t oCro) => t -> oGen -> oCro -> IO [TermLog t]
+testCros _ oGen oCro = do
+ ts <- runRand $ generateIt oGen
+ let ps = pairs ts
+ cs <- runRand $ forM ps (\(t1,t2)-> crossIt oCro t1 t2)  
+ let ls = concatMap (\((t1,t2),(t1',t2')) -> 
+                       [LogGenom t1  , LogLine1 ,
+                        LogGenom t2  , LogLine2 , 
+                        LogGenom t1' , LogLine1 , 
+                        LogGenom t2' , LogLine3] ) ( zip ps cs )
+ putList ls
+ return ls
+
+pairs :: [a] -> [(a,a)]
+pairs []  = []
+pairs [x] = []
+pairs (x:y:rest) = (x,y) : pairs rest
 
 instance Gene t t  where generateIt x  = return $ repeat x
 instance Muta t () where mutateIt _ x  = return x
@@ -165,16 +212,33 @@ instance (Cros t o) => Cros (Dist t) (DistCro o) where crossIt    = distCro
 
 instance Gene KTree  KTreeGen  where generateIt = kTreeGen
 instance Muta KTree  KTreeMut  where mutateIt   = kTreeMut
+instance Cros KTree  KTreeCro  where crossIt    = kTreeCro
 
 data KTreeGen = KG_Koza KEnv
 data KTreeMut = KM_Koza KEnv
+data KTreeCro = KC_Koza
 
 type KEnv = (KTerminals,KNonterminals)
 type KTerminals    = [String]
 type KNonterminals = [(String,Arity)]
 type Arity = Int
 
-testGen = (KG_Koza (["1","2"],[("+",2),("*",2),("inc",1)]))
+env1 :: KEnv
+env1 =  (["1","2"],[("plus",2),("inc",1)])
+
+kTreeCro :: KTreeCro -> KTree -> KTree -> Rand (KTree,KTree)
+kTreeCro KC_Koza tree1 tree2 = do
+  cPos1 <- crossPos tree1
+  cPos2 <- crossPos tree2
+  let sub1          = kSubtree tree1 cPos1
+      (tree2',sub2) = kChangeSubtree tree2 cPos2 sub1
+      (tree1',_   ) = kChangeSubtree tree1 cPos1 sub2
+  return (tree1',tree2')
+ where
+  crossPos :: KTree -> Rand KPos
+  crossPos tree = do
+   poses <- let (ts,ns) = kPoses2 tree in randCase 0.9 ns ts
+   getRandomL poses
 
 kTreeMut :: KTreeMut -> KTree -> Rand KTree
 kTreeMut (KM_Koza kEnv) tree = do
@@ -206,6 +270,8 @@ kTreeGenOne (terminals,nonterminals) = do
      (name,arity) <- getRandomL xs
      trees <- mapM (\_->genOne (depth+1) maxDepth fullMet ) [1..arity]
      return $ KNode name trees
+
+
 
 
 instance Gene Bool   BoolGen   where generateIt = boolGen
@@ -348,11 +414,11 @@ doubleCro dc x y = case dc of
 
 
 
-type BoolListProblem = Problem [Bool] (ListGen BoolGen) (ListMut BoolMut) (ListCro () )
+type BoolListProblem = Problem [Bool] () (ListGen BoolGen) (ListMut BoolMut) (ListCro () )
 
 boolListProblem :: (Double,Double,Double) -> PopSize -> Len -> ([Bool]->FitVal) -> BoolListProblem
 boolListProblem eParams popSize len ff = 
-  Problem popSize (mkEOpt eParams) (LG_ BG_ len) (LM_OnePoint BM_Not len ) (LC_OnePoint () len) (return . ff)  
+  Problem popSize (mkEOpt eParams) (LG_ BG_ len) (LM_OnePoint BM_Not len ) (LC_OnePoint () len) (FF1 $ return . ff)  ()
   
 
 
@@ -382,16 +448,16 @@ test2 ( ePars , popSize ) =
      gOpt    = LG_         (PG_Both BG_    (DG_Normal (0,1)) ) len
      mOpt    = LM_OnePoint (PM_Both BM_Not (DM_Normal (0,1)) ) len
      cOpt    = LC_OnePoint ()                                  len 
-  in putEvolveMaximas 500 $ Problem popSize eOpt gOpt mOpt cOpt (return . ff3)
+  in putEvolveMaximas 500 $ Problem popSize eOpt gOpt mOpt cOpt (FF1 $ return . ff3) ()
 
 metaTest2 = 
  let len      = 100
      gOpt     = LG_         (PG_Both BG_    (DG_Normal (0,1)) ) len
      mOpt     = LM_OnePoint (PM_Both BM_Not (DM_Normal (0,1)) ) len  
      cOpt     = LC_OnePoint ()                                  len
-     ff       = return . ff3
+     ff       = FF1 $ return . ff3
      inCredit = 500
-  in putEvolveMaximas 25000 $ metaProblem (gOpt,mOpt,cOpt,ff,inCredit)
+  in putEvolveMaximas 25000 $ metaProblem (gOpt,mOpt,cOpt,ff,(),inCredit)
 
 
 testFF4 = 
@@ -401,10 +467,10 @@ testFF4 =
      gOpt    = DiG_Uniform (DG_Normal (0,1) ) len
      mOpt    = DiM_ ( DM_Normal (0,1) )
      cOpt    = DiC_OnePoint ()
-  in putEvolveMaximas 20000 $ Problem popSize eOpt gOpt mOpt cOpt ff4' -- (return . ff4)
+  in putEvolveMaximas 20000 $ Problem popSize eOpt gOpt mOpt cOpt (FF1 ff4') () -- (return . ff4)
 
-type MetaProblem = Problem [Double] (ListGen DoubleGen) (ListMut DoubleMut) (ListCro ())
-type MetaParams t g m c = (g,m,c,FitFun t,Credit) 
+type MetaProblem = Problem [Double] () (ListGen DoubleGen) (ListMut DoubleMut) (ListCro ())
+type MetaParams t a g m c = (g,m,c,FitFun2 t a,a,Credit) 
 
 
 metaTest = 
@@ -412,11 +478,11 @@ metaTest =
      gOpt     = LG_ BG_ len  
      mOpt     = LM_OnePoint BM_Not len  
      cOpt     = LC_OnePoint () len
-     ff       = return . ff2
+     ff       = FF1 $ return . ff2
      inCredit = 500
-  in putEvolveMaximas 25000 $ metaProblem (gOpt,mOpt,cOpt,ff,inCredit)
+  in putEvolveMaximas 25000 $ metaProblem (gOpt,mOpt,cOpt,ff,(),inCredit)
 
-metaProblem :: Evolvable t g m c => MetaParams t g m c -> MetaProblem
+metaProblem :: Evolvable t a g m c => MetaParams t a g m c -> MetaProblem
 metaProblem params =
  let popSize = 20
      len     = 5 -- == length [rep,mut,cro,gSize,gNum] 
@@ -424,22 +490,34 @@ metaProblem params =
      gOpt    = LG_ ( DG_Uniform (0,1) ) len
      mOpt    = LM_OnePoint ( DM_NormalAbs (0,1) ) len
      cOpt    = LC_OnePoint () len
-  in Problem popSize eOpt gOpt mOpt cOpt (metaFF params) 
+  in Problem popSize eOpt gOpt mOpt cOpt (metaFF params) () 
  
-metaFF :: Evolvable t g m c => MetaParams t g m c -> [Double] -> Rand FitVal
-metaFF (gOpt,mOpt,cOpt,ff,credit) [rep,mut,cro,gSize,gNum] = do 
-  ds <- evolveIt innerProblem credit
-  if null ds
-   then return 0
-   else let Just (_,ffVal) = distMax . last $ ds
-         in return ffVal
- where 
-  innerProblem = 
-   let ratio   = gSize / gNum
-       popSize = round . sqrt $ credit * ratio
-       eOpt    = mkEOpt (rep,mut,cro)
-    in Problem popSize eOpt gOpt mOpt cOpt ff
+metaFF :: Evolvable t a g m c => MetaParams t a g m c -> FitFun2 [Double] () -- [Double] -> Rand FitVal
+metaFF (gOpt,mOpt,cOpt,ff,a,credit) = FF1 $ \ [rep,mut,cro,gSize,gNum] -> 
+ let innerProblem = 
+      let ratio   = gSize / gNum
+          popSize = round . sqrt $ credit * ratio
+          eOpt    = mkEOpt (rep,mut,cro)
+       in Problem popSize eOpt gOpt mOpt cOpt ff a 
+  in do 
+   ds <- evolveIt innerProblem credit
+   if null ds
+    then return 0
+    else let Just (_,ffVal) = distMax . last $ ds
+          in return ffVal
 
+
+testKT = 
+ let eOpt    = mkEOpt (10,0,90)
+     popSize = 20
+     gOpt    = KG_Koza env1
+     mOpt    = KM_Koza env1
+     cOpt    = KC_Koza 
+  in putEvolveMaximas 1000 $ Problem popSize eOpt gOpt mOpt cOpt ff_KT (as::Int)
+
+
+ff_KT :: FitFun2 KTree Int
+ff_KT = FF2 show (as::Int) (\i -> return $ fromIntegral i )
 
 
 ff1 :: [Bool]-> FitVal

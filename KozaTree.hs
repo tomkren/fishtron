@@ -1,8 +1,9 @@
 module KozaTree 
-( KTree (..)
+( KTree (..), KPos
 , kParse
 , kPoses, kPoses2
 , kChangeSubtree
+, kSubtree
 ) where
 
 import Text.ParserCombinators.Parsec
@@ -12,8 +13,8 @@ import Data.Tree
 import Data.Maybe
 import Data.Either
 import Control.Monad
-import Text.Parsec.Prim
-import Text.Parsec.Pos
+-- import Text.Parsec.Prim
+-- import Text.Parsec.Pos
 
 import Heval
 import Util
@@ -23,7 +24,13 @@ data KTree = KNode String [KTree] deriving (Eq)
 type KPos = [Int]
 
 
+evalKTree :: (Typeable a) => KTree -> a -> a
+evalKTree t as = eval (show t) as  
+
+
 t1 = kParse' "(a (b e (f k l) g) (c h i) (d j))"
+
+t2 = kParse' "(plus 1 1)"
 
 
 -- pak udelat quickcheck na 
@@ -37,11 +44,9 @@ kSize (KNode _ ts) = (1+) . sum $ map kSize ts
 kSubtrees :: KTree -> [KTree]
 kSubtrees t@(KNode _ ts) = t : concatMap kSubtrees ts
 
-kSubtree :: KTree -> KPos -> Maybe KTree
-kSubtree t [] = Just t
-kSubtree (KNode _ ts) (i:is) = do
- subt <- ts `at` i
- kSubtree subt is
+kSubtree :: KTree -> KPos -> KTree
+kSubtree t [] = t
+kSubtree (KNode _ ts) (i:is) = kSubtree (ts !! (i-1)) is
 
 kChangeSubtree :: KTree -> KPos -> KTree -> (KTree,KTree)
 kChangeSubtree tree           []     newSub = (newSub,tree) 
@@ -50,12 +55,13 @@ kChangeSubtree (KNode str ts) (i:is) newSub =
      (subt',oldSub) = kChangeSubtree subt is newSub
   in (KNode str (ts1 ++ (subt':ts2) ) ,oldSub)  
 
-
+{-
 at :: [a] -> Int -> Maybe a
 xs     `at` n | n < 1 =  Nothing
 []     `at` _         =  Nothing
 (x:_)  `at` 1         =  Just x
 (_:xs) `at` n         =  xs `at` (n-1)
+-}
 
 kPoses :: KTree -> [KPos]
 kPoses t = map reverse (kPoses' [] t)
@@ -86,189 +92,42 @@ toTree :: KTree -> Tree String
 toTree (KNode str ts) = Node str $ map toTree ts
 
 
-evalKTree :: (Typeable a) => KTree -> a -> IO a
-evalKTree t as = heval (show t) as  
 
+-- parser --------------------------------------
 
-{- 
-
- ( (a b c) c d e  ) .. v kozovskejch nejde
-
- expr   ::= symbol | ( symbol exprs )  
- exprs  ::= expr | expr exprs 
- symbol ::= 'abc'
--}
-
-
-data Tok = LPar | RPar | Symbol String | End deriving (Show,Eq)
-
-type Token = (SourcePos,Tok)
-data Tok2  = Identifier String
-          | Reserved String
-          | Symbol2 String
-          | Price Int
-          deriving Show
-
-kPars :: String -> Either ParseError KTree
-kPars str = do
-  toks <- kToksParse str
-  kExprParse (toTokenus $ toks++[End])
-
-kToksParse :: String -> Either ParseError [Tok]
-kToksParse str = parse toks' "(Token Error)" str 
- where
-  sym   = Symbol `liftM` many1 ( noneOf " ()" )
-  lpar  = char '(' >> return LPar
-  rpar  = char ')' >> return RPar
-  tok   = sym <|> lpar <|> rpar
-  manyW = many $ char ' '
-  toks' = manyW >> toks
-  toks  = toks1 <|> toks0
-  toks0 = eof >> return []
-  toks1 = do
-   t <- tok
-   manyW
-   ts <- toks
-   return $ t:ts 
-
-type MyParser a = GenParser Token () a
-
-toTokenus :: [Tok] -> [Token]
-toTokenus ts = zip (map  (\i->setSourceColumn (initialPos "input") i ) [1..] ) ts
-
-kExprParse :: [Token] -> Either ParseError KTree
-kExprParse toks = parse input "(Syntax Error)" toks
-
-input :: MyParser KTree
-input = do
-  tree <- ex
-  end
-  return tree
-
-
-mytoken :: (Tok -> Maybe a) -> MyParser a
-mytoken test = token showToken posToken testToken
- where 
-  showToken (pos,tok) = show tok
-  posToken  (pos,tok) = pos
-  testToken (pos,tok) = test tok
-
-
-symbo :: MyParser String
-symbo = mytoken $ \tok -> case tok of
- Symbol name -> Just name
- _ -> Nothing
-
-
-lpar :: MyParser ()
-lpar = mytoken $ \tok -> case tok of
- LPar -> Just ()
- _ -> Nothing
-
-rpar :: MyParser ()
-rpar = mytoken $ \tok -> case tok of
- RPar -> Just ()
- _ -> Nothing
-
-end :: MyParser ()
-end = mytoken $ \tok -> case tok of
- End -> Just ()
- _ -> Nothing
-
-ex :: MyParser KTree
-ex = ex1 <|> ex2
-
-ex1 :: MyParser KTree
-ex1 = do
- str <- symbo 
- return $ KNode str [] 
-
-ex2 :: MyParser KTree
-ex2 = do
-  lpar 
-  str <- symbo
-  ts <- many ex
-  rpar
-  return $ KNode str ts
-
-
-{--
-
-do
-  tree <- ex
-  end
-  return tree
-
-lpar :: GenParser KToken st KToken
-lpar = sat (==LPar)
-
-rpar :: GenParser KToken st KToken
-rpar = sat (==RPar)
-
-end :: GenParser KToken st KToken
-end = sat (==End)
-
-symb :: GenParser KToken st String
-symb = do
- Symbol str <- sat (\x->case x of Symbol _ -> True ;_->False)
- return str
-
-ex :: GenParser KToken st KTree
-ex = ex1 <|> ex2
-
-ex1 :: GenParser KToken st KTree
-ex1 = do 
-  str <- symb
-  return $ KNode str []
-
-
-ex2 :: GenParser KToken st KTree
-ex2 = do
-  lpar 
-  str <- symb
-  ts <- many ex
-  rpar
-  return $ KNode str ts
-
---}
-
-
-
-
-
--- ---------
+kParse :: String -> Either ParseError KTree
+kParse str = parse input "KTree" str
 
 kParse' :: String -> KTree
 kParse' str = let Right t = kParse str in t
 
-kParse :: String -> Either ParseError KTree
-kParse str = parse expr0 "(unknown)" str
-
-expr0 :: GenParser Char st KTree
-expr0 = do 
- tree <- expr
+input :: Parser KTree
+input = do
+ t <- expr 
  eof
- return tree
+ return t
 
-expr :: GenParser Char st KTree
-expr = expr1 <|> expr2
+expr :: Parser KTree
+expr = tre1
+   <|> do char '('
+          t <- tre2
+          char ')'
+          return t  
 
-expr1 :: GenParser Char st KTree
-expr1 = do 
- str <- symbol
- return $ KNode str []
+sym :: Parser String 
+sym = many1 $ noneOf " ()"
 
-expr2 :: GenParser Char st KTree
-expr2 = do
- char '('
- str   <- symbol
- white
- trees <- sepBy expr white
- char ')'
- return $ KNode str trees
+sps :: Parser ()
+sps = skipMany1 space
 
-symbol :: GenParser Char st String
-symbol = many1 ( noneOf " ()" )
+tre1 :: Parser KTree
+tre1 = liftM (\str->KNode str []) sym  
 
-white :: GenParser Char st Char
-white = char ' ' 
+tre2 :: Parser KTree
+tre2 = do 
+ str <- sym
+ sps
+ ts <- sepBy expr sps
+ return $ KNode str ts
+
+

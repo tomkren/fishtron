@@ -1,3 +1,7 @@
+{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE TypeSynonymInstances #-}
+{-# LANGUAGE FlexibleInstances #-}
+
 -- Util obsahuje obecné funkce funkce nad standardními typy.
 
 module Util
@@ -9,8 +13,9 @@ module Util
 , (+++)
 , fill , fillStr
 , Queue , emptyQueue , insertQueue , insertsQueue , popQueue , nullQueue , singletonQueue
-, Rand  , randLift , getRandom , getRandomR , mkRand , runRand' , runRand , infiniteRand
+, Rand  , randLift , getRandom , getRandomR , runRand 
         , infChainRand , infRand , randCase, randIf ,getNormal, getRandomL
+        , RunRand
 ) where
 
 import Data.List
@@ -19,6 +24,7 @@ import Data.Map (Map)
 import System.Random
 import Data.Random.Normal
 import Control.Monad.State
+import Data.Functor.Identity
 
 -- "Zřetězení funkcí"
 (+++) :: (a->[b]) -> (a->[b]) -> (a->[b])
@@ -140,6 +146,80 @@ popQueue ( Queue xs (y:ys) ) = Just (y , Queue xs ys )
 
 -- rand ----------------------------------------------------------------
 
+type Rand  = StateT StdGen Identity 
+
+class RunRand m where
+ runRand :: m a -> IO a
+
+instance RunRand Rand where 
+ runRand rand = do
+  gen <- getStdGen
+  return . fst $ runState rand gen
+
+randLift :: (RandomGen g , MonadState g m ) => (g -> (a,g)) -> m a
+randLift f = do
+ gen <- get
+ let (val,gen') = f gen
+ put gen'
+ return val
+
+getRandom :: (RandomGen g , MonadState g m , Random a)  => m a
+getRandom = randLift random
+
+getRandomR :: (RandomGen g, MonadState g m ,Random a) => (a,a) -> m a
+getRandomR range = randLift $ randomR range
+
+getRandomL :: (RandomGen g, MonadState g m ) => [a] -> m a
+getRandomL xs = do
+ i <- getRandomR (0,length xs - 1)
+ return $ xs !! i
+
+getNormal :: (RandomGen g , MonadState g m ) => (Random a, Floating a) => (a, a) -> m a
+getNormal params@( mean , stdDeviation ) = randLift $ normal' params
+
+randCase :: (RandomGen g, MonadState g m ) => Double -> a -> a -> m a
+randCase p ok ko = do
+ p' <- getRandomR (0.0 , 1.0)
+ return $ if p' < p then ok else ko
+
+randIf :: (RandomGen g, MonadState g m) => Double -> m a -> m a -> m a
+randIf p ok ko = do
+ p' <- getRandomR (0.0 , 1.0)
+ if p' < p then ok else ko
+
+infRand :: (RandomGen g, MonadState g m ) => m a -> m [a]
+infRand rand = do
+   gen <- get
+   let (gen1,gen2) = split gen
+   put gen1
+   xs <- inf rand
+   put gen2
+   return xs
+ where
+  inf :: (RandomGen g , MonadState g m ) => m a -> m [a]
+  inf r = do
+   x  <- r
+   xs <- inf r
+   return $ x:xs
+
+infChainRand :: (RandomGen g , MonadState g m ) => (a -> m a) -> a -> m [a]
+infChainRand f x = do
+   gen <- get
+   let (gen1,gen2) = split gen
+   put gen1
+   xs <- inf f x
+--       ( xs , _  ) = runState ( inf f x ) gen1
+   put gen2
+   return $ x:xs
+ where
+  inf :: (RandomGen g , MonadState g m ) => (a -> m a) -> a -> m [a]
+  inf f x = do
+   x' <- f x
+   xs <- inf f x'
+   return $ x':xs 
+
+
+{--
 type Rand a = State StdGen a
 
 randLift :: (StdGen -> (a,StdGen)) -> Rand a
@@ -148,23 +228,6 @@ randLift f = do
  let (val,gen') = f gen
  put gen'
  return val
-
--- ošetřuje aby při generování nekonečného seznamu nedošlo ke ztrátě generátoru
--- myslím že to je ten problém který vykolejil GP.hs tenkrát..
-infiniteRand :: Rand a -> Rand [a]
-infiniteRand rand = do
-   gen <- get
-   let (gen1,gen2) = split gen
-       ( xs , _  ) = infin (runState rand) gen1
-   put gen2
-   return xs
- where
-   infin :: (StdGen -> (a,StdGen)) -> (StdGen -> ([a],StdGen))
-   infin f gen = 
-    let ( x  , gen'  ) = f gen
-        ( xs , gen'' ) = infin f gen'
-     in ( x:xs , gen'' ) 
-
 
 infRand :: Rand a -> Rand [a]
 infRand rand = do
@@ -239,6 +302,7 @@ runRand rand = do
  gen <- getStdGen
  return . fst $ runState rand gen
 
+--}
 
 
 

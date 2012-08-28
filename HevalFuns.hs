@@ -1,7 +1,10 @@
 module HevalFuns where
 
-foo :: Int -> Int
-foo = (+42)
+inc :: Int -> Int
+inc = (+1)
+
+plus :: Num a => a -> a -> a
+plus = (+)
 
 iplus :: Int -> Int -> Int
 iplus = (+)
