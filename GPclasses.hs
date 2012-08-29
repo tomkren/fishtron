@@ -188,10 +188,6 @@ testCros _ oGen oCro = do
  putList ls
  return ls
 
-pairs :: [a] -> [(a,a)]
-pairs []  = []
-pairs [x] = []
-pairs (x:y:rest) = (x,y) : pairs rest
 
 instance Gene t t  where generateIt x  = return $ repeat x
 instance Muta t () where mutateIt _ x  = return x
@@ -214,66 +210,6 @@ instance Gene KTree  KTreeGen  where generateIt = kTreeGen
 instance Muta KTree  KTreeMut  where mutateIt   = kTreeMut
 instance Cros KTree  KTreeCro  where crossIt    = kTreeCro
 
-data KTreeGen = KG_Koza KEnv
-data KTreeMut = KM_Koza KEnv
-data KTreeCro = KC_Koza
-
-type KEnv = (KTerminals,KNonterminals)
-type KTerminals    = [String]
-type KNonterminals = [(String,Arity)]
-type Arity = Int
-
-env1 :: KEnv
-env1 =  (["1","2"],[("plus",2),("inc",1)])
-
-kTreeCro :: KTreeCro -> KTree -> KTree -> Rand (KTree,KTree)
-kTreeCro KC_Koza tree1 tree2 = do
-  cPos1 <- crossPos tree1
-  cPos2 <- crossPos tree2
-  let sub1          = kSubtree tree1 cPos1
-      (tree2',sub2) = kChangeSubtree tree2 cPos2 sub1
-      (tree1',_   ) = kChangeSubtree tree1 cPos1 sub2
-  return (tree1',tree2')
- where
-  crossPos :: KTree -> Rand KPos
-  crossPos tree = do
-   poses <- let (ts,ns) = kPoses2 tree in randCase 0.9 ns ts
-   getRandomL poses
-
-kTreeMut :: KTreeMut -> KTree -> Rand KTree
-kTreeMut (KM_Koza kEnv) tree = do
- newSub <- kTreeGenOne kEnv
- mutPos <- getRandomL $ kPoses tree
- return . fst $ kChangeSubtree tree mutPos newSub
-
-kTreeGen :: KTreeGen -> Rand [KTree]
-kTreeGen (KG_Koza kEnv) = infRand $ kTreeGenOne kEnv 
-
-kTreeGenOne :: KEnv -> Rand KTree
-kTreeGenOne (terminals,nonterminals) = do
-  isFullMethod <- getRandom
-  maximalDepth <- getRandomL [1..6]
-  genOne 0 maximalDepth isFullMethod
- where
-  ts = map (\t->(t,0)) terminals
-  ns = nonterminals
-  cs = ts ++ ns
-  genOne :: Int -> Int -> Bool -> Rand KTree
-  genOne depth maxDepth fullMet
-    | depth == 0        = genOne' ns
-    | depth == maxDepth = genOne' ts
-    | fullMet           = genOne' ns
-    | otherwise         = genOne' cs
-   where 
-    genOne' :: [(String,Arity)] -> Rand KTree
-    genOne' xs = do
-     (name,arity) <- getRandomL xs
-     trees <- mapM (\_->genOne (depth+1) maxDepth fullMet ) [1..arity]
-     return $ KNode name trees
-
-
-
-
 instance Gene Bool   BoolGen   where generateIt = boolGen
 instance Muta Bool   BoolMut   where mutateIt   = boolMut 
 instance Cros Bool   BoolCro   where crossIt    = boolCro
@@ -281,7 +217,6 @@ instance Cros Bool   BoolCro   where crossIt    = boolCro
 instance Gene Double DoubleGen where generateIt = doubleGen 
 instance Muta Double DoubleMut where mutateIt   = doubleMut 
 instance Cros Double DoubleCro where crossIt    = doubleCro
-
 
 data PairGen o1 o2 = PG_Both o1 o2 
 data PairMut o1 o2 = PM_Both o1 o2
@@ -299,7 +234,16 @@ data ListCro opt   = LC_OnePoint  opt Len
 data DistMut o     = DiM_ o 
 data DistCro o     = DiC_OnePoint o
 data DistGen o     = DiG_Uniform o Len
-  
+ 
+data KTreeGen      = KG_Koza KEnv
+data KTreeMut      = KM_Koza KEnv
+data KTreeCro      = KC_Koza
+
+type KEnv          = (KTerminals,KNonterminals)
+type KTerminals    = [String]
+type KNonterminals = [(String,Arity)]
+type Arity         = Int
+
 data BoolGen       = BG_
 data BoolMut       = BM_Not
                    | BM_Prob      Prob
@@ -375,6 +319,53 @@ distCro (DiC_OnePoint _) x y =
    (a,b) <- crossIt cOpt x' y'
    return ( mkDist a , mkDist b )   
 
+kTreeCro :: KTreeCro -> KTree -> KTree -> Rand (KTree,KTree)
+kTreeCro KC_Koza tree1 tree2 = do
+  cPos1 <- crossPos tree1
+  cPos2 <- crossPos tree2
+  let sub1          = kSubtree tree1 cPos1
+      (tree2',sub2) = kChangeSubtree tree2 cPos2 sub1
+      (tree1',_   ) = kChangeSubtree tree1 cPos1 sub2
+  return (tree1',tree2')
+ where
+  crossPos :: KTree -> Rand KPos
+  crossPos tree = do
+   poses <- let (ts,ns) = kPoses2 tree 
+             in if null ns 
+                 then return ts 
+                 else randCase 0.9 ns ts
+   getRandomL poses
+
+kTreeMut :: KTreeMut -> KTree -> Rand KTree
+kTreeMut (KM_Koza kEnv) tree = do
+ newSub <- kTreeGenOne kEnv
+ mutPos <- getRandomL $ kPoses tree
+ return . fst $ kChangeSubtree tree mutPos newSub
+
+kTreeGen :: KTreeGen -> Rand [KTree]
+kTreeGen (KG_Koza kEnv) = infRand $ kTreeGenOne kEnv 
+
+kTreeGenOne :: KEnv -> Rand KTree
+kTreeGenOne (terminals,nonterminals) = do
+  isFullMethod <- getRandom
+  maximalDepth <- getRandomL [1..6]
+  genOne 0 maximalDepth isFullMethod
+ where
+  ts = map (\t->(t,0)) terminals
+  ns = nonterminals
+  cs = ts ++ ns
+  genOne :: Int -> Int -> Bool -> Rand KTree
+  genOne depth maxDepth fullMet
+    | depth == 0        = genOne' ns
+    | depth == maxDepth = genOne' ts
+    | fullMet           = genOne' ns
+    | otherwise         = genOne' cs
+   where 
+    genOne' :: [(String,Arity)] -> Rand KTree
+    genOne' xs = do
+     (name,arity) <- getRandomL xs
+     trees <- mapM (\_->genOne (depth+1) maxDepth fullMet ) [1..arity]
+     return $ KNode name trees
 
 boolGen :: BoolGen -> Rand [Bool]
 boolGen _ = infRand $ getRandom
@@ -507,17 +498,32 @@ metaFF (gOpt,mOpt,cOpt,ff,a,credit) = FF1 $ \ [rep,mut,cro,gSize,gNum] ->
           in return ffVal
 
 
-testKT = 
+testKoza ff env as = 
  let eOpt    = mkEOpt (10,0,90)
-     popSize = 20
-     gOpt    = KG_Koza env1
-     mOpt    = KM_Koza env1
+     popSize = 500
+     gOpt    = KG_Koza env
+     mOpt    = KM_Koza env
      cOpt    = KC_Koza 
-  in putEvolveMaximas 1000 $ Problem popSize eOpt gOpt mOpt cOpt ff_KT (as::Int)
+  in putEvolveMaximas 25000 $ Problem popSize eOpt gOpt mOpt cOpt ff as
 
 
-ff_KT :: FitFun2 KTree Int
-ff_KT = FF2 show (as::Int) (\i -> return $ fromIntegral i )
+koza_ssr = testKoza ff_koza_ssr env_koza_ssr (as::Double->Double)
+
+env_koza_ssr :: KEnv
+env_koza_ssr = (["x"],[("plus",2),("minus",2),("krat",2),("rdiv",2),("sin",1),("cos",1),("exp",1),("rlog",1)])
+
+ff_koza_ssr :: FitFun2 KTree (Double->Double)
+ff_koza_ssr = FF2 toStr (as::Double->Double) (return . ff)
+ where
+  toStr :: KTree -> String
+  toStr tree = "(\\ x -> " ++ show tree ++ ")"
+  ff :: (Double->Double) -> FitVal
+  ff f = (1/) . (1+) . sum . map (\x-> let dx = (f x) - ( x*x*x*x+x*x*x+x*x+x ) in dx*dx ) $ [-1,-0.9..1] 
+
+
+
+ff_Koza0 :: FitFun2 KTree Double
+ff_Koza0 = FF2 show (as::Double) (\i -> return $ 1/ (1+abs (123 - i)) )
 
 
 ff1 :: [Bool]-> FitVal

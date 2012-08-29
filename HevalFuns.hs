@@ -1,14 +1,19 @@
 module HevalFuns where
 
-inc :: Int -> Int
-inc = (+1)
-
 plus :: Num a => a -> a -> a
 plus = (+)
 
-iplus :: Int -> Int -> Int
-iplus = (+)
+krat :: Num a => a -> a -> a
+krat = (*)
 
-ikrat :: Int -> Int -> Int
-ikrat = (*)
+minus :: Num a => a -> a -> a
+minus = (-)
+
+rdiv :: Double -> Double -> Double
+rdiv _ 0 = 1
+rdiv x y = x / y
+
+rlog :: Double -> Double
+rlog 0 = 0
+rlog x = log $ abs x
 

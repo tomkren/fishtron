@@ -32,4 +32,4 @@ int = Typ "Int"
 t1 = App (Lam "x" ( App (Val "(+1)" (int:->int) ) (Var "x" int ) int  ) (int:->int)) (Val "6" int) int
 
 ttEval :: (Typeable a) => TTerm -> a -> IO a
-ttEval tterm a = heval (show tterm) a
+ttEval tterm a = eval (show tterm) a

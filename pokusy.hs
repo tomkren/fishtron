@@ -70,3 +70,6 @@ instance Show Term where
    ValInt n -> show n
    ValPlus m n -> "("++ show m ++"+"++show n++")" 
 
+
+
+

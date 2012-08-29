@@ -46,7 +46,8 @@ kSubtrees t@(KNode _ ts) = t : concatMap kSubtrees ts
 
 kSubtree :: KTree -> KPos -> KTree
 kSubtree t [] = t
-kSubtree (KNode _ ts) (i:is) = kSubtree (ts !! (i-1)) is
+kSubtree (KNode _ ts) (i:is) = 
+ kSubtree (ts !! (i-1)) is
 
 kChangeSubtree :: KTree -> KPos -> KTree -> (KTree,KTree)
 kChangeSubtree tree           []     newSub = (newSub,tree) 

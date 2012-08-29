@@ -11,6 +11,7 @@ module Util
 , newSymbol , newSymbol'
 , nthWord
 , (+++)
+, pairs
 , fill , fillStr
 , Queue , emptyQueue , insertQueue , insertsQueue , popQueue , nullQueue , singletonQueue
 , Rand  , randLift , getRandom , getRandomR , runRand 
@@ -30,6 +31,11 @@ import Data.Functor.Identity
 (+++) :: (a->[b]) -> (a->[b]) -> (a->[b])
 (f +++ g) x = f x ++ g x
 infixr 7 +++
+
+pairs :: [a] -> [(a,a)]
+pairs []  = []
+pairs [x] = []
+pairs (x:y:rest) = (x,y) : pairs rest
 
 -- Pro přehledné vykreslení seznamu, záznam na řádek
 putList :: (Show a) => [a] -> IO ()
@@ -170,6 +176,7 @@ getRandomR :: (RandomGen g, MonadState g m ,Random a) => (a,a) -> m a
 getRandomR range = randLift $ randomR range
 
 getRandomL :: (RandomGen g, MonadState g m ) => [a] -> m a
+getRandomL [] = error "Empty list in getRandomL."
 getRandomL xs = do
  i <- getRandomR (0,length xs - 1)
  return $ xs !! i
