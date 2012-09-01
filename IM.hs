@@ -5,7 +5,7 @@ import qualified Data.Map as Map
 import Data.Map (Map)
 import Data.List
 import Data.Maybe
-import Base
+import TTerm
 import Util
 
 generate :: Int -> Context -> Typ -> IO ()
@@ -23,8 +23,8 @@ type Stack    = [ ( Typ , Context ) ]
 type IMMap    = Map Typ [(Token, [Typ] )]
 type PreIMMap = Map Typ ( [(Token, [Typ] )] , Context )
 
-data Token = TLam [(Symbol,Typ)] 
-           | TVar  Symbol Typ 
+data Token = TokLam [(Symbol,Typ)] 
+           | TokVar  Symbol Typ 
 
 data Token2 = T2Lam [(Symbol,Int,Typ)] 
             | T2Var Symbol Int Typ 
@@ -96,9 +96,9 @@ nextTaxis im ctx2 typ = case Map.lookup typ im of
  where
   next :: (Token,[Typ]) -> [ ( [Token2] , Context2 ) ]
   next (tok,ts) = case tok of
-   TLam ctx -> let (ctx2' , lamTok2 , rparTok2 ) = solveTLam ctx ctx2  
+   TokLam ctx -> let (ctx2' , lamTok2 , rparTok2 ) = solveTokLam ctx ctx2  
                 in [ ( T2ParL : lamTok2 : ( ( map T2Typ ts ) ++ [rparTok2]  ) , ctx2' ) ]
-   TVar x t -> let f t2Var = if null ts 
+   TokVar x t -> let f t2Var = if null ts 
                               then ( [t2Var] , ctx2 )
                               else ( T2ParL : t2Var : ( ( map T2Typ ts ) ++ [T2ParR]  ) , ctx2 ) 
                 in map f $ getT2Vars x t ctx2 
@@ -106,8 +106,8 @@ nextTaxis im ctx2 typ = case Map.lookup typ im of
 getT2Vars :: Symbol -> Typ -> Context2 -> [Token2]
 getT2Vars x t ctx2 = map (\(_,n)-> T2Var x n t ) $ getThatVars ctx2 x
 
-solveTLam :: Context -> Context2 -> (Context2 , Token2 , Token2 )
-solveTLam ctx ctx2 = ( ctx'' ++ ctx2 , T2Lam ctx' , T2ParR_lam ctx'' )
+solveTokLam :: Context -> Context2 -> (Context2 , Token2 , Token2 )
+solveTokLam ctx ctx2 = ( ctx'' ++ ctx2 , T2Lam ctx' , T2ParR_lam ctx'' )
  where
   ctx' = map f ctx
   ctx''= map (\(s,i,_)->(s,i)) ctx'
@@ -153,21 +153,21 @@ mkPre contx typ = PreIM typ $ mkPre' [(typ,contx)] Map.empty
 succesors :: Typ -> Context -> ( [(Token, [Typ] )] , Context ) 
 succesors typ contx = case typ of
   (_ :-> _) -> let (ts,alpha) = typeArgs typ
-                   tLamContx  = mkTLamContx contx ts
-                in ( [ ( TLam tLamContx , [Typ alpha] ) ] , tLamContx ++ contx ) 
+                   tLamContx  = mkTokLamContx contx ts
+                in ( [ ( TokLam tLamContx , [Typ alpha] ) ] , tLamContx ++ contx ) 
   Typ alpha -> ( map f $ getWithEnd alpha contx , contx ) 
  where
   f :: (Symbol,Typ) -> ( Token , [Typ] )
   f (varName , typ) 
    = let ( ts , _ ) = typeArgs typ
-      in ( TVar varName typ , ts ) 
+      in ( TokVar varName typ , ts ) 
 
 getWithEnd :: Symbol -> [(Symbol,Typ)] -> [(Symbol,Typ)]
 getWithEnd alpha contx 
  = filter (\(_,typ)->let (_,beta)=typeArgs typ in alpha == beta ) contx 
 
-mkTLamContx :: Context -> [Typ] -> [(Symbol,Typ)]
-mkTLamContx contx ts = zip (mkNewVars contx (length ts)) ts
+mkTokLamContx :: Context -> [Typ] -> [(Symbol,Typ)]
+mkTokLamContx contx ts = zip (mkNewVars contx (length ts)) ts
 
 mkNewVars :: Context -> Int -> [Symbol]
 mkNewVars contx num =  reverse $ mkNewVars' (map fst contx) [] num
@@ -196,8 +196,8 @@ showIM (IM typ _ im) = (++) (hLine ++ show typ ++ "\n" ++ hLine) $ concatMap f $
   g str = if null str then "\n" else str
 
 showToken :: Token -> String
-showToken (TLam cxt) = (++) "\\ " $ concatMap (\(x,t)->x ++ ":" ++ show t ++" ") cxt
-showToken (TVar x t) = x  
+showToken (TokLam cxt) = (++) "\\ " $ concatMap (\(x,t)->x ++ ":" ++ show t ++" ") cxt
+showToken (TokVar x t) = x  
 
 showToken2 :: Token2 -> String
 showToken2 t = case t of

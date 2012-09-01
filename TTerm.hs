@@ -2,6 +2,8 @@ module TTerm
 ( Typ (..)
 , TTerm (..)
 , Context
+, Symbol
+, typeArgs
 ) where
 
 import Data.Typeable
@@ -29,6 +31,35 @@ data Term  = Var Symbol
            | Lam Symbol Term  
            | App Term   Term  
 
+-- various -----------------------------------------
+
+typeArgs :: Typ -> ([Typ],Symbol)
+typeArgs typ = case typ of
+ Typ alpha -> ([],alpha)
+ (a :-> b) -> let (  as, alpha) = typeArgs b
+               in (a:as, alpha)
+
+typeRank :: Typ -> Int
+typeRank t = case t of
+  Typ _   -> 0
+  a :-> b -> max (1 + typeRank a) (typeRank b) 
+
+isTypNum :: Typ -> Bool
+isTypNum t = if isTypFromNulls t then f t else False
+ where 
+  f t = case t of
+   Typ _         -> True
+   a :-> (Typ _) -> f a
+   _             -> False
+
+isTypFromNulls :: Typ -> Bool
+isTypFromNulls t = case t of
+ Typ "0" -> True
+ Typ _   -> False
+ a :-> Typ "0" -> isTypFromNulls a
+ _ -> False 
+
+-- show --------------------------------------------
 
 instance Show TTerm where 
  show t = case t of
@@ -44,6 +75,17 @@ instance Show Term where
   Lam x m -> "(\\ "++ x   ++ " -> " ++ show m ++")"
   App m n -> "("++ show m ++ " "    ++ show n ++")" 
 
+instance Show Typ where show = showTyp
+
+showTyp :: Typ -> String
+showTyp t | isTypNum t = show $ typeRank t
+          | otherwise  = showTyp' t 
+
+showTyp' :: Typ -> String
+showTyp' (Typ t) = t
+showTyp' (a :-> b) = "(" ++ showTyp a ++ "->" ++ showTyp b ++ ")"
+
+-- eval -----------------------------------------------
 
 ttEval :: (Typeable a) => TTerm -> a -> a
 ttEval tterm a = eval (show tterm) a
