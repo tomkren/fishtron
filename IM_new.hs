@@ -36,7 +36,7 @@ mkPreGraph ((typ,ctx):stack) graph = case Map.lookup typ graph of
  Just oldVertex@( edges , vCtx ) -> case ctx \\ vCtx of
   [] -> mkPreGraph stack graph
   cs -> 
-   undefined
+    undefined
 
 
 
