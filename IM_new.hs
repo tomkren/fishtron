@@ -39,7 +39,7 @@ mkPreGraph  (cmd:stack) graph = case cmd of
       newCmds = catMaybes . map (whatToDo graph ctx') . succs $ newV
    in mkPreGraph (newCmds:stack) (Map.insert typ newV graph)
  DeltaCtx typ ctx -> 
-  let 
+  let ...
 
 
 whatToDo :: PreGraph -> Context -> Typ -> Maybe UpdateCmd
@@ -54,13 +54,15 @@ succs :: PreVertex -> [Typ]
 succs (edges,_) = nub . concatMap snd $ edges
 
 updateVertex :: PreGraph -> Typ -> Context -> PreGraph
-updateVertex graph typ deltaCtx = Map.update f typ graph
+updateVertex graph typ deltaCtx = Map.update upF typ graph
  where
-  f (edges,ctx) = undefined
+  upF (edges,ctx) = case typ of 
+   _:->_     -> Just ( edges , deltaCtx ++ ctx )
+   Typ alpha -> ... 
 
 mkVertex :: Typ -> Context -> ( PreVertex , Context ) 
 mkVertex typ ctx = case typ of 
-  _ :-> _ ->
+  _:->_ ->
    let ( ts , alpha ) = typeArgs typ
        varz           = zip (mkNewVars ctx (length ts)) ts
        forkEdge       = ( LLams varz , [Typ alpha] )
