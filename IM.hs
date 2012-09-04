@@ -45,6 +45,7 @@ o = t0
 a = Typ "a"
 b = Typ "b"
 c = Typ "c"
+d = Typ "d"
 
 t0 = Typ "0"
 t1 = t 1

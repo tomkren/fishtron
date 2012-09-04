@@ -3,6 +3,7 @@ module IM_new where
 import qualified Data.Map as Map
 import Data.Map (Map)
 import Data.List((\\),nub)
+import Data.Maybe(catMaybes)
 -- import Data.Maybe
 import TTerm (Symbol,Typ(..),Context,typeArgs)
 import Util  (newSymbol')
@@ -25,23 +26,69 @@ type Stack = [ ( Typ , Context ) ]
 
 -- TODO : nahradit Context Set-kou
 
-mkPreGraph :: Stack -> PreGraph -> PreGraph
+
+data UpdateCmd = MkVertex Typ Context
+               | DeltaCtx Typ Context
+
+
+mkPreGraph :: [UpdateCmd] -> PreGraph -> PreGraph
 mkPreGraph [] graph = graph
-mkPreGraph ((typ,ctx):stack) graph = case Map.lookup typ graph of
+mkPreGraph  (cmd:stack) graph = case cmd of
+ MkVertex typ ctx ->
+  let ( newV , ctx' ) = mkVertex typ ctx
+      newCmds = catMaybes . map (whatToDo graph ctx') . succs $ newV
+   in mkPreGraph (newCmds:stack) (Map.insert typ newV graph)
+ DeltaCtx typ ctx -> 
+  let 
+
+
+whatToDo :: PreGraph -> Context -> Typ -> Maybe UpdateCmd
+whatToDo graph sentCtx child = case Map.lookup typ graph of
+ Nothing      -> Just $ MkVertex child sentCtx
+ Just (_,ctx) -> case sentCtx \\ ctx of 
+  []    -> Nothing 
+  delta -> Just $ DeltaCtx child delta
+
+
+succs :: PreVertex -> [Typ]
+succs (edges,_) = nub . concatMap snd $ edges
+
+updateVertex :: PreGraph -> Typ -> Context -> PreGraph
+updateVertex graph typ deltaCtx = Map.update f typ graph
+ where
+  f (edges,ctx) = undefined
+
+mkVertex :: Typ -> Context -> ( PreVertex , Context ) 
+mkVertex typ ctx = case typ of 
+  _ :-> _ ->
+   let ( ts , alpha ) = typeArgs typ
+       varz           = zip (mkNewVars ctx (length ts)) ts
+       forkEdge       = ( LLams varz , [Typ alpha] )
+    in ( ( [ forkEdge ] , ctx ) , varz ++ ctx ) 
+  Typ alpha ->
+   ( ( map mkVarEdge . filter (hasDesiredEnd alpha) $ ctx , ctx ) , ctx )
+
+
+
+mkPreGraph' :: Stack -> PreGraph -> PreGraph
+mkPreGraph' [] graph = graph
+mkPreGraph' ((typ,ctx):stack) graph = case Map.lookup typ graph of
  Nothing ->
-  let newVertex@( edges , vCtx ) = succesors typ ctx
-      stack' = addToStack stack edges vCtx
+  let newVertex@( edges , ctx' ) = succesors typ ctx
+      stack' = addToStack stack edges ctx'
       graph' = Map.insert typ newVertex graph
-   in mkPreGraph stack' graph'
- Just oldVertex@( edges , vCtx ) -> case ctx \\ vCtx of
-  [] -> mkPreGraph stack graph
+   in mkPreGraph' stack' graph'
+ Just oldVertex@( edges , vCtx ) -> case ctx \\ vCtx of 
+  [] -> mkPreGraph' stack graph
   cs -> 
-    undefined
+   let ( edges' , vCtx' ) = succesors typ cs
+       stack' = addToStack stack edges' vCtx'
+       graph' = Map.insert typ ( edges' ++ edges , union vCtx' vCtx ) graph
+    in mkPreGraph' stack' graph'
 
 
-
-succesors2 :: Typ -> Context -> ( ( [ForkEdge] , Context ) , Stack )
-succesors2 typ ctx
+f :: Typ -> Context -> ( ( [ForkEdge] , Context ) , Stack )
+f typ ctx
  = let xs@( edges , ctx') = succesors typ ctx 
        stack' = map (\t->(t,ctx')) . nub . concatMap snd $ edges
     in ( xs , stack' )  
