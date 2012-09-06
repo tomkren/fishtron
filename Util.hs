@@ -76,17 +76,37 @@ newSymbol = newSymbol' ['a'..'z']
 
 newSymbol' :: [Char] -> [String] -> String
 newSymbol' abeceda vns = snd . head $ dropWhile (\(x,y)->x==y) 
-   (zip ((sortBy nameOrdering vns') ++ repeat "") (map (nthWord abeceda) [1..]))
+   (zip ((sortBy (nameOrderingBy abeceda) vns') ++ repeat "") (map (nthWord abeceda) [1..]))
  where
   vns' = filter (all (`elem` abeceda )) vns 
 
--- Uspořádání primárnì podle délky, sekundárnì podle abecedy.
+-- stará verze s bugem při nestandardní abecedě
 nameOrdering :: Ord a => [a] -> [a] -> Ordering
 nameOrdering x y
-    | lo /= EQ  = lo
-    | otherwise = compare x y
+     | lo /= EQ  = lo
+     | otherwise = compare x y
     where
-    lo = lenOrdering x y
+     lo = lenOrdering x y
+
+-- Uspořádání primárnì podle délky, sekundárnì podle abecedy.
+nameOrderingBy :: (Eq a) => [a] -> [a] -> [a] -> Ordering
+nameOrderingBy abc x y
+  | lo /= EQ  = lo
+  | otherwise = compareByAbc abc x y
+ where lo = lenOrdering x y
+
+compareByAbc :: (Eq a) => [a] -> [a] -> [a] -> Ordering
+compareByAbc _ [] [] = EQ
+compareByAbc abc (x:xs) (y:ys) = case cByAbc abc x y of
+  EQ -> compareByAbc abc xs ys
+  x  -> x
+ where 
+  cByAbc :: (Eq a) => [a] -> a -> a -> Ordering
+  cByAbc abc x y
+   | x == y    = EQ
+   | otherwise = case dropWhile (\ch-> (ch/=x) && (ch/=y) ) abc  of
+      []  -> error "cByAbc : x and y are not in the alphabet"
+      z:_ -> if z == x then LT else GT 
 
 -- Uspořádání podle délky.
 lenOrdering :: [a] -> [a] -> Ordering
