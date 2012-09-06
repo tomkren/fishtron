@@ -13,30 +13,6 @@ generate limit ctx t = do
   mapM putStrLn $ take limit $ proveStrs ctx t 
   return () 
 
--- types ------------------------------------------------------------
-
-data IM = IM Typ Context IMMap
-
-data PreIM    = PreIM Typ PreIMMap  
-type Stack    = [ ( Typ , Context ) ]
-
-type IMMap    = Map Typ [(Token, [Typ] )]
-type PreIMMap = Map Typ ( [(Token, [Typ] )] , Context )
-
-data Token = TokLam [(Symbol,Typ)] 
-           | TokVar  Symbol Typ 
-
-data Token2 = T2Lam [(Symbol,Int,Typ)] 
-            | T2Var Symbol Int Typ 
-            | T2ParL
-            | T2ParR
-            | T2ParR_lam [(Symbol,Int)]
-            | T2Typ Typ
-
-type Context2 = [(Symbol,Int)]
-
-data Taxi = Taxi [Token2] [Token2] Context2  deriving (Show)
-
 -- testing -------------------------------------------------------------
 
 test = mapM putStrLn $ take 10 $ proveStrs [] (t1:->o:->o)
@@ -61,6 +37,32 @@ tt :: Int -> Int -> Typ
 tt n k = foldr (\_ acc -> t (n-1) :-> acc ) t0 [1..k]
 
 contx1 = [("0",o),("succ",t1),("+",t1_2 ),("*",t1_2 )]
+
+
+-- types ------------------------------------------------------------
+
+data IM = IM Typ Context IMMap
+
+data PreIM    = PreIM Typ PreIMMap  
+type Stack    = [ ( Typ , Context ) ]
+
+type IMMap    = Map Typ [(Token, [Typ] )]
+type PreIMMap = Map Typ ( [(Token, [Typ] )] , Context )
+
+data Token = TokLam [(Symbol,Typ)] 
+           | TokVar  Symbol Typ 
+
+data Token2 = T2Lam [(Symbol,Int,Typ)] 
+            | T2Var Symbol Int Typ 
+            | T2ParL
+            | T2ParR
+            | T2ParR_lam [(Symbol,Int)]
+            | T2Typ Typ
+
+type Context2 = [(Symbol,Int)]
+
+-- rekonstrukce: výstupObrácene     
+data Taxi = Taxi [Token2] [Token2] Context2  deriving (Show)
 
 -- generating terms by IM --------------------------------------------
 
@@ -98,11 +100,11 @@ nextTaxis im ctx2 typ = case Map.lookup typ im of
   next :: (Token,[Typ]) -> [ ( [Token2] , Context2 ) ]
   next (tok,ts) = case tok of
    TokLam ctx -> let (ctx2' , lamTok2 , rparTok2 ) = solveTokLam ctx ctx2  
-                in [ ( T2ParL : lamTok2 : ( ( map T2Typ ts ) ++ [rparTok2]  ) , ctx2' ) ]
+                  in [ ( T2ParL : lamTok2 : ( ( map T2Typ ts ) ++ [rparTok2]  ) , ctx2' ) ]
    TokVar x t -> let f t2Var = if null ts 
-                              then ( [t2Var] , ctx2 )
-                              else ( T2ParL : t2Var : ( ( map T2Typ ts ) ++ [T2ParR]  ) , ctx2 ) 
-                in map f $ getT2Vars x t ctx2 
+                                then ( [t2Var] , ctx2 )
+                                else ( T2ParL : t2Var : ( ( map T2Typ ts ) ++ [T2ParR]  ) , ctx2 ) 
+                  in map f $ getT2Vars x t ctx2 
 
 getT2Vars :: Symbol -> Typ -> Context2 -> [Token2]
 getT2Vars x t ctx2 = map (\(_,n)-> T2Var x n t ) $ getThatVars ctx2 x

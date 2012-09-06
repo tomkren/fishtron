@@ -5,7 +5,7 @@ import Data.Map (Map)
 import Data.List((\\),nub,intercalate)
 import Data.Maybe(catMaybes)
 -- import Data.Maybe
-import TTerm (Symbol,Typ(..),Context,typeArgs)
+import TTerm (Symbol,Typ(..),TTerm(..),Context,typeArgs)
 import Util  (newSymbol' , fillStr )
 
 import Debug.Trace
@@ -37,6 +37,47 @@ type Stack = [ ( Typ , Context ) ]
 data UpdateCmd = MkVertex Typ Context
                | DeltaCtx Typ Context PreVertex
 
+
+-- generating using IM ----------------------------------------------
+
+type NSymbol  = (Symbol,Int)
+type NContext = [NSymbol]
+
+{-- Tenhle rekurzivní přístup zamítam kul blbýmu kontrolovatelnosti, s frontou de líp
+
+
+mkTTermsByTyp :: IMGraph -> NContext -> Typ -> [ TTerm ]
+mkTTermsByTyp graph nCtx typ = case Map.lookup typ graph of
+ Just edges -> map (mkTTermsByEdge graph nCtx typ) edges
+ Nothing -> error "mkTTerms : Type " ++ show typ ++ "is not in the IM-graph."
+
+mkTTermsByTypes :: IMGraph -> NContext -> [ Typ ] -> [[ TTerm ]]
+mkTTermsByTypes graph nCtx [] = 
+
+
+mkTTermsByEdge :: IMGraph -> NContext -> Typ -> ForkEdge -> [ TTerm ] 
+mkTTermsByEdge graph nCtx typ edge = case edge of
+ ( LLams vars , [t] ) -> 
+  let tterms = mkTTermsByTyp graph nCtx t
+   in map (ttermFromLLams vars typ) tterms  
+ ( LVar v t , ts ) -> 
+  let ttss = transpose . map (mkTTermsByTyp graph nCtx) $ ts
+   in 
+ _ -> error "mkTTermsByEdge : LLams must be label of a simple edge. OR is not of '->' type."
+
+
+ttermFromLLams :: [(Symbol,Typ)] -> Typ -> TTerm -> TTerm
+ttermFromLLams ((v,_):vars) typ@( _ :-> b ) body = 
+ TLam v ( ttermFromLLams vars b body ) typ 
+ttermFromLLams [] typ body = body
+ttermFromLLams _ _ _ = error "ttermFromLLams : lambda must have '->' type."
+
+--}
+
+-- next :: Context2 -> ForkEdge -> [ ( [Token2] , Context2 ) ]
+
+
+-- constructing graph ----------------------------------------------------
 
 mkIM :: Typ -> Context -> IM
 mkIM typ ctx = 
@@ -93,9 +134,9 @@ mkVarEdges :: Symbol -> Context -> [ForkEdge]
 mkVarEdges alpha ctx = map mkVarEdge . filter (hasDesiredEnd alpha) $ ctx
 
 mkVarEdge :: (Symbol,Typ) -> ForkEdge
-mkVarEdge (varName , typ) 
- = let ( ts , _ ) = typeArgs typ
-    in ( LVar varName typ , ts ) 
+mkVarEdge (varName , typ) = 
+ let ( ts , _ ) = typeArgs typ
+  in ( LVar varName typ , ts ) 
 
 hasDesiredEnd :: Symbol -> (Symbol,Typ) -> Bool 
 hasDesiredEnd alpha (_,typ) = 
