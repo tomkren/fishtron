@@ -2,14 +2,17 @@ module IM_new where
 
 import qualified Data.Map as Map
 import Data.Map (Map)
-import Data.List((\\),nub,intercalate)
+import Data.List((\\),nub,intercalate,unlines )
 import Data.Maybe(catMaybes)
 -- import Data.Maybe
-import TTerm (Symbol,Typ(..),TTerm(..),Context,typeArgs)
-import Util  (newSymbol' , fillStr )
+import TTerm (Symbol,Typ(..),TTerm(..),Context,typeArgs,ttermTyp)
+import Util  (newSymbol' , fillStr ,singletonQueue , Queue , insertsQueue , popQueue , putList )
 
-import Debug.Trace
-
+-- import Debug.Trace
+import Text.Parsec.Pos
+-- import Text.Parsec.Prim
+-- import Text.Parsec
+import Text.ParserCombinators.Parsec
 
 data IM = IM Typ Context IMGraph
 type IMGraph = Map Typ [ForkEdge]
@@ -43,6 +46,185 @@ data UpdateCmd = MkVertex Typ Context
 type NSymbol  = (Symbol,Int)
 type NContext = [NSymbol]
 
+data Token2 = 
+ T2Lam [(Symbol,Int,Typ)]   |
+ T2Var Symbol Int Typ       |
+ T2ParL                     |
+ T2ParR                     |
+ T2ParR_lam [(Symbol,Int)]  |
+ T2Typ Typ                  |
+ End
+
+type Token3 = (SourcePos,Token2)
+type MyParser a = GenParser Token3 () a
+
+ttParse' :: [Token2] -> TTerm
+ttParse' tok2s = let Right tt = ttParse tok2s in tt
+
+ttParse :: [Token2] -> Either ParseError TTerm
+ttParse tok2s = parse parseTTEnd "(ttParse : Syntax Error)" (toT3 $ tok2s ++ [End])
+
+parseTT :: MyParser TTerm
+parseTT = parseVariable
+   <|> do parseLpar
+          tt <- parseLambda <|> parseApp
+          parseRpar
+          return tt  
+
+parseVariable :: MyParser TTerm
+parseVariable = do
+ (s,i,t) <- parseVar
+ return $ TVar (ivar s i) t
+
+ivar :: Symbol -> Int -> Symbol
+ivar s i 
+ | i==1      = s 
+ | otherwise = s ++ show i
+
+parseLambda :: MyParser TTerm
+parseLambda = do 
+ vars <- parseLam 
+ body <- parseTT 
+ return $ toTLam vars body 
+
+parseApp :: MyParser TTerm
+parseApp = do
+ tts <- many1 parseTT
+ return $ toTApp tts
+
+toTApp :: [TTerm] -> TTerm
+toTApp = foldl1 f
+ where
+  f :: TTerm -> TTerm -> TTerm 
+  f tt1 tt2 = 
+   let ( _ :-> typ ) = ttermTyp tt1
+    in TApp tt1 tt2 typ
+
+toTLam :: [(Symbol,Int,Typ)] -> TTerm -> TTerm
+toTLam vars body = foldr f body vars
+ where
+  f :: (Symbol,Int,Typ) -> TTerm -> TTerm
+  f (s,i,t) acc = TLam (ivar s i) acc (t :-> ttermTyp acc)
+
+toT3 :: [Token2] -> [Token3]
+toT3 ts = zip (map (setSourceColumn (initialPos "input")) [1..] ) ts
+
+parseTTEnd :: MyParser TTerm
+parseTTEnd = do
+  tt <- parseTT
+  parseEnd
+  return tt
+
+mytoken :: (Token2 -> Maybe a) -> MyParser a
+mytoken test = token showToken posToken testToken
+ where 
+  showToken (pos,tok) = show tok
+  posToken  (pos,tok) = pos
+  testToken (pos,tok) = test tok
+
+parseEnd :: MyParser ()
+parseEnd = mytoken $ \tok -> case tok of
+ End -> Just ()
+ _   -> Nothing
+
+parseLpar :: MyParser ()
+parseLpar = mytoken $ \tok -> case tok of
+ T2ParL -> Just ()
+ _      -> Nothing
+
+parseRpar :: MyParser ()
+parseRpar = mytoken $ \tok -> case tok of
+ T2ParR      -> Just ()
+ T2ParR_lam _-> Just ()
+ _           -> Nothing
+
+parseLam :: MyParser [(Symbol,Int,Typ)]
+parseLam = mytoken $ \tok -> case tok of
+ T2Lam x -> Just x
+ _       -> Nothing
+
+parseVar :: MyParser (Symbol,Int,Typ)
+parseVar = mytoken $ \tok -> case tok of
+ T2Var s i t -> Just (s,i,t)
+ _           -> Nothing
+
+
+
+-- rekonstrukce: výstupObrácene     
+data Taxi = Taxi [Token2] [Token2] NContext  deriving (Show)
+
+
+proveStr :: Context -> Typ -> Int -> IO()
+proveStr ctx t i 
+  = putStr . unlines $
+    (:) (show iM) $ take i $ map (\toks-> concatMap show toks) $ prove' im $ singletonQueue taxi
+ where
+  iM@(IM _ _ im) = mkIM t ctx
+  taxi = mkTaxi iM
+
+
+prove :: Typ -> Context -> [TTerm]
+prove typ ctx = 
+ let graph = mkIMGraph typ ctx
+     taxi  = mkTaxi'   typ ctx
+  in map ttParse' . prove' graph . singletonQueue $ taxi   
+
+
+prove' :: IMGraph -> Queue Taxi -> [[Token2]]
+prove' im q = case popQueue q of
+  Nothing -> []
+  Just (taxi,q') -> case nextTaxis' im taxi of
+   Left toks   -> toks : (prove' im q')
+   Right taxis -> prove' im $ insertsQueue taxis q'
+
+
+mkTaxi' :: Typ -> Context -> Taxi
+mkTaxi' t ctx = Taxi [] [T2Typ t] $ map (\(x,_)->(x,1)) ctx
+
+mkTaxi :: IM -> Taxi
+mkTaxi (IM t ctx im) = Taxi [] [T2Typ t] $ map (\(x,_)->(x,1)) ctx
+
+nextTaxis' :: IMGraph -> Taxi -> Either [Token2] [Taxi]
+nextTaxis' im taxi = case taxi of
+  Taxi ret []     _    -> Left $ reverse ret
+  Taxi ret (x:xs) ctx2 -> case x of
+    T2Typ t         -> Right [ Taxi ret (toks++xs) ctx2' | (toks,ctx2') <- nextTaxis im ctx2 t ]
+    T2ParR_lam vars -> Right [ Taxi (x:ret) xs (ctx2 \\ vars) ]
+    _               -> Right [ Taxi (x:ret) xs ctx2 ]
+
+nextTaxis :: IMGraph -> NContext -> Typ ->  [ ( [Token2] , NContext ) ]
+nextTaxis im ctx2 typ = case Map.lookup typ im of
+  Nothing -> error "unexpected Nothing"
+  Just edges -> concatMap next edges
+ where
+  next :: (EdgeLabel,[Typ]) -> [ ( [Token2] , NContext ) ]
+  next (tok,ts) = case tok of
+   LLams ctx  -> let (ctx2' , lamTok2 , rparTok2 ) = solveTokLam ctx ctx2  
+                  in [ ( T2ParL : lamTok2 : ( ( map T2Typ ts ) ++ [rparTok2]  ) , ctx2' ) ]
+   LVar x t   -> let f t2Var = if null ts 
+                                then ( [t2Var] , ctx2 )
+                                else ( T2ParL : t2Var : ( ( map T2Typ ts ) ++ [T2ParR]  ) , ctx2 ) 
+                  in map f $ getT2Vars x t ctx2 
+
+getT2Vars :: Symbol -> Typ -> NContext -> [Token2]
+getT2Vars x t ctx2 = map (\(_,n)-> T2Var x n t ) $ getThatVars ctx2 x
+
+solveTokLam :: Context -> NContext -> (NContext , Token2 , Token2 )
+solveTokLam ctx ctx2 = ( ctx'' ++ ctx2 , T2Lam ctx' , T2ParR_lam ctx'' )
+ where
+  ctx' = map f ctx
+  ctx''= map (\(s,i,_)->(s,i)) ctx'
+  f :: (Symbol,Typ) -> (Symbol,Int,Typ)
+  f (x,t) = (x, 1 + (numOfThatVar ctx2 x) ,t)
+
+numOfThatVar :: NContext -> Symbol -> Int
+numOfThatVar ctx2 x = length $ getThatVars ctx2 x 
+
+getThatVars :: NContext -> Symbol -> NContext
+getThatVars ctx2 x = filter (\(x',_)->x'==x) ctx2 
+
+-------------------------------------------------------------------------------------------------------
+
 {-- Tenhle rekurzivní přístup zamítam kul blbýmu kontrolovatelnosti, s frontou de líp
 
 
@@ -74,15 +256,18 @@ ttermFromLLams _ _ _ = error "ttermFromLLams : lambda must have '->' type."
 
 --}
 
--- next :: Context2 -> ForkEdge -> [ ( [Token2] , Context2 ) ]
+-- next :: NContext -> ForkEdge -> [ ( [Token2] , NContext ) ]
 
 
--- constructing graph ----------------------------------------------------
+-- constructing graph ----------------------------------------------------------------------------------
 
 mkIM :: Typ -> Context -> IM
-mkIM typ ctx = 
+mkIM typ ctx = IM typ ctx (mkIMGraph typ ctx)
+
+mkIMGraph :: Typ -> Context -> IMGraph
+mkIMGraph typ ctx = 
  let preGraph = mkPreGraph [MkVertex typ ctx] Map.empty
-  in IM typ ctx $ Map.fromList . map (\(t,(es,_))->(t,es)) . Map.toList $ preGraph
+  in Map.fromList . map (\(t,(es,_))->(t,es)) . Map.toList $ preGraph
 
 mkPreGraph :: [UpdateCmd] -> PreGraph -> PreGraph
 mkPreGraph [] graph = graph
@@ -157,6 +342,9 @@ mkNewVars ctx num = reverse $ mkNewVars' (map fst ctx) [] num
 
 ---------------------------------------------------
 
+test_binTree = putList . take 256 $ prove (t1_2:->o:->o) []
+
+
 o = t0
 a = Typ "a"
 b = Typ "b"
@@ -189,6 +377,18 @@ instance Show IM where
     (hLine ++ show typ ++ "\n" ++ show ctx ++ "\n" ++ hLine) ++ 
     (showIMGraph graph) 
    where hLine = (replicate 60 '-') ++ "\n" 
+
+instance Show Token2 where
+ show t = case t of
+   T2Lam xs     -> "\\ " ++ (concatMap (\(x,n,t)-> showVar x n ++ ":" ++ show t ++" ") xs) ++ ". "
+   T2Var x n _  -> showVar x n ++ " "
+   T2ParL       -> "( "
+   T2ParR       -> " )"
+   T2ParR_lam _ -> " )"
+   T2Typ t      -> show t
+  where
+   showVar x n = x ++ ( if n == 1 then "" else show n )
+
 
 showIMGraph :: IMGraph -> String
 showIMGraph graph = concatMap showVertex $ Map.toAscList graph

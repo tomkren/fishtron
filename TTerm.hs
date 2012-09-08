@@ -4,6 +4,7 @@ module TTerm
 , Context
 , Symbol
 , typeArgs
+, ttermTyp
 ) where
 
 import Data.Typeable
@@ -32,6 +33,13 @@ data Term  = Var Symbol
            | App Term   Term  
 
 -- various -----------------------------------------
+
+ttermTyp :: TTerm -> Typ
+ttermTyp t = case t of
+ TVar _   typ -> typ  
+ TVal _   typ -> typ
+ TLam _ _ typ -> typ
+ TApp _ _ typ -> typ
 
 typeArgs :: Typ -> ([Typ],Symbol)
 typeArgs typ = case typ of
