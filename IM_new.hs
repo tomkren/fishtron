@@ -9,10 +9,9 @@ import TTerm (Symbol,Typ(..),TTerm(..),Context,typeArgs,ttermTyp)
 import Util  (newSymbol' , fillStr ,singletonQueue , Queue , insertsQueue , popQueue , putList )
 
 -- import Debug.Trace
-import Text.Parsec.Pos
--- import Text.Parsec.Prim
--- import Text.Parsec
+
 import Text.ParserCombinators.Parsec
+import Text.Parsec.Pos
 
 data IM = IM Typ Context IMGraph
 type IMGraph = Map Typ [ForkEdge]
@@ -41,6 +40,38 @@ data UpdateCmd = MkVertex Typ Context
                | DeltaCtx Typ Context PreVertex
 
 
+----------------------------------------------------------------------------------------------
+
+prove :: Typ -> Context -> [TTerm]
+prove typ ctx = 
+ let graph = mkIMGraph typ ctx
+     taxi  = mkTaxi'   typ ctx
+  in map ttParse' . prove' graph . singletonQueue $ taxi   
+
+prove' :: IMGraph -> Queue Taxi -> [[Token2]]
+prove' im q = case popQueue q of
+  Nothing -> []
+  Just (taxi,q') -> case nextTaxis' im taxi of
+   Left toks   -> toks : (prove' im q')
+   Right taxis -> prove' im $ insertsQueue taxis q'
+
+
+proveStr :: Context -> Typ -> Int -> IO()
+proveStr ctx t i 
+  = putStr . unlines $
+    (:) (show iM) $ take i $ map (\toks-> concatMap show toks) $ prove' im $ singletonQueue taxi
+ where
+  iM@(IM _ _ im) = mkIM t ctx
+  taxi = mkTaxi iM
+
+
+
+
+----------------------------------------------------------------------------------------------
+
+
+
+
 -- generating using IM ----------------------------------------------
 
 type NSymbol  = (Symbol,Int)
@@ -57,6 +88,7 @@ data Token2 =
 
 type Token3 = (SourcePos,Token2)
 type MyParser a = GenParser Token3 () a
+
 
 ttParse' :: [Token2] -> TTerm
 ttParse' tok2s = let Right tt = ttParse tok2s in tt
@@ -152,30 +184,6 @@ parseVar = mytoken $ \tok -> case tok of
 
 -- rekonstrukce: výstupObrácene     
 data Taxi = Taxi [Token2] [Token2] NContext  deriving (Show)
-
-
-proveStr :: Context -> Typ -> Int -> IO()
-proveStr ctx t i 
-  = putStr . unlines $
-    (:) (show iM) $ take i $ map (\toks-> concatMap show toks) $ prove' im $ singletonQueue taxi
- where
-  iM@(IM _ _ im) = mkIM t ctx
-  taxi = mkTaxi iM
-
-
-prove :: Typ -> Context -> [TTerm]
-prove typ ctx = 
- let graph = mkIMGraph typ ctx
-     taxi  = mkTaxi'   typ ctx
-  in map ttParse' . prove' graph . singletonQueue $ taxi   
-
-
-prove' :: IMGraph -> Queue Taxi -> [[Token2]]
-prove' im q = case popQueue q of
-  Nothing -> []
-  Just (taxi,q') -> case nextTaxis' im taxi of
-   Left toks   -> toks : (prove' im q')
-   Right taxis -> prove' im $ insertsQueue taxis q'
 
 
 mkTaxi' :: Typ -> Context -> Taxi
