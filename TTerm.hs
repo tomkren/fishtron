@@ -37,6 +37,28 @@ data TTerm =
  TVal Symbol        Typ | 
  TLam Symbol TTerm  Typ |
  TApp TTerm  TTerm  Typ
+ deriving (Ord,Eq)
+
+-- eq & ord -------------------------------------
+
+-- instance Eq TTerm where
+--   ( TVar x   _) == ( TVar y   _) = x == y
+--   ( TVal x   _) == ( TVal y   _) = x == y
+--   ( TLam a b _) == ( TLam c d _) = a == c && b == d
+--   ( TApp a b _) == ( TApp c d _) = a == c && b == d
+--   _ == _  = False
+
+--instance Ord TTerm where 
+-- compare x y = compare (show x) (show y) 
+
+--  compare ( TVar x   _) ( TVar y   _) = compare x y
+--  compare ( TVal x   _) ( TVal y   _) = compare x y
+--  compare ( TLam a b _) ( TLam c d _) = let ac = compare a c in if ac /= EQ then ac else compare b d
+--  compare ( TApp a b _) ( TApp c d _) = let ac = compare a c in if ac /= EQ then ac else compare b d
+--  compare (TVar _   _) _ = LT
+--  compare (TVal _   _) _ = LT
+--  compare (TLam _ _ _) _ = LT
+--  compare (TApp _ _ _) _ = LT
 
 
 -- substitution ------------------------------------
@@ -237,12 +259,6 @@ showTyp' (a :-> b) = "(" ++ showTyp a ++ "->" ++ showTyp b ++ ")"
 
 ttEval :: (Typeable a) => TTerm -> a -> a
 ttEval tterm a = eval (show tterm) a
-
-
-
-
-
-
 
 
 

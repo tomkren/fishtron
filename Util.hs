@@ -5,7 +5,7 @@
 -- Util obsahuje obecné funkce funkce nad standardními typy.
 
 module Util
-( putList
+( putList , putRandList
 , insertToListMap , lookupInListMap
 , maximas , maximasBy
 , newSymbol , newSymbol'
@@ -15,13 +15,15 @@ module Util
 , fill , fillStr
 , Queue , emptyQueue , insertQueue , insertsQueue , popQueue , nullQueue , singletonQueue
 , Rand  , randLift , getRandom , getRandomR , runRand 
-        , infChainRand , infRand , randCase, randIf ,getNormal, getRandomL
+        , infChainRand , infRand , infSetRand , randCase, randIf ,getNormal, getRandomL
         , RunRand
 ) where
 
 import Data.List
 import qualified Data.Map as Map
 import Data.Map (Map)
+import qualified Data.Set as Set
+import Data.Set (Set)
 import System.Random
 import Data.Random.Normal
 import Control.Monad.State
@@ -43,6 +45,11 @@ putList []     = return ()
 putList (x:xs) = do
  putStrLn . show $ x
  putList xs 
+
+putRandList :: (Show a) => Rand [a] -> IO ()
+putRandList randXs = do
+ xs <- runRand randXs
+ putList xs
 
 insertToListMap :: (Ord k) => k -> a -> Map k [a] -> Map k [a]
 insertToListMap key val listMap 
@@ -228,6 +235,22 @@ infRand rand = do
    x  <- r
    xs <- inf r
    return $ x:xs
+
+infSetRand :: (RandomGen g, MonadState g m , Ord a ) => m a -> m [a]
+infSetRand rand = do
+  gen <- get
+  let (gen1,gen2) = split gen
+  put gen1
+  xs <- inf Set.empty rand 
+  put gen2
+  return xs
+ where
+  inf :: (RandomGen g , MonadState g m , Ord a ) => Set a -> m a -> m [a]
+  inf s r = do 
+   x  <- r
+   xs <- inf (Set.insert x s) r 
+   return $ if Set.member x s then xs else x:xs  
+  
 
 infChainRand :: (RandomGen g , MonadState g m ) => (a -> m a) -> a -> m [a]
 infChainRand f x = do

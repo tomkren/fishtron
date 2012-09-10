@@ -1,13 +1,19 @@
 module IM_new where
 
-import qualified Data.Map as Map
-import Data.Map (Map)
+
 import Data.List((\\),nub,intercalate,unlines )
 import Data.Maybe(catMaybes)
 -- import Data.Maybe
 import TTerm (Symbol,Typ(..),TTerm(..),Context,typeArgs,ttermTyp)
-import Util  (newSymbol' , fillStr ,singletonQueue , Queue , insertsQueue , popQueue , putList )
+import Util  (runRand , newSymbol' , fillStr ,singletonQueue , infRand, infSetRand, 
+              Queue, Rand , insertsQueue , popQueue , putList, putRandList ,getRandomL )
 
+-- import Data.Set (Set)
+-- import qualified Data.Set as Set
+import qualified Data.Map as Map
+import Data.Map (Map)
+
+import Control.Monad
 -- import Debug.Trace
 
 import Text.ParserCombinators.Parsec
@@ -34,6 +40,7 @@ type PreVertex = ( [ForkEdge] , Context )
 type Stack = [ ( Typ , Context ) ]
 
 -- TODO : nahradit Context Set-kou
+--        realizovat ořezávání nedostupných vrcholů při konstrukci grafu
 
 
 data UpdateCmd = MkVertex Typ Context
@@ -56,6 +63,45 @@ prove' im q = case popQueue q of
    Right taxis -> prove' im $ insertsQueue taxis q'
 
 
+randProveUnique :: Int -> Typ -> Context -> Rand [TTerm]
+randProveUnique limit typ ctx = infSetRand $ randProveOne limit typ ctx
+
+randProve :: Int -> Typ -> Context -> Rand [TTerm]
+randProve limit typ ctx = infRand $ randProveOne limit typ ctx
+
+randProveOne :: Int -> Typ -> Context -> Rand TTerm
+randProveOne limit typ ctx = 
+ let graph = mkIMGraph typ ctx
+     taxi  = mkTaxi'   typ ctx
+  in do
+   mToks <- randProveOne' limit graph taxi
+   case mToks of
+    Just toks -> return $ ttParse' toks 
+    Nothing   -> randProveOne (limit+1) typ ctx
+
+
+randProveOne' :: Int -> IMGraph -> Taxi -> Rand ( Maybe [Token2] )
+randProveOne' 0 _ _ = return Nothing
+randProveOne' limit graph taxi = do
+ nxt <- randOneNext graph taxi
+ case nxt of
+  Left toks          -> return . Just $ toks
+  Right Nothing      -> return Nothing 
+  Right (Just taxi') -> randProveOne' (limit-1) graph taxi'
+
+
+-- Left : finished tokens ; Right : Unfinished Taxi or Unsuccesfull
+randOneNext :: IMGraph -> Taxi -> Rand (  Either [Token2] (Maybe Taxi)  )
+randOneNext graph taxi = case nextTaxis' graph taxi of
+  Left  toks  -> return $ Left toks
+  Right taxis -> case taxis of
+   [] -> return $ Right Nothing
+   _  -> do
+    taxi' <- getRandomL taxis
+    return . Right . Just $ taxi' 
+
+
+
 proveStr :: Context -> Typ -> Int -> IO()
 proveStr ctx t i 
   = putStr . unlines $
@@ -65,14 +111,9 @@ proveStr ctx t i
   taxi = mkTaxi iM
 
 
+-- generating using IM - GENERATING TOKENS ---------------------------------
 
-
-----------------------------------------------------------------------------------------------
-
-
-
-
--- generating using IM ----------------------------------------------
+-- rekonstrukce: Taxi <výstupObrácene> <keZpracování> <dostupnéProměnné>    
 
 type NSymbol  = (Symbol,Int)
 type NContext = [NSymbol]
@@ -85,6 +126,138 @@ data Token2 =
  T2ParR_lam [(Symbol,Int)]  |
  T2Typ Typ                  |
  End
+
+data Taxi = Taxi [Token2] [Token2] NContext  deriving (Show)
+
+mkTaxi' :: Typ -> Context -> Taxi
+mkTaxi' t ctx = Taxi [] [T2Typ t] $ map (\(x,_)->(x,1)) ctx
+
+mkTaxi :: IM -> Taxi
+mkTaxi (IM t ctx im) = Taxi [] [T2Typ t] $ map (\(x,_)->(x,1)) ctx
+
+nextTaxis' :: IMGraph -> Taxi -> Either [Token2] [Taxi]
+nextTaxis' im taxi = case taxi of
+  Taxi ret []     _    -> Left $ reverse ret
+  Taxi ret (x:xs) nCtx -> case x of
+    T2Typ t         -> Right [ Taxi ret (toks++xs) nCtx' | (toks,nCtx') <- nextTaxis im nCtx t ]
+    T2ParR_lam vars -> Right [ Taxi (x:ret) xs (nCtx \\ vars) ]
+    _               -> Right [ Taxi (x:ret) xs nCtx ]
+
+nextTaxis :: IMGraph -> NContext -> Typ ->  [ ( [Token2] , NContext ) ]
+nextTaxis im nCtx typ = case Map.lookup typ im of
+  Nothing -> error "unexpected Nothing"
+  Just edges -> concatMap (next nCtx) edges
+
+next :: NContext -> (EdgeLabel,[Typ]) -> [ ( [Token2] , NContext ) ]
+next nCtx (tok,ts) = case tok of
+ LLams vars -> 
+  let (nCtx' , lamTok2 , rparTok2 ) = solveTokLam vars nCtx 
+      tok2s = [T2ParL , lamTok2] ++ ( map T2Typ ts ) ++ [rparTok2]  
+   in [ ( tok2s  , nCtx' ) ]
+ LVar x t   -> 
+  let f t2Var | null ts   = ( [t2Var] , nCtx )
+              | otherwise = ( [T2ParL , t2Var] ++ ( map T2Typ ts ) ++ [T2ParR]  , nCtx ) 
+   in map f $ getT2Vars x t nCtx 
+
+getT2Vars :: Symbol -> Typ -> NContext -> [Token2]
+getT2Vars x t nCtx = map (\(_,n)-> T2Var x n t ) $ getThatVars nCtx x
+
+solveTokLam :: Context -> NContext -> (NContext , Token2 , Token2 )
+solveTokLam ctx nCtx = ( ctx'' ++ nCtx , T2Lam ctx' , T2ParR_lam ctx'' )
+ where
+  ctx' = map f ctx
+  ctx''= map (\(s,i,_)->(s,i)) ctx'
+  f :: (Symbol,Typ) -> (Symbol,Int,Typ)
+  f (x,t) = (x, 1 + (numOfThatVar nCtx x) ,t)
+
+numOfThatVar :: NContext -> Symbol -> Int
+numOfThatVar nCtx x = length $ getThatVars nCtx x 
+
+getThatVars :: NContext -> Symbol -> NContext
+getThatVars nCtx x = filter (\(x',_)->x'==x) nCtx 
+
+-- constructing graph ----------------------------------------------------------------------------------
+
+mkIM :: Typ -> Context -> IM
+mkIM typ ctx = IM typ ctx (mkIMGraph typ ctx)
+
+mkIMGraph :: Typ -> Context -> IMGraph
+mkIMGraph typ ctx = 
+ let preGraph = mkPreGraph [MkVertex typ ctx] Map.empty
+  in Map.fromList . map (\(t,(es,_))->(t,es)) . Map.toList $ preGraph
+
+mkPreGraph :: [UpdateCmd] -> PreGraph -> PreGraph
+mkPreGraph [] graph = graph
+mkPreGraph  (cmd:stack) graph = case cmd of
+ MkVertex typ ctx ->
+  let ( newV , ctx' ) = mkVertex typ ctx
+      graph'  = Map.insert typ newV graph
+      newCmds = mkNewCmds graph' newV ctx'
+   in mkPreGraph (newCmds++stack) graph'
+ DeltaCtx typ deltaCtx vertex -> 
+  let graph'  = updateEdges graph typ deltaCtx
+      newCmds = mkNewCmds graph' vertex deltaCtx
+   in mkPreGraph (newCmds++stack) graph'
+
+mkNewCmds :: PreGraph -> PreVertex -> Context -> [UpdateCmd]
+mkNewCmds graph vertex ctx = 
+  catMaybes . map (whatToDo graph ctx) . succs $ vertex
+
+whatToDo :: PreGraph -> Context -> Typ -> Maybe UpdateCmd
+whatToDo graph sentCtx child = case Map.lookup child graph of
+ Nothing -> Just $ MkVertex child sentCtx
+ Just vertex@(_,ctx) -> case sentCtx \\ ctx of 
+  []       -> Nothing 
+  deltaCtx -> Just $ DeltaCtx child deltaCtx vertex  
+
+succs :: PreVertex -> [Typ]
+succs (edges,_) = nub . concatMap snd $ edges
+
+updateEdges :: PreGraph -> Typ -> Context -> PreGraph
+updateEdges graph typ deltaCtx = Map.update upF typ graph
+ where
+  upF (edges,ctx) = case typ of 
+   _:->_     -> Just ( edges , deltaCtx ++ ctx )
+   Typ alpha -> 
+    let newEdges = mkVarEdges alpha deltaCtx
+     in Just ( newEdges ++ edges , deltaCtx ++ ctx ) 
+
+mkVertex :: Typ -> Context -> ( PreVertex , Context ) 
+mkVertex typ ctx = case typ of 
+  _:->_ ->
+   let ( ts , alpha ) = typeArgs typ
+       varz           = zip (mkNewVars ctx (length ts)) ts
+       forkEdge       = ( LLams varz , [Typ alpha] )
+    in ( ( [ forkEdge ] , ctx ) , varz ++ ctx ) 
+  Typ alpha ->
+   ( ( mkVarEdges alpha ctx , ctx ) , ctx )
+
+mkVarEdges :: Symbol -> Context -> [ForkEdge]
+mkVarEdges alpha ctx = map mkVarEdge . filter (hasDesiredEnd alpha) $ ctx
+
+mkVarEdge :: (Symbol,Typ) -> ForkEdge
+mkVarEdge (varName , typ) = 
+ let ( ts , _ ) = typeArgs typ
+  in ( LVar varName typ , ts ) 
+
+hasDesiredEnd :: Symbol -> (Symbol,Typ) -> Bool 
+hasDesiredEnd alpha (_,typ) = 
+ let (_,beta) = typeArgs typ 
+  in alpha == beta 
+
+-- Creates number of new names for vars, so the new names do not occur in Context.
+mkNewVars :: Context -> Int -> [Symbol]
+mkNewVars ctx num = reverse $ mkNewVars' (map fst ctx) [] num 
+ where
+  varAlphabet = ['x'..'z'] ++ ['t'..'w'] ++ ['a'..'s']
+  mkNewVars' :: [Symbol] -> [Symbol] -> Int -> [Symbol]
+  mkNewVars' occ acc 0 = acc
+  mkNewVars' occ acc n 
+   = let var = newSymbol' varAlphabet occ  
+      in mkNewVars' (var:occ) (var:acc) (n-1)
+
+
+-- generating using IM - PARSING ----------------------------------------------
 
 type Token3 = (SourcePos,Token2)
 type MyParser a = GenParser Token3 () a
@@ -182,172 +355,6 @@ parseVar = mytoken $ \tok -> case tok of
 
 
 
--- rekonstrukce: výstupObrácene     
-data Taxi = Taxi [Token2] [Token2] NContext  deriving (Show)
-
-
-mkTaxi' :: Typ -> Context -> Taxi
-mkTaxi' t ctx = Taxi [] [T2Typ t] $ map (\(x,_)->(x,1)) ctx
-
-mkTaxi :: IM -> Taxi
-mkTaxi (IM t ctx im) = Taxi [] [T2Typ t] $ map (\(x,_)->(x,1)) ctx
-
-nextTaxis' :: IMGraph -> Taxi -> Either [Token2] [Taxi]
-nextTaxis' im taxi = case taxi of
-  Taxi ret []     _    -> Left $ reverse ret
-  Taxi ret (x:xs) ctx2 -> case x of
-    T2Typ t         -> Right [ Taxi ret (toks++xs) ctx2' | (toks,ctx2') <- nextTaxis im ctx2 t ]
-    T2ParR_lam vars -> Right [ Taxi (x:ret) xs (ctx2 \\ vars) ]
-    _               -> Right [ Taxi (x:ret) xs ctx2 ]
-
-nextTaxis :: IMGraph -> NContext -> Typ ->  [ ( [Token2] , NContext ) ]
-nextTaxis im ctx2 typ = case Map.lookup typ im of
-  Nothing -> error "unexpected Nothing"
-  Just edges -> concatMap next edges
- where
-  next :: (EdgeLabel,[Typ]) -> [ ( [Token2] , NContext ) ]
-  next (tok,ts) = case tok of
-   LLams ctx  -> let (ctx2' , lamTok2 , rparTok2 ) = solveTokLam ctx ctx2  
-                  in [ ( T2ParL : lamTok2 : ( ( map T2Typ ts ) ++ [rparTok2]  ) , ctx2' ) ]
-   LVar x t   -> let f t2Var = if null ts 
-                                then ( [t2Var] , ctx2 )
-                                else ( T2ParL : t2Var : ( ( map T2Typ ts ) ++ [T2ParR]  ) , ctx2 ) 
-                  in map f $ getT2Vars x t ctx2 
-
-getT2Vars :: Symbol -> Typ -> NContext -> [Token2]
-getT2Vars x t ctx2 = map (\(_,n)-> T2Var x n t ) $ getThatVars ctx2 x
-
-solveTokLam :: Context -> NContext -> (NContext , Token2 , Token2 )
-solveTokLam ctx ctx2 = ( ctx'' ++ ctx2 , T2Lam ctx' , T2ParR_lam ctx'' )
- where
-  ctx' = map f ctx
-  ctx''= map (\(s,i,_)->(s,i)) ctx'
-  f :: (Symbol,Typ) -> (Symbol,Int,Typ)
-  f (x,t) = (x, 1 + (numOfThatVar ctx2 x) ,t)
-
-numOfThatVar :: NContext -> Symbol -> Int
-numOfThatVar ctx2 x = length $ getThatVars ctx2 x 
-
-getThatVars :: NContext -> Symbol -> NContext
-getThatVars ctx2 x = filter (\(x',_)->x'==x) ctx2 
-
--------------------------------------------------------------------------------------------------------
-
-{-- Tenhle rekurzivní přístup zamítam kul blbýmu kontrolovatelnosti, s frontou de líp
-
-
-mkTTermsByTyp :: IMGraph -> NContext -> Typ -> [ TTerm ]
-mkTTermsByTyp graph nCtx typ = case Map.lookup typ graph of
- Just edges -> map (mkTTermsByEdge graph nCtx typ) edges
- Nothing -> error "mkTTerms : Type " ++ show typ ++ "is not in the IM-graph."
-
-mkTTermsByTypes :: IMGraph -> NContext -> [ Typ ] -> [[ TTerm ]]
-mkTTermsByTypes graph nCtx [] = 
-
-
-mkTTermsByEdge :: IMGraph -> NContext -> Typ -> ForkEdge -> [ TTerm ] 
-mkTTermsByEdge graph nCtx typ edge = case edge of
- ( LLams vars , [t] ) -> 
-  let tterms = mkTTermsByTyp graph nCtx t
-   in map (ttermFromLLams vars typ) tterms  
- ( LVar v t , ts ) -> 
-  let ttss = transpose . map (mkTTermsByTyp graph nCtx) $ ts
-   in 
- _ -> error "mkTTermsByEdge : LLams must be label of a simple edge. OR is not of '->' type."
-
-
-ttermFromLLams :: [(Symbol,Typ)] -> Typ -> TTerm -> TTerm
-ttermFromLLams ((v,_):vars) typ@( _ :-> b ) body = 
- TLam v ( ttermFromLLams vars b body ) typ 
-ttermFromLLams [] typ body = body
-ttermFromLLams _ _ _ = error "ttermFromLLams : lambda must have '->' type."
-
---}
-
--- next :: NContext -> ForkEdge -> [ ( [Token2] , NContext ) ]
-
-
--- constructing graph ----------------------------------------------------------------------------------
-
-mkIM :: Typ -> Context -> IM
-mkIM typ ctx = IM typ ctx (mkIMGraph typ ctx)
-
-mkIMGraph :: Typ -> Context -> IMGraph
-mkIMGraph typ ctx = 
- let preGraph = mkPreGraph [MkVertex typ ctx] Map.empty
-  in Map.fromList . map (\(t,(es,_))->(t,es)) . Map.toList $ preGraph
-
-mkPreGraph :: [UpdateCmd] -> PreGraph -> PreGraph
-mkPreGraph [] graph = graph
-mkPreGraph  (cmd:stack) graph = case cmd of
- MkVertex typ ctx ->
-  let ( newV , ctx' ) = mkVertex typ ctx
-      graph'  = Map.insert typ newV graph
-      newCmds = mkNewCmds graph' newV ctx'
-   in mkPreGraph (newCmds++stack) graph'
- DeltaCtx typ deltaCtx vertex -> 
-  let graph'  = updateEdges graph typ deltaCtx
-      newCmds = mkNewCmds graph' vertex deltaCtx
-   in mkPreGraph (newCmds++stack) graph'
-
-mkNewCmds :: PreGraph -> PreVertex -> Context -> [UpdateCmd]
-mkNewCmds graph vertex ctx = 
-  catMaybes . map (whatToDo graph ctx) . succs $ vertex
-
-whatToDo :: PreGraph -> Context -> Typ -> Maybe UpdateCmd
-whatToDo graph sentCtx child = case Map.lookup child graph of
- Nothing -> Just $ MkVertex child sentCtx
- Just vertex@(_,ctx) -> case sentCtx \\ ctx of 
-  []       -> Nothing 
-  deltaCtx -> Just $ DeltaCtx child deltaCtx vertex  
-
-succs :: PreVertex -> [Typ]
-succs (edges,_) = nub . concatMap snd $ edges
-
-updateEdges :: PreGraph -> Typ -> Context -> PreGraph
-updateEdges graph typ deltaCtx = Map.update upF typ graph
- where
-  upF (edges,ctx) = case typ of 
-   _:->_     -> Just ( edges , deltaCtx ++ ctx )
-   Typ alpha -> 
-    let newEdges = mkVarEdges alpha deltaCtx
-     in Just ( newEdges ++ edges , deltaCtx ++ ctx ) 
-
-mkVertex :: Typ -> Context -> ( PreVertex , Context ) 
-mkVertex typ ctx = case typ of 
-  _:->_ ->
-   let ( ts , alpha ) = typeArgs typ
-       varz           = zip (mkNewVars ctx (length ts)) ts
-       forkEdge       = ( LLams varz , [Typ alpha] )
-    in ( ( [ forkEdge ] , ctx ) , varz ++ ctx ) 
-  Typ alpha ->
-   ( ( mkVarEdges alpha ctx , ctx ) , ctx )
-
-mkVarEdges :: Symbol -> Context -> [ForkEdge]
-mkVarEdges alpha ctx = map mkVarEdge . filter (hasDesiredEnd alpha) $ ctx
-
-mkVarEdge :: (Symbol,Typ) -> ForkEdge
-mkVarEdge (varName , typ) = 
- let ( ts , _ ) = typeArgs typ
-  in ( LVar varName typ , ts ) 
-
-hasDesiredEnd :: Symbol -> (Symbol,Typ) -> Bool 
-hasDesiredEnd alpha (_,typ) = 
- let (_,beta) = typeArgs typ 
-  in alpha == beta 
-
--- Creates number of new names for vars, so the new names do not occur in Context.
-mkNewVars :: Context -> Int -> [Symbol]
-mkNewVars ctx num = reverse $ mkNewVars' (map fst ctx) [] num 
- where
-  varAlphabet = ['x'..'z'] ++ ['t'..'w'] ++ ['a'..'s']
-  mkNewVars' :: [Symbol] -> [Symbol] -> Int -> [Symbol]
-  mkNewVars' occ acc 0 = acc
-  mkNewVars' occ acc n 
-   = let var = newSymbol' varAlphabet occ  
-      in mkNewVars' (var:occ) (var:acc) (n-1)
-
-
 ---------------------------------------------------
 
 test_binTree = putList . take 256 $ prove (t1_2:->o:->o) []
@@ -418,6 +425,42 @@ showPreGraph graph = concatMap showVertex $ Map.toDescList graph
 
 -----------------
 
+-------------------------------------------------------------------------------------------------------
+
+{-- Tenhle rekurzivní přístup zamítam kul blbýmu kontrolovatelnosti, s frontou de líp
+
+
+mkTTermsByTyp :: IMGraph -> NContext -> Typ -> [ TTerm ]
+mkTTermsByTyp graph nCtx typ = case Map.lookup typ graph of
+ Just edges -> map (mkTTermsByEdge graph nCtx typ) edges
+ Nothing -> error "mkTTerms : Type " ++ show typ ++ "is not in the IM-graph."
+
+mkTTermsByTypes :: IMGraph -> NContext -> [ Typ ] -> [[ TTerm ]]
+mkTTermsByTypes graph nCtx [] = 
+
+
+mkTTermsByEdge :: IMGraph -> NContext -> Typ -> ForkEdge -> [ TTerm ] 
+mkTTermsByEdge graph nCtx typ edge = case edge of
+ ( LLams vars , [t] ) -> 
+  let tterms = mkTTermsByTyp graph nCtx t
+   in map (ttermFromLLams vars typ) tterms  
+ ( LVar v t , ts ) -> 
+  let ttss = transpose . map (mkTTermsByTyp graph nCtx) $ ts
+   in 
+ _ -> error "mkTTermsByEdge : LLams must be label of a simple edge. OR is not of '->' type."
+
+
+ttermFromLLams :: [(Symbol,Typ)] -> Typ -> TTerm -> TTerm
+ttermFromLLams ((v,_):vars) typ@( _ :-> b ) body = 
+ TLam v ( ttermFromLLams vars b body ) typ 
+ttermFromLLams [] typ body = body
+ttermFromLLams _ _ _ = error "ttermFromLLams : lambda must have '->' type."
+
+--}
+
+-- next :: NContext -> ForkEdge -> [ ( [Token2] , NContext ) ]
+
+----------------------------------------------------------------------------
 
 {--
 mkPreGraph' :: Stack -> PreGraph -> PreGraph
