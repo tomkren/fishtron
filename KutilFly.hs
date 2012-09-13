@@ -161,12 +161,12 @@ data ObjSchema   = Fly Pos Goal SensorsSchema Effectors ProgSchema
                  | LongWall Pos Pos
 
 Just world1 = fromWordlSchema [
-  Apple (-7,-2) ,
+  -- Apple (-7,-2) ,
   LongWall (-18,-18) (-18,18) ,
   LongWall (-18,-18) (18,-18) ,
   LongWall (-18,18) (18,18) ,
   LongWall (18,-18) (18,18) ,
-  fly1,fly2,fly3
+  fly1,fly2 -- ,fly3
  ]
 
 fly1 =

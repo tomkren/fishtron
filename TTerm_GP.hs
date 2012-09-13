@@ -1,4 +1,4 @@
-module TTerm_test where
+module TTerm_GP where
 
 import TTerm
 import IM_new (prove,o,t1_2)
