@@ -4,7 +4,7 @@ module IM_new where
 import Data.List((\\),nub,intercalate,unlines )
 import Data.Maybe(catMaybes)
 -- import Data.Maybe
-import TTerm (Symbol,Typ(..),TTerm(..),Context,typeArgs,ttermTyp)
+import TTerm (Symbol,Typ(..),TTerm(..),Context,typeArgs,ttermTyp,isInCtx)
 import Util  (runRand , newSymbol' , fillStr ,singletonQueue , infRand, infSetRand, 
               Queue, Rand , insertsQueue , popQueue , putList, putRandList ,getRandomL )
 
@@ -53,7 +53,7 @@ prove :: Typ -> Context -> [TTerm]
 prove typ ctx = 
  let graph = mkIMGraph typ ctx
      taxi  = mkTaxi'   typ ctx
-  in map ttParse' . prove' graph . singletonQueue $ taxi   
+  in map (ttParse' ctx) . prove' graph . singletonQueue $ taxi   
 
 prove' :: IMGraph -> Queue Taxi -> [[Token2]]
 prove' im q = case popQueue q of
@@ -76,7 +76,7 @@ randProveOne limit typ ctx =
   in do
    mToks <- randProveOne' limit graph taxi
    case mToks of
-    Just toks -> return $ ttParse' toks 
+    Just toks -> return $ ttParse' ctx toks 
     Nothing   -> randProveOne (limit+1) typ ctx
 
 
@@ -109,8 +109,7 @@ proveStr ctx t i
  where
   iM@(IM _ _ im) = mkIM t ctx
   taxi = mkTaxi iM
-
-
+ 
 -- generating using IM - GENERATING TOKENS ---------------------------------
 
 -- rekonstrukce: Taxi <výstupObrácene> <keZpracování> <dostupnéProměnné>    
@@ -263,8 +262,15 @@ type Token3 = (SourcePos,Token2)
 type MyParser a = GenParser Token3 () a
 
 
-ttParse' :: [Token2] -> TTerm
-ttParse' tok2s = let Right tt = ttParse tok2s in tt
+ttParse' :: Context -> [Token2] -> TTerm
+ttParse' ctx tok2s = let Right tt = ttParse tok2s in ctxVarsToVals ctx tt
+
+ctxVarsToVals :: Context -> TTerm -> TTerm
+ctxVarsToVals ctx tt = case tt of
+ TVar x   t -> if x `isInCtx` ctx then TVal x t else tt 
+ TVal _   _ -> tt 
+ TLam x m t -> TLam x (ctxVarsToVals ctx m) t
+ TApp m n t -> TApp (ctxVarsToVals ctx m) (ctxVarsToVals ctx n) t
 
 ttParse :: [Token2] -> Either ParseError TTerm
 ttParse tok2s = parse parseTTEnd "(ttParse : Syntax Error)" (toT3 $ tok2s ++ [End])

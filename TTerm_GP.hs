@@ -4,9 +4,10 @@ module TTerm_GP where
 
 import TTerm
 import IM_new (prove , randProveUnique , randProveOne ,   o,t1_2 )
-import GPclasses (Gene,Cros,Muta, generateIt,mutateIt,crossIt, mkEOpt,putEvolveMaximas,Problem(..))
+import GPclasses (Gene,Cros,Muta,FitFun2, generateIt,mutateIt,crossIt, mkEOpt,putEvolveMaximas,Problem(..))
 import Util
 import Data.List
+import Data.Typeable
 
 -- testing ------------------
 
@@ -15,7 +16,7 @@ tree i = head . drop i $ prove treeType []
 
 -- GP instances ---------------------------
 
-
+ttSolve :: (Typeable a) => FitFun2 TTerm a -> Context -> Typ -> a -> IO ()
 ttSolve ff ctx typ as = 
  let eOpt    = mkEOpt (10,10,80)
      popSize = 100
