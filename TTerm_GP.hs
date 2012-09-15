@@ -1,7 +1,10 @@
+{-# LANGUAGE MultiParamTypeClasses #-}
+
 module TTerm_GP where
 
 import TTerm
-import IM_new (prove,o,t1_2)
+import IM_new (prove , randProveUnique , randProveOne ,   o,t1_2 )
+import GPclasses (Gene,Cros,Muta, generateIt,mutateIt,crossIt, mkEOpt,putEvolveMaximas,Problem(..))
 import Util
 import Data.List
 
@@ -10,13 +13,47 @@ import Data.List
 treeType = (t1_2:->o:->o)
 tree i = head . drop i $ prove treeType []
 
------------------------------
+-- GP instances ---------------------------
 
 
--- generating -------------------------------------
+ttSolve ff ctx typ as = 
+ let eOpt    = mkEOpt (10,10,80)
+     popSize = 100
+     lim     = 100
+     gOpt    = TTG_IM_rand typ ctx lim
+     mOpt    = TTM_my ctx lim  
+     cOpt    = TTC_my ctx 
+  in putEvolveMaximas 25000 $ Problem popSize eOpt gOpt mOpt cOpt ff as
 
-defaultValue :: Typ -> Context -> TTerm
-defaultValue typ ctx = head $ prove typ ctx
+instance Gene TTerm TTermGen where generateIt = ttermGen
+instance Muta TTerm TTermMut where mutateIt   = ttermMut
+instance Cros TTerm TTermCro where crossIt    = ttermCro
+
+
+data TTermGen = TTG_IM_rand Typ Context Int
+              | TTG_IM_syst Typ Context
+
+data TTermMut = TTM_my Context Int
+
+data TTermCro = TTC_my Context
+
+
+ttermGen :: TTermGen -> Rand [TTerm] 
+ttermGen opt = case opt of
+ TTG_IM_rand typ ctx limit -> randProveUnique limit typ ctx
+ TTG_IM_syst typ ctx       -> return $ prove typ ctx
+
+ttermCro :: TTermCro -> TTerm -> TTerm -> Rand (TTerm,TTerm)
+ttermCro (TTC_my ctx) tt1 tt2 = xover ctx tt1 tt2
+
+-- mutation --------------------------------------
+
+ttermMut :: TTermMut -> TTerm -> Rand TTerm
+ttermMut (TTM_my ctx limit) tt = do
+ (TTZ sub ds) <- getRandomL $ subterms tt
+ newSub <- randProveOne limit (ttermTyp sub) ctx 
+ return . makeVarsUnique . tzGoTop $ TTZ newSub ds
+
 
 -- xover ------------------------------------------
 
@@ -78,7 +115,8 @@ treatFVs ctx (TTZ t ds) = f (fv' t) t
   fv' (TApp p q _  ) = nub $ (fv' p) ++ (fv' q) 
   fv' (TLam v p typ) = filter (\(s,_)->s/=v) (fv' p)   -- neefektivni
 
-
+defaultValue :: Typ -> Context -> TTerm
+defaultValue typ ctx = head $ prove typ ctx
 
 compatibleSubterms :: TTerm -> TTerm ->  [ (TTermZipper,TTermZipper) ]
 compatibleSubterms t1 t2 = concatMap (\(as,bs) -> [ (a,b) | a <- as , b <- bs ] ) 
