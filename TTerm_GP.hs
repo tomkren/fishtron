@@ -4,7 +4,7 @@ module TTerm_GP where
 
 import TTerm
 import IM_new (prove , randProveUnique , randProveOne ,   o,t1_2 )
-import GPclasses (Gene,Cros,Muta,FitFun2(..),FitVal, generateIt,mutateIt,crossIt, mkEOpt,Problem(..)
+import GP_Classes (Gene,Cros,Muta,FitFun2(..),FitVal, generateIt,mutateIt,crossIt, mkEOpt,Problem(..)
                  ,getFFType,putEvolveMaximas,putEvolve)
 import Heval  (as)
 import Util

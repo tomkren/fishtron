@@ -19,7 +19,7 @@ import Util
 import Dist
 import Evaluation
 import Parser
-import GP
+import GP_old
 import Enviroments
 import Prover
 

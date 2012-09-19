@@ -6,7 +6,7 @@ import Dist
 import Evaluation
 import Parser
 import Prover
-import GP
+import GP_old
 import Enviroments
 
 import Ant

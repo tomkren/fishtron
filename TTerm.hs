@@ -1,4 +1,4 @@
-module TTerm 
+module TTerm
 ( Typ (..)
 , TTerm (..)
 , TTermZipper (..)
