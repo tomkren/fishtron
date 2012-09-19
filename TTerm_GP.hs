@@ -4,7 +4,9 @@ module TTerm_GP where
 
 import TTerm
 import IM_new (prove , randProveUnique , randProveOne ,   o,t1_2 )
-import GPclasses (Gene,Cros,Muta,FitFun2, generateIt,mutateIt,crossIt, mkEOpt,putEvolveMaximas,Problem(..))
+import GPclasses (Gene,Cros,Muta,FitFun2(..),FitVal, generateIt,mutateIt,crossIt, mkEOpt,Problem(..)
+                 ,getFFType,putEvolveMaximas,putEvolve)
+import Heval  (as)
 import Util
 import Data.List
 import Data.Typeable
@@ -14,17 +16,37 @@ import Data.Typeable
 treeType = (t1_2:->o:->o)
 tree i = head . drop i $ prove treeType []
 
+-- data FitFun2 term a = FF1 (term -> Rand FitVal)
+--                     | FF2 (term->String) a (a->Rand FitVal)
+
+dou, dou1, dou2 :: Typ
+dou  = Typ "Double"
+dou1 = dou :-> dou
+dou2 = dou :-> dou :-> dou
+
+tt_ssr = ttSolve ff_tt_ssr ssr_ctx dou1
+
+ssr_ctx :: Context
+ssr_ctx = ([("plus",dou2),("minus",dou2),("krat",dou2),("rdiv",dou2),("sin",dou1),("cos",dou1),("exp",dou1),("rlog",dou1)])
+
+ff_tt_ssr :: FitFun2 TTerm (Double->Double)
+ff_tt_ssr = FF2 show (as::Double->Double) (return . ff)
+ where
+  ff :: (Double->Double) -> FitVal
+  ff f = (1/) . (1+) . sum . map (\x-> let dx = (f x) - ( x*x*x*x+x*x*x+x*x+x ) in dx*dx ) $ [-1,-0.9..1] 
+
+
 -- GP instances ---------------------------
 
-ttSolve :: (Typeable a) => FitFun2 TTerm a -> Context -> Typ -> a -> IO ()
-ttSolve ff ctx typ as = 
- let eOpt    = mkEOpt (10,10,80)
-     popSize = 100
+ttSolve :: (Typeable a) => FitFun2 TTerm a -> Context -> Typ -> IO ()
+ttSolve ff ctx typ = 
+ let eOpt    = mkEOpt (0,0,100)
+     popSize = 10
      lim     = 100
      gOpt    = TTG_IM_rand typ ctx lim
      mOpt    = TTM_my ctx lim  
      cOpt    = TTC_my ctx 
-  in putEvolveMaximas 25000 $ Problem popSize eOpt gOpt mOpt cOpt ff as
+  in putEvolve 25000 $ Problem popSize eOpt gOpt mOpt cOpt ff (getFFType ff)
 
 instance Gene TTerm TTermGen where generateIt = ttermGen
 instance Muta TTerm TTermMut where mutateIt   = ttermMut

@@ -29,10 +29,15 @@ data Problem term a gOpt mOpt cOpt = Problem
 
 type FitFun term = term -> Rand FitVal
 
-data FitFun2 term a = FF1 (term -> Rand FitVal)
+data FitFun2 term a = FF1 (term -> Rand FitVal) a
                     | FF2 (term->String) a (a->Rand FitVal)
 
+mkFF1 :: (term -> Rand FitVal) -> FitFun2 term ()
+mkFF1 ff = FF1 ff () 
 
+getFFType :: FitFun2 term a -> a
+getFFType (FF1 _ a  ) = a
+getFFType (FF2 _ a _) = a
 
 type Credit = Double
 
@@ -93,7 +98,7 @@ evolveStep p x@(_,credit) = do
 
 evalFF :: (Typeable a) => Problem term a gOpt mOpt cOpt -> [term] -> Rand (Dist term)
 evalFF p ts = case fitFun p of
- FF1 ff -> mkDist `liftM` mapM (\t->(t,) `liftM` ff t) ts
+ FF1 ff _ -> mkDist `liftM` mapM (\t->(t,) `liftM` ff t) ts
  FF2 toStr a ff -> 
   let strs = map toStr ts
       as   = evals strs a
@@ -409,7 +414,7 @@ type BoolListProblem = Problem [Bool] () (ListGen BoolGen) (ListMut BoolMut) (Li
 
 boolListProblem :: (Double,Double,Double) -> PopSize -> Len -> ([Bool]->FitVal) -> BoolListProblem
 boolListProblem eParams popSize len ff = 
-  Problem popSize (mkEOpt eParams) (LG_ BG_ len) (LM_OnePoint BM_Not len ) (LC_OnePoint () len) (FF1 $ return . ff)  ()
+  Problem popSize (mkEOpt eParams) (LG_ BG_ len) (LM_OnePoint BM_Not len ) (LC_OnePoint () len) (mkFF1 $ return . ff)  ()
   
 
 
@@ -439,14 +444,14 @@ test2 ( ePars , popSize ) =
      gOpt    = LG_         (PG_Both BG_    (DG_Normal (0,1)) ) len
      mOpt    = LM_OnePoint (PM_Both BM_Not (DM_Normal (0,1)) ) len
      cOpt    = LC_OnePoint ()                                  len 
-  in putEvolveMaximas 500 $ Problem popSize eOpt gOpt mOpt cOpt (FF1 $ return . ff3) ()
+  in putEvolveMaximas 500 $ Problem popSize eOpt gOpt mOpt cOpt (mkFF1 $ return . ff3) ()
 
 metaTest2 = 
  let len      = 100
      gOpt     = LG_         (PG_Both BG_    (DG_Normal (0,1)) ) len
      mOpt     = LM_OnePoint (PM_Both BM_Not (DM_Normal (0,1)) ) len  
      cOpt     = LC_OnePoint ()                                  len
-     ff       = FF1 $ return . ff3
+     ff       = mkFF1 $ return . ff3
      inCredit = 500
   in putEvolveMaximas 25000 $ metaProblem (gOpt,mOpt,cOpt,ff,(),inCredit)
 
@@ -458,7 +463,7 @@ testFF4 =
      gOpt    = DiG_Uniform (DG_Normal (0,1) ) len
      mOpt    = DiM_ ( DM_Normal (0,1) )
      cOpt    = DiC_OnePoint ()
-  in putEvolveMaximas 20000 $ Problem popSize eOpt gOpt mOpt cOpt (FF1 ff4') () -- (return . ff4)
+  in putEvolveMaximas 20000 $ Problem popSize eOpt gOpt mOpt cOpt (mkFF1 ff4') () -- (return . ff4)
 
 type MetaProblem = Problem [Double] () (ListGen DoubleGen) (ListMut DoubleMut) (ListCro ())
 type MetaParams t a g m c = (g,m,c,FitFun2 t a,a,Credit) 
@@ -469,7 +474,7 @@ metaTest =
      gOpt     = LG_ BG_ len  
      mOpt     = LM_OnePoint BM_Not len  
      cOpt     = LC_OnePoint () len
-     ff       = FF1 $ return . ff2
+     ff       = mkFF1 $ return . ff2
      inCredit = 500
   in putEvolveMaximas 25000 $ metaProblem (gOpt,mOpt,cOpt,ff,(),inCredit)
 
@@ -484,7 +489,7 @@ metaProblem params =
   in Problem popSize eOpt gOpt mOpt cOpt (metaFF params) () 
  
 metaFF :: Evolvable t a g m c => MetaParams t a g m c -> FitFun2 [Double] () -- [Double] -> Rand FitVal
-metaFF (gOpt,mOpt,cOpt,ff,a,credit) = FF1 $ \ [rep,mut,cro,gSize,gNum] -> 
+metaFF (gOpt,mOpt,cOpt,ff,a,credit) = mkFF1 $ \ [rep,mut,cro,gSize,gNum] -> 
  let innerProblem = 
       let ratio   = gSize / gNum
           popSize = round . sqrt $ credit * ratio
