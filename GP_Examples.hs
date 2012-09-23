@@ -1,20 +1,19 @@
 
 module GP_Examples where
 
-import GP_Classes
-import GP_Instances
+import GP_Classes   ( Evolvable, Problem(Problem), FitFun2(FF2), PopSize, FitVal, Credit,
+                      mkEOpt, mkFF1, putEvolveMaximas, evolveIt )
+import GP_Instances 
 
 import Util     ( Rand )
 import Dist     ( Dist, distTake_new, distSize, distMax )
 import KozaTree ( KTree )
 import Heval    ( as )
 
-    
+import System.Random       (mkStdGen)
+import Control.Monad.State (runState)
 
-
-
-import System.Random
-import Control.Monad.State
+--------------------------------------
 
 type BoolListProblem = Problem [Bool] () (ListGen BoolGen) (ListMut BoolMut) (ListCro () )
 

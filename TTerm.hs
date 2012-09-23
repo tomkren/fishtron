@@ -13,14 +13,14 @@ module TTerm
 , checkTyp
 ) where
 
-import Data.List
+import Data.List ( nub, (\\) )
+import Data.Typeable ( Typeable )
+import Text.ParserCombinators.Parsec ( Parser, ParseError, parse, (<|>), eof, char, many1, noneOf, skipMany1, space )
 
-import Data.Typeable
-import Text.ParserCombinators.Parsec
+import Util  ( newSymbol )
+import Heval ( eval )
 
-import Util
-import Heval
-
+---------------------------------------------------
 
 type Symbol = String
 

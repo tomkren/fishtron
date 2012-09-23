@@ -1,22 +1,18 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE FlexibleInstances     #-}
 
-
 module GP_Instances where
 
+import GP_Classes ( Gene, Muta, Cros, generateIt, mutateIt, crossIt , Prob )
+import KozaTree   ( KTree(KNode), KPos, kSubtree, kChangeSubtree, kPoses, kPoses2 ) 
+import Util       ( Rand, getRandom, getRandomL, getRandomR, randIf, randCase, infRand, getNormal )
+import Dist       ( Dist, mkDist, distSize, distToList )
 
 import Control.Monad ( liftM, liftM2, forM )
-
-import GP_Classes    ( Gene, Muta, Cros, generateIt, mutateIt, crossIt , Prob )
-import KozaTree      ( KTree(KNode), KPos, kSubtree, kChangeSubtree, kPoses, kPoses2 ) 
-import Util          ( Rand, getRandom, getRandomL, getRandomR, randIf, randCase, infRand, getNormal )
-import Dist          ( Dist, mkDist, distSize, distToList )
 
 type Len    = Int
 type Mean   = Double
 type StdDev = Double
-
-
 
 -- instances ------------------------------------------------------------------------
 

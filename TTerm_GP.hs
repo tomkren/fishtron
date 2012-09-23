@@ -6,10 +6,12 @@ import TTerm
 import IM_new (prove , randProveUnique , randProveOne ,   o,t1_2 )
 import GP_Classes (Gene,Cros,Muta,FitFun2(..),FitVal, generateIt,mutateIt,crossIt, mkEOpt,Problem(..)
                  ,getFFType,putEvolveMaximas,putEvolve)
+
 import Heval  (as)
-import Util
-import Data.List
-import Data.Typeable
+import Util   (Rand, getRandomL, getRandomR)
+
+import Data.List     (nub,groupBy)
+import Data.Typeable (Typeable)
 
 -- testing ------------------
 
