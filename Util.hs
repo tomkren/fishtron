@@ -193,6 +193,8 @@ type Logbook = [String]
 data TalkativeLevel = Grave | Spartan | NormalGuy | TeenAgeGirl deriving (Eq,Ord)
           -- ? : OnlyErrors | Laconic | Normal | Verbose
 
+-- lepší je to udělat víc [(téma,tLevel)]
+
 instance RunRand Ralog where runRand = runRalog Spartan
 
 logIt :: String -> Ralog ()
