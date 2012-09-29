@@ -17,7 +17,9 @@ module Util
 , Rand  , randLift , getRandom , getRandomR , runRand 
         , infChainRand , infRand , infSetRand , randCase, randIf ,getNormal, getRandomL
         , RunRand
-, Ralog , TalkativeLevel(..) , logIt , logAs , runRalog 
+, Ral , TalkativeLevel(..) , logIt , logAs , runRal 
+, chainM
+, asType
 ) where
 
 import Data.List
@@ -33,6 +35,8 @@ import Data.Functor.Identity
 import Control.Monad.Writer 
 import Control.Monad.Reader
 
+asType :: a
+asType = undefined
 
 -- "Zřetězení funkcí"
 (+++) :: (a->[b]) -> (a->[b]) -> (a->[b])
@@ -182,12 +186,35 @@ popQueue ( Queue [] []     ) = Nothing
 popQueue ( Queue xs []     ) = Just (y , Queue [] ys ) where (y:ys) = reverse xs
 popQueue ( Queue xs (y:ys) ) = Just (y , Queue xs ys )
 
+-- Functions on monads ------------------------------------------------
+
+chainM :: Monad m => Int -> (a -> m a) -> a -> m [a]
+chainM n f x = (x:) `liftM` chainM' n f x 
+ where
+  chainM' 0 _ _ = return []
+  chainM' n f x = do
+   y  <- f x
+   ys <- chainM' (n-1) f y
+   return (y:ys)
+
 -- rand & logging monad -----------------------------------------------
 
-type MetaRalog talkativeLevel = StateT StdGen (WriterT Logbook (Reader talkativeLevel)) 
+type MetaRal rom = StateT StdGen (WriterT Logbook (Reader rom)) 
+
+type LogOpt     = Map LogTheme LogLevel
+type LogOptions = [(LogTheme,LogLevel)]
+type LogTheme = String
+type LogLevel = Double
+
+defaultLogLevel :: LogLevel
+defaultLogLevel = 5
+
+defaultLogTheme :: LogTheme
+defaultLogTheme = "default"
 
 
-type Ralog = MetaRalog TalkativeLevel 
+-- type Ral  = MetaRal TalkativeLevel 
+type Ral = MetaRal LogOpt 
 
 type Logbook = [String]
 data TalkativeLevel = Grave | Spartan | NormalGuy | TeenAgeGirl deriving (Eq,Ord)
@@ -195,46 +222,79 @@ data TalkativeLevel = Grave | Spartan | NormalGuy | TeenAgeGirl deriving (Eq,Ord
 
 -- lepší je to udělat víc [(téma,tLevel)]
 
-instance RunRand Ralog where runRand = runRalog Spartan
 
-logIt :: String -> Ralog ()
-logIt str = logAs NormalGuy str
+instance RunRand Ral where runRand = runRal []
 
-logAs :: TalkativeLevel -> String -> Ralog ()
-logAs whoTalks str = do
- level <- ask
- if whoTalks <= level
+logIt :: String -> Ral ()
+logIt = logAs defaultLogTheme defaultLogLevel
+
+logL :: LogLevel -> String -> Ral ()
+logL level = logAs defaultLogTheme level
+
+logT :: LogTheme -> String -> Ral ()
+logT theme = logAs theme defaultLogLevel
+
+-- logAs :: TalkativeLevel -> String -> Ral ()
+-- logAs whoTalks str = do
+--  level <- ask
+--  if whoTalks <= level
+--   then tell [str]
+--   else return ()
+
+logAs :: LogTheme -> LogLevel -> String -> Ral ()
+logAs theme level str = do
+ logOpt <- ask
+ let levelLimit = maybe defaultLogLevel id (Map.lookup theme logOpt) 
+ if levelLimit <= level
   then tell [str]
   else return ()
 
 
---runRalog = undefined
-
-runRalog :: TalkativeLevel -> Ralog a -> IO a
-runRalog talkativeLevel ralog = do
+runRal :: LogOptions -> Ral a -> IO a
+runRal logOptions ralog = do
  gen <- getStdGen
- let ((x,gen'),logbook) = runReader (runWriterT $ runStateT ralog gen) talkativeLevel
+ let ((x,gen'),logbook) = runReader (runWriterT $ runStateT ralog gen) (Map.fromList logOptions)
  mapM_ putStrLn logbook
  return x 
 
 
-test ::TalkativeLevel -> IO [Bool]
-test tLevel = do 
- runRalog tLevel (test' 1)  
+-- runRal :: TalkativeLevel -> Ral a -> IO a
+-- runRal talkativeLevel ralog = do
+--  gen <- getStdGen
+--  let ((x,gen'),logbook) = runReader (runWriterT $ runStateT ralog gen) talkativeLevel
+--  mapM_ putStrLn logbook
+--  return x 
 
-test' :: Int -> Ralog [Bool]
+opt1 :: LogOptions
+opt1 = [("default",5),("xoxo",6)]
+
+test :: LogOptions -> IO [Bool]
+test opt = do 
+ runRal opt (test' 1)  
+
+test' :: Int -> Ral [Bool]
 test' i = do
  let n = 9
- logIt $ "Ted vygeneruju bool seznam délky " ++ show n ++ ", pokus cislo " ++ show i
+ logT "info" $ "Ted vygeneruju bool seznam délky " ++ show n ++ ", pokus cislo " ++ show i
  bs <- replicateM n getRandom
- logAs Spartan $ "Vygeneroval sem " ++ show bs
+ logL 10 $ "Vygeneroval sem " ++ show bs
  if bs == (replicate n True) 
   then do 
-   logAs TeenAgeGirl $ "Jupiiii!! HOTOVOVOVOVOVOVO ! xOXo"
+   logAs "xoxo" 10 $ "Jupiiii!! HOTOVOVOVOVOVOVO ! xOXo"
    return bs 
   else do 
-   logAs TeenAgeGirl $ "Fuck it, AGAIN!!"
+   logAs "xoxo" 5 $ "Fuck it, AGAIN!!"
    test' (i+1) 
+
+-- test :: IO [Bool]
+-- test = runRal Map.empty test'
+-- 
+-- test' :: Ral [Bool]
+-- test' = do 
+--  let n = 9
+--  logg "Hello world!"
+--  bs <- replicateM n getRandom
+--  return bs
 
 -- rand ----------------------------------------------------------------
 

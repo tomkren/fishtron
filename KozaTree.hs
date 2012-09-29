@@ -4,6 +4,8 @@ module KozaTree
 , kPoses, kPoses2
 , kChangeSubtree
 , kSubtree
+, kSize
+, kDepth
 ) where
 
 import Text.ParserCombinators.Parsec
@@ -40,6 +42,11 @@ t2 = kParse' "(plus 1 1)"
 
 kSize :: KTree -> Int
 kSize (KNode _ ts) = (1+) . sum $ map kSize ts
+
+kDepth :: KTree -> Int
+kDepth (KNode _ ts) = case ts of
+ [] -> 0
+ _  -> (1+) . maximum $ map kDepth ts
 
 kSubtrees :: KTree -> [KTree]
 kSubtrees t@(KNode _ ts) = t : concatMap kSubtrees ts

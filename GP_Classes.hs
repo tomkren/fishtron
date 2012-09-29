@@ -19,7 +19,6 @@ import Data.Maybe    ( fromJust )
 import Data.Typeable ( Typeable )
 
 import Util  ( Rand, infChainRand, runRand, putList, pairs, maximasBy )
-import Util  ( Ralog, TalkativeLevel(..) , logIt , logAs , runRalog  )
 import Dist  ( Dist, mkDist, distIsEmpty, distSize, distMax, distTake_new, distGet )
 import Heval ( evals )
 
@@ -66,24 +65,6 @@ mkEOpt (probRep,probMut,probCro) =
  mkDist [ ( Reproduction , probRep ) 
         , ( Mutation     , probMut )   
         , ( Crossover    , probCro ) ]
-
-
-
---- new types --------------
-
-data GenOp2 term = MonoOp2 String (term->Ralog term) | DiOp2 String (term->term->Ralog (term,term) )
-
-class GeneN term opt where
-  generateN :: Int -> opt -> Ralog [term]
-
-class Muta2 term opt where
- mutateIt2 :: opt -> term -> Ralog term 
-
-class Cros2 term opt where
- crossIt2 :: opt -> term -> term -> Ralog (term,term)  
-
-class Evolvable2 term a gOpt mOpt cOpt where
-  evolveIt2  :: Problem term a gOpt mOpt cOpt -> Credit -> Ralog [Dist term]
 
 
 ----------------------------
@@ -162,40 +143,6 @@ performOps p (best,terms) = (best ++ ) `liftM` performOps' (mkOpDist p) terms
        (t1',t2') <- f t1 t2
        tt'       <- performOps' opDist tt
        return $ t1' : t2' : tt'
-
-
--- new --------------------------
-
--- evolveBegin2 :: ( GeneN term gOpt, Typeable a ) => Problem term a gOpt mOpt cOpt -> Credit -> Ralog (Dist term,Credit)
--- evolveBegin2 p credit = do
---  let toTake = min (popSize p) (floor credit) 
---  pop0 <- (generateN toTake (gOpt p)) >>= evalFF p
---  return (pop0, credit - fromIntegral toTake )
-
-performOps2 :: (Muta2 term mOpt , Cros2 term cOpt ) => Problem term a gOpt mOpt cOpt -> ([term],[term]) -> Ralog [term]
-performOps2 p (bests,terms) = (bests ++ ) `liftM` performOps2' (mkOpDist p) terms  
- where
-  mkOpDist p = fmap (f p) (eOpt p)
-  f p opType = case opType of
-   Reproduction -> MonoOp2 "Reproduction" return
-   Mutation     -> MonoOp2 "Mutation"     (mutateIt2 $ mOpt p)
-   Crossover    -> DiOp2   "Crossover"    (crossIt2  $ cOpt p)
-
-performOps2' :: Dist (GenOp2 term) -> [term] -> Ralog [term]
-performOps2' _ [] = return [] 
-performOps2' opDist terms@(t:ts) = do
-  op <- distGet opDist
-  case op of
-   MonoOp2 name f -> do 
-    t'  <- f t
-    ts' <- performOps2' opDist ts
-    return $ t' : ts'
-   DiOp2 name f -> case terms of
-    [t] -> return [t]
-    (t1:t2:tt) -> do
-     (t1',t2') <- f t1 t2
-     tt'       <- performOps2' opDist tt
-     return $ t1' : t2' : tt'
 
 -- printing and testing ---------------------------------------------------------------------------
 

@@ -4,7 +4,7 @@
 module GP_Instances where
 
 import GP_Classes ( Gene, Muta, Cros, generateIt, mutateIt, crossIt , Prob )
-import KozaTree   ( KTree(KNode), KPos, kSubtree, kChangeSubtree, kPoses, kPoses2 ) 
+import KozaTree   ( KTree(KNode), KPos, kSubtree, kChangeSubtree, kPoses, kPoses2, kDepth ) 
 import Util       ( Rand, getRandom, getRandomL, getRandomR, randIf, randCase, infRand, getNormal )
 import Dist       ( Dist, mkDist, distSize, distToList )
 
@@ -131,7 +131,6 @@ distGen (DiG_Uniform opt len) =
     xss <- generateIt gOpt 
     return $ map mkDist xss
 
-
 distMut :: (Muta t o) => DistMut o -> Dist t -> Rand (Dist t)
 distMut (DiM_ opt) dist = 
  let mOpt = LM_OnePoint ( PM_Both opt (DM_NormalAbs (0,1) ) ) (distSize dist)
@@ -146,6 +145,7 @@ distCro (DiC_OnePoint _) x y =
    (a,b) <- crossIt cOpt x' y'
    return ( mkDist a , mkDist b )   
 
+
 kTreeCro :: KTreeCro -> KTree -> KTree -> Rand (KTree,KTree)
 kTreeCro KC_Koza tree1 tree2 = do
   cPos1 <- crossPos tree1
@@ -153,8 +153,11 @@ kTreeCro KC_Koza tree1 tree2 = do
   let sub1          = kSubtree tree1 cPos1
       (tree2',sub2) = kChangeSubtree tree2 cPos2 sub1
       (tree1',_   ) = kChangeSubtree tree1 cPos1 sub2
-  return (tree1',tree2')
+      child1        = if kDepth tree1' > maxDepth then tree1 else tree1'
+      child2        = if kDepth tree2' > maxDepth then tree2 else tree2'
+  return (child1,child2)
  where
+  maxDepth = 17
   crossPos :: KTree -> Rand KPos
   crossPos tree = do
    poses <- let (ts,ns) = kPoses2 tree 
