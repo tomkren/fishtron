@@ -17,7 +17,7 @@ module Util
 , Rand  , randLift , getRandom , getRandomR , runRand 
         , infChainRand , infRand , infSetRand , randCase, randIf ,getNormal, getRandomL
         , RunRand
-, Ral , TalkativeLevel(..) , logIt , logAs , runRal 
+, Ral , TalkativeLevel(..) , logIt , logAs , runRal , runRalWith
 , chainM
 , asType
 ) where
@@ -250,9 +250,18 @@ logAs theme level str = do
   else return ()
 
 
+runRalWith :: String -> LogOptions -> Ral a -> IO a
+runRalWith seed logOptions ralog = do
+ let gen = read seed
+ putStrLn $ "stdGen: " ++ show gen
+ let ((x,gen'),logbook) = runReader (runWriterT $ runStateT ralog gen) (Map.fromList logOptions)
+ mapM_ putStrLn logbook
+ return x 
+
 runRal :: LogOptions -> Ral a -> IO a
 runRal logOptions ralog = do
  gen <- getStdGen
+ putStrLn $ "stdGen: " ++ show gen
  let ((x,gen'),logbook) = runReader (runWriterT $ runStateT ralog gen) (Map.fromList logOptions)
  mapM_ putStrLn logbook
  return x 

@@ -12,14 +12,14 @@ module GP_Core
 , Prob, FitVal, GenOpProbs, PopSize, NumGene
 , mkGenOps, mkFF1
 
--- ,putEvolveMaxs
+, run, runWith
 ) where
 
 import Control.Monad ( liftM )
 import Data.Typeable ( Typeable )
 import Data.Maybe    ( fromJust )
 
-import Util  ( Ral, chainM, runRal, maximasBy, putList, logIt )
+import Util  ( Ral, chainM, runRal, runRalWith, maximasBy, putList, logIt )
 import Dist  ( Dist, mkDist, distGet, distMax, distSize, distTake_new )
 import Heval ( evals )
 
@@ -62,7 +62,7 @@ class Evolvable term a gOpt mOpt cOpt where
   evolveIt :: Problem term a gOpt mOpt cOpt -> Ral (term,FitVal)
 
 
-instance (Gene term gOpt, Muta term mOpt, Cros term cOpt,Typeable a) => Evolvable term a gOpt mOpt cOpt where
+instance (Gene term gOpt, Muta term mOpt, Cros term cOpt,Typeable a,Show term) => Evolvable term a gOpt mOpt cOpt where
  evolveIt p = do
    pop0 <- evolveBegin p  
    lastPop <- chain numGens (evolveStep p) pop0
@@ -76,13 +76,13 @@ instance (Gene term gOpt, Muta term mOpt, Cros term cOpt,Typeable a) => Evolvabl
     f x >>= chain (n-1) f
  
 
-evolveBegin :: ( Gene term gOpt, Typeable a ) => Problem term a gOpt mOpt cOpt -> Ral (Dist term)
+evolveBegin :: ( Gene term gOpt, Typeable a,Show term) => Problem term a gOpt mOpt cOpt -> Ral (Dist term)
 evolveBegin p = do
  let n = popSize p 
  terms <- generateIt n (gOpt p)
  evalFF (fitFun p) terms
 
-evolveStep ::(Muta term mOpt,Cros term cOpt,Typeable a)=>Problem term a gOpt mOpt cOpt-> Dist term ->Ral (Dist term)
+evolveStep ::(Muta term mOpt,Cros term cOpt,Typeable a,Show term)=>Problem term a gOpt mOpt cOpt-> Dist term ->Ral (Dist term)
 evolveStep p pop = do
  (tsNoOps,tsForOps) <- getWinners pop
  tsAfterOps <- performOps (genOps p) tsForOps 
@@ -96,13 +96,21 @@ getWinners pop = do
   logIt $ "Best: " ++ show ffVal  
   ( [best] , ) `liftM` distTake_new toTake pop 
 
-evalFF :: (Typeable a) => FitFun term a -> [term] -> Ral (Dist term)
+evalFF :: (Typeable a,Show term) => FitFun term a -> [term] -> Ral (Dist term)
 evalFF ff ts = case ff of
  FF1 ff _ -> mkDist `liftM` mapM (\t->(t,) `liftM` ff t) ts
  FF2 toStr a ff -> 
   let strs = map toStr ts
       xs   = evals strs a
-   in mkDist `liftM` mapM (\(t,a)->(t,) `liftM` ff a) (zip ts xs)
+   in mkDist `liftM` mapM (\(t,a)->(t,) `liftM` (ff a >>= checkNaN) ) (zip ts xs)
+
+checkNaN :: FitVal -> Ral FitVal
+checkNaN x = 
+ if isNaN x 
+ then do
+  logIt "Warning : Fitness Value is NaN ; changed to 0."
+  return 0 
+ else return x
 
 performOps :: Dist (GenOp term) -> [term] -> Ral [term]
 performOps _ [] = return [] 
@@ -138,6 +146,17 @@ mkFF1 :: (term -> Ral FitVal) -> FitFun term ()
 mkFF1 ff = FF1 ff () 
 
 -- printing & testing -----------------------------------------------------------
+
+run :: (Show term , Evolvable term a gOpt mOpt cOpt) => Problem term a gOpt mOpt cOpt -> IO ()
+run problem = do 
+  ret <- runRal [] $ evolveIt problem
+  putStrLn . show $ ret
+
+runWith :: (Show term , Evolvable term a gOpt mOpt cOpt) => String -> Problem term a gOpt mOpt cOpt -> IO ()
+runWith seedStr problem = do 
+  ret <- runRalWith seedStr [] $ evolveIt problem
+  putStrLn . show $ ret
+
 
 --putEvolveMaxs :: (Show term , Evolvable term a gOpt mOpt cOpt) => Problem term a gOpt mOpt cOpt -> IO ()
 --putEvolveMaxs problem = do

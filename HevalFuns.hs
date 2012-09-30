@@ -16,4 +16,3 @@ rdiv x y = x / y
 rlog :: Double -> Double
 rlog 0 = 0
 rlog x = log $ abs x
-

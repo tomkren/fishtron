@@ -30,6 +30,7 @@ evalKTree :: (Typeable a) => KTree -> a -> a
 evalKTree t as = eval (show t) as  
 
 
+
 t1 = kParse' "(a (b e (f k l) g) (c h i) (d j))"
 
 t2 = kParse' "(plus 1 1)"

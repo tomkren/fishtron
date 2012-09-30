@@ -1,4 +1,4 @@
-module GP_Test () where
+module GP_Test where
 
 import GP_Core
 import GP_Data
@@ -8,8 +8,13 @@ import KozaTree
 
 -- Test Runs ------------------------------------------------------------
 
--- run_boolAlternate = putEvolveMaxs pro_boolAlternate
--- run_kozaSSR       = putEvolveMaxs pro_kozaSSR
+run_boolAlternate = run pro_boolAlternate
+run_kozaSSR       = run pro_kozaSSR
+
+bug1 = runWith "195915681 1"          pro_kozaSSR
+bug2 = runWith "709804832 1549792035" pro_kozaSSR -- compilovaný dělá něco jinyho než interpretovaný ?!?
+
+speedTest = runWith "1598308484 1" pro_kozaSSR
 
 -- Problems & Fitnes Functions -------------------------------------------
 
