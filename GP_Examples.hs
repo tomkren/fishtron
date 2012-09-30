@@ -2,7 +2,7 @@
 module GP_Examples where
 
 import GP_Classes   ( Evolvable, Problem(Problem), FitFun2(FF2), PopSize, FitVal, Credit,
-                      mkEOpt, mkFF1, putEvolveMaximas,putEvolve, evolveIt )
+                      mkEOpt, mkFF1, putEvolveMaximas,putEvolve, evolveIt, putEvolveWith )
 import GP_Instances 
 
 import Util     ( Rand )
@@ -124,11 +124,19 @@ testKoza2 ff env as =
      cOpt    = KC_Koza 
   in putEvolve 25500 $ Problem popSize eOpt gOpt mOpt cOpt ff as
 
+kozaWith seedStr ff env as =
+ let eOpt    = mkEOpt (10,0,90)
+     popSize = 500
+     gOpt    = KG_Koza env
+     mOpt    = KM_Koza env
+     cOpt    = KC_Koza 
+  in putEvolveWith seedStr 25500 $ Problem popSize eOpt gOpt mOpt cOpt ff as  
 
 koza_ssr = testKoza ff_koza_ssr env_koza_ssr (as::Double->Double)
 
 kozaa = testKoza2 ff_koza_ssr env_koza_ssr (as::Double->Double)
 
+kuzka = kozaWith "1598308484 1" ff_koza_ssr env_koza_ssr (as::Double->Double)
 
 env_koza_ssr :: KEnv
 env_koza_ssr = (["x"],[("plus",2),("minus",2),("krat",2),("rdiv",2),("sin",1),("cos",1),("exp",1),("rlog",1)])

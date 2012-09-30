@@ -19,8 +19,8 @@ import Control.Monad ( liftM )
 import Data.Typeable ( Typeable )
 import Data.Maybe    ( fromJust )
 
-import Util  ( Ral, chainM, runRal, runRalWith, maximasBy, putList, logIt, statIt , StatRecord(..) )
-import Dist  ( Dist, mkDist, distGet, distMax,distAvg, distSize, distTake_new )
+import Util  ( Ral, chainM, runRal, runRalWith, maximasBy, putList, logIt )
+import Dist  ( Dist, mkDist, distGet, distMax, distSize, distTake_new )
 import Heval ( evals )
 
 type PopSize = Int
@@ -48,6 +48,12 @@ data GenOp term =
   MonoOp (term->Ral term) | 
   DiOp   (term->term->Ral (term,term))
 
+data Stats term = Stats
+ { bestTerm :: Maybe (term,FitVal)  
+ } deriving (Show)
+
+st_setBest :: Stats term -> (term,FitVal) -> Stats term
+st_setBest st best = Stats (Just best)
 
 class Gene term opt where
   generateIt :: Int -> opt -> Ral [term]
@@ -59,47 +65,56 @@ class Cros term opt where
  crossIt :: opt -> term -> term -> Ral (term,term)  
 
 class Evolvable term a gOpt mOpt cOpt where
-  evolveIt :: Problem term a gOpt mOpt cOpt -> Ral (term,FitVal)
+  evolveIt :: Problem term a gOpt mOpt cOpt -> Ral (Stats term)
 
 
 instance (Gene term gOpt, Muta term mOpt, Cros term cOpt,Typeable a,Show term) => Evolvable term a gOpt mOpt cOpt where
  evolveIt p = do
-   pop0 <- evolveBegin p  
-   lastPop <- chain numGens (evolveStep p) pop0
-   return . fromJust. distMax $ lastPop 
+   (pop0,st)     <- evolveBegin (Stats Nothing) p 
+   (lastPop,st') <- chain numGens (evolveStep p) pop0 st
+   --return . Stats . fromJust. distMax $ lastPop
+   return st'
   where 
    numGens = numGene p
-   chain :: Int -> (Int -> a -> Ral a) -> a -> Ral a
-   chain 0 _ x = return x
-   chain n f x = f (numGens - n + 1) x >>= chain (n-1) f
+   chain :: Int -> (s -> a -> Ral (a,s) ) -> a -> s -> Ral (a,s)
+   chain 0 _ x st = return (x,st)
+   chain n f x st = do 
+    logIt . headline $ "Genration " ++ show (numGens - n + 1)  
+    (x',st') <- f st x 
+    chain (n-1) f x' st'
  
 headline :: String -> String
 headline str = "-- " ++ str ++ " "++ replicate (76-length str) '-'
 
-evolveBegin :: ( Gene term gOpt, Typeable a,Show term) => Problem term a gOpt mOpt cOpt -> Ral (Dist term)
-evolveBegin p = do
+evolveBegin :: ( Gene term gOpt, Typeable a,Show term) => 
+  Stats term -> Problem term a gOpt mOpt cOpt -> Ral (Dist term,Stats term)
+evolveBegin st p = do
  logIt . headline $ "Genration 0"  
  let n = popSize p 
  terms <- generateIt n (gOpt p)
  pop0 <- evalFF (fitFun p) terms
- logBest pop0
- return pop0
+ b <- logBest pop0
+ return (pop0,st_setBest st b )
 
-evolveStep ::(Muta term mOpt,Cros term cOpt,Typeable a,Show term)=> Problem term a gOpt mOpt cOpt -> Int -> Dist term -> Ral (Dist term)
-evolveStep p i pop = do
- logIt . headline $ "Genration " ++ show i  
- (best,ffVal) <- logBest pop 
- statIt $ SR_Best i ffVal
- statIt $ SR_Avg  i (distAvg pop)  
- terms  <- distTake_new (popSize p - 1) pop   
- terms' <- performOps (genOps p) terms 
- evalFF (fitFun p) ( best : terms' )
+evolveStep ::(Muta term mOpt,Cros term cOpt,Typeable a,Show term)=> 
+  Problem term a gOpt mOpt cOpt-> Stats term -> Dist term ->Ral (Dist term,Stats term)
+evolveStep p st pop = do
+ (tsNoOps,tsForOps,st') <- getWinners st pop
+ tsAfterOps <- performOps (genOps p) tsForOps 
+ pop' <- evalFF (fitFun p) ( tsNoOps ++ tsAfterOps )
+ return (pop',st')
 
 logBest :: (Show term) => Dist term -> Ral (term,FitVal)
 logBest pop = do 
  let Just (best,ffVal) = distMax pop  
- logIt $ "\nBest:\n" ++ show ffVal ++ "\n" ++ show best ++ "\n"
+ logIt $ "\nBest: " ++ show ffVal ++ "\n" ++ show best ++ "\n"
  return (best,ffVal)
+
+getWinners :: (Show term) => Stats term -> Dist term -> Ral ( [term] , [term] , Stats term )
+getWinners st pop = do
+  b@(best,_) <- logBest pop
+  let toTake = distSize pop - 1 
+  ( [best] , , st_setBest st b ) `liftM` distTake_new toTake pop 
 
 evalFF :: (Typeable a,Show term) => FitFun term a -> [term] -> Ral (Dist term)
 evalFF ff ts = case ff of
@@ -113,7 +128,7 @@ checkNaN :: FitVal -> Ral FitVal
 checkNaN x = 
  if isNaN x 
  then do
-  logIt ">>> Warning : Fitness Value is NaN ; changed to 0.\n"
+  logIt "Warning : Fitness Value is NaN ; changed to 0."
   return 0 
  else return x
 

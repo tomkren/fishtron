@@ -10,9 +10,11 @@ module GP_Classes
   Problem(Problem), FitFun2(FF2),
   Prob, PopSize, FitVal, Credit,
   mkEOpt, mkFF1, getFFType,
-  putEvolve, putEvolveMaximas,  
+  putEvolve, putEvolveMaximas, putEvolveWith,  
   testGene, testMuta, testCros
 ) where
+
+import Control.Monad.State (runState)
 
 import Control.Monad ( liftM, forM )
 import Data.Maybe    ( fromJust )
@@ -109,8 +111,14 @@ evalFF p ts = case fitFun p of
  FF2 toStr a ff -> 
   let strs = map toStr ts
       as   = evals strs a
-   in mkDist `liftM` mapM (\(t,a)->(t,) `liftM` ff a) (zip ts as)
+   in mkDist `liftM` mapM (\(t,a)->(t,) `liftM` (ff a >>= checkNaN )) (zip ts as)
 
+checkNaN :: FitVal -> Rand FitVal
+checkNaN x = 
+ if isNaN x 
+ then do
+  return 0 
+ else return x
 
 getWinners :: (Dist term,Credit) -> Rand ( [term] , [term] )
 getWinners (pop,credit) = 
@@ -149,6 +157,13 @@ performOps p (best,terms) = (best ++ ) `liftM` performOps' (mkOpDist p) terms
 putEvolve :: (Show term , Evolvable term a gOpt mOpt cOpt) => Credit -> Problem term a gOpt mOpt cOpt -> IO()
 putEvolve credit problem =
  liftM (map $ (\(i,d)->(i,fromJust . distMax $ d) ) ) (runRand $ (zip [0..]) `liftM` evolveIt problem credit ) >>= putList
+
+putEvolveWith :: (Show term , Evolvable term a gOpt mOpt cOpt) => String -> Credit -> Problem term a gOpt mOpt cOpt -> IO()
+putEvolveWith seedStr credit problem = do
+ let (pops,_) = runState (evolveIt problem credit) (read seedStr)
+     maxes    = map (fromJust . distMax) pops
+     ret      = zip [0..] maxes
+ putList ret 
 
 putEvolveMaximas :: (Show term , Evolvable term a gOpt mOpt cOpt) => Credit -> Problem term a gOpt mOpt cOpt -> IO ()
 putEvolveMaximas credit problem = do

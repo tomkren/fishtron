@@ -64,6 +64,7 @@ module Dist
 , distCut
 , distObtain
 , distSize
+, distAvg
 ) where
 
 import System.Random
@@ -103,10 +104,16 @@ mkDist :: [(a,Double)] -> Dist a
 mkDist xs = mkDist2 xs []
 
 mkDist2 :: [(a,Double)] -> [(Double->a,Double)]  -> Dist a
-mkDist2 xs ys = case tree3 $ tree2 $ (tree1 xs) ++ (tree1' ys) of 
+mkDist2 xs ys = case tree3 $ tree2 $ (tree1 (check xs)) ++ (tree1' (check ys)) of 
   Nothing      -> DEmpty
   Just (t,sum) -> Dist t (sum,length xs) 
   where
+  
+  check :: [(a,Double)] -> [(a,Double)]
+  check = map (\x@(_,v)->if isNaN v || isInfinite v 
+                        then error "Fatal Error in mkDist : value is NaN or Infinite!" 
+                        else x )
+
   tree1 :: [(a,Double)] -> [(DTree a,Double)]
   tree1 = map (\(a,v) -> (DLeaf (a,v) , v) ) 
 
@@ -230,7 +237,7 @@ distObtain gen (percent,cutP) dist = distMetaCut (distObt' cutP) gen howMany dis
 
 distMax :: Dist a -> Maybe (a,Double)
 distMax DEmpty           = Nothing
-distMax (Dist t (sum,_)) = Just $ distMax' sum t
+distMax (Dist t (suma,_)) = Just $ distMax' suma t
   where
   distMax' :: Double -> DTree a -> (a,Double)
   distMax' _ (DLeaf x     ) = x
@@ -239,7 +246,12 @@ distMax (Dist t (sum,_)) = Just $ distMax' sum t
     where
     r1@(_ , part1) = distMax' (part*mark    ) t1  
     r2@(_ , part2) = distMax' (part*(1-mark)) t2   
-  
+
+distAvg :: Dist a -> Double
+distAvg DEmpty = error "Avg of empty Dist!"
+distAvg (Dist t (suma,size)) = suma / (fromIntegral size)
+
+
 distSize :: Dist a -> Int
 distSize (Dist _ (_,size)) = size
 distSize DEmpty = 0

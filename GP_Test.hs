@@ -54,7 +54,7 @@ type BoolListProblem = Problem [Bool] () (ListGen BoolGen) (ListMut BoolMut) (Li
 kozaProblem :: FitFun KTree a -> KEnv -> KozaProblem a
 kozaProblem ff env = 
  let popSize    = 500
-     numGene    = 51
+     numGene    = 15
      genOpProbs = (10,0,90)
      gOpt       = KG_Koza env
      mOpt       = KM_Koza env

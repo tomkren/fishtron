@@ -17,7 +17,7 @@ module Util
 , Rand  , randLift , getRandom , getRandomR , runRand 
         , infChainRand , infRand , infSetRand , randCase, randIf ,getNormal, getRandomL
         , RunRand
-, Ral , TalkativeLevel(..) , logIt , logAs , runRal , runRalWith
+, Ral , logIt , logAs , runRal , runRalWith, statIt , StatRecord(..)
 , chainM
 , asType
 ) where
@@ -34,6 +34,8 @@ import Data.Functor.Identity
 
 import Control.Monad.Writer 
 import Control.Monad.Reader
+
+import Data.Time.Clock
 
 asType :: a
 asType = undefined
@@ -199,7 +201,7 @@ chainM n f x = (x:) `liftM` chainM' n f x
 
 -- rand & logging monad -----------------------------------------------
 
-type MetaRal rom = StateT StdGen (WriterT Logbook (Reader rom)) 
+type MetaRal rom = StateT StdGen (WriterT Logbook ( WriterT [StatRecord] (Reader rom)) ) 
 
 type LogOpt     = Map LogTheme LogLevel
 type LogOptions = [(LogTheme,LogLevel)]
@@ -216,9 +218,17 @@ defaultLogTheme = "default"
 -- type Ral  = MetaRal TalkativeLevel 
 type Ral = MetaRal LogOpt 
 
-type Logbook = [String]
-data TalkativeLevel = Grave | Spartan | NormalGuy | TeenAgeGirl deriving (Eq,Ord)
+type Logbook = ([String]) -- ,[StatRecord])
+
+data StatRecord = 
+ SR_Best Int Double |
+ SR_Avg  Int Double
+ deriving (Show)
+
+--data TalkativeLevel = Grave | Spartan | NormalGuy | TeenAgeGirl deriving (Eq,Ord)
           -- ? : OnlyErrors | Laconic | Normal | Verbose
+
+
 
 -- lepší je to udělat víc [(téma,tLevel)]
 
@@ -246,24 +256,32 @@ logAs theme level str = do
  logOpt <- ask
  let levelLimit = maybe defaultLogLevel id (Map.lookup theme logOpt) 
  if levelLimit <= level
-  then tell [str]
+  then tell ([str])--,[])
   else return ()
 
+-- statIt = undefined
+statIt :: StatRecord -> Ral ()
+statIt sr = lift . lift . tell $ [sr] 
 
 runRalWith :: String -> LogOptions -> Ral a -> IO a
 runRalWith seed logOptions ralog = do
  let gen = read seed
  putStrLn $ "stdGen: " ++ show gen
- let ((x,gen'),logbook) = runReader (runWriterT $ runStateT ralog gen) (Map.fromList logOptions)
+ let (((x,gen'),logbook),stats) = runReader (runWriterT $runWriterT $ runStateT ralog gen) (Map.fromList logOptions)
  mapM_ putStrLn logbook
+ mapM_ (putStrLn . show) stats
  return x 
 
 runRal :: LogOptions -> Ral a -> IO a
 runRal logOptions ralog = do
+ startTime <- getCurrentTime
  gen <- getStdGen
  putStrLn $ "stdGen: " ++ show gen
- let ((x,gen'),logbook) = runReader (runWriterT $ runStateT ralog gen) (Map.fromList logOptions)
- mapM_ putStrLn logbook
+ let (((x,gen'),logbook),stats) = runReader (runWriterT $ runWriterT $ runStateT ralog gen) (Map.fromList logOptions)
+ mapM_ putStrLn logbook 
+ mapM_ (putStrLn . show) stats 
+ finishTime <- getCurrentTime
+ putStrLn $ "Total time: " ++ show (diffUTCTime finishTime startTime)
  return x 
 
 
@@ -315,6 +333,7 @@ class RunRand m where
 instance RunRand Rand where 
  runRand rand = do
   gen <- getStdGen
+  putStrLn $ show gen
   return . fst $ runState rand gen
 
 randLift :: (RandomGen g , MonadState g m ) => (g -> (a,g)) -> m a
