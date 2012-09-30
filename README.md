@@ -18,7 +18,7 @@ You need to install PSQueue package by `cabal install psqueue`
 
 Runs OK on Haskell Platform.
 
-![](http://github.com/tomkren/fishtron/raw/master/docs/logo.png)
+![](http://github.com/tomkren/fishtron/raw/master/_docs/logo.png)
 
 In czech only
 =============
