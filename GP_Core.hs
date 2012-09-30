@@ -19,9 +19,11 @@ import Control.Monad ( liftM )
 import Data.Typeable ( Typeable )
 import Data.Maybe    ( fromJust )
 
-import Util  ( Ral, chainM, runRal, runRalWith, maximasBy, putList, logIt, statIt , StatRecord(..) )
-import Dist  ( Dist, mkDist, distGet, distMax,distAvg, distSize, distTake_new )
+import Util  ( Ral, chainM, runRal, runRalWith, maximasBy, putList, logIt, boxIt, statIt , StatRecord(..) )
+import Dist  ( Dist, mkDist, distGet, distMax,distMin,distAvg, distSize, distTake_new )
 import Heval ( evals )
+
+import Text.Printf
 
 type PopSize = Int
 type NumGene = Int
@@ -73,33 +75,23 @@ instance (Gene term gOpt, Muta term mOpt, Cros term cOpt,Typeable a,Show term) =
    chain 0 _ x = return x
    chain n f x = f (numGens - n + 1) x >>= chain (n-1) f
  
-headline :: String -> String
-headline str = "-- " ++ str ++ " "++ replicate (76-length str) '-'
-
 evolveBegin :: ( Gene term gOpt, Typeable a,Show term) => Problem term a gOpt mOpt cOpt -> Ral (Dist term)
 evolveBegin p = do
- logIt . headline $ "Genration 0"  
+ logGeneration 0  
  let n = popSize p 
  terms <- generateIt n (gOpt p)
  pop0 <- evalFF (fitFun p) terms
- logBest pop0
+ logBest 0 pop0
  return pop0
 
 evolveStep ::(Muta term mOpt,Cros term cOpt,Typeable a,Show term)=> Problem term a gOpt mOpt cOpt -> Int -> Dist term -> Ral (Dist term)
 evolveStep p i pop = do
- logIt . headline $ "Genration " ++ show i  
- (best,ffVal) <- logBest pop 
- statIt $ SR_Best i ffVal
- statIt $ SR_Avg  i (distAvg pop)  
+ logGeneration i 
+ best   <- logBest i pop 
  terms  <- distTake_new (popSize p - 1) pop   
  terms' <- performOps (genOps p) terms 
  evalFF (fitFun p) ( best : terms' )
 
-logBest :: (Show term) => Dist term -> Ral (term,FitVal)
-logBest pop = do 
- let Just (best,ffVal) = distMax pop  
- logIt $ "\nBest:\n" ++ show ffVal ++ "\n" ++ show best ++ "\n"
- return (best,ffVal)
 
 evalFF :: (Typeable a,Show term) => FitFun term a -> [term] -> Ral (Dist term)
 evalFF ff ts = case ff of
@@ -113,7 +105,7 @@ checkNaN :: FitVal -> Ral FitVal
 checkNaN x = 
  if isNaN x 
  then do
-  logIt ">>> Warning : Fitness Value is NaN ; changed to 0.\n"
+  boxIt ">>> Warning : Fitness Value is NaN ; changed to 0 <<<"
   return 0 
  else return x
 
@@ -132,6 +124,31 @@ performOps opDist terms@(t:ts) = do
      (t1',t2') <- f t1 t2
      tt'       <- performOps opDist tt
      return $ t1' : t2' : tt'
+
+
+logGeneration :: Int -> Ral ()
+logGeneration i = do
+ let sh = printf "%*d" (12::Int)
+ logIt  $ " ┌────────────────────────┐"
+ logIt  $ " │ Genration "++ sh i ++" │"  
+
+logBest :: (Show term) => Int -> Dist term -> Ral term
+logBest i pop = do  
+ let Just (best,b) = distMax pop
+ let            a  = distAvg pop
+ let Just (_   ,w) = distMin pop 
+ let sh = printf "%*.5f" (14::Int)
+ logIt  $ " ├────────────────────────┤"
+ logIt  $ " │ Best    " ++ sh b ++ " │"
+ logIt  $ " │ Average " ++ sh a ++ " │"
+ logIt  $ " │ Worst   " ++ sh w ++ " │"
+ logIt  $ " └────────────────────────┘" 
+ boxIt  $ show best 
+ statIt $ SR_Best  i b
+ statIt $ SR_Avg   i a 
+ statIt $ SR_Worst i w 
+ return best
+
 
 -- Creating problem structure --------------------------------------------------
 

@@ -17,7 +17,7 @@ module Util
 , Rand  , randLift , getRandom , getRandomR , runRand 
         , infChainRand , infRand , infSetRand , randCase, randIf ,getNormal, getRandomL
         , RunRand
-, Ral , logIt , logAs , runRal , runRalWith, statIt , StatRecord(..)
+, Ral , logIt, boxIt , logAs , runRal , runRalWith, statIt , StatRecord(..)
 , chainM
 , asType
 ) where
@@ -221,8 +221,9 @@ type Ral = MetaRal LogOpt
 type Logbook = ([String]) -- ,[StatRecord])
 
 data StatRecord = 
- SR_Best Int Double |
- SR_Avg  Int Double
+ SR_Best  Int Double |
+ SR_Avg   Int Double |
+ SR_Worst Int Double
  deriving (Show)
 
 --data TalkativeLevel = Grave | Spartan | NormalGuy | TeenAgeGirl deriving (Eq,Ord)
@@ -244,6 +245,21 @@ logL level = logAs defaultLogTheme level
 logT :: LogTheme -> String -> Ral ()
 logT theme = logAs theme defaultLogLevel
 
+boxIt :: String -> Ral ()
+boxIt mesg = do
+ let len  = min (length mesg ) 75
+     line = replicate (len+2) '─'
+ logIt $ " ┌" ++ line ++ "┐"
+ mapM_ (\line-> logIt $ " │ "++ line ++ (replicate (len- length line) ' ' ) ++" │") (align len mesg) 
+ logIt $ " └" ++ line ++ "┘"
+
+align :: Int -> String -> [String]
+align _     []  = [] 
+align width str = 
+ let (line,rest) = splitAt width str
+  in line : (align width rest)
+
+
 -- logAs :: TalkativeLevel -> String -> Ral ()
 -- logAs whoTalks str = do
 --  level <- ask
@@ -263,34 +279,38 @@ logAs theme level str = do
 statIt :: StatRecord -> Ral ()
 statIt sr = lift . lift . tell $ [sr] 
 
-runRalWith :: String -> LogOptions -> Ral a -> IO a
-runRalWith seed logOptions ralog = do
- let gen = read seed
- putStrLn $ "stdGen: " ++ show gen
- let (((x,gen'),logbook),stats) = runReader (runWriterT $runWriterT $ runStateT ralog gen) (Map.fromList logOptions)
- mapM_ putStrLn logbook
- mapM_ (putStrLn . show) stats
- return x 
 
 runRal :: LogOptions -> Ral a -> IO a
 runRal logOptions ralog = do
- startTime <- getCurrentTime
  gen <- getStdGen
+ runRalWith' gen logOptions ralog 
+
+runRalWith :: String -> LogOptions -> Ral a -> IO a
+runRalWith seed = runRalWith' (read seed)
+
+runRalWith' :: StdGen -> LogOptions -> Ral a -> IO a
+runRalWith' gen logOptions ralog = do
+ startTime <- getCurrentTime
  putStrLn $ "stdGen: " ++ show gen
  let (((x,gen'),logbook),stats) = runReader (runWriterT $ runWriterT $ runStateT ralog gen) (Map.fromList logOptions)
  mapM_ putStrLn logbook 
- mapM_ (putStrLn . show) stats 
+ let graphData = showStats $ stats
+ writeFile "graph.txt" graphData
  finishTime <- getCurrentTime
- putStrLn $ "Total time: " ++ show (diffUTCTime finishTime startTime)
+ putStrLn $ "Total time: " ++ show (diffUTCTime finishTime startTime) ++ "\n"
  return x 
 
+showStats :: [StatRecord] -> String
+showStats rs = concat [ show i ++ " " ++ (intercalate " " (map show ds)) ++ "\n" | (i,ds) <- rows ] 
+ where 
+  rows :: [(Int,[Double])]
+  rows = Map.toAscList $ foldr f Map.empty rs
+  f :: StatRecord -> Map Int [Double] -> Map Int [Double]
+  f r mapa = case r of
+   SR_Best  x y -> Map.insertWith (\[y,_,_] [_,y2,y3]->[y,y2,y3]) x [y,undefined,undefined] mapa
+   SR_Avg   x y -> Map.insertWith (\[_,y,_] [y1,_,y3]->[y1,y,y3]) x [undefined,y,undefined] mapa
+   SR_Worst x y -> Map.insertWith (\[_,_,y] [y1,y2,_]->[y1,y2,y]) x [undefined,undefined,y] mapa
 
--- runRal :: TalkativeLevel -> Ral a -> IO a
--- runRal talkativeLevel ralog = do
---  gen <- getStdGen
---  let ((x,gen'),logbook) = runReader (runWriterT $ runStateT ralog gen) talkativeLevel
---  mapM_ putStrLn logbook
---  return x 
 
 opt1 :: LogOptions
 opt1 = [("default",5),("xoxo",6)]

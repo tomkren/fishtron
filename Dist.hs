@@ -59,6 +59,7 @@ module Dist
 ,  distToList 
 ,  distIsEmpty
 , distMax
+, distMin
 , distTake
 , distTake_new , distGet
 , distCut
@@ -246,6 +247,18 @@ distMax (Dist t (suma,_)) = Just $ distMax' suma t
     where
     r1@(_ , part1) = distMax' (part*mark    ) t1  
     r2@(_ , part2) = distMax' (part*(1-mark)) t2   
+
+distMin :: Dist a -> Maybe (a,Double)
+distMin DEmpty           = Nothing
+distMin (Dist t (suma,_)) = Just $ distMin' suma t
+  where
+  distMin' :: Double -> DTree a -> (a,Double)
+  distMin' _ (DLeaf x     ) = x
+  distMin' _ (DLeaf2 (f,v)) = (f 0.5,v)                              -- TODO domyslet líp, ne 0.5kou 
+  distMin' part (DNode mark t1 t2) = if part1 < part2 then r1 else r2 
+    where
+    r1@(_ , part1) = distMin' (part*mark    ) t1  
+    r2@(_ , part2) = distMin' (part*(1-mark)) t2   
 
 distAvg :: Dist a -> Double
 distAvg DEmpty = error "Avg of empty Dist!"

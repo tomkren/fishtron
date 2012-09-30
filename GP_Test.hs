@@ -11,15 +11,10 @@ import KozaTree
 run_boolAlternate = run pro_boolAlternate
 run_kozaSSR       = run pro_kozaSSR
 
-bug1 = runWith "195915681 1"          pro_kozaSSR
-bug2 = runWith "709804832 1549792035" pro_kozaSSR -- compilovaný dělá něco jinyho než interpretovaný ?!?
-
-speedTest = runWith "1598308484 1" pro_kozaSSR
-
 -- Problems & Fitnes Functions -------------------------------------------
 
 
-pro_boolAlternate = boolListProblem 5 50 (33,33,33) 100 ff_boolAlternate
+pro_boolAlternate = boolListProblem 50 50 (33,33,33) 100 ff_boolAlternate
 
 ff_boolAlternate :: [Bool] -> FitVal
 ff_boolAlternate bits = 
@@ -54,7 +49,7 @@ type BoolListProblem = Problem [Bool] () (ListGen BoolGen) (ListMut BoolMut) (Li
 kozaProblem :: FitFun KTree a -> KEnv -> KozaProblem a
 kozaProblem ff env = 
  let popSize    = 500
-     numGene    = 15
+     numGene    = 50
      genOpProbs = (10,0,90)
      gOpt       = KG_Koza env
      mOpt       = KM_Koza env
