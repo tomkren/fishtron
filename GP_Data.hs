@@ -6,6 +6,9 @@ module GP_Data where
 import GP_Core ( Gene, Muta, Cros, generateIt, mutateIt, crossIt , Prob )
 import Util    ( Ral, getRandom, getRandomR, getRandomL, getNormal, randIf, randCase )
 
+import TTerm
+import InhabitationMachines ( proveN , randProveN, randProveUnique )
+
 import KozaTree ( KTree(KNode), KPos, kSubtree, kChangeSubtree, kPoses, kPoses2, kDepth ) 
 import Dist     ( Dist, mkDist, distSize, distToList )
 
@@ -15,6 +18,23 @@ import Control.Monad (replicateM, liftM, liftM2, forM)
 type Len    = Int
 type Mean   = Double
 type StdDev = Double
+
+-- TTerm --------------------------------------------------------------------------
+
+instance Gene TTerm TTermGen where generateIt = ttermGen
+
+data TTermGen = 
+ TTG_IM_rand Typ Context Int |
+ TTG_IM_syst Typ Context |
+ TTG_IM_rand0 Typ Context Int
+
+
+ttermGen :: Int -> TTermGen -> Ral [TTerm] 
+ttermGen n opt = case opt of
+ TTG_IM_syst  typ ctx       -> return $ proveN n       typ ctx
+ TTG_IM_rand  typ ctx limit -> randProveUnique n limit typ ctx
+ TTG_IM_rand0 typ ctx limit -> randProveN      n limit typ ctx
+
 
 -- KTree --------------------------------------------------------------------------
 

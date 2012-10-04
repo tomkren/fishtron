@@ -13,15 +13,16 @@ module GP_Core
 , mkGenOps, mkFF1
 
 , run, runWith
+, runTest, testGene
 ) where
 
-import Control.Monad ( liftM )
+import Control.Monad ( liftM, mapM_ )
 import Data.Typeable ( Typeable )
 import Data.Maybe    ( fromJust )
 
-import Util  ( Ral, chainM, runRal, runRalWith, maximasBy, putList, logIt, boxIt, statIt , StatRecord(..) )
+import Util  ( Ral, runRal, runRalWith, maximasBy, putList, logIt, boxIt, boxThem, statIt , StatRecord(..) )
 import Dist  ( Dist, mkDist, distGet, distMax,distMin,distAvg, distSize, distTake_new )
-import Heval ( evals )
+import Heval ( evals, eval )
 
 import Text.Printf
 
@@ -167,7 +168,7 @@ mkGenOp (mo,co) opType = case opType of
 mkFF1 :: (term -> Ral FitVal) -> FitFun term ()
 mkFF1 ff = FF1 ff () 
 
--- printing & testing -----------------------------------------------------------
+-- running -----------------------------------------------------------
 
 run :: (Show term , Evolvable term a gOpt mOpt cOpt) => Problem term a gOpt mOpt cOpt -> IO ()
 run problem = do 
@@ -180,13 +181,46 @@ runWith seedStr problem = do
   putStrLn . show $ ret
 
 
---putEvolveMaxs :: (Show term , Evolvable term a gOpt mOpt cOpt) => Problem term a gOpt mOpt cOpt -> IO ()
---putEvolveMaxs problem = do
--- ds <- runRal [] $ zip [0..] `liftM` evolveIt problem
--- let f (i,pop) = ( i , fromJust . distMax $ pop )
---     bs = map f ds
---     g = snd . snd 
---     lt x y = (g x) < (g y)
---     ms = maximasBy lt bs
--- putList ms
---
+-- testing ----------------------------------------------------------
+
+runTest :: Ral a -> IO ()
+runTest test = do
+ runRal [] test
+ return ()
+
+testGene :: (Gene term opt, Typeable a,Show term) => Int -> opt -> FitFun term a -> (a->String) -> Ral [term]
+testGene n opt fitFun showResult = do
+ ts <- generateIt n opt
+ mapM (\(i,t) -> testGene1 (show i ++ "/" ++ show n) fitFun showResult t) (zip [1..] ts) 
+ return terms
+
+-- blbě rozdělaný
+-- testCros :: (Gene t go, Cros t co, Typeable a,Show t) => Int -> Int -> go -> co -> FitFun t a -> (a->String) -> Ral [t]
+-- testCros i n gOpt cOpt fitFun showResult = do
+--  ts <- testGene
+--  if i == 0 
+--   then return ts
+--   else do
+--    let ps = toPairs ts
+--    ps' <- forM ps $ \(t1,t2) -> do
+--     (u1,u2) <- crossIt cOpt t1 t2
+--     boxThem [ show t1 , show t2 , show u1 , show u2 ]
+
+
+
+toPairs :: [a] -> [(a,a)]
+toPairs []  = []
+toPairs [_] = []
+toPairs (x1:x2:xs) = (x1,x2) : toPairs xs
+
+testGene1 :: (Typeable a,Show term) => String -> FitFun term a -> (a->String) -> term -> Ral ()
+testGene1 str fitFun showResult term = case fitFun of 
+ FF1 ff _ -> do
+  fitVal <- ff term
+  boxThem [ str , show term , show fitVal ]
+ FF2 toStr as ff -> do
+  let haskellTerm = toStr term
+      result      = eval haskellTerm as
+  fitVal <- ff result
+  boxThem [ str , haskellTerm , showResult result , show fitVal ]
+

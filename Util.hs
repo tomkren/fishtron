@@ -17,9 +17,9 @@ module Util
 , Rand  , randLift , getRandom , getRandomR , runRand 
         , infChainRand , infRand , infSetRand , randCase, randIf ,getNormal, getRandomL
         , RunRand
-, Ral , logIt, boxIt , logAs , runRal , runRalWith, statIt , StatRecord(..)
-, chainM
+, Ral , logIt, boxIt, boxThem , logAs , runRal , runRalWith, statIt , StatRecord(..)
 , asType
+, replicateM_unique
 ) where
 
 import Data.List
@@ -190,14 +190,49 @@ popQueue ( Queue xs (y:ys) ) = Just (y , Queue xs ys )
 
 -- Functions on monads ------------------------------------------------
 
-chainM :: Monad m => Int -> (a -> m a) -> a -> m [a]
-chainM n f x = (x:) `liftM` chainM' n f x 
- where
-  chainM' 0 _ _ = return []
-  chainM' n f x = do
-   y  <- f x
-   ys <- chainM' (n-1) f y
-   return (y:ys)
+-- chainM :: Monad m => Int -> (a -> m a) -> a -> m [a]
+-- chainM n f x = (x:) `liftM` chainM' n f x 
+--  where
+--   chainM' 0 _ _ = return []
+--   chainM' n f x = do
+--    y  <- f x
+--    ys <- chainM' (n-1) f y
+--    return (y:ys)
+
+replicateM_unique :: (RandomGen g, MonadState g m, Ord a) => Int -> m a -> m [a]
+replicateM_unique n mo = do 
+ gen <- get
+ let (gen1,gen2) = split gen
+ put gen1
+ xs <- replicateM_unique' Set.empty n mo
+ put gen2
+ return xs
+ 
+replicateM_unique' :: (RandomGen g, MonadState g m, Ord a)  => Set a -> Int -> m a -> m [a]
+replicateM_unique' _ 0 _ = return []
+replicateM_unique' set n mo = do
+ x <- mo
+ if Set.member x set 
+  then replicateM_unique' set n mo
+  else (x:) `liftM` replicateM_unique' (Set.insert x set) (n-1) mo
+
+
+-- infSetRand :: (RandomGen g, MonadState g m , Ord a ) => m a -> m [a]
+-- infSetRand rand = do
+--   gen <- get
+--   let (gen1,gen2) = split gen
+--   put gen1
+--   xs <- inf Set.empty rand 
+--   put gen2
+--   return xs
+--  where
+--   inf :: (RandomGen g , MonadState g m , Ord a ) => Set a -> m a -> m [a]
+--   inf s r = do 
+--    x  <- r
+--    xs <- inf (Set.insert x s) r 
+--    return $ if Set.member x s then xs else x:xs  
+  
+
 
 -- rand & logging monad -----------------------------------------------
 
@@ -245,13 +280,53 @@ logL level = logAs defaultLogTheme level
 logT :: LogTheme -> String -> Ral ()
 logT theme = logAs theme defaultLogLevel
 
+maxMsgLength :: Int
+maxMsgLength = 75
+
 boxIt :: String -> Ral ()
-boxIt mesg = do
- let len  = min (length mesg ) 75
-     line = replicate (len+2) '─'
- logIt $ " ┌" ++ line ++ "┐"
- mapM_ (\line-> logIt $ " │ "++ line ++ (replicate (len- length line) ' ' ) ++" │") (align len mesg) 
- logIt $ " └" ++ line ++ "┘"
+boxIt str = 
+ let strs = lines str
+     len  = min (maximum . map length $ strs) maxMsgLength
+  in boxAs len AloneBox strs
+
+data BoxType = AloneBox | TopBox | MiddleBox | BottomBox
+
+boxAs :: Int -> BoxType -> [String] -> Ral ()
+boxAs lineLen boxType strs = 
+ case boxType of
+  AloneBox -> do
+   frame "┌┐"
+   boxBody
+   frame "└┘"
+  TopBox -> do
+   frame "┌┐"
+   boxBody
+   frame "├┤"
+  MiddleBox -> do
+   boxBody
+   frame "├┤"
+  BottomBox -> do
+   boxBody
+   frame "└┘" 
+ where
+  hLine = replicate (lineLen+2) '─'
+  frame [c1,c2] = logIt $ ' ' : c1 : (hLine ++ [c2])
+  showLine line = logIt $ " │ "++ line ++ (replicate (lineLen- length line) ' ' ) ++" │"
+  boxBody = mapM_ showLine (concatMap (align lineLen) strs) 
+
+
+boxThem :: [String] -> Ral ()
+boxThem strs = do
+ let strs' = map lines strs
+     lineLen = min (maximum . map length . concat $ strs') maxMsgLength
+ case strs' of
+  [] -> return ()
+  [s] -> boxAs lineLen AloneBox s
+  _ -> do
+   boxAs lineLen TopBox (head strs')
+   mapM_ (boxAs lineLen MiddleBox) (tail . init $ strs')
+   boxAs lineLen BottomBox (last strs')
+
 
 align :: Int -> String -> [String]
 align _     []  = [] 

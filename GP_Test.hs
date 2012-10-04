@@ -5,11 +5,19 @@ import GP_Data
 
 import Util
 import KozaTree
+import TTerm
+
+import InhabitationMachines (mkIM,testIM)
+
+import Data.Typeable
+import Heval
 
 -- Test Runs ------------------------------------------------------------
 
 run_boolAlternate = run pro_boolAlternate
 run_kozaSSR       = run pro_kozaSSR
+
+
 
 -- Problems & Fitnes Functions -------------------------------------------
 
@@ -22,23 +30,42 @@ ff_boolAlternate bits =
      len  = dLen $ bits
   in 100*(tNum * tNum)/(len*len)
 
-
-
 pro_kozaSSR = kozaProblem ff_kozaSSR env_kozaSSR
 
 env_kozaSSR :: KEnv
 env_kozaSSR = (["x"],[("plus",2),("minus",2),("krat",2),("rdiv",2),("sin",1),("cos",1),("exp",1),("rlog",1)])
- 
-ff_lol :: FitFun KTree ()
-ff_lol = mkFF1 $ return . fromIntegral . kSize 
+
+dou, dou1, dou2 :: Typ
+dou  = Typ "Double"
+dou1 = dou :-> dou
+dou2 = dou :-> dou :-> dou
+
+ctx_ttSSR :: Context
+ctx_ttSSR = ([("plus",dou2),("minus",dou2),("krat",dou2),("rdiv",dou2),("sin",dou1),("cos",dou1),("exp",dou1),("rlog",dou1)])
 
 ff_kozaSSR :: FitFun KTree (Double->Double)
-ff_kozaSSR = FF2 toStr (asType::Double->Double) (return . ff)
- where
-  toStr :: KTree -> String
-  toStr tree = "(\\ x -> " ++ show tree ++ ")"
-  ff :: (Double->Double) -> FitVal
-  ff f = (1/) . (1+) . sum . map (\x-> let dx = (f x) - ( x*x*x*x+x*x*x+x*x+x ) in abs dx ) $ [-1,-0.9..1] 
+ff_kozaSSR = FF2 (\ t -> "(\\ x -> " ++ show t ++ ")" ) (asType::Double->Double) (return . rawFF_SSR)
+
+ff_ttSSR :: FitFun TTerm (Double->Double)
+ff_ttSSR = FF2 show (asType::Double->Double) (return . rawFF_SSR)
+
+rawFF_SSR :: (Double->Double) -> FitVal
+rawFF_SSR f = (1/) . (1+) . sum . diffs_kozaSSR $ f  
+
+diffs_kozaSSR :: (Double->Double) -> [Double]
+diffs_kozaSSR f = map (\x-> let dx = (f x) - ( x*x*x*x+x*x*x+x*x+x ) in abs dx ) [-1,-0.9..1]
+
+
+showRes_SSR :: (Double->Double) -> String
+showRes_SSR f = "Sum of diffs : " ++ ( show . sum . diffs_kozaSSR $ f )
+
+
+-- Testing phases ------------------------------------------------------
+
+gene_boolAlternate n len = runTest $ testGene n (LG_ BG_ len) (mkFF1 $ return . ff_boolAlternate) undefined
+
+gene_kozaSSR n = runTest $ testGene n (KG_Koza env_kozaSSR)            ff_kozaSSR showRes_SSR 
+gene_ttSSR   n = runTest $ testGene n (TTG_IM_rand dou1 ctx_ttSSR 100) ff_ttSSR   showRes_SSR 
 
 
 -- utils ---------------------------------------------------------------
