@@ -13,10 +13,10 @@ module GP_Core
 , mkGenOps, mkFF1
 
 , run, runWith
-, runTest, testGene
+, runTest, testGene, testCros
 ) where
 
-import Control.Monad ( liftM, mapM_ )
+import Control.Monad ( liftM,  forM )
 import Data.Typeable ( Typeable )
 import Data.Maybe    ( fromJust )
 
@@ -188,23 +188,25 @@ runTest test = do
  runRal [] test
  return ()
 
-testGene :: (Gene term opt, Typeable a,Show term) => Int -> opt -> FitFun term a -> (a->String) -> Ral [term]
+testGene :: (Gene t o, Typeable a,Show t) => Int -> o -> FitFun t a -> (a->String) -> Ral [t]
 testGene n opt fitFun showResult = do
  ts <- generateIt n opt
  mapM (\(i,t) -> testGene1 (show i ++ "/" ++ show n) fitFun showResult t) (zip [1..] ts) 
- return terms
+ return ts
 
--- blbě rozdělaný
--- testCros :: (Gene t go, Cros t co, Typeable a,Show t) => Int -> Int -> go -> co -> FitFun t a -> (a->String) -> Ral [t]
--- testCros i n gOpt cOpt fitFun showResult = do
---  ts <- testGene
---  if i == 0 
---   then return ts
---   else do
---    let ps = toPairs ts
---    ps' <- forM ps $ \(t1,t2) -> do
---     (u1,u2) <- crossIt cOpt t1 t2
---     boxThem [ show t1 , show t2 , show u1 , show u2 ]
+testCros :: (Gene t go, Cros t co, Typeable a,Show t) => Int -> Int -> go -> co -> FitFun t a -> (a->String) -> Ral [(t,t)]
+testCros i n gOpt cOpt fitFun showResult = do
+ ts <- testGene n gOpt fitFun showResult
+ testCros' i cOpt . toPairs $ ts
+
+testCros' :: (Cros t o, Show t) => Int -> o -> [(t,t)] -> Ral [(t,t)]
+testCros' 0 _ ps = return ps
+testCros' n o ps = do
+ ps' <- forM ps $ \ (t1,t2) -> do
+  pair'@(u1,u2) <- crossIt o t1 t2
+  boxThem [ show t1 , show t2 , show u1 , show u2 ]
+  return pair'
+ testCros' (n-1) o ps'
 
 
 
@@ -212,6 +214,9 @@ toPairs :: [a] -> [(a,a)]
 toPairs []  = []
 toPairs [_] = []
 toPairs (x1:x2:xs) = (x1,x2) : toPairs xs
+
+unPair :: [(a,a)]->[a]
+unPair = foldr (\(x1,x2) acc->x1:x2:acc) [] 
 
 testGene1 :: (Typeable a,Show term) => String -> FitFun term a -> (a->String) -> term -> Ral ()
 testGene1 str fitFun showResult term = case fitFun of 

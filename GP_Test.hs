@@ -64,9 +64,17 @@ showRes_SSR f = "Sum of diffs : " ++ ( show . sum . diffs_kozaSSR $ f )
 
 gene_boolAlternate n len = runTest $ testGene n (LG_ BG_ len) (mkFF1 $ return . ff_boolAlternate) undefined
 
-gene_kozaSSR n = runTest $ testGene n (KG_Koza env_kozaSSR)            ff_kozaSSR showRes_SSR 
-gene_ttSSR   n = runTest $ testGene n (TTG_IM_rand dou1 ctx_ttSSR 100) ff_ttSSR   showRes_SSR 
+gOpt_kozaSSR = KG_Koza env_kozaSSR
+gOpt_ttSSR   = TTG_IM_rand dou1 ctx_ttSSR 100
 
+cOpt_kozaSSR = KC_Koza
+cOpt_ttSSR   = TTC_my ctx_ttSSR
+
+gene_kozaSSR n = runTest $ testGene n gOpt_kozaSSR ff_kozaSSR showRes_SSR 
+gene_ttSSR   n = runTest $ testGene n gOpt_ttSSR   ff_ttSSR   showRes_SSR 
+
+cros_kozaSSR i n = runTest $ testCros i n gOpt_kozaSSR cOpt_kozaSSR ff_kozaSSR showRes_SSR
+cros_ttSSR   i n = runTest $ testCros i n gOpt_ttSSR   cOpt_ttSSR   ff_ttSSR   showRes_SSR
 
 -- utils ---------------------------------------------------------------
 
