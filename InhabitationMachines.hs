@@ -61,6 +61,10 @@ dou2 = dou :-> dou :-> dou
 ctx_ttSSR :: Context
 ctx_ttSSR = ([("plus",dou2),("minus",dou2),("krat",dou2),("rdiv",dou2),("sin",dou1),("cos",dou1),("exp",dou1),("rlog",dou1)])
 
+ctx_mini :: Context
+ctx_mini = ([("plus",dou2),("sin",dou1)])
+
+
 testIM :: Int -> Ral [TTerm]
 testIM n = ( randProveUnique n 100 dou1 ctx_ttSSR )
 
@@ -88,6 +92,27 @@ uniqueN num = uniqueN' Set.empty num
 
 
 -------------------
+
+proveOneWithLimit :: Int -> Typ -> Context -> Maybe TTerm
+proveOneWithLimit limit typ ctx = 
+ let graph = mkIMGraph typ ctx
+     taxi  = mkTaxi'   typ ctx
+     tokss = proveWL' limit graph (singletonQueue taxi)
+  in case tokss of
+   []       -> Nothing
+   (toks:_) -> Just (ttParse' ctx toks)
+   
+
+proveWL' :: Int -> IMGraph -> Queue Taxi -> [[Token2]]
+proveWL' 0 _ _ = []
+proveWL' limit im q = case popQueue q of
+  Nothing -> []
+  Just (taxi,q') -> case nextTaxis' im taxi of
+   Left toks   -> toks : (proveWL' (limit-1) im q') 
+   Right taxis -> proveWL' (limit-1) im $ insertsQueue taxis q'
+
+
+----
 
 proveN :: Int -> Typ -> Context -> [TTerm]
 proveN n typ ctx = take n $ prove typ ctx 

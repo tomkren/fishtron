@@ -13,7 +13,7 @@ module GP_Core
 , mkGenOps, mkFF1
 
 , run, runWith
-, runTest, testGene, testCros
+, runTest, runTestWith, testGene, testCros
 ) where
 
 import Control.Monad ( liftM,  forM )
@@ -188,6 +188,13 @@ runTest test = do
  runRal [] test
  return ()
 
+-- 2097148790 558345920
+runTestWith :: String -> Ral a -> IO ()
+runTestWith seedStr test = do
+ runRalWith seedStr [] test
+ return ()
+
+
 testGene :: (Gene t o, Typeable a,Show t) => Int -> o -> FitFun t a -> (a->String) -> Ral [t]
 testGene n opt fitFun showResult = do
  ts <- generateIt n opt
@@ -197,18 +204,27 @@ testGene n opt fitFun showResult = do
 testCros :: (Gene t go, Cros t co, Typeable a,Show t) => Int -> Int -> go -> co -> FitFun t a -> (a->String) -> Ral [(t,t)]
 testCros i n gOpt cOpt fitFun showResult = do
  ts <- testGene n gOpt fitFun showResult
- testCros' i cOpt . toPairs $ ts
+ testCros' i cOpt fitFun showResult . toPairs $ ts
 
-testCros' :: (Cros t o, Show t) => Int -> o -> [(t,t)] -> Ral [(t,t)]
-testCros' 0 _ ps = return ps
-testCros' n o ps = do
- ps' <- forM ps $ \ (t1,t2) -> do
-  pair'@(u1,u2) <- crossIt o t1 t2
-  boxThem [ show t1 , show t2 , show u1 , show u2 ]
-  return pair'
- testCros' (n-1) o ps'
-
-
+testCros' :: (Cros t o, Show t,Typeable a) => Int -> o -> FitFun t a -> (a->String) -> [(t,t)] -> Ral [(t,t)]
+testCros' 0 _ _      _          ps = return ps
+testCros' n o fitFun showResult ps = do
+  ps' <- forM ps $ \ (t1,t2) -> do
+   pair'@(u1,u2) <- crossIt o t1 t2
+   (fv1,res1) <- testEval fitFun u1
+   (fv2,res2) <- testEval fitFun u2
+   boxThem $  [ show t1 , 
+                show t2 , 
+                show u1 ] ++ (f showResult res1) ++ [ show fv1 , 
+                show u2 ] ++ (f showResult res2) ++ [ show fv2 ]
+   -- boxThem [ show t1 , show t2 , show u1 , show u2 ]
+   return pair'
+  logIt "------------------------------------------------------------------------"
+  testCros' (n-1) o fitFun showResult ps'
+ where
+  f :: (a->String) -> Maybe a -> [String]
+  f _ Nothing = []
+  f showFun (Just x) = [showFun x] 
 
 toPairs :: [a] -> [(a,a)]
 toPairs []  = []
@@ -217,6 +233,17 @@ toPairs (x1:x2:xs) = (x1,x2) : toPairs xs
 
 unPair :: [(a,a)]->[a]
 unPair = foldr (\(x1,x2) acc->x1:x2:acc) [] 
+
+testEval :: (Typeable a) => FitFun term a -> term -> Ral (FitVal , Maybe a)
+testEval fitFun term = case fitFun of
+ FF1 ff _ -> do
+  fitVal <- ff term
+  return (fitVal , Nothing )
+ FF2 toStr as ff -> do
+  let haskellTerm = toStr term
+      result      = eval haskellTerm as
+  fitVal <- ff result
+  return ( fitVal , Just result )
 
 testGene1 :: (Typeable a,Show term) => String -> FitFun term a -> (a->String) -> term -> Ral ()
 testGene1 str fitFun showResult term = case fitFun of 

@@ -4,10 +4,10 @@
 module GP_Data where
 
 import GP_Core ( Gene, Muta, Cros, generateIt, mutateIt, crossIt , Prob )
-import Util    ( Ral, getRandom, getRandomR, getRandomL, getNormal, randIf, randCase )
+import Util    ( Ral, getRandom, getRandomR, getRandomL, getNormal, randIf, randCase,logIt,boxIt,boxThem )
 
 import TTerm
-import InhabitationMachines ( proveN , randProveN, randProveUnique )
+import InhabitationMachines ( proveN , randProveN, randProveUnique, proveOneWithLimit )
 
 import KozaTree ( KTree(KNode), KPos, kSubtree, kChangeSubtree, kPoses, kPoses2, kDepth ) 
 import Dist     ( Dist, mkDist, distSize, distToList )
@@ -25,7 +25,6 @@ type StdDev = Double
 
 instance Gene TTerm TTermGen where generateIt = ttermGen
 instance Cros TTerm TTermCro where crossIt    = ttermCro
-
 
 data TTermGen = 
  TTG_IM_rand Typ Context Int |
@@ -45,8 +44,23 @@ ttermCro :: TTermCro -> TTerm -> TTerm -> Ral (TTerm,TTerm)
 ttermCro (TTC_my ctx) tt1 tt2 = xover ctx tt1 tt2
 
 
+
+
+
 xover :: Context -> TTerm -> TTerm -> Ral ( TTerm , TTerm )
-xover ctx t1 t2 = 
+xover ctx t1 t2 = do 
+ let candidates = compatibleSubterms t1 t2  --  <---------------- tady se voli smart/normal
+ if null candidates then return (t1,t2)
+  else do
+   i <- getRandomR (0, length candidates - 1 )
+   let (z1,z2) = candidates !! i 
+   -- boxThem $ ["XOVER : what is being swaped",show z1,show z2]
+   xover' ctx z1 z2  
+   
+
+
+xover_old :: Context -> TTerm -> TTerm -> Ral ( TTerm , TTerm )
+xover_old ctx t1 t2 = 
   let candidates = compatibleSubterms t1 t2  --  <---------------- tady se voli smart/normal
       canSize    = length candidates
    in if null candidates 
@@ -54,16 +68,21 @@ xover ctx t1 t2 =
       else do
         i <- getRandomR (0, canSize - 1 )
         let (z1,z2) = candidates !! i 
-        xover' ctx z1 z2
+        ret <- xover' ctx z1 z2
+        return ret
 
 
 xover' :: Context -> TTermZipper -> TTermZipper -> Ral ( TTerm , TTerm )
 xover' ctx tz1@(TTZ t1 ds1) tz2@(TTZ t2 ds2) = do 
  t1' <- treatFVs ctx (TTZ t1 ds2)
  t2' <- treatFVs ctx (TTZ t2 ds1)
- let  chis = ( makeVarsUnique $ tzGoTop (TTZ t2' ds1) , makeVarsUnique $ tzGoTop (TTZ t1' ds2) ) 
-      pars = ( tzGoTop tz1 , tzGoTop tz2 )
-  in  return $ checkXover pars chis
+ let pars = ( tzGoTop tz1 , tzGoTop tz2 ) 
+ chis <- case (t1',t2') of
+  (Just tt1 , Just tt2) -> return ( makeVarsUnique $ tzGoTop (TTZ tt2 ds1) , makeVarsUnique $ tzGoTop (TTZ tt1 ds2) )
+  _ -> do
+   -- boxIt " >>> Default value fail ! <<< " 
+   return pars
+ return $ checkXover pars chis
 
 checkXover :: (TTerm,TTerm) -> (TTerm , TTerm) -> (TTerm , TTerm)
 checkXover parents chs@(ch1,ch2) = 
@@ -76,7 +95,7 @@ checkXover parents chs@(ch1,ch2) =
  err = error $ "xover typeCheck ERR: " ++
   show parents ++ " -> " ++ show chs
 
-treatFVs :: Context -> TTermZipper -> Ral TTerm
+treatFVs :: Context -> TTermZipper -> Ral (Maybe TTerm)
 treatFVs ctx (TTZ t ds) = f (fv' t) t
   where
   boundVarsInDs :: Context  
@@ -87,11 +106,14 @@ treatFVs ctx (TTZ t ds) = f (fv' t) t
     _                  ->                acc ) [] ds
   has :: Context -> Symbol -> Bool
   has xs s = any (\(s',_)->s==s') xs
-  f :: [(Symbol,Typ)] -> TTerm  -> Ral TTerm
-  f [] t = return t
+  f :: [(Symbol,Typ)] -> TTerm  -> Ral (Maybe TTerm)
+  f [] t = return (Just t)
   f ((fv,fvTyp):fvs) t = 
     if null withSameTyp
-    then f fvs $ subs fv t (defaultValue fvTyp ctx) 
+    then case defaultValue fvTyp ctx of
+      Nothing     -> return Nothing
+      Just defVal -> f fvs (subs fv t defVal)
+      -- f fvs $ subs fv t (defaultValue fvTyp ctx) 
     else do
       i <- getRandomR ( 0 , length withSameTyp - 1 )
       f fvs $ subs fv t $ TVar (withSameTyp !! i) fvTyp
@@ -103,8 +125,8 @@ treatFVs ctx (TTZ t ds) = f (fv' t) t
   fv' (TApp p q _  ) = nub $ (fv' p) ++ (fv' q) 
   fv' (TLam v p typ) = filter (\(s,_)->s/=v) (fv' p)   -- neefektivni
 
-defaultValue :: Typ -> Context -> TTerm
-defaultValue typ ctx = head $ proveN 1 typ ctx
+defaultValue :: Typ -> Context -> Maybe TTerm
+defaultValue typ ctx = proveOneWithLimit 10000 typ ctx -- head $ proveN 1 typ ctx
 
 compatibleSubterms :: TTerm -> TTerm ->  [ (TTermZipper,TTermZipper) ]
 compatibleSubterms t1 t2 = concatMap (\(as,bs) -> [ (a,b) | a <- as , b <- bs ] ) 
