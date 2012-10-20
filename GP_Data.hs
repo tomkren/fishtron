@@ -235,6 +235,7 @@ instance (Cros t o) => Cros [t] (ListCro o) where crossIt    = listCro
 data ListGen opt   = LG_          opt Len
 data ListMut opt   = LM_OnePoint  opt Len
                    | LM_Prob      opt Len Prob
+                   | LM_Swap          Len
 data ListCro opt   = LC_OnePoint  opt Len
 
 listGen :: (Gene term opt) => Int -> ListGen opt -> Ral [[term]]
@@ -254,6 +255,20 @@ listMut lm genom = case lm of
   (\y' -> xs ++ ( y' : ys ) ) `liftM` mutateIt opt y
  LM_Prob opt len p -> 
   forM genom $ \ bit -> randIf p (mutateIt opt bit) (return bit)
+ LM_Swap len -> do
+  let randomPos = getRandomR (0,len-1)
+  pos1 <- randomPos
+  pos2 <- randomPos
+  return $ swap pos1 pos2 genom
+
+swap :: Int -> Int -> [a] -> [a]
+swap pos1 pos2 xs
+ | pos1 < pos2 = let (as,b:bs) = splitAt pos1 xs
+                     (cs,d:ds) = splitAt (pos2-pos1-1) bs
+                  in as ++ [d] ++ cs ++ [b] ++ ds
+ | pos1 > pos2 = swap pos2 pos1 xs
+ | otherwise   = xs
+ 
 
 listCro :: (Cros term opt) => ListCro opt -> [term] -> [term] -> Ral ([term],[term])
 listCro lc x y = case lc of
@@ -285,19 +300,31 @@ boolMut bm x = case bm of
 boolCro :: BoolCro -> Bool -> Bool -> Ral (Bool,Bool)
 boolCro _ x y = return ( x && y , x || y )
 
+-- Int ----------------------------------------------------------
+
+instance Gene Int IntGen where generateIt = intGen
+
+data IntGen = IG_Uniform (Int,Int)
+
+intGen :: Int -> IntGen -> Ral [Int]
+intGen n ig = case ig of
+ IG_Uniform range -> replicateM n $ getRandomR range
+
+
+
 -- Double -------------------------------------------------------
 
 instance Gene Double DoubleGen where generateIt = doubleGen 
 instance Muta Double DoubleMut where mutateIt   = doubleMut 
 instance Cros Double DoubleCro where crossIt    = doubleCro
 
-data DoubleGen     = DG_Uniform   (Double,Double)
-                   | DG_Normal    (Mean,  StdDev)
-data DoubleMut     = DM_Uniform   (Double,Double)
-                   | DM_Normal    (Mean,  StdDev)
-                   | DM_NormalAbs (Mean,  StdDev)
-data DoubleCro     = DC_Avg  
-                   | DC_GeoAvg  
+data DoubleGen = DG_Uniform   (Double,Double)
+               | DG_Normal    (Mean,  StdDev)
+data DoubleMut = DM_Uniform   (Double,Double)
+               | DM_Normal    (Mean,  StdDev)
+               | DM_NormalAbs (Mean,  StdDev)
+data DoubleCro = DC_Avg  
+               | DC_GeoAvg  
 
 doubleGen :: Int -> DoubleGen -> Ral [Double]
 doubleGen n dg = case dg of

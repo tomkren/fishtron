@@ -30,6 +30,10 @@ ff_boolAlternate bits =
      len  = dLen $ bits
   in 100*(tNum * tNum)/(len*len)
 
+-- TODO
+--ff_hromadky :: Int -> [Double] -> [Int] -> FitVal
+--ff_hromadky numHromadek ws hs = 
+
 pro_kozaSSR = kozaProblem ff_kozaSSR env_kozaSSR
 
 env_kozaSSR :: KEnv
