@@ -51,6 +51,8 @@ data UpdateCmd = MkVertex Typ Context
                | DeltaCtx Typ Context PreVertex
 
 
+type Limit = Int
+
 ----------------------------------------------------------------------------------------------
 
 dou, dou1, dou2 :: Typ
@@ -93,7 +95,7 @@ uniqueN num = uniqueN' Set.empty num
 
 -------------------
 
-proveOneWithLimit :: Int -> Typ -> Context -> Maybe TTerm
+proveOneWithLimit :: Limit -> Typ -> Context -> Maybe TTerm
 proveOneWithLimit limit typ ctx = 
  let graph = mkIMGraph typ ctx
      taxi  = mkTaxi'   typ ctx
@@ -103,7 +105,7 @@ proveOneWithLimit limit typ ctx =
    (toks:_) -> Just (ttParse' ctx toks)
    
 
-proveWL' :: Int -> IMGraph -> Queue Taxi -> [[Token2]]
+proveWL' :: Limit -> IMGraph -> Queue Taxi -> [[Token2]]
 proveWL' 0 _ _ = []
 proveWL' limit im q = case popQueue q of
   Nothing -> []
@@ -131,11 +133,52 @@ prove' im q = case popQueue q of
    Right taxis -> prove' im $ insertsQueue taxis q'
 
 
-randProveUnique :: Int -> Int -> Typ -> Context -> Ral [TTerm]
+randProveUnique :: Int -> Limit -> Typ -> Context -> Ral [TTerm]
 randProveUnique n limit typ ctx = uniqueN n $ randProveOne limit typ ctx -- infSetRand $ randProveOne limit typ ctx
 
-randProveN :: Int -> Int -> Typ -> Context -> Ral [TTerm]
+randProveN :: Int -> Limit -> Typ -> Context -> Ral [TTerm]
 randProveN n limit typ ctx = replicateM n $ randProveOne limit typ ctx
+
+
+type Strategy = [ForkEdge] -> Ral ForkEdge  
+
+strategyProveOne :: Strategy -> IMGraph -> Limit -> Typ -> Context -> Ral TTerm
+strategyProveOne strategy graph limit typ ctx =
+ let taxi = mkTaxi' typ ctx 
+  in do 
+   mToks <- strategyProveOne' limit strategy graph taxi
+   case mToks of
+    Nothing -> strategyProveOne strategy graph (limit+10) typ ctx
+    Just toks -> do
+     let tterm = ttParse' ctx toks
+     logIt $ show tterm
+     return tterm  
+ 
+strategyProveOne' :: Limit -> Strategy -> IMGraph -> Taxi -> Ral (Maybe [Token2])
+strategyProveOne' 0     _        _     _    = return Nothing
+strategyProveOne' limit strategy graph taxi = do
+ nxt <- strategyOneNext strategy graph taxi
+ case nxt of 
+  Left toks          -> return . Just $ toks
+  Right Nothing      -> return Nothing
+  Right (Just taxi') -> strategyProveOne' (limit-1) strategy graph taxi'
+
+strategyOneNext :: Strategy -> IMGraph -> Taxi -> Ral ( Either [Token2] (Maybe Taxi) )
+strategyOneNext strategy graph taxi = case taxi of
+ Taxi ret []     _    -> return . Left . reverse $ ret
+ Taxi ret (x:xs) nCtx -> case x of
+  T2Typ t -> undefined 
+ 
+
+-- _nextTaxis' :: IMGraph -> Taxi -> Either [Token2] [Taxi]
+-- _nextTaxis' im taxi = case taxi of
+--   Taxi ret []     _    -> Left $ reverse ret
+--   Taxi ret (x:xs) nCtx -> case x of
+--     T2Typ t         -> Right [ Taxi ret (toks++xs) nCtx' | (toks,nCtx') <- nextTaxis im nCtx t ]
+--     T2ParR_lam vars -> Right [ Taxi (x:ret) xs (nCtx \\ vars) ]
+--     _               -> Right [ Taxi (x:ret) xs nCtx ]
+
+
 
 randProveOne :: Int -> Typ -> Context -> Ral TTerm
 randProveOne limit typ ctx = 
@@ -151,7 +194,7 @@ randProveOne limit typ ctx =
     Nothing   -> randProveOne (limit+1) typ ctx
 
 
-randProveOne' :: Int -> IMGraph -> Taxi -> Ral ( Maybe [Token2] )
+randProveOne' :: Limit -> IMGraph -> Taxi -> Ral ( Maybe [Token2] )
 randProveOne' 0 _ _ = return Nothing
 randProveOne' limit graph taxi = do
  nxt <- randOneNext graph taxi
