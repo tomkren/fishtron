@@ -11,6 +11,7 @@ module TTerm
 , subs
 , makeVarsUnique 
 , checkTyp
+, toSki, toSki'
 ) where
 
 import Data.List ( nub, (\\) )
@@ -102,7 +103,7 @@ makeVarsUnique tt = (\(a,_,_)->a) $ u (varNames tt) [] tt
       in ( TApp m' n' typ , all'' , occ'' )
     _           -> ( t , allVars , occupied )
 
--- checkType -------------------------------------------------------------------
+-- checkTyp -------------------------------------------------------------------
 
 checkTyp :: TTerm -> Bool
 checkTyp t = checkTyp' t (ttermTyp t) []
@@ -243,6 +244,97 @@ ttEval :: (Typeable a) => TTerm -> a -> a
 ttEval tterm a = eval (show tterm) a
 
 ---------------------------------------------------------------------------
+
+
+
+
+
+-- ------------- --
+-- prevod do SKI --
+-- ------------- --
+
+toSki' :: TTerm -> TTerm
+toSki' tt = 
+ let ret = toSki tt 
+  in if checkTyp ret then ret else error "error in SKI conversion!"
+
+toSki :: TTerm -> TTerm
+toSki tt = case tt of 
+ TVar x   t -> tt
+ TVal v   t -> tt
+ TApp m n t -> TApp (toSki m) (toSki n) t
+ TLam x m t@(tx:->tm) -> case x `elem` (skiFV m) of
+  False -> TApp (TVal "k" (tm:->tx:->tm) ) (toSki m) t
+  True  -> case m of
+   TVar _   _ -> TVal "i" t
+   TLam y e _ -> toSki ( TLam x ( toSki m ) t )
+   TApp p q _ -> 
+    let tp = ttermTyp p
+        tq = ttermTyp q
+        tlp= tx:->tp 
+        tlq= tx:->tq
+        lp = TLam x p tlp
+        lq = TLam x q tlq
+        s  = TVal "s" ( tlp :-> tlq :-> t ) 
+     in TApp ( TApp s ( toSki lp ) ( tlq :-> t) ) ( toSki lq ) t 
+            
+
+
+skiFV :: TTerm -> [Symbol]
+skiFV tt = case tt of
+ TVar x   _ -> [x]
+ TVal v   _ -> []
+ TApp m n _ -> nub $ (skiFV m) ++ (skiFV n) 
+ TLam x m _ -> (skiFV m) \\ [x]
+
+
+-- toSKI :: SKI -> SKI
+-- toSKI S = S
+-- toSKI K = K
+-- toSKI I = I
+-- toSKI x@(SKIvar _)     = x
+-- toSKI   (SKIapp e1 e2) = SKIapp (toSKI e1) (toSKI e2) 
+-- toSKI   (SKIlam x  e)  
+--   | not $ elem x (skifv e) = SKIapp K (toSKI e)
+--   | otherwise = case e of
+--     (SKIvar _)    -> I
+--     (SKIlam y ee) -> toSKI ( SKIlam x ( toSKI ( SKIlam y ee ) ) )
+--     (SKIapp e1 e2)-> ( SKIapp (   SKIapp S  (toSKI (SKIlam x e1))   )  (toSKI (SKIlam x e2) ) )
+-- 
+-- 
+-- data SKI = S | K | I | SKIapp SKI SKI | SKIlam VarName SKI | SKIvar VarName  
+-- 
+-- 
+-- toSKI' :: String -> String
+-- toSKI' = show . toSKI . termToSKI . parse'
+-- 
+-- 
+-- termToSKI :: Term -> SKI
+-- termToSKI (Lazy t _) = termToSKI t
+-- termToSKI (Var  x  ) = SKIvar x
+-- termToSKI (App m n ) = SKIapp (termToSKI m) (termToSKI n)
+-- termToSKI (Lam x m ) = SKIlam x (termToSKI m)
+-- 
+-- 
+-- skifv :: SKI -> [VarName]
+-- skifv (SKIvar v)    = [v]
+-- skifv (SKIapp p q)  = nub $ (skifv p) ++ (skifv q) 
+-- skifv (SKIlam v p)  = (skifv p) \\ [v]
+-- skifv _             = []
+-- 
+-- na :: (a->a) -> Int -> (a->a)
+-- na f n x = foldr ($) x $ replicate n f
+-- 
+-- 
+-- instance Show SKI where
+--   show S = "S"
+--   show K = "K"
+--   show I = "I"
+--   show (SKIapp m n) = "( " ++ show m ++ " " ++ show n ++ " )" 
+--   show (SKIlam x m) = "( \\ " ++ show x ++ "." ++ show m ++ " )"
+--   show (SKIvar x )  = show x
+
+
 
 
 

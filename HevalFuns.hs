@@ -16,3 +16,12 @@ rdiv x y = x / y
 rlog :: Double -> Double
 rlog 0 = 0
 rlog x = log $ abs x
+
+s :: (a->b->c) -> (a->b) -> a -> c
+s x y z = x z (y z)
+
+k :: a -> b -> a
+k x y = x
+
+i :: a -> a
+i x = x

@@ -7,7 +7,7 @@ import Util
 import KozaTree
 import TTerm
 
-import InhabitationMachines (mkIM,testIM)
+import InhabitationMachines (mkIM,testIM,proveN)
 
 import Data.Typeable
 import Heval
@@ -18,8 +18,6 @@ run_boolAlternate = run pro_boolAlternate
 run_kozaSSR       = run pro_kozaSSR
 run_ttSSR         = run pro_ttSSR
 run_ttSSR_mini    = run pro_ttSSR_mini
-
-
 
 
 -- Problems & Fitnes Functions -------------------------------------------
@@ -95,6 +93,11 @@ cros_fail1 = cros_ttSSRwith "2097148790 558345920" 2 10
 cros_fail2 = cros_ttSSRwith "611099341 1516597540" 20 2
 
 
+
+testSKI = putList . map (\f-> g f == g (toSki' f) ) $ proveN 100 dou1 ctx_ttSSR_mini
+ where g f = eval (show f) (asType::Double->Double) 42
+
+
 -- utils ---------------------------------------------------------------
 
 type TTProblem   a   = Problem TTerm  a  TTermGen          ()                TTermCro
@@ -103,12 +106,12 @@ type BoolListProblem = Problem [Bool] () (ListGen BoolGen) (ListMut BoolMut) (Li
 
 ttProblem :: FitFun TTerm a -> Typ -> Context -> TTProblem a
 ttProblem ff typ ctx =
- let popSize    = 250
+ let popSize    = 500
      numGene    = 50   
      genOpProbs = (10,0,90)
-     gOpt       = TTG_IM_rand typ ctx 100
+     gOpt       = TTG_SKI typ ctx 100 -- TTG_IM_rand typ ctx 100
      mOpt       = ()
-     cOpt       = TTC_my ctx
+     cOpt       = TTC_SKI -- TTC_my ctx
   in Problem popSize numGene (mkGenOps (mOpt,cOpt) genOpProbs) gOpt mOpt cOpt ff
 
 kozaProblem :: FitFun KTree a -> KEnv -> KozaProblem a

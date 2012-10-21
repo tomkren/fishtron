@@ -27,11 +27,14 @@ instance Gene TTerm TTermGen where generateIt = ttermGen
 instance Cros TTerm TTermCro where crossIt    = ttermCro
 
 data TTermGen = 
- TTG_IM_rand Typ Context Int |
- TTG_IM_syst Typ Context |
- TTG_IM_rand0 Typ Context Int
+ TTG_IM_rand  Typ Context Int  |
+ TTG_IM_syst  Typ Context      |
+ TTG_IM_rand0 Typ Context Int  |
+ TTG_SKI      Typ Context Int
 
-data TTermCro = TTC_my Context
+data TTermCro = 
+ TTC_my Context |
+ TTC_SKI
 
 
 ttermGen :: Int -> TTermGen -> Ral [TTerm] 
@@ -39,11 +42,22 @@ ttermGen n opt = case opt of
  TTG_IM_syst  typ ctx       -> return $ proveN n       typ ctx
  TTG_IM_rand  typ ctx limit -> randProveUnique n limit typ ctx
  TTG_IM_rand0 typ ctx limit -> randProveN      n limit typ ctx
+ TTG_SKI      typ ctx limit -> (map toSki) `liftM` (randProveUnique n limit typ ctx)
 
 ttermCro :: TTermCro -> TTerm -> TTerm -> Ral (TTerm,TTerm)
 ttermCro (TTC_my ctx) tt1 tt2 = xover ctx tt1 tt2
+ttermCro TTC_SKI tt1 tt2 = skiXover tt1 tt2
 
 
+-- Vyžaduje aby to neobsahovalo proměnný
+skiXover :: TTerm -> TTerm -> Ral ( TTerm , TTerm )
+skiXover tt1 tt2 = do
+ let candidates = compatibleSubterms tt1 tt2
+ if null candidates then return (tt1,tt2)
+  else do
+   i <- getRandomR (0,length candidates -1)
+   let ( TTZ t1 ds1 , TTZ t2 ds2 ) = candidates !! i
+   return ( tzGoTop (TTZ t2 ds1) , tzGoTop (TTZ t1 ds2) )
 
 
 
