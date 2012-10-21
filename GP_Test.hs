@@ -9,6 +9,8 @@ import TTerm
 
 import InhabitationMachines (mkIM,testIM,proveN)
 
+import TTree
+
 import Data.Typeable
 import Heval
 
@@ -97,6 +99,9 @@ cros_fail2 = cros_ttSSRwith "611099341 1516597540" 20 2
 testSKI = putList . map (\f-> g f == g (toSki' f) ) $ proveN 100 dou1 ctx_ttSSR_mini
  where g f = eval (show f) (asType::Double->Double) 42
 
+testSKI2 n = putStrList . concatMap (\tt-> [ [], show tt , show (toSki' tt) , show (mkCTree tt) ] ) $ proveN n dou1 ctx_ttSSR_mini
+
+testSKI3 n = putStrList . concatMap (\tt-> [ [], show tt , show (toSki' tt) , show (mkCTree tt) ] ) $ proveN n ( (((dou:->dou):->dou):->dou) :-> dou :-> dou ) []
 
 -- utils ---------------------------------------------------------------
 

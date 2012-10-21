@@ -5,7 +5,7 @@
 -- Util obsahuje obecné funkce funkce nad standardními typy.
 
 module Util
-( putList , putRandList
+( putList , putRandList, putStrList
 , insertToListMap , lookupInListMap
 , maximas , maximasBy
 , newSymbol , newSymbol'
@@ -56,6 +56,9 @@ putList []     = return ()
 putList (x:xs) = do
  putStrLn . show $ x
  putList xs 
+
+putStrList :: [String] -> IO ()
+putStrList = mapM_ putStrLn 
 
 putRandList :: (Show a) => Rand [a] -> IO ()
 putRandList randXs = do
