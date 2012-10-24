@@ -1,0 +1,56 @@
+<!doctype html>
+ 
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <title>Show it</title>
+    <link rel="stylesheet" href="http://code.jquery.com/ui/1.9.0/themes/base/jquery-ui.css" />
+    <script src="http://code.jquery.com/jquery-1.8.2.js"></script>
+    <script src="http://code.jquery.com/ui/1.9.0/jquery-ui.js"></script>
+    <!--<link rel="stylesheet" href="/resources/demos/style.css" />-->
+
+
+
+</head>
+<body>
+ 
+<p>
+  From: <input type="text" id="fromPicker" />
+  To:   <input type="text" id="toPicker"   />
+</p>
+
+<script>
+
+g_startStr  = undefined
+g_finishStr = undefined
+
+
+var render = function( startStr , finishStr ){
+  console.log("Tadá : " + startStr + " " + finishStr );
+}
+
+
+$(function() {
+    $( "#fromPicker" ).datepicker({
+      "onSelect" : function( dateStr ){
+        console.log( "start: " + dateStr );
+        g_startStr = dateStr ;
+        if (g_startStr && g_finishStr ) render(g_startStr,g_finishStr);
+      }
+    });
+    $( "#toPicker"   ).datepicker({
+      "onSelect" : function( dateStr ){
+        console.log( "finish: " + dateStr );
+        g_finishStr = dateStr ;
+        if (g_startStr && g_finishStr ) render(g_startStr,g_finishStr);
+      }
+    });
+});
+
+
+
+</script>
+ 
+ 
+</body>
+</html>
