@@ -29,6 +29,131 @@ import Data.Map (Map)
 
 import Util
 
+import GP_Core
+import GP_Data
+
+-------------------------------------------------------
+
+type Portfolio = [(Int,Double)]
+
+pf1 = [("AAPL",1.0),("GLD",0.35)]
+
+testIt pf' = do
+ finDB <- mkFinDB
+ let pf   = mkPf finDB pf' 
+     sharpe = pfSharpe finDB pf 
+ return sharpe
+
+evoluce = do 
+ db <- mkFinDB
+ run $ pfProblem db
+
+type PfProblem = Problem Portfolio () (ListGen (PairGen IntGen DoubleGen)) (ListMut (PairMut IntMut DoubleMut)) (ListCro ())
+
+pfProblem :: FinDB -> PfProblem
+pfProblem db =
+ let popSize    = 500
+     numGene    = 50   
+     genOpProbs = (15,60,25)
+     len        = 4
+     fidRange   = (1,numFids db)
+     gOpt       = LG_         ( PG_Both (IG_Uniform fidRange) (DG_Uniform   (0.0,1.0)) ) len
+     mOpt       = LM_OnePoint ( PM_OneP (IM_Uniform fidRange) (DM_NormalAbs (0.0,1.0))  0.1 ) len 
+     cOpt       = LC_OnePoint () len
+     ff         = mkFF1 $ return . ffSharpe db
+  in Problem popSize numGene (mkGenOps (mOpt,cOpt) genOpProbs) gOpt mOpt cOpt ff
+
+-- 2012
+
+-- ([("CVLY",42.205756670002657),("LTON",14.144996900656098),("FBMI",24.68497302032342),("PCYC",18.96427340901783)],4.769909140147182)
+
+-- 2011
+
+-- ([(2285,3.4468633226051857),(702,0.16293131595206523),(1879,1.6522436522526265),(58,1.223926997827076)]     , 4.457442525756673  )  
+-- ([(691,1.5025998691417208),(1788,0.6433439406155237),(2285,4.991572937746497),(58,2.653982502641272)]       , 4.412857697715442  )
+-- ([(702,0.37543966525601363),(1788,1.273720232373137),(2285,4.613323487647596),(58,2.575472607622432)]       , 4.212510710029744  )
+-- ([(382,1.060887526614168),(58,1.135974746893138),(2285,4.807972824801381),(1788,0.5952066242913024)]        , 4.136278259996953  )
+-- ([(1681,1.251067378616731),(691,1.6903442267310962),(58,4.793943450970708),(927,1.221142898129401)]         , 3.7655589163194327 )
+-- ([(1788,1.1751757414288109),(1977,0.39766888146713275),(691,0.8370091790862124),(702,0.5107351490098859)]   , 3.5994969267601107 )
+-- ([(1796,1.552484952257648),(702,0.8980517340963887),(2239,0.8236956976971771),(1788,2.004931460856152)]     , 3.442650897373856  )
+-- ([(1977,2.0908104564493373),(651,0.7209660221567094),(691,3.787021104970802),(702,1.8018993135122188)]      , 3.2743582143179952 )
+-- ([(2083,0.9189114600730007),(1712,1.6913387584037265e-2),(1180,9.56756398897312e-3),(1488,4.92448658597407)], 2.78650197270814   )
+-- ([(927,1.1420039126022834),(1686,0.32690710572008264),(691,1.7360744448575787),(1521,0.5457785932779147)]   , 2.7761091972390646 )
+ 
+
+prettyPf :: FinDB -> Portfolio -> [(String,Double)]
+prettyPf db pf = map (\(fid,a)-> (f fid,a/suma*100) ) pf
+ where 
+  f fid = fromJust $ Map.lookup fid (fid2str db) 
+  suma = sum . map snd $ pf
+
+ffSharpe :: FinDB -> Portfolio -> FitVal
+ffSharpe db pf 
+  | sharpe > 0 = sharpe
+  | otherwise  = 0 
+ where sharpe = pfSharpe db pf
+
+
+pfSharpe :: FinDB -> Portfolio -> Double
+pfSharpe db pf = sqrt( nDays ) * (mean drs) / (stdeva drs) 
+ where 
+  drs = 0 : pfDayRets db pf
+  nDays = fromIntegral $ numDays db
+
+mkPf :: FinDB -> [(String,Double)] -> Portfolio
+mkPf finDB = map (\(str,a)->(f str,a))
+ where
+  s2f = str2fid finDB
+  f str = fromJust $ Map.lookup str s2f
+
+pfDayRets :: FinDB -> Portfolio -> [Double]
+pfDayRets finDB pf = dayRets $ pfCumuRets (numDays finDB) (finArr finDB) pf
+
+pfCumuRets :: NumDays -> FinArray -> Portfolio -> [Double]
+pfCumuRets nDays arr pf = map pfCumuRet [1..nDays]
+ where
+  mulBy = (1/) . sum . map snd $ pf 
+  price fid d = arr ! (fid,d)
+  pfCumuRet d = (mulBy*) . sum . map (\(fid,a)-> a * (price fid d) / (price fid 1) ) $ pf
+
+dayRets :: [Double] -> [Double]
+dayRets [ ] = []
+dayRets [_] = []
+dayRets (x1:x2:xs) = (x2/x1 - 1) : dayRets (x2:xs)
+
+price :: FinDB -> String -> DayID -> Double
+price db name d = (finArr db) ! ( fromJust $ Map.lookup name (str2fid db) ,d) 
+
+------------------------------------------------------------------------
+
+type FID   = Int
+type DayID = Int
+type NumDays = Int
+
+type FinArray = Array (FID,DayID) Double
+
+data FinDB = FinDB { 
+ numDays :: NumDays,
+ numFids :: Int,
+ fid2str :: Map FID String,
+ str2fid :: Map String FID,
+ finArr  :: FinArray } 
+ deriving (Show,Read)
+
+mkFinDB :: IO FinDB
+mkFinDB = do 
+ let nDays = 251 -- 252
+ xs <- getAllFrom_fin_data
+ let (names,valss) = unzip (filter (\(_,vs)->length vs == nDays) xs)
+     xs' = concatMap (\(fid,vals) -> [ ( (fid,day) , val ) | (day,val) <- (zip [1..] vals)  ]  ) (zip [1..] valss)
+     nFids = length names
+ return $ FinDB nDays nFids 
+                ( Map.fromList (zip [1..] names) ) 
+                ( Map.fromList (zip names [1..]) )
+                ( array ( (1,1) , (nFids,nDays) ) xs' )
+
+-------------------------------------------------------
+
 type URL = String
 
 getSource :: URL -> IO String
@@ -127,7 +252,9 @@ test from to fid = do
 
 
 y2011 = ("2011-01-01","2011-12-31")
-  
+
+y12 = ("2011-10-31","2012-10-31")
+
 downloadDailyReturns :: (Date,Date) -> String -> IO ()
 downloadDailyReturns (from,to) fid = do
  putStrLn fid 
@@ -139,9 +266,20 @@ downloadDailyReturns (from,to) fid = do
    writeFile ("fin_data/"++fid++".txt") (show adjCloses)
    putStrLn " OK!"
 
+downloadDailyReturns2 :: (Date,Date) -> String -> IO ()
+downloadDailyReturns2 (from,to) fid = do
+ putStrLn fid 
+ source <- getSource $ toYahooURL fid from to
+ case toCSV source of
+  Nothing -> putStrLn $ " KO : Unavalible data for : " ++ fid
+  Just csv -> do
+   let adjCloses = map snd . toHistory $ csv
+   writeFile ("fin_data2/"++fid++".txt") (show adjCloses)
+   putStrLn " OK!"
+
 getAllFrom_fin_data :: IO [(String,[Double])]
 getAllFrom_fin_data = do
- let dir = "fin_data"
+ let dir = "fin_data2"
  names <- (tail . tail . reverse) `liftM` getDirectoryContents dir
  ret <- forM names $ \ name -> do
   fi <- openFile (dir ++ "/" ++ name ) ReadMode
@@ -150,18 +288,7 @@ getAllFrom_fin_data = do
   return (takeWhile (/='.') name,read x)
  return ret
 
-type FID   = Int
-type DayID = Int
 
-data FinDB = FinDB (Map String FID) (Array (FID,DayID) Double)
-
-mkFinDB :: IO FinDB
-mkFinDB = do 
- let numDays = 252
- xs <- getAllFrom_fin_data
- let (names,valss) = unzip (filter (\(_,vs)->length vs == numDays) xs)
- let xs' = concatMap (\(fid,vals) -> [ ( (fid,day) , val ) | (day,val) <- (zip [1..] vals)  ]  ) (zip [1..] valss)
- return $ FinDB ( Map.fromList (zip names [1..]) ) ( array ( (1,1) , (length names,numDays) ) xs' )
 
 
 
@@ -260,7 +387,9 @@ fids = ["AAIT" , "ADNC" ,
  "CALM","CAMP","CAMT","CAR","CARB","CART","CARV","CARZ","CASH","CASM","CASS","CASY","CATM","CATY","CAVM","CBAK","CBAN","CBEY",
  "CBF","CBIN","CBLI","CBMX","CBMXW","CBNJ","CBNK","CBOE","CBOU","CBPO","CBRL","CBRX","CBSH","CBST","CCBG","CCCL","CCCLU","CCCLW",
  "CCIH","CCIX","CCMP","CCNE","CCOI","CCRN","CCRT","CCUR","CCXI","CDNS","CDTI","CDXS","CDZI","CEBK","CECE","CECO","CEDC","CEDU",
- "CELG","CELGZ","CEMI","CEMP","CENT","CENTA","CENX","CERE","CERN","CERP","CERS","CETV","CEVA","CFBK","CFFC","CFFI","CFFN","CFNB",
+ "CELG","CELGZ","CEMI","CEMP","CENT","CENTA","CENX","CERE"]
+
+fids_p1 = ["CERN","CERP","CERS","CETV","CEVA","CFBK","CFFC","CFFI","CFFN","CFNB",
  "CFNL","CG","CGEI","CGEIU","CGEIW","CGEN","CGNX","CGO","CIDM","CIEN","CIMT","CINF","CISG","CITZ","CIZN","CJJD","CKEC","CKSW","CLBH",
  "CLCT","CLDX","CLFD","CLIR","CLMS","CLMT","CLNE","CLNT","CLRO","CLRX","CLSN","CLUB","CLVS","CLWR","CLWT","CMCO","CMCSA","CMCSK","CME",
  "CMGE","CMLS","CMRG","CMSB","CMTL","CMVT","CMVTV","CNBC","CNBKA","CNDO","CNET","CNIT","CNMD","CNQR","CNSIV","CNSL","CNTF",
@@ -270,7 +399,8 @@ fids_part2 = ["COST","COWN","CPAH","CPBC","CPGI","CPHC","CPHD","CPIX","CPLA","CP
  "CPTS","CPWR","CRAI","CRAY","CRBC"]
 
 fids_part3 = ["CRDC","CRDN","CRDS","CREE","CREG","CRESW","CRESY","CRFN","CRIS","CRMB","CRMBU","CRMBW",
- "CRME","CRMT","CRNT","CROX","CRRB","CRRC","CRTX","CRUS","CRVL","CRWN","CRWS","CRZO","CSBK","CSCD","CSCO","CSFL","CSGP",
+ "CRME","CRMT","CRNT","CROX","CRRB","CRRC"]
+fids_part3_1 = ["CRTX","CRUS","CRVL","CRWN","CRWS","CRZO","CSBK","CSCD","CSCO","CSFL","CSGP",
  "CSGS","CSII","CSIQ","CSOD","CSPI","CSQ","CSRE","CSTE","CSTR","CSUN","CSWC","CTAS","CTBI","CTCM","CTCT","CTDC","CTEL",
  "CTFO","CTGX","CTHR","CTCH","CTIB","CTIC","CTRN","CTRP","CTRX","CTSH","CTWS","CTXS","CU","CUBA","CUI","CUNB","CUTR",
  "CVBF","CVCO","CVCY","CVGI","CVGW","CVLT","CVLY","CVTI","CVV","CWBC","CWCO","CWEI","CWST","CWTR","CXDC","CXPO","CY",
@@ -283,8 +413,8 @@ fids_part3 = ["CRDC","CRDN","CRDS","CREE","CREG","CRESW","CRESY","CRFN","CRIS","
  "EBMT","EBSB","EBTC","ECOL","ECPG","ECTE","ECTY","ECYT","EDAC","EDAP","EDGW","EDMC","EDS","EDUC","EEFT","EEI","EEMA","EEME",
  "EEML","EFII","EFSC","EFUT","EGAN","EGBN","EGHT","EGLE","EGOV","EGRW","EHTH","ECHO","EIHI","ELGX","ELNK","ELON","ELOQ","ELOS",
  "ELRC","ELSE","ELTK","EMCB","EMCF","EMCI","EMDI","EMEY","EMFN","EMIF","EMITF","EMKR","EML","EMMS","EMMSP","EMMT","ENDP","ENG",
- "ENMD","ENOC","ENPH","ENSG","ENTG","ENTR","ENVI","ENZN","EONC","EOPN","EPAX","EPAY","EPHC","EPIQ","EPOC","EQIX","ERIC","ERIE",
- "ERII","EROC","ESBF","ESBK","ESCA","ESEA","ESGR","ESIO","ESLT","ESMC","ESRX","ESSA","ESSX","ESYS","ETFC","ETRM","EUFN","EVAC",
+ "ENMD","ENOC","ENPH","ENSG","ENTG","ENTR","ENVI","ENZN","EONC","EOPN","EPAX","EPAY","EPHC","EPIQ","EPOC","EQIX","ERIC","ERIE"]
+fids_part3_2 = ["ERII","EROC","ESBF","ESBK","ESCA","ESEA","ESGR","ESIO","ESLT","ESMC","ESRX","ESSA","ESSX","ESYS","ETFC","ETRM","EUFN","EVAC",
  "EVAL","EVBS","EVEP","EVOL","EWBC","EXA","EXAC","EXAR","EXAS","EXEL","EXFO","EXLP","EXLS","EXPD","EXPE","EXPO","EXTR","EXXI",
  "EZCH","EZPW","FABK","FACE","FALC","FANG","FARM","FARO","FAST","FB","FBIZ","FBMI","FBMS","FBNC","FBNK","FBRC","FBSS","FCAL","FCAP",
  "FCBC","FCCO","FCCY","FCEL","FCFC","FCFS","FCLF","FCNCA","FCTY","FCVA","FCZA","FDEF","FDML","FDUS","FEFN","FEIC","FEIM","FELE","FES",
@@ -324,11 +454,15 @@ fids_part5 = ["INDB","INDY","INFA","INFI",
  "LINTA","LINTB","LION","LIOX","LIVE","LIWA","LKFN","LKQ","LLEN","LLNW","LLTC","LMAT","LMCA","LMCB","LMIA","LMLP","LMNR","LMNX",
  "LMOS","LNBB","LNCE","LNCO","LNDC","LNET","LOAN","LOCM","LOGI","LOGM","LOJN","LONG","LOOK","LOPE","LORL","LPHI","LPLA","LPNT",
  "LPSBD","LPSN","LPTH","LPTN","LQDT","LRAD","LRCX","LSBI","LSBK","LSCC","LSTR","LTBR","LTON","LTRE","LTRX","LTXC","LUFK","LULU",
- "LUNA","LVNTA","LVNTB","LWAY","LXRX","LYTS","MACK","MAG","MAGS","MAKO","MALL","MANH","MANT","MAPP","MARK","MARPS","MASC","MASI",
+ "LUNA","LVNTA"]
+
+fids_part5_1 = ["LVNTB","LWAY","LXRX","LYTS","MACK","MAG","MAGS","MAKO","MALL","MANH","MANT","MAPP","MARK","MARPS","MASC","MASI",
  "MAT","MATR","MATW","MAXY","MAYS","MBFI","MBLX","MBND","MBRG","MBTF","MBVT","MBWM","MCBC","MCBI","MCBK","MCEP","MCGC","MCOX",
  "MCRI","MCRL","MCRS","MDAS","MDCA","MDCI","MDCO","MDH","MDIV","MDLZ","MDRX","MDSO","MDVN","MEAD","MEAS","MEDW","MEILU","MEIP",
  "MELA","MELI","MEMP","MEMS","MENT","MEOH","MERC","MERU","METR","MFI","MFLR","MFLX","MFNC","MFRI","MFRM","MFSF","MGAM","MGCD",
- "MGEE","MGIC","MGLN","MGPI","MGRC","MGYR","MHGC","MHLD","MCHP","MCHX","MIDD","MIND","MINI","MIPS","MITK","MITL","MKSI","MKTAY",
+ "MGEE","MGIC","MGLN","MGPI","MGRC","MGYR","MHGC","MHLD","MCHP","MCHX","MIDD","MIND","MINI"]
+
+fids_part5_2 =["MITK","MITL","MKSI","MKTAY",
  "MKTG","MKTX","MLAB","MLHR","MLNK","MLNX","MLVFD","MMLP","MMSI","MMUS","MMYT","MNDO","MNGA","MNGL","MNGLU","MNGLW",
  "MNKD","MNOV","MNRK","MNRKP","MNRO","MNST","MNTA","MNTG","MNTX","MOBI","MOCO","MOFG","MOLX","MOLXA","MORN","MOSY","MOTR","MOVE",
  "MPAA","MPAC","MPB","MPEL","MPET","MPWR","MRCY","MRGE","MRLN","MRTN","MRVL","MSBF","MSCC","MSEX","MSFG","MSFT","MSG","MSLI","MSON",
@@ -349,7 +483,7 @@ fids_part5 = ["INDB","INDY","INFA","INFI",
  "PGTI","PHII","PHIIK","PHMD","PCH","PICO","PKBK","PKOH","PKOL","PKT","PLAB","PLBC","PLCC","PLCE","PLCM","PLFE","PLMT","PLNR",
  "PLPC","PLTM","PLUG","PLUS","PLXS","PLXT","PMBC"]
 
-fids_part6 = ["PMCS","PMD","PMFG","PMNA","PMTC","PMTI","PNBK","PNFP","PNNT","PNQI","PNRA",
+fids_part6 = ["MIPS","PMCS","PMD","PMFG","PMNA","PMTC","PMTI","PNBK","PNFP","PNNT","PNQI","PNRA",
  "PNRG","PNTR","PODD","POOL","POPE","POWI","POWL","POWR","POZN","PPBI","PPHM","PRAA","PRAN","PRCP","PRFT","PRFZ","PRGO","PRGS",
  "PRGX","PRIM","PRKR","PRLS","PRMW","PROV","PRPH","PRSC","PRSS","PRST","PRTS","PRWT","PRXI","PRXL","PSAU","PSBH","PSCC","PSCD",
  "PSCE","PSCF","PSCI","PSCM","PSCT","PSCU","PSDV","PSEC","PSEM","PSCH","PSMI","PSMT","PSOF","PSSI","PSTB","PSTI","PSTL","PSTR",

@@ -1,5 +1,6 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE FlexibleInstances     #-}
+{-# LANGUAGE TupleSections         #-}
 
 module GP_Data where
 
@@ -7,7 +8,9 @@ import GP_Core ( Gene, Muta, Cros, generateIt, mutateIt, crossIt , Prob )
 import Util    ( Ral, getRandom, getRandomR, getRandomL, getNormal, randIf, randCase,logIt,boxIt,boxThem )
 
 import TTerm
-import InhabitationMachines ( proveN , randProveN, randProveUnique, proveOneWithLimit )
+import TTree
+
+import InhabitationMachines ( proveN , randProveN, randProveUnique, proveOneWithLimit, Limit, kozaProveN )
 
 import KozaTree ( KTree(KNode), KPos, kSubtree, kChangeSubtree, kPoses, kPoses2, kDepth ) 
 import Dist     ( Dist, mkDist, distSize, distToList )
@@ -20,6 +23,39 @@ import Data.List     (nub,groupBy)
 type Len    = Int
 type Mean   = Double
 type StdDev = Double
+
+-- CTT -------------------------------------------------------------------------
+
+instance Gene CTT CTTGen where generateIt = cttGen
+instance Cros CTT CTTCro where crossIt    = cttCro
+
+data CTTGen = CTTG_Koza Typ Context Limit 
+data CTTCro = CTTC_Koza
+
+cttGen :: Int -> CTTGen -> Ral [CTT]
+cttGen n (CTTG_Koza typ ctx limit) = map mkCTT `liftM` kozaProveN n limit typ ctx
+
+cttCro :: CTTCro -> CTT -> CTT -> Ral (CTT,CTT)
+cttCro CTTC_Koza (CTT v1 tree1) (CTT v2 tree2) = do
+  cPos1 <- crossPos tree1
+  cPos2 <- crossPos tree2
+  let sub1          = ttreeSubtree tree1 cPos1
+      (tree2',sub2) = ttreeChangeSubtree tree2 cPos2 sub1
+      (tree1',_   ) = ttreeChangeSubtree tree1 cPos1 sub2
+      child1        = if ttreeDepth tree1' > maxDepth then tree1 else tree1'
+      child2        = if ttreeDepth tree2' > maxDepth then tree2 else tree2'
+  return ( (CTT v1 child1) , (CTT v2 child2) )
+ where
+  maxDepth = 17
+  crossPos :: TTree -> Ral TTPos
+  crossPos tree = do
+   poses <- let (ts,ns) = ttreePoses2 tree 
+             in if null ns 
+                 then return ts 
+                 else randCase 0.9 ns ts
+   getRandomL poses
+
+
 
 -- TTerm --------------------------------------------------------------------------
 
@@ -247,14 +283,25 @@ instance (Muta t1 o1,Muta t2 o2) => Muta (t1,t2) (PairMut o1 o2) where mutateIt 
 instance (Cros t1 o1,Cros t2 o2) => Cros (t1,t2) (PairCro o1 o2) where crossIt    = pairCro
 
 data PairGen o1 o2 = PG_Both o1 o2 
-data PairMut o1 o2 = PM_Both o1 o2
+data PairMut o1 o2 = PM_Both o1 o2 |
+                     PM_One  o1 o2 |
+                     PM_OneP o1 o2 Prob
 data PairCro o1 o2 = PC_Both o1 o2
 
 pairGen :: (Gene t1 o1,Gene t2 o2) => Int -> PairGen o1 o2 -> Ral [(t1,t2)]
 pairGen n (PG_Both o1 o2) = liftM2 zip (generateIt n o1) (generateIt n o2)
 
 pairMut :: (Muta t1 o1,Muta t2 o2) => PairMut o1 o2 -> (t1,t2) -> Ral (t1,t2)
-pairMut (PM_Both o1 o2) (x,y) = liftM2 (,) (mutateIt o1 x) (mutateIt o2 y)
+pairMut opt (x,y) = case opt of 
+ PM_Both o1 o2 -> liftM2 (,) (mutateIt o1 x) (mutateIt o2 y)
+ PM_One  o1 o2 -> do
+  first <- getRandom
+  if first then (,y) `liftM` mutateIt o1 x 
+           else (x,) `liftM` mutateIt o2 y
+ PM_OneP  o1 o2 p ->
+  randIf p ( (,y) `liftM` mutateIt o1 x ) 
+           ( (x,) `liftM` mutateIt o2 y )           
+
 
 pairCro :: (Cros t1 o1,Cros t2 o2) => PairCro o1 o2 -> (t1,t2) -> (t1,t2) -> Ral ((t1,t2),(t1,t2))
 pairCro(PC_Both o1 o2) (x1,x2) (y1,y2) = do
@@ -339,6 +386,7 @@ boolCro _ x y = return ( x && y , x || y )
 -- Int ----------------------------------------------------------
 
 instance Gene Int IntGen where generateIt = intGen
+instance Muta Int IntMut where mutateIt   = intMut
 
 data IntGen = IG_Uniform (Int,Int)
 
@@ -346,6 +394,11 @@ intGen :: Int -> IntGen -> Ral [Int]
 intGen n ig = case ig of
  IG_Uniform range -> replicateM n $ getRandomR range
 
+data IntMut = IM_Uniform (Int,Int)
+
+intMut :: IntMut -> Int -> Ral Int
+intMut im x = case im of
+ IM_Uniform range -> getRandomR range
 
 
 -- Double -------------------------------------------------------

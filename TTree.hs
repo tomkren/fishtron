@@ -1,19 +1,28 @@
 module TTree 
-( CTree (..),
+( CTT (..),
   TTree (..),
-  mkCTree
+  TTPos,
+  mkCTT,
+  ttreeSubtree,
+  ttreeSubtrees,
+  ttreeChangeSubtree,
+  ttreeDepth,
+  ttreePoses2
 ) where
 
 import Data.List
+import Data.Either
 
 import TTerm
 
-data CTree = CTree Context TTree 
+data CTT = CTT Context TTree 
 
 data TTree = TTree Symbol Typ [TTree] 
 
-instance Show CTree where
- show (CTree ctx ttree) = case ctx of
+type TTPos = [Int]
+
+instance Show CTT where
+ show (CTT ctx ttree) = case ctx of
   [] -> show ttree
   _  -> let vars = intercalate " " . map fst $ ctx
          in "\\ "++ vars ++ " -> " ++ show ttree 
@@ -28,15 +37,50 @@ instance Show TTree where
     _  -> "(" ++ x ++ " " ++ (intercalate " " (map showPars ts)) ++ ")"
 
 
-mkCTree :: TTerm -> CTree
-mkCTree tt = 
- let (ctx,ttree) = mkCTree' [] tt
-  in CTree ctx ttree
 
-mkCTree' :: [Symbol] -> TTerm -> ( Context , TTree ) 
-mkCTree' xs tt = case tt of
+ttreeDepth :: TTree -> Int
+ttreeDepth (TTree _ _ ts) = case ts of
+ [] -> 0
+ _  -> (1+) . maximum $ map ttreeDepth ts
+
+
+ttreeSubtree :: TTree -> TTPos -> TTree
+ttreeSubtree t [] = t
+ttreeSubtree (TTree _ _ ts) (i:is) = 
+ ttreeSubtree (ts !! (i-1)) is
+
+ttreeSubtrees :: TTree -> [TTree]
+ttreeSubtrees t@(TTree _ _ ts) = t : concatMap ttreeSubtrees ts
+
+ttreeChangeSubtree :: TTree -> TTPos -> TTree -> (TTree,TTree)
+ttreeChangeSubtree tree               []     newSub = (newSub,tree) 
+ttreeChangeSubtree (TTree str typ ts) (i:is) newSub = 
+ let (ts1,subt:ts2) = splitAt (i-1) ts
+     (subt',oldSub) = ttreeChangeSubtree subt is newSub
+  in (TTree str typ (ts1 ++ (subt':ts2) ) ,oldSub)  
+
+ttreePoses2 :: TTree -> ([TTPos],[TTPos])
+ttreePoses2 t = 
+  let xs  = poses2 [] t 
+      rev = map reverse 
+   in ( rev . lefts $ xs , rev . rights $ xs )
+ where
+  poses2 :: [Int] -> TTree -> [ Either [Int] [Int] ]
+  poses2 pos (TTree _ _ []) = [Left pos]
+  poses2 pos (TTree _ _ ts) = 
+   (Right pos) : (concatMap (\(i,t)-> poses2 (i:pos) t ) (zip [1..] ts) )
+
+
+
+mkCTT :: TTerm -> CTT
+mkCTT tt = 
+ let (ctx,ttree) = mkCTT' [] tt
+  in CTT ctx ttree
+
+mkCTT' :: [Symbol] -> TTerm -> ( Context , TTree ) 
+mkCTT' xs tt = case tt of
  TLam x m (tx:->_) -> 
-  let ( rest , ret ) = mkCTree' (x:xs) m
+  let ( rest , ret ) = mkCTT' (x:xs) m
    in ( (x,tx) : rest , ret ) 
  _ -> ( [] , fromTTerm . toSki . changeVarsToVals xs $ tt )  
 

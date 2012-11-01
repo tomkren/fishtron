@@ -6,7 +6,7 @@ import Data.Maybe(catMaybes)
 -- import Data.Maybe
 import TTerm (Symbol,Typ(..),TTerm(..),Context,typeArgs,ttermTyp,isInCtx)
 import Util  ( newSymbol' , fillStr ,singletonQueue ,  
-              Queue, insertsQueue , popQueue , putList ,getRandomL, 
+              Queue, insertsQueue , popQueue , putList ,getRandomL, getRandom,
               Ral, runRal ,  boxIt, logIt )
 
 -- import Data.Set (Set)
@@ -67,8 +67,15 @@ ctx_mini :: Context
 ctx_mini = ([("plus",dou2),("sin",dou1)])
 
 
-testIM :: Int -> Ral [TTerm]
-testIM n = ( randProveUnique n 100 dou1 ctx_ttSSR )
+testIM :: Int -> IO [TTerm]
+testIM n = runRal [] $ randProveUnique n 100 dou1 ctx_ttSSR 
+
+testIM2 :: Int -> IO [TTerm]
+testIM2 n = runRal [] $ strategyProveUnique defaultStrategy n 100 dou1 ctx_ttSSR 
+
+testIM3 :: Int -> IO [TTerm]
+testIM3 n = runRal [] $ kozaProveN n 100 dou1 ctx_ttSSR 
+
 
 -- uniqueN :: Int -> Ral TTerm -> Ral [TTerm]
 -- uniqueN n mo = do 
@@ -140,7 +147,73 @@ randProveN :: Int -> Limit -> Typ -> Context -> Ral [TTerm]
 randProveN n limit typ ctx = replicateM n $ randProveOne limit typ ctx
 
 
-type Strategy = [ForkEdge] -> Ral ForkEdge  
+-- ======================================================================= --
+
+type Strategy = CurrentDepth -> [ForkEdge] -> Ral [ForkEdge]
+
+defaultStrategy :: Strategy
+defaultStrategy _ edges = return edges
+
+kozaStrategy :: Bool -> Int -> Strategy
+kozaStrategy isFullMethod maxDepth depth 
+  | depth <= 1        = ks . onlyNonterminals  -- 1 místo 0 protože první lambda je navíc
+  | depth == maxDepth = ks . onlyTerminals
+  | isFullMethod      = ks . onlyNonterminals
+  | otherwise         = ks 
+ where 
+  onlyTerminals    = filter ( \ (_,ts) ->       null   ts )
+  onlyNonterminals = filter ( \ (_,ts) -> not . null $ ts )
+  ks :: [ForkEdge] -> Ral [ForkEdge]
+  ks edges = do
+   selectedEdge <- getRandomL edges
+   return [selectedEdge]
+
+kozaProveN :: Int -> Limit -> Typ -> Context -> Ral [TTerm]
+kozaProveN n limit typ ctx = 
+  let graph = mkIMGraph typ ctx
+   in replicateM n $ kozaProveOne graph limit typ ctx  
+ where
+  kozaProveOne :: IMGraph -> Limit -> Typ -> Context -> Ral TTerm
+  kozaProveOne graph limit typ ctx = do 
+   isFullMethod <- getRandom
+   maxDepth     <- getRandomL [1..6]
+   strategyProveOne (kozaStrategy isFullMethod (maxDepth+1) ) graph limit typ ctx
+
+
+-- kTreeGenOne :: KEnv -> Ral KTree
+-- kTreeGenOne (terminals,nonterminals) = do
+--   isFullMethod <- getRandom
+--   maximalDepth <- getRandomL [1..6]
+--   genOne 0 maximalDepth isFullMethod
+--  where
+--   ts = map (\t->(t,0)) terminals
+--   ns = nonterminals
+--   cs = ts ++ ns
+--   genOne :: Int -> Int -> Bool -> Ral KTree
+--   genOne depth maxDepth fullMet
+--     | depth == 0        = genOne' ns
+--     | depth == maxDepth = genOne' ts
+--     | fullMet           = genOne' ns
+--     | otherwise         = genOne' cs
+--    where 
+--     genOne' :: [(String,Arity)] -> Ral KTree
+--     genOne' xs = do
+--      (name,arity) <- getRandomL xs
+--      trees <- mapM (\_->genOne (depth+1) maxDepth fullMet ) [1..arity]
+--      return $ KNode name trees
+
+---------------------------------------------------------------------------
+
+strategyProveN :: Strategy -> Int -> Limit -> Typ -> Context -> Ral [TTerm]
+strategyProveN strategy n limit typ ctx = 
+ let graph = mkIMGraph typ ctx
+  in replicateM n $ strategyProveOne strategy graph limit typ ctx
+
+strategyProveUnique :: Strategy -> Int -> Limit -> Typ -> Context -> Ral [TTerm]
+strategyProveUnique strategy n limit typ ctx = 
+  let graph = mkIMGraph typ ctx
+   in uniqueN n $ strategyProveOne strategy graph limit typ ctx 
+
 
 strategyProveOne :: Strategy -> IMGraph -> Limit -> Typ -> Context -> Ral TTerm
 strategyProveOne strategy graph limit typ ctx =
@@ -154,6 +227,7 @@ strategyProveOne strategy graph limit typ ctx =
      logIt $ show tterm
      return tterm  
  
+
 strategyProveOne' :: Limit -> Strategy -> IMGraph -> Taxi -> Ral (Maybe [Token2])
 strategyProveOne' 0     _        _     _    = return Nothing
 strategyProveOne' limit strategy graph taxi = do
@@ -163,22 +237,47 @@ strategyProveOne' limit strategy graph taxi = do
   Right Nothing      -> return Nothing
   Right (Just taxi') -> strategyProveOne' (limit-1) strategy graph taxi'
 
+-- strategyOneNext :: Strategy -> IMGraph -> Taxi -> Ral ( Either [Token2] (Maybe Taxi) )
+-- strategyOneNext strategy graph taxi = case taxi of
+--  Taxi ret []     _    -> return . Left . reverse $ ret
+--  Taxi ret (x:xs) nCtx -> case x of
+--   T2Typ t -> undefined 
+
 strategyOneNext :: Strategy -> IMGraph -> Taxi -> Ral ( Either [Token2] (Maybe Taxi) )
-strategyOneNext strategy graph taxi = case taxi of
- Taxi ret []     _    -> return . Left . reverse $ ret
- Taxi ret (x:xs) nCtx -> case x of
-  T2Typ t -> undefined 
- 
+strategyOneNext strategy graph taxi = do 
+  tok2sOrTaxis <- strategyNextTaxis strategy graph taxi
+  case tok2sOrTaxis of
+   Left  tok2s -> return $ Left tok2s
+   Right taxis -> case taxis of
+    [] -> return $ Right Nothing
+    _  -> do
+     taxi' <- getRandomL taxis
+     return . Right . Just $ taxi'  
 
--- _nextTaxis' :: IMGraph -> Taxi -> Either [Token2] [Taxi]
--- _nextTaxis' im taxi = case taxi of
---   Taxi ret []     _    -> Left $ reverse ret
---   Taxi ret (x:xs) nCtx -> case x of
---     T2Typ t         -> Right [ Taxi ret (toks++xs) nCtx' | (toks,nCtx') <- nextTaxis im nCtx t ]
---     T2ParR_lam vars -> Right [ Taxi (x:ret) xs (nCtx \\ vars) ]
---     _               -> Right [ Taxi (x:ret) xs nCtx ]
+strategyNextTaxis :: Strategy -> IMGraph -> Taxi -> Ral ( Either [Token2] [Taxi] )
+strategyNextTaxis strategy im taxi = case taxi of
+  Taxi ret []     _    _     -> return . Left . reverse $ ret
+  Taxi ret (x:xs) nCtx depth -> case x of
+    T2Typ t         -> do
+                        result <- strategyNextTaxis' depth strategy im nCtx t
+                        rr [ Taxi    ret (toks++xs) nCtx'          depth    | (toks,nCtx') <- result ]
+    T2ParR_lam vars ->  rr [ Taxi (x:ret)       xs (nCtx \\ vars) (depth-1) ]
+    T2ParR          ->  rr [ Taxi (x:ret)       xs  nCtx          (depth-1) ]
+    T2ParL          ->  rr [ Taxi (x:ret)       xs  nCtx          (depth+1) ]
+    _               ->  rr [ Taxi (x:ret)       xs  nCtx           depth    ]
+ where
+  rr = return . Right
+
+strategyNextTaxis' :: CurrentDepth -> Strategy -> IMGraph -> NContext -> Typ -> Ral [ ( [Token2] , NContext ) ]
+strategyNextTaxis' depth strategy im nCtx typ = case Map.lookup typ im of
+  Nothing -> error "unexpected Nothing"
+  Just edges -> do 
+    edges' <- strategy depth edges 
+    return $ concatMap (next nCtx) edges'
 
 
+
+-- ======================================================================= --
 
 randProveOne :: Int -> Typ -> Context -> Ral TTerm
 randProveOne limit typ ctx = 
@@ -240,21 +339,26 @@ data Token2 =
  T2Typ Typ                  |
  End
 
-data Taxi = Taxi [Token2] [Token2] NContext  deriving (Show)
+type CurrentDepth = Int
+
+data Taxi = Taxi [Token2] [Token2] NContext CurrentDepth deriving (Show)
 
 mkTaxi' :: Typ -> Context -> Taxi
-mkTaxi' t ctx = Taxi [] [T2Typ t] $ map (\(x,_)->(x,1)) ctx
+mkTaxi' t ctx = Taxi [] [T2Typ t] ( map (\(x,_)->(x,1)) ctx ) 0
 
 mkTaxi :: IM -> Taxi
-mkTaxi (IM t ctx im) = Taxi [] [T2Typ t] $ map (\(x,_)->(x,1)) ctx
+mkTaxi (IM t ctx im) = mkTaxi' t ctx -- Taxi [] [T2Typ t] $ map (\(x,_)->(x,1)) ctx
 
 nextTaxis' :: IMGraph -> Taxi -> Either [Token2] [Taxi]
 nextTaxis' im taxi = case taxi of
-  Taxi ret []     _    -> Left $ reverse ret
-  Taxi ret (x:xs) nCtx -> case x of
-    T2Typ t         -> Right [ Taxi ret (toks++xs) nCtx' | (toks,nCtx') <- nextTaxis im nCtx t ]
-    T2ParR_lam vars -> Right [ Taxi (x:ret) xs (nCtx \\ vars) ]
-    _               -> Right [ Taxi (x:ret) xs nCtx ]
+  Taxi ret []     _    _     -> Left $ reverse ret
+  Taxi ret (x:xs) nCtx depth -> case x of
+    T2Typ t         -> Right [ Taxi    ret (toks++xs) nCtx'          depth    | (toks,nCtx') <- nextTaxis im nCtx t ]
+    T2ParR_lam vars -> Right [ Taxi (x:ret)       xs (nCtx \\ vars) (depth-1) ]
+    T2ParR          -> Right [ Taxi (x:ret)       xs  nCtx          (depth-1) ]
+    T2ParL          -> Right [ Taxi (x:ret)       xs  nCtx          (depth+1) ]
+    _               -> Right [ Taxi (x:ret)       xs  nCtx           depth    ]
+
 
 nextTaxis :: IMGraph -> NContext -> Typ ->  [ ( [Token2] , NContext ) ]
 nextTaxis im nCtx typ = case Map.lookup typ im of
