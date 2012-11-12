@@ -71,15 +71,22 @@ ctx_mini = ([("plus",dou2),("sin",dou1)])
 
 
 testIM :: Int -> IO [TTerm]
-testIM n = runEva $ randProveUnique n 100 dou1 ctx_ttSSR 
+testIM n = do 
+ (ret,_) <- runEva $ randProveUnique n 100 dou1 ctx_ttSSR 
+ return ret
 
 testIM2 :: Int -> IO [TTerm]
-testIM2 n = runEva $ strategyProveUnique defaultStrategy n 100 dou1 ctx_ttSSR 
+testIM2 n = do
+  (ret,_) <- runEva $ strategyProveUnique defaultStrategy n 100 dou1 ctx_ttSSR 
+  return ret
 
 testIM3 :: Int -> IO [TTerm]
-testIM3 n = runEva $ kozaProveN n 100 dou1 ctx_ttSSR 
+testIM3 n = do
+  (ret,_) <- runEva $ kozaProveN n 100 dou1 ctx_ttSSR 
+  return ret
 
 
+  
 uniqueN :: Int -> Eva TTerm -> Eva [TTerm]
 uniqueN num = uniqueN' Set.empty num
  where 

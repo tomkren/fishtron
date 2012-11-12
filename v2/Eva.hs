@@ -10,7 +10,6 @@ import System.Random
 import Control.Monad.State
 import Data.Time.Clock
 import Data.Typeable
-import System.Directory
 
 import Utils
 import Heval
@@ -40,21 +39,19 @@ instance Randable Eva where
   put gen'
   return val 
 
-runEva :: Eva a -> IO a
+runEva :: Eva a -> IO (a,Stats)
 runEva eva = do
  gen <- getStdGen
  runEvaWith gen eva 
 
-runEvaWith :: StdGen -> Eva a -> IO a
+runEvaWith :: StdGen -> Eva a -> IO (a,Stats)
 runEvaWith gen eva = do
  startTime <- getCurrentTime
  putStrLn $ "\nstdGen: " ++ show gen
- ((ret,gen'),stats) <- runStateT (runStateT eva gen) (Map.empty,Map.empty) 
- --writeFile "graph.txt" (showStats stats)
- writeStats stats
+ ((ret,gen'),stats) <- runStateT (runStateT eva gen) (Map.empty) 
  finishTime <- getCurrentTime
  putStrLn $ "Total time: " ++ show (diffUTCTime finishTime startTime) ++ "\n"
- return ret
+ return (ret,stats)
 
 -- Stating stuff --------------------------------------
 
@@ -64,7 +61,7 @@ data GenInfoType = BestOfGen | AvgOfGen | WorstOfGen deriving (Eq,Ord,Show)
 
 type GenInfos = Map GenInfoType Double
 type RunInfos = Map GenID GenInfos
-type Stats    = (Map RunID RunInfos,Map String String)
+type Stats    = Map RunID RunInfos
 
 data StatRecord = 
  GenInfo RunID GenID GenInfoType Double |
@@ -72,10 +69,9 @@ data StatRecord =
 
 statIt_ :: StatRecord -> Eva () --RunID -> GenID -> GenInfoType -> Double -> Eva ()
 statIt_ sr = do 
- (mapa1,mapa2) <- lift get
+ stats <- lift get
  case sr of
-  GenInfo runID genID git val -> lift . put $ ( statIt' mapa1 runID genID git val , mapa2 )
-  StrInfo key val             -> lift . put $ ( mapa1 , Map.insert key val mapa2 )
+  GenInfo runID genID git val -> lift . put $ statIt' stats runID genID git val 
 
 statIt' :: Map RunID RunInfos -> RunID -> GenID -> GenInfoType -> Double -> Map RunID RunInfos
 statIt' stats runID genID git val = case Map.lookup runID stats of
@@ -86,76 +82,12 @@ statIt' stats runID genID git val = case Map.lookup runID stats of
    Nothing -> Map.insert runID ( Map.insert genID ( Map.insert git val genInfos ) runInfos ) stats
    Just _  -> error "statIt': rewriting statistical value should be illegal"
 
-getStat :: Map RunID RunInfos -> RunID -> GenID -> GenInfoType -> Double
-getStat stats runID genID git = case Map.lookup runID stats of
- Just runInfos -> case Map.lookup genID runInfos of
-  Just genInfos -> case Map.lookup git genInfos of
-   Just value -> value
-
-showStats :: Map RunID RunInfos -> [(RunID,String)]
-showStats stats = 
-  [ ( runID , oneRunGraphStr ++ 
-              oneDataStream runInfos BestOfGen ++
-              oneDataStream runInfos AvgOfGen  ++
-              oneDataStream runInfos WorstOfGen ) | 
-    (runID,runInfos) <- Map.toAscList stats ] 
-
-oneDataStream :: RunInfos -> GenInfoType -> String
-oneDataStream runInfos git 
- = ( concat [ show genID++" "++show val++"\n" | 
-              (genID,genInfos) <- Map.toAscList runInfos ,
-              let Just val = Map.lookup git genInfos ] ) ++ "e\n"
-
-writeStats :: Stats -> IO ()
-writeStats (stats,strStats) = do
-  isThere <- doesDirectoryExist problemName 
-  problemName' <- if isThere then checkFreeName 2 problemName else return problemName
-  createDirectory problemName' 
-  setCurrentDirectory problemName'
-  createDirectory dirName
-  setCurrentDirectory ".."  
-  mapM_ ( \ (runID,str) -> writeFile ( problemName' ++ "/" ++ dirName ++"/" ++ show runID ++ "-graph.gpl") str ) (showStats stats)
- where 
-  Just problemName = Map.lookup "problemName" strStats
-  dirName = "eachGene"
 
 
-checkFreeName :: Int -> String -> IO String
-checkFreeName i base = 
-  let tryName = (base++"-"++show i)
-   in do 
-    itExist <- doesDirectoryExist tryName 
-    if itExist
-    then checkFreeName (i+1) base 
-    else return tryName 
 
-testSt = statIt' Map.empty 1 0 BestOfGen 100.1
-
--- type Stats_ = [StatRecord]
--- 
--- data StatRecord = 
---  SR_Best  Int Double |
---  SR_Avg   Int Double |
---  SR_Worst Int Double
---  deriving (Show)
--- 
--- showStats_ :: [StatRecord] -> String
--- showStats_ rs = concat [ show i ++ " " ++ (intercalate " " (map show ds)) ++ "\n" | (i,ds) <- rows ] 
---  where 
---   rows :: [(Int,[Double])]
---   rows = Map.toAscList $ foldr f Map.empty rs
---   f :: StatRecord -> Map Int [Double] -> Map Int [Double]
---   f r mapa = case r of
---    SR_Best  x y -> Map.insertWith (\[y,_,_] [_,y2,y3]->[y,y2,y3]) x [y,undefined,undefined] mapa
---    SR_Avg   x y -> Map.insertWith (\[_,y,_] [y1,_,y3]->[y1,y,y3]) x [undefined,y,undefined] mapa
---    SR_Worst x y -> Map.insertWith (\[_,_,y] [y1,y2,_]->[y1,y2,y]) x [undefined,undefined,y] mapa
+-- testSt = statIt' Map.empty 1 0 BestOfGen 100.1
 
 
-oneRunGraphStr :: String
-oneRunGraphStr = 
- "plot \'-\' title 'best'  with linespoints ,\\\n" ++
- "     \'-\' title 'avg'   with linespoints ,\\\n" ++
- "     \'-\' title 'worst' with linespoints\n"
 
 
 

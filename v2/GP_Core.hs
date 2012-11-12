@@ -10,9 +10,12 @@ import Data.Typeable ( Typeable )
 import Data.Maybe    ( fromJust )
 import Text.Printf (printf)
 import Data.List 
+import System.Directory
+
 
 import Dist ( Dist, mkDist, distGet, distMax,distMin,distAvg, distSize, distTake_new )
-import Eva (Eva,runEva,runEvaWith,statIt,evals,eval,GenInfoType(..),StatRecord(..))
+import Eva (Eva,runEva,runEvaWith,statIt,evals,eval,GenInfoType(..),StatRecord(..)
+           ,RunID,RunInfos,Stats)
 import Utils (logIt,boxIt,putList,boxThem)
 
 type PopSize = Int
@@ -57,7 +60,6 @@ class Evolvable term a gOpt mOpt cOpt where
 
 instance (Gene term gOpt, Muta term mOpt, Cros term cOpt,Typeable a,Show term) => Evolvable term a gOpt mOpt cOpt where
  evolveIt runInfo p = do
-   statIt $ StrInfo "problemName" (problemName p)
    (pop0,mWin) <- evolveBegin runInfo p
    case mWin of
     Nothing -> chain numGens (evolveStep runInfo p) (fromJust . distMax) pop0
@@ -201,20 +203,20 @@ mkFF1 ff = FF1 ff ()
 
 run :: (Show term , Evolvable term a gOpt mOpt cOpt) => Problem term a gOpt mOpt cOpt -> IO ()
 run problem = do 
-  ret <- runEva $ evolveIt (1,1) problem
+  (ret,stats) <- runEva $ evolveIt (1,1) problem
+  writeStats problem stats []
   putStrLn . show $ ret
 
 runWith :: (Show term , Evolvable term a gOpt mOpt cOpt) => String -> Problem term a gOpt mOpt cOpt -> IO ()
 runWith seedStr problem = do 
-  ret <- runEvaWith (read seedStr) $ evolveIt (1,1) problem
+  (ret,stats) <- runEvaWith (read seedStr) $ evolveIt (1,1) problem
+  writeStats problem stats []
   putStrLn . show $ ret
 
 nRuns :: (Show term , Evolvable term a gOpt mOpt cOpt) => Int -> Problem term a gOpt mOpt cOpt -> IO ()
 nRuns numRuns p = do
-  ret <- runEva $ multipleRuns numRuns p
-  let kozaPerfStr = showKozaPerformance $ computeKozaPerformance (numGene p) (map (\(_,_,m)->m) ret)
-  putStrLn kozaPerfStr
-  writeFile "kozaPerf.txt" kozaPerfStr
+  (ret,stats) <- runEva $ multipleRuns numRuns p
+  writeStats p stats ret
   --let pilatPerfStr = showPilatPerformance $ computePilatPerformance (map (\(_,_,m)->m) ret)
   --putStrLn kozaPerfStr
   --writeFile "kozaPerf.txt" kozaPerfStr
@@ -252,6 +254,58 @@ computePilatPerformance bestsPerRuns =
   in map (\bestsOfGenI -> ( maximum bestsOfGenI , avg bestsOfGenI , minimum bestsOfGenI ) ) bestsPerGens
   
    
+-- stating ------------------------
+
+showStats :: Map RunID RunInfos -> [(RunID,String)]
+showStats stats = 
+  [ ( runID , oneRunGraphStr ++ 
+              oneDataStream runInfos BestOfGen ++
+              oneDataStream runInfos AvgOfGen  ++
+              oneDataStream runInfos WorstOfGen ) | 
+    (runID,runInfos) <- Map.toAscList stats ] 
+
+oneDataStream :: RunInfos -> GenInfoType -> String
+oneDataStream runInfos git 
+ = ( concat [ show genID++" "++show val++"\n" | 
+              (genID,genInfos) <- Map.toAscList runInfos ,
+              let Just val = Map.lookup git genInfos ] ) ++ "e\n"
+
+writeStats :: Problem term a gOpt mOpt cOpt -> Stats -> [(term,FitVal,Maybe Int)] -> IO ()
+writeStats problem stats retFromNRuns = do
+  isThere <- doesDirectoryExist pName 
+  pName' <- if isThere then checkFreeName 2 pName else return pName
+  createDirectory pName' 
+  setCurrentDirectory pName'
+  createDirectory dirName
+  if null retFromNRuns then return ()
+  else do 
+   let kozaPerfStr = showKozaPerformance $ computeKozaPerformance (numGene problem) (map (\(_,_,m)->m) retFromNRuns)
+   putStrLn kozaPerfStr
+   writeFile "kozaPerf.txt" kozaPerfStr
+  setCurrentDirectory ".."  
+  mapM_ ( \ (runID,str) -> writeFile ( pName' ++ "/" ++ dirName ++"/" ++ "run-" ++ show runID ++ ".gpl") str ) (showStats stats)
+ where 
+  pName = problemName problem
+  dirName = "runs"
+
+
+checkFreeName :: Int -> String -> IO String
+checkFreeName i base = 
+  let tryName = (base++"-"++show i)
+   in do 
+    itExist <- doesDirectoryExist tryName 
+    if itExist
+    then checkFreeName (i+1) base 
+    else return tryName 
+
+oneRunGraphStr :: String
+oneRunGraphStr = 
+ "plot \'-\' title 'best'  with linespoints ,\\\n" ++
+ "     \'-\' title 'avg'   with linespoints ,\\\n" ++
+ "     \'-\' title 'worst' with linespoints\n"
+
+
+
 
 
 -- testing ----------------------------------------------------------
