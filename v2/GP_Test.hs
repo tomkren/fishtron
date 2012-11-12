@@ -3,33 +3,38 @@ module GP_Test where
 import GP_Core
 import GP_Data
 
-import Util
+import Utils ( asType )
 import KozaTree
 import TTerm
-
-import InhabitationMachines (mkIM,testIM,proveN)
-
+-- 
+-- import InhabitationMachines (mkIM,testIM,proveN)
+-- 
 import TTree
-
-import Data.Typeable
-import Heval
+-- 
+-- import Data.Typeable
+-- import Heval
 
 -- Test Runs ------------------------------------------------------------
 
 run_boolAlternate = run pro_boolAlternate
 run_ttSSR         = run pro_ttSSR
 run_ttSSR_mini    = run pro_ttSSR_mini
-run_cttSSR        = run pro_cttSSR
 
+run_cttSSR        = run (pro_cttSSR 50)
+ 
 run_kozaSSR       = run (pro_kozaSSR   50)
 run_kozaSSR_2     = run (pro_kozaSSR_2 50)
-runs_kozaSSR      = nRuns 3 (pro_kozaSSR 5)
+runs_kozaSSR      = nRuns 20 (pro_kozaSSR 25)
+
+runs_kozaSSR_2    = nRuns 113 (pro_kozaSSR_2 25)
+runs_cttSSR_2     = nRuns 2  (pro_cttSSR_2 3)
+
 
 
 -- Problems & Fitnes Functions -------------------------------------------
 
 
-pro_boolAlternate = boolListProblem 50 50 (33,33,33) 100 ff_boolAlternate
+pro_boolAlternate = boolListProblem "boolAlt" 50 50 (33,33,33) 100 ff_boolAlternate
 
 ff_boolAlternate :: [Bool] -> FitVal
 ff_boolAlternate bits = 
@@ -37,16 +42,15 @@ ff_boolAlternate bits =
      len  = dLen $ bits
   in 100*(tNum * tNum)/(len*len)
 
--- TODO
---ff_hromadky :: Int -> [Double] -> [Int] -> FitVal
---ff_hromadky numHromadek ws hs = 
+pro_kozaSSR    = kozaProblem "kozaSSR"     ff_kozaSSR       env_kozaSSR
+pro_kozaSSR_2  = kozaProblem "kozaSSRhits" ff_kozaSSR_2     env_kozaSSR
 
-pro_cttSSR     = cttProblem  ff_cttSSR  dou1 ctx_ttSSR
-pro_kozaSSR    = kozaProblem ff_kozaSSR      env_kozaSSR
-pro_kozaSSR_2  = kozaProblem ff_kozaSSR_2    env_kozaSSR
-pro_ttSSR      = ttProblem   ff_ttSSR   dou1 ctx_ttSSR
-pro_ttSSR_mini = ttProblem   ff_ttSSR   dou1 ctx_ttSSR_mini
+pro_cttSSR     = cttProblem  "cttSSR"      ff_cttSSR   dou1 ctx_ttSSR
+pro_cttSSR_2   = cttProblem  "cttSSRhits"  ff_cttSSR_2 dou1 ctx_ttSSR
 
+pro_ttSSR      = ttProblem   "ttSSR"       ff_ttSSR    dou1 ctx_ttSSR
+pro_ttSSR_mini = ttProblem   "ttSSRmini"   ff_ttSSR    dou1 ctx_ttSSR_mini
+ 
 env_kozaSSR :: KEnv
 env_kozaSSR = (["x"],[("plus",2),("minus",2),("krat",2),("rdiv",2),("sin",1),("cos",1),("exp",1),("rlog",1)])
 
@@ -57,19 +61,21 @@ dou2 = dou :-> dou :-> dou
 
 ctx_ttSSR :: Context
 ctx_ttSSR = ([("plus",dou2),("minus",dou2),("krat",dou2),("rdiv",dou2),("sin",dou1),("cos",dou1),("exp",dou1),("rlog",dou1)])
-
+ 
 ctx_ttSSR_mini :: Context
 ctx_ttSSR_mini = ([("plus",dou2),("krat",dou2)])
-
-
+ 
+ 
 ff_kozaSSR :: FitFun KTree (Double->Double)
 ff_kozaSSR = FF2 (\ t -> "(\\ x -> " ++ show t ++ ")" ) (asType::Double->Double) (return . rawFF_SSR)
 
 ff_kozaSSR_2 :: FitFun KTree (Double->Double)
-ff_kozaSSR_2 = FF3 (\ t -> "(\\ x -> " ++ show t ++ ")" ) (asType::Double->Double) ff 
- where ff f = let fv       = rawFF_SSR f
-                  isWinner = fv > 0.5
-               in return ( fv , isWinner )
+ff_kozaSSR_2 = FF3 (\ t -> "(\\ x -> " ++ show t ++ ")" ) (asType::Double->Double) (return . rawFF_SSR_2)
+
+-- where ff f = let fv       = rawFF_SSR f
+--                  isWinner = fv > 0.5
+--               in return ( fv , isWinner )
+
    
 ff_ttSSR :: FitFun TTerm (Double->Double)
 ff_ttSSR = FF2 show (asType::Double->Double) (return . rawFF_SSR)
@@ -77,13 +83,29 @@ ff_ttSSR = FF2 show (asType::Double->Double) (return . rawFF_SSR)
 ff_cttSSR :: FitFun CTT (Double->Double)
 ff_cttSSR = FF2 show (asType::Double->Double) (return . rawFF_SSR)
 
+ff_cttSSR_2 :: FitFun CTT (Double->Double)
+ff_cttSSR_2 = FF3 show (asType::Double->Double) (return . rawFF_SSR_2)
+
+
 rawFF_SSR :: (Double->Double) -> FitVal
 rawFF_SSR f = (1/) . (1+) . sum . diffs_kozaSSR $ f  
 
+rawFF_SSR_2 :: (Double->Double) -> (FitVal,Bool)
+rawFF_SSR_2 f = 
+ let diffs = diffs_kozaSSR f
+  in( (1/) . (1+) . sum $ diffs , 20 == (length . filter (\dif-> (abs dif) < 0.01 ) $ diffs)  )  
+
+
+-- 
 diffs_kozaSSR :: (Double->Double) -> [Double]
-diffs_kozaSSR f = map (\x-> let dx = (f x) - ( x*x*x*x+x*x*x+x*x+x ) in abs dx ) [-1,-0.9..1]
+diffs_kozaSSR f = map (\x-> let dx = (f x) - ( x*x*x*x+x*x*x+x*x+x ) in abs dx ) (linInterval (-1,1) 20)
 
+linInterval :: (Double,Double) -> Int -> [Double]
+linInterval (a,b) n = 
+ let step = (b-a) / (fromIntegral $ n-1)
+  in [ a + (fromIntegral i)*step | i <- [0..(n-1)] ]
 
+ 
 showRes_SSR :: (Double->Double) -> String
 showRes_SSR f = "Sum of diffs : " ++ ( show . sum . diffs_kozaSSR $ f )
 
@@ -114,12 +136,12 @@ cros_fail2 = cros_ttSSRwith "611099341 1516597540" 20 2
 
 ---------
 
-testSKI = putList . map (\f-> g f == g (toSki' f) ) $ proveN 100 dou1 ctx_ttSSR_mini
- where g f = eval (show f) (asType::Double->Double) 42
-testSKI2 n = skiComare dou1 ctx_ttSSR_mini n
-testSKI3 n = skiComare ( (((dou:->dou):->dou):->dou) :-> dou :-> dou ) [] n
-
-skiComare typ ctx n = putStrList . concatMap (\tt-> [ [], show tt , show (toSki' tt) , show (mkCTT tt) ] ) $ proveN n typ ctx
+-- testSKI = putList . map (\f-> g f == g (toSki' f) ) $ proveN 100 dou1 ctx_ttSSR_mini
+--  where g f = eval (show f) (asType::Double->Double) 42
+-- testSKI2 n = skiComare dou1 ctx_ttSSR_mini n
+-- testSKI3 n = skiComare ( (((dou:->dou):->dou):->dou) :-> dou :-> dou ) [] n
+-- 
+-- skiComare typ ctx n = putStrList . concatMap (\tt-> [ [], show tt , show (toSki' tt) , show (mkCTT tt) ] ) $ proveN n typ ctx
 
 -----------
 
@@ -132,43 +154,42 @@ type TTProblem   a   = Problem TTerm  a  TTermGen          ()                TTe
 type KozaProblem a   = Problem KTree  a  KTreeGen          KTreeMut          KTreeCro
 type BoolListProblem = Problem [Bool] () (ListGen BoolGen) (ListMut BoolMut) (ListCro () )
 
-cttProblem :: FitFun CTT a -> Typ -> Context -> CTTProblem a
-cttProblem ff typ ctx =
- let popSize    = 500
-     numGene    = 50   
+cttProblem :: String -> FitFun CTT a -> Typ -> Context -> NumGene -> CTTProblem a
+cttProblem problemName ff typ ctx numGene =
+ let popSize    = 500   
      genOpProbs = (10,0,90)
      gOpt       = CTTG_Koza typ ctx 1000 
      mOpt       = ()
      cOpt       = CTTC_Koza
-  in Problem popSize numGene (mkGenOps (mOpt,cOpt) genOpProbs) gOpt mOpt cOpt ff
+  in Problem problemName popSize numGene (mkGenOps (mOpt,cOpt) genOpProbs) gOpt mOpt cOpt ff
 
-ttProblem :: FitFun TTerm a -> Typ -> Context -> TTProblem a
-ttProblem ff typ ctx =
+ttProblem :: String -> FitFun TTerm a -> Typ -> Context -> TTProblem a
+ttProblem problemName ff typ ctx =
  let popSize    = 500
      numGene    = 50   
      genOpProbs = (10,0,90)
      gOpt       = TTG_SKI typ ctx 100 -- TTG_IM_rand typ ctx 100
      mOpt       = ()
      cOpt       = TTC_SKI -- TTC_my ctx
-  in Problem popSize numGene (mkGenOps (mOpt,cOpt) genOpProbs) gOpt mOpt cOpt ff
+  in Problem problemName popSize numGene (mkGenOps (mOpt,cOpt) genOpProbs) gOpt mOpt cOpt ff
 
-kozaProblem :: FitFun KTree a -> KEnv -> NumGene -> KozaProblem a
-kozaProblem ff env numGene = 
+kozaProblem :: String -> FitFun KTree a -> KEnv -> NumGene -> KozaProblem a
+kozaProblem problemName ff env numGene = 
  let popSize    = 500
      genOpProbs = (10,0,90)
      gOpt       = KG_Koza env
      mOpt       = KM_Koza env
      cOpt       = KC_Koza 
-  in Problem popSize numGene (mkGenOps (mOpt,cOpt) genOpProbs) gOpt mOpt cOpt ff
+  in Problem problemName popSize numGene (mkGenOps (mOpt,cOpt) genOpProbs) gOpt mOpt cOpt ff
 
-boolListProblem :: PopSize -> NumGene -> GenOpProbs -> Len -> ([Bool]->FitVal) -> BoolListProblem
-boolListProblem popSize numGene genOpProbs len ff = 
+boolListProblem :: String -> PopSize -> NumGene -> GenOpProbs -> Len -> ([Bool]->FitVal) -> BoolListProblem
+boolListProblem problemName popSize numGene genOpProbs len ff = 
  let gOpt   = LG_ BG_ len
      mOpt   = LM_OnePoint BM_Not len 
      cOpt   = LC_OnePoint () len
      genOps = mkGenOps (mOpt,cOpt) genOpProbs
      fitFun = mkFF1 $ return . ff
-  in Problem popSize numGene genOps gOpt mOpt cOpt fitFun
+  in Problem problemName popSize numGene genOps gOpt mOpt cOpt fitFun
 
 
 

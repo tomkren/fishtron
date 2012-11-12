@@ -8,26 +8,17 @@ module KozaTree
 , kDepth
 ) where
 
-import Text.ParserCombinators.Parsec
-import Data.List
-import Data.Typeable
-import Data.Tree
-import Data.Maybe
-import Data.Either
-import Control.Monad
--- import Text.Parsec.Prim
--- import Text.Parsec.Pos
+import Data.List (intercalate)
+import Data.Either (lefts,rights)
+import Control.Monad (liftM)
+import Text.ParserCombinators.Parsec (parse,eof,(<|>),char,many1,noneOf,skipMany1,space,sepBy,Parser,ParseError)
 
-import Heval
-import Util
+
+
 
 data KTree = KNode String [KTree] deriving (Eq)
 
 type KPos = [Int]
-
-
---evalKTree :: (Typeable a) => KTree -> a -> a
---evalKTree t as = eval (show t) as  
 
 
 
@@ -64,13 +55,6 @@ kChangeSubtree (KNode str ts) (i:is) newSub =
      (subt',oldSub) = kChangeSubtree subt is newSub
   in (KNode str (ts1 ++ (subt':ts2) ) ,oldSub)  
 
-{-
-at :: [a] -> Int -> Maybe a
-xs     `at` n | n < 1 =  Nothing
-[]     `at` _         =  Nothing
-(x:_)  `at` 1         =  Just x
-(_:xs) `at` n         =  xs `at` (n-1)
--}
 
 kPoses :: KTree -> [KPos]
 kPoses t = map reverse (kPoses' [] t)
@@ -97,8 +81,8 @@ instance Show KTree where
   _  -> "(" ++ str ++ " " ++ (intercalate " " (map show ts)) ++ ")"
 
 
-toTree :: KTree -> Tree String
-toTree (KNode str ts) = Node str $ map toTree ts
+-- toTree :: KTree -> Tree String
+-- toTree (KNode str ts) = Node str $ map toTree ts
 
 
 

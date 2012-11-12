@@ -1,0 +1,3 @@
+set yrange [0:1]
+set ytics 0,0.1,1
+plot "kozaPerf.txt" using 1:2 title 'prob of success'  with linespoints

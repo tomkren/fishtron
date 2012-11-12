@@ -18,8 +18,10 @@ import Data.List ( nub, (\\) )
 import Data.Typeable ( Typeable )
 import Text.ParserCombinators.Parsec ( Parser, ParseError, parse, (<|>), eof, char, many1, noneOf, skipMany1, space )
 
-import Util  ( newSymbol )
-import Heval ( eval )
+import Utils ( newSymbol )
+
+--import Util  ( newSymbol )
+--import Heval ( eval )
 
 ---------------------------------------------------
 
