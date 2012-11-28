@@ -1,9 +1,10 @@
 module Ekon where
 
-type Qant  = Double
-type Price = Double
-type Money = Double
-type Time  = Int
+type Qant     = Double
+type Price    = Double
+type Money    = Double
+
+type Time     = Int
 
 type Demand = Price -> Qant
 
@@ -27,6 +28,7 @@ data Firm = Firm {
  outMask    :: [Bool] 
  }
 
+
 data Mach = Mach {
  inMoney  :: Money  ,
  inQants  :: [Qant] , 
@@ -36,23 +38,39 @@ data Mach = Mach {
 
 type History = ( [[Price]] , [[(Price,Qant)]] )
 
-type FirmProgram = Firm -> History -> ( [Qant] , [Qant] , [Price]  )
+type Priority  = Double
+type Power     = Double  
+type MachOrder = (Power,Priority)
+
+type FirmProgram = Firm -> History -> ( [Qant] , [MachOrder] , [Price]  )
 
 
-stepFirm :: Firm -> FirmProgram -> History -> [Price] -> [Demand] -> Firm
+stepFirm :: Firm -> FirmProgram -> History -> [Price] -> [Demand] -> ( Firm , History )
 stepFirm firm prog history inputPrices outputDemands =
- let ( qantsToBuy , qantsToMake , sellPrices ) = prog firm history
-     (money',deltaInputQants) = buyInputs (fMoney firm) (zip qantsToMake inputPrices)
-     property' = plus (fProperty firm) (fillIt 0 deltaInputQants (inMask firm))
-     -- @TODO production
+ let history' = updateHistoryWithInputPrices history inputPrices
+     ( qantsToBuy , qantsToMake , sellPrices ) = prog firm history'
+     firm' = buyInputs firm qantsToBuy inputPrices
+     -- run machines : 
+     -- ..
+     -- set prices for outputs
      sellQants = map (\(demand,sellPrice) -> demand sellPrice ) (zip outputDemands sellPrices)
-
      -- ...
   in undefined 
 
 
-buyInputs :: Money -> [(Qant,Price)] -> ( Money , [Qant] )
-buyInputs money order = 
+updateHistoryWithInputPrices :: History -> [Price] -> History
+updateHistoryWithInputPrices ( pss , dss ) ps = ( ps:pss , dss )
+
+
+buyInputs :: Firm -> [Qant] -> [Price] -> Firm
+buyInputs firm qantsToBuy inputPrices = 
+ let (money',deltaInputQants) = buyInputs' (fMoney firm) (zip qantsToBuy inputPrices)
+     property' = plus (fProperty firm) (fillIt 0 deltaInputQants (inMask firm) )
+  in firm { fMoney = money' , fProperty = property' }
+
+
+buyInputs' :: Money -> [(Qant,Price)] -> ( Money , [Qant] )
+buyInputs' money order = 
   let orderPrice = sum $ map (uncurry (*)) order
       qants = map fst order
    in if orderPrice <= money
@@ -62,10 +80,20 @@ buyInputs money order =
 
 
 
+runMach :: Mach -> Power -> Firm -> Firm
+runMach mach power firm = undefined
+
+checkMachInput :: Mach -> [Qnat] -> [Qant]
+
+
+
 
 
 plus :: Num a => [a] -> [a] -> [a]
 plus xs ys = map (\(x,y)->x+y) (zip xs ys)
+
+--perCompo :: (a->a->a) -> [a] -> [a] -> [a]
+--perCompo op xs ys = map (\(x,y)->x `op` y) (zip xs ys)
 
 subIt :: [a] -> [Bool] -> [a]
 subIt [] [] = []
