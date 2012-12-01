@@ -51,6 +51,15 @@ type MachOrder = (Power,Priority)
 type FirmProgram = Firm -> History -> ( [Qant] , [MachOrder] , [Price]  )
 
 
+-- my firm-program --------------------
+
+
+myProg :: Firm -> History -> ( [Qant], [MachOrder] , [Price] )
+
+
+
+-- stepping simulation ------------
+
 stepFirm :: Firm -> FirmProgram -> History -> [Price] -> [Demand] -> ( Firm , History )
 stepFirm firm0 prog history0 inputPrices outputDemands =
  let history1           = updateInputPrices history0 inputPrices
