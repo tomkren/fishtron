@@ -165,9 +165,12 @@ kozaStrategy isFullMethod maxDepth depth
   onlyTerminals    = filter ( \ (_,ts) ->       null   ts )
   onlyNonterminals = filter ( \ (_,ts) -> not . null $ ts )
   ks :: [ForkEdge] -> Eva [ForkEdge]
-  ks edges = do
-   selectedEdge <- getRandomL edges
-   return [selectedEdge]
+  ks edges = 
+   if null edges
+    then return []
+    else do
+     selectedEdge <- getRandomL edges
+     return [selectedEdge]
 
 kozaProveN :: Int -> Limit -> Typ -> Context -> Eva [TTerm]
 kozaProveN n limit typ ctx = 

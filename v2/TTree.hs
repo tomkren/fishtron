@@ -7,7 +7,10 @@ module TTree
   ttreeSubtrees,
   ttreeChangeSubtree,
   ttreeDepth,
-  ttreePoses2
+  ttreePoses2,
+
+  ttreePoses2WithTyps,
+  ttreePoses2ByTyp
 ) where
 
 import Data.List
@@ -70,6 +73,28 @@ ttreePoses2 t =
   poses2 pos (TTree _ _ ts) = 
    (Right pos) : (concatMap (\(i,t)-> poses2 (i:pos) t ) (zip [1..] ts) )
 
+ttreePoses2WithTyps :: TTree -> ([(TTPos,Typ)],[(TTPos,Typ)])
+ttreePoses2WithTyps t = 
+  let xs  = poses2xx [] t 
+      rev = map (\(pos,typ)->(reverse pos,typ))
+   in ( rev . lefts $ xs , rev . rights $ xs )
+ where
+  poses2xx :: [Int] -> TTree -> [ Either ([Int],Typ) ([Int],Typ) ]
+  poses2xx pos (TTree _ typ []) = [Left (pos,typ)]
+  poses2xx pos (TTree _ typ ts) = 
+   (Right (pos,typ)) : (concatMap (\(i,t)-> poses2xx (i:pos) t ) (zip [1..] ts) )
+
+ttreePoses2ByTyp :: Typ -> TTree -> ([TTPos],[TTPos])
+ttreePoses2ByTyp typ t = 
+  let xs  = poses2 [] t 
+      rev = map reverse 
+   in ( rev . lefts $ xs , rev . rights $ xs )
+ where
+  poses2 :: [Int] -> TTree -> [ Either [Int] [Int] ]
+  poses2 pos (TTree _ typ' []) | typ' == typ = [Left pos]
+                               | otherwise   = []
+  poses2 pos (TTree _ typ' ts) = 
+   (if typ' == typ then [Right pos] else []) ++ (concatMap (\(i,t)-> poses2 (i:pos) t ) (zip [1..] ts) )
 
 
 mkCTT :: TTerm -> CTT

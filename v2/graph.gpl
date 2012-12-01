@@ -1,3 +1,0 @@
-plot "graph.txt" using 1:2 title 'best'  with linespoints ,\
-     "graph.txt" using 1:3 title 'avg'   with linespoints ,\
-     "graph.txt" using 1:4 title 'worst' with linespoints

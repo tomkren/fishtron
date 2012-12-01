@@ -1,5 +1,7 @@
 module Ekon where
 
+import Data.List
+
 type Qant     = Double
 type Price    = Double
 type Money    = Double
@@ -32,9 +34,12 @@ data Firm = Firm {
 data Mach = Mach {
  inMoney  :: Money  ,
  inQants  :: [Qant] , 
- outQants :: [Qant]
+ outIndex :: Index ,
+ outQant  :: Qant
  }
 
+
+type Index   = Int
 
 type History = ( [[Price]] , [[(Price,Qant)]] )
 
@@ -48,7 +53,7 @@ type FirmProgram = Firm -> History -> ( [Qant] , [MachOrder] , [Price]  )
 stepFirm :: Firm -> FirmProgram -> History -> [Price] -> [Demand] -> ( Firm , History )
 stepFirm firm prog history inputPrices outputDemands =
  let history' = updateHistoryWithInputPrices history inputPrices
-     ( qantsToBuy , qantsToMake , sellPrices ) = prog firm history'
+     ( qantsToBuy , machOrders , sellPrices ) = prog firm history'
      firm' = buyInputs firm qantsToBuy inputPrices
      -- run machines : 
      -- ..
@@ -68,7 +73,6 @@ buyInputs firm qantsToBuy inputPrices =
      property' = plus (fProperty firm) (fillIt 0 deltaInputQants (inMask firm) )
   in firm { fMoney = money' , fProperty = property' }
 
-
 buyInputs' :: Money -> [(Qant,Price)] -> ( Money , [Qant] )
 buyInputs' money order = 
   let orderPrice = sum $ map (uncurry (*)) order
@@ -80,20 +84,37 @@ buyInputs' money order =
 
 
 
+--runMachs :: Firm -> [MachOrder] -> [Firm]
+--runMachs firm machOrders = 
+
 runMach :: Mach -> Power -> Firm -> Firm
-runMach mach power firm = undefined
+runMach mach power firm =
+ let (costMoney,realInputQants) = checkMachInput mach power firm
+     property'                  = minus (fProperty firm) realInputQants
+     property''                 = updateAt (outIndex mach) property' (+ (outQant mach))
+     money'                     = (fMoney firm) - costMoney
+  in firm { fMoney = money' , fProperty = property'' }
 
-checkMachInput :: Mach -> [Qnat] -> [Qant]
-
+checkMachInput :: Mach -> Power -> Firm -> (Money , [Qant])
+checkMachInput mach power firm = 
+ let machIn     = map (*power) $ (inMoney mach) : (inQants   mach)
+     firmHas    =                (fMoney  firm) : (fProperty firm)
+     worstRatio = minimum $ perCompo (/) firmHas machIn
+     machIn'    = if worstRatio < 1 then map (*worstRatio) machIn else machIn
+  in ( head machIn' , tail machIn' )
 
 
 
 
 plus :: Num a => [a] -> [a] -> [a]
-plus xs ys = map (\(x,y)->x+y) (zip xs ys)
+plus = perCompo (+)
 
---perCompo :: (a->a->a) -> [a] -> [a] -> [a]
---perCompo op xs ys = map (\(x,y)->x `op` y) (zip xs ys)
+minus :: Num a => [a] -> [a] -> [a]
+minus = perCompo (-)
+
+perCompo :: (a->a->a) -> [a] -> [a] -> [a]
+perCompo op xs ys = map (\(x,y)->x `op` y) (zip xs ys)
+
 
 subIt :: [a] -> [Bool] -> [a]
 subIt [] [] = []
@@ -106,4 +127,10 @@ fillIt _    []     []     = []
 fillIt defa []     bs     = if not (or bs) then replicate (length bs) defa else error "Mask do not match list."
 fillIt defa xxs@(x:xs) (b:bs) = if b then x:(fillIt defa xs bs) else defa:(fillIt defa xxs bs)
 fillIt _ _ _ = error "Mask do not match list."
+
+
+updateAt :: Int -> [a] -> (a->a) -> [a]
+updateAt i xs f = 
+ let (as,b:bs) = splitAt i xs
+  in as ++ ( f b : bs )
 
