@@ -2,6 +2,23 @@ module Ekon where
 
 import Data.List
 
+
+import qualified Data.Vector.Unboxed as U
+import Statistics.LinearRegression
+
+test :: Double -> IO ()
+test k = do
+  let n = 10000000
+  let a = k*n + 1
+  let b = (k+1)*n
+  let xs = U.fromList [a..b]
+  let ys = U.map (\x -> x*100 + 2000) xs
+  -- thus 100 and 2000 are the alpha and beta we want
+  putStrLn "linearRegression:"
+  print $ linearRegression xs ys
+
+
+
 type Qant     = Double
 type Price    = Double
 type Money    = Double
@@ -55,6 +72,23 @@ type FirmProgram = Firm -> History -> ( [Qant] , [MachOrder] , [Price]  )
 
 
 myProg :: Firm -> History -> ( [Qant], [MachOrder] , [Price] )
+myProg firm history = undefined
+
+inputPricesEstimate :: [[Price]] -> [Price]
+inputPricesEstimate pss = map mean pss
+
+demandsEstimate :: [[(Price,Qant)]] -> [Demand]
+demandsEstimate dds = map demandEstimate dds
+ where
+  demandEstimate dd = \ x -> alpha*x + beta
+    where ( beta , alpha ) = linReg dd 
+
+
+
+
+linReg :: [(Double,Double)] -> (Double,Double)
+linReg datas = linearRegression (U.fromList xs) (U.fromList ys)
+ where (xs,ys) = unzip datas
 
 
 
@@ -74,10 +108,10 @@ stepFirm firm0 prog history0 inputPrices outputDemands =
 
 
 updateInputPrices :: History -> [Price] -> History
-updateInputPrices ( pss , dss ) ps = ( ps:pss , dss )
+updateInputPrices ( pss , dds ) ps = ( zipWith (:) ps pss , dds )
                   
 updateDemandData :: History -> [(Price,Qant)] -> History
-updateDemandData ( pss , dds ) dd = ( pss , dd:dds )
+updateDemandData ( pss , dds ) dd = ( pss , zipWith (:) dd dds )
 
 
 buyInputs :: Firm -> [Qant] -> [Price] -> Firm
@@ -112,7 +146,7 @@ checkMachInput :: Mach -> Power -> Firm -> (Money , [Qant])
 checkMachInput mach power firm = 
  let machIn     = map (*power) $ (inMoney mach) : (inQants   mach)
      firmHas    =                (fMoney  firm) : (fProperty firm)
-     worstRatio = minimum $ perCompo (/) firmHas machIn
+     worstRatio = minimum $ zipWith (/) firmHas machIn
      machIn'    = if worstRatio < 1 then map (*worstRatio) machIn else machIn
   in ( head machIn' , tail machIn' )
 
@@ -132,16 +166,17 @@ setPrices firm sellPrices outputDemands =
 
 
 plus :: Num a => [a] -> [a] -> [a]
-plus = perCompo (+)
+plus = zipWith (+)
 
 minus :: Num a => [a] -> [a] -> [a]
-minus = perCompo (-)
+minus = zipWith (-)
 
 krat :: Num a => [a] -> [a] -> [a]
-krat = perCompo (*)
+krat = zipWith (*)
 
-perCompo :: (a->a->a) -> [a] -> [a] -> [a]
-perCompo op xs ys = map (\(x,y)->x `op` y) (zip xs ys)
+
+mean :: [Double] -> Double
+mean xs = sum xs / (fromIntegral $ length xs)
 
 
 subIt :: [a] -> [Bool] -> [a]
