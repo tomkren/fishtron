@@ -16,6 +16,12 @@ import TTree
 -- import Data.Typeable
 -- import Heval
 
+-- for Server to call ... -----------------------------------------------
+
+job1 :: IO ()
+job1 = undefined
+
+
 -- Test Runs ------------------------------------------------------------
 
 run_boolAlternate = run pro_boolAlternate
