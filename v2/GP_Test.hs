@@ -18,8 +18,8 @@ import TTree
 
 -- for Server to call ... -----------------------------------------------
 
-job1 :: IO ()
-job1 = undefined
+job1 :: String -> IO ()
+job1 jobID = runByServer jobID (pro_cttSSR_2 10)
 
 
 -- Test Runs ------------------------------------------------------------

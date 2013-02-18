@@ -11,44 +11,40 @@
         var input = $('#yayi').attr('value') ;
 
         $.ajax({
-          url: 'yay/' + input ,
+          //url: 'yay/' + input ,
+          url : 'run/' + encodeURIComponent(input) , 
           type: 'GET'  ,
           success: function(wid) {  
               console.log('worker id : ' + wid );
 
-              setTimeout( function(){out( wid )} , 100 );
+              setTimeout( function(){out( wid , 1 )} , 100 );
           }
         });
 
       };
 
-      var out = function( wid ){
+      var out = function( wid , oid ){
 
         if( ! wid ){
           wid = $('#outi').attr('value') ;
+          oid = 1;
         }
         
         $.ajax({
-          url: 'out/' + wid ,
+          url: 'out/' + wid + '/' + oid ,
           type: 'GET'  ,
           success: function( output ) { 
 
-            if( output !== '' ){
-
-              console.log('output from worker '+ wid +' : ' + output );
-
-              setTimeout( function(){out( wid )} , 100 );
-
-            }else{
-
-              console.log( 'zatím další ouput není' ); 
-
+            if( output === '' ){
+              console.log( wid + ' [HOTOVO]' ); 
+            } else if( output === '_' ){
+              //working ale zatim žadnej output
+              //console.log( wid + ': working ...' );
+              setTimeout( function(){out( wid , oid )} , 100 );
+            } else {
+              console.log(wid +': ' + output );
+              setTimeout( function(){out( wid , oid+1 )} , 1 );
             }
-
-              
-
-
-
 
           }
         });
@@ -61,8 +57,8 @@
     <p>Vítá Vás Fishtron! ěščřžýáíé</p>
     <img src="files/logo.png">
     <p>
-      <input type="text" value="6" id="yayi"> 
-      <input type="button" value="yay!" onclick="yay()">
+      run/<input type="text" value="cmd-here" id="yayi"> 
+      <input type="button" value="Run!" onclick="yay()">
     </p>
     <p>
       <input type="text" value="3" id="outi"> 

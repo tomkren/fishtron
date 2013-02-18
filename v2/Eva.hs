@@ -14,6 +14,9 @@ import Data.Typeable
 import Utils
 import Heval
 
+import ServerInterface
+
+
 type Eva = StateT StdGen ( StateT Stats IO ) 
 
 class ( Randable m , Logable m  ) => EvaMonad m where 
@@ -30,7 +33,15 @@ instance EvaMonad Eva where
  -- lift . put $ (sr:stats) 
 
 instance Logable Eva where
- logIt = liftIO . putStrLn 
+ --logIt = liftIO . putStrLn 
+ logIt str = do
+  (_,strs) <- lift get
+  case Map.lookup "jobID" strs of
+    Nothing    -> liftIO . putStrLn $ str
+    Just jobID -> do
+      liftIO $ writeNextOutput (read jobID) str
+      liftIO . putStrLn $ jobID ++ " : " ++ str
+  
 
 instance Randable Eva where
  randLift f = do
@@ -48,7 +59,7 @@ runEvaWith :: StdGen -> Eva a -> IO (a,Stats)
 runEvaWith gen eva = do
  startTime <- getCurrentTime
  putStrLn $ "\nstdGen: " ++ show gen
- ((ret,gen'),stats) <- runStateT (runStateT eva gen) (Map.empty) 
+ ((ret,gen'),stats) <- runStateT (runStateT eva gen) (Map.empty , Map.empty) 
  finishTime <- getCurrentTime
  putStrLn $ "Total time: " ++ show (diffUTCTime finishTime startTime) ++ "\n"
  return (ret,stats)
@@ -61,7 +72,7 @@ data GenInfoType = BestOfGen | AvgOfGen | WorstOfGen deriving (Eq,Ord,Show)
 
 type GenInfos = Map GenInfoType Double
 type RunInfos = Map GenID GenInfos
-type Stats    = Map RunID RunInfos
+type Stats    = ( Map RunID RunInfos , Map String String )
 
 data StatRecord = 
  GenInfo RunID GenID GenInfoType Double |
@@ -69,9 +80,10 @@ data StatRecord =
 
 statIt_ :: StatRecord -> Eva () --RunID -> GenID -> GenInfoType -> Double -> Eva ()
 statIt_ sr = do 
- stats <- lift get
+ (stats,strs) <- lift get
  case sr of
-  GenInfo runID genID git val -> lift . put $ statIt' stats runID genID git val 
+  GenInfo runID genID git val -> lift . put $ ( statIt' stats runID genID git val , strs )
+  StrInfo key val             -> lift . put $ ( stats , Map.insert key val strs )  
 
 statIt' :: Map RunID RunInfos -> RunID -> GenID -> GenInfoType -> Double -> Map RunID RunInfos
 statIt' stats runID genID git val = case Map.lookup runID stats of

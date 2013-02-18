@@ -1,2 +1,2 @@
-start http://localhost:3000
 runhaskell Server.hs
+REM ghc -O2 --make Server.hs -threaded -rtsopts

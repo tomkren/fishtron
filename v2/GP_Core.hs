@@ -201,6 +201,15 @@ mkFF1 ff = FF1 ff ()
 
 -- running -----------------------------------------------------------
 
+runByServer :: (Show term , Evolvable term a gOpt mOpt cOpt) => String -> Problem term a gOpt mOpt cOpt -> IO ()
+runByServer jobID problem = 
+ let evaToRun = (statIt (StrInfo "jobID" jobID) ) >> evolveIt (1,1) problem
+  in do
+    (ret,stats) <- runEva $ evaToRun
+    -- writeStats problem stats []
+    putStrLn . show $ ret
+
+
 run :: (Show term , Evolvable term a gOpt mOpt cOpt) => Problem term a gOpt mOpt cOpt -> IO ()
 run problem = do 
   (ret,stats) <- runEva $ evolveIt (1,1) problem
@@ -271,7 +280,7 @@ oneDataStream runInfos git
               let Just val = Map.lookup git genInfos ] ) ++ "e\n"
 
 writeStats :: Problem term a gOpt mOpt cOpt -> Stats -> [(term,FitVal,Maybe Int)] -> IO ()
-writeStats problem stats retFromNRuns = do
+writeStats problem (stats,_) retFromNRuns = do
   isThere <- doesDirectoryExist pName 
   pName' <- if isThere then checkFreeName 2 pName else return pName
   createDirectory pName' 
