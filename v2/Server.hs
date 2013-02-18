@@ -49,7 +49,15 @@ createOutputFolder i = do
 
   
 clearServer :: IO ()
-clearServer = undefined
+clearServer = do
+  removeDirectoryRecursive "server/output"
+  removeDirectoryRecursive "server/working"
+  removeDirectoryRecursive "server/queue"
+  createDirectory "server/output"
+  createDirectory "server/working"
+  createDirectory "server/queue"  
+  myWriteFile "server/current.txt" "0"  
+
 
 
 workerFilename :: Int -> String
@@ -135,6 +143,7 @@ serveOutput2 wid oid = do
 
 
 main = do
+    clearServer
     let port = 3000
     putStrLn $ "Listening on port " ++ show port
     run port app
