@@ -1,1 +1,0 @@
- ³ >>> Warning : Fitness Value is NaN ; changed to 0 <<< ³

@@ -1,1 +1,0 @@
- ³ \ x -> rdiv (exp ((+) x x)) ((+) (sin (cos x)) (rdiv x ((*) x x))) ³

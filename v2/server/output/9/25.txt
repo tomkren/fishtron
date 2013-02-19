@@ -1,1 +1,0 @@
- ³ \ x -> (*) (exp ((*) x (rdiv x x))) (rlog (exp x)) ³

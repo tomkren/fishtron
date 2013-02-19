@@ -1,1 +1,0 @@
- ³ \ x -> rdiv ((*) (exp x) x) (rdiv (sin (exp x)) ((-) x x)) ³

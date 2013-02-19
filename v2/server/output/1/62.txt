@@ -1,1 +1,0 @@
- ³ \ x -> rlog (exp ((*) x (exp x))) ³

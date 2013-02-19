@@ -1,1 +1,0 @@
- ³ \ x -> (+) (sin x) ((*) (rdiv ((*) ((*) (exp x) x) x) (sin x)) x) ³

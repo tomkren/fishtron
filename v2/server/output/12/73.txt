@@ -1,1 +1,0 @@
- ³ +) x x) (cos (sin (sin x)))))))) (exp (sin ((+) (rlog x) ((-) x x))))) (exp ³

@@ -1,1 +1,0 @@
- ³ \ x -> (*) ((-) ((*) (rdiv x x) (exp x)) (rdiv x x)) (exp x) ³

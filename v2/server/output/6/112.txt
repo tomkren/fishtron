@@ -1,1 +1,0 @@
- ³ x))) (rlog ((-) x (sin x)))))) (rdiv x ((*) x x)))                          ³

@@ -1,1 +1,0 @@
- ³ \ x -> (*) (sin ((-) (cos (sin x)) (exp (rdiv x x)))) ((+) ((-) (sin (cos x ³
