@@ -21,7 +21,7 @@ import Text.Parsec.Pos
 
 
 import Eva (Eva,runEva)
-import Utils( putList,boxIt,logIt,getRandom,getRandomL,Queue,popQueue,insertsQueue,singletonQueue,newSymbol',fillStr )
+import Utils( putList,boxIt,logIt,logIt2,getRandom,getRandomL,Queue,popQueue,insertsQueue,singletonQueue,newSymbol',fillStr )
 
 
 
@@ -206,7 +206,7 @@ strategyProveOne strategy graph limit typ ctx =
     Nothing -> strategyProveOne strategy graph (limit+10) typ ctx
     Just toks -> do
      let tterm = ttParse' ctx toks
-     logIt $ show tterm
+     logIt2 $ show tterm
      return tterm  
  
 

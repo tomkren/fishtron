@@ -143,9 +143,12 @@ randIf p ok ko = do
 
 class (Monad m) => Logable m where
  logIt  :: String -> m ()
+ logIt2 :: String -> m ()
+ logIt2 x = logIt x
 
 instance Logable IO where
- logIt = putStrLn 
+ logIt  = putStrLn 
+ logIt2 = putStrLn 
 
 boxIt :: (Logable m) => String -> m ()
 boxIt str = 

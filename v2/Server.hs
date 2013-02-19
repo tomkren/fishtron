@@ -123,12 +123,13 @@ runCmd workerId cmd = do
     writeNextOutput workerId $ "Někdo již pracuje, zařazuji se do fronty........"
     setWaiting   workerId cmd
    else do
+    let logg = writeNextOutput workerId
     setIsWorking workerId True
-    writeNextOutput workerId $ "I want to do this : "  ++ cmd
-    writeNextOutput workerId $ "But i can't ! :("
-    writeNextOutput workerId $ "Instead i will run the job1"
-    job1 (show workerId)
-    writeNextOutput workerId $ "Done!"
+    logg $ replicate 80 '─'
+    logg $ "run/" ++ cmd
+    logg $ replicate 80 '─'
+    job1 (show workerId) cmd
+    logg $ "Done!"
     closeWorker workerId
 
 serveOutput2 :: Int -> Int -> IO String

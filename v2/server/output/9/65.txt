@@ -1,0 +1,1 @@
+ ³ \ x -> (*) ((+) (sin x) (exp (sin (sin ((+) x ((*) x x)))))) (rlog (exp x)) ³

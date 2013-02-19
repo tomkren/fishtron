@@ -15,7 +15,7 @@
           url : 'run/' + encodeURIComponent(input) , 
           type: 'GET'  ,
           success: function(wid) {  
-              console.log('worker id : ' + wid );
+              console.log( wid + ' [VYTVOREN]' );
 
               setTimeout( function(){out( wid , 1 )} , 100 );
           }
@@ -42,27 +42,31 @@
               //console.log( wid + ': working ...' );
               setTimeout( function(){out( wid , oid )} , 100 );
             } else {
-              console.log(wid +': ' + output );
+              //console.log(wid +': ' + output );
+              $('textarea').append(output+'\n');
+              var texta = document.getElementById('texta');
+              texta.scrollTop = texta.scrollHeight - texta.clientHeight;
               setTimeout( function(){out( wid , oid+1 )} , 1 );
             }
 
           }
         });
 
-      }
+      };
+
+      var clrscr = function(){
+          $('textarea').html('');
+      };
 
     </script>
   </head>
 	<body>
-    <p>Vítá Vás Fishtron! ěščřžýáíé</p>
-    <img src="files/logo.png">
+
     <p>
-      run/<input type="text" value="cmd-here" id="yayi"> 
+      run/<input type="text" value="ssr 10" id="yayi"> 
       <input type="button" value="Run!" onclick="yay()">
+      <input type="button" value="clrscr" onclick="clrscr()">
     </p>
-    <p>
-      <input type="text" value="3" id="outi"> 
-      <input type="button" value="out!" onclick="out()">
-    </p>
+    <textarea id="texta" style="background-image: url('files/logo3.png');" cols="80" rows="20"></textarea>
   </body>
 </html>

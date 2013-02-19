@@ -1,0 +1,1 @@
+ ³ \ x -> rdiv (exp x) ((+) ((*) (rlog ((+) x x)) (sin ((-) (exp (cos (rdiv x  ³

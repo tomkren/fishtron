@@ -33,7 +33,8 @@ instance EvaMonad Eva where
  -- lift . put $ (sr:stats) 
 
 instance Logable Eva where
- --logIt = liftIO . putStrLn 
+ --logIt = liftIO . putStrLn
+ logIt2 str = liftIO . putStrLn $ str
  logIt str = do
   (_,strs) <- lift get
   case Map.lookup "jobID" strs of

@@ -1,0 +1,1 @@
+ ³ \ x -> rdiv (rdiv ((+) ((*) x x) x) (cos ((-) (sin ((+) ((*) x x) x)) x)))  ³

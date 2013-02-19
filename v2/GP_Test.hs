@@ -1,5 +1,7 @@
 module GP_Test where
 
+import Data.List
+
 import GP_Core
 import GP_Data
 
@@ -18,9 +20,18 @@ import TTree
 
 -- for Server to call ... -----------------------------------------------
 
-job1 :: String -> IO ()
-job1 jobID = runByServer jobID (pro_cttSSR_2 10)
+job1 :: String -> String -> IO ()
+job1 jobID cmd = 
+  let parts   = wordsWhen (==' ') cmd
+      problem = head parts
+      numGene = read ( parts !! 1 ) :: Int
+   in runByServer jobID (pro_cttSSR_2 numGene)
 
+wordsWhen     :: (Char -> Bool) -> String -> [String]
+wordsWhen p s =  case dropWhile p s of
+                      "" -> []
+                      s' -> w : wordsWhen p s''
+                            where (w, s'') = break p s'
 
 -- Test Runs ------------------------------------------------------------
 
