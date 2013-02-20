@@ -11,6 +11,8 @@ import Control.Monad.State
 import Data.Time.Clock
 import Data.Typeable
 
+import Text.JSON ( encode , JSValue )
+
 import Utils
 import Heval
 
@@ -40,8 +42,20 @@ instance Logable Eva where
   case Map.lookup "jobID" strs of
     Nothing    -> liftIO . putStrLn $ str
     Just jobID -> do
-      liftIO $ writeNextOutput (read jobID) str
-      liftIO . putStrLn $ jobID ++ " : " ++ str
+      liftIO $ writeNextOutput (read jobID) (encode $ stdoutCmd str)
+      liftIO . putStrLn $ str
+
+
+sendJSON :: JSValue -> Eva ()
+sendJSON json = do
+  let jsonStr = encode json
+  (_,strs) <- lift get
+  case Map.lookup "jobID" strs of
+    Nothing -> 
+      liftIO . putStrLn $ jsonStr
+    Just jobID -> do
+      liftIO $ writeNextOutput (read jobID) jsonStr
+      liftIO . putStrLn $ jsonStr
   
 
 instance Randable Eva where

@@ -12,11 +12,14 @@ import Text.Printf (printf)
 import Data.List 
 import System.Directory
 
+import Control.Monad.State ( liftIO )
 
 import Dist ( Dist, mkDist, distGet, distMax,distMin,distAvg, distSize, distTake_new )
 import Eva (Eva,runEva,runEvaWith,statIt,evals,eval,GenInfoType(..),StatRecord(..)
-           ,RunID,RunInfos,Stats)
+           ,RunID,RunInfos,Stats , sendJSON )
 import Utils (logIt,boxIt,putList,boxThem)
+
+import ServerInterface (graphCmd)
 
 type PopSize = Int
 type NumGene = Int
@@ -174,6 +177,9 @@ logGeneration (actRun,allRuns) i pop = do
  statIt $ GenInfo actRun i BestOfGen  b
  statIt $ GenInfo actRun i AvgOfGen   a
  statIt $ GenInfo actRun i WorstOfGen w
+ liftIO . putStrLn $ ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>"
+ sendJSON $ graphCmd i (b,a,w)
+ --liftIO $ writeNextOutput (read jobID) (stdoutCmd str)
 
   
 -- statIt $ SR_Best  i b

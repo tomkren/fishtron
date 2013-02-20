@@ -1,0 +1,72 @@
+<!DOCTYPE HTML>
+<html>
+  <head>
+    <title>Fishtron</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <script src="js/jquery.js"></script>
+    <script>
+
+      var yay = function(){
+
+        var input = $('#yayi').attr('value') ;
+
+        $.ajax({
+          //url: 'yay/' + input ,
+          url : 'run/' + encodeURIComponent(input) , 
+          type: 'GET'  ,
+          success: function(wid) {  
+              console.log( wid + ' [VYTVOREN]' );
+
+              setTimeout( function(){out( wid , 1 )} , 100 );
+          }
+        });
+
+      };
+
+      var out = function( wid , oid ){
+
+        if( ! wid ){
+          wid = $('#outi').attr('value') ;
+          oid = 1;
+        }
+        
+        $.ajax({
+          url: 'out/' + wid + '/' + oid ,
+          type: 'GET'  ,
+          success: function( output ) { 
+
+            if( output === '' ){
+              console.log( wid + ' [HOTOVO]' ); 
+            } else if( output === '_' ){
+              //working ale zatim žadnej output
+              //console.log( wid + ': working ...' );
+              setTimeout( function(){out( wid , oid )} , 100 );
+            } else {
+              //console.log(wid +': ' + output );
+              $('textarea').append(output+'\n');
+              var texta = document.getElementById('texta');
+              texta.scrollTop = texta.scrollHeight - texta.clientHeight;
+              setTimeout( function(){out( wid , oid+1 )} , 1 );
+            }
+
+          }
+        });
+
+      };
+
+      var clrscr = function(){
+          $('textarea').html('');
+      };
+
+    </script>
+  </head>
+	<body>
+
+    <p>
+      run/<input type="text" value="ssr 10" id="yayi"> 
+      <input type="button" value="Run!" onclick="yay()">
+      <input type="button" value="clrscr" onclick="clrscr()">
+    </p>
+    <textarea id="texta" style="background-image: url('files/logo3.png');" cols="80" rows="20"></textarea>
+  </body>
+</html>

@@ -3,6 +3,8 @@ module ServerInterface where
 import System.IO
 import System.Directory
 
+import Text.JSON
+
 writeNextOutput :: Int -> String -> IO ()
 writeNextOutput i output = do
   outI <- incrementFile ("server/output/" ++ (show i) ++ "/_hotovo.txt")
@@ -27,9 +29,6 @@ myWriteFile filename str = do
   hPutStr file str
   hClose file
 
-
-
-
 myReadFile :: FilePath -> IO String
 myReadFile filename = do
  file <- openFile filename ReadMode 
@@ -38,7 +37,30 @@ myReadFile filename = do
  return str
 
 
+stdoutCmd :: String -> JSValue
+stdoutCmd str = JSObject $ toJSObject [ 
+  ("type" , JSString . toJSString $ "stdout" ) ,
+  ("msg"  , JSString . toJSString $ str      ) ]
 
+graphCmd :: Int -> (Double,Double,Double) -> JSValue
+graphCmd genI (best,avg,worst) = toObj $ [ 
+  ("type"   , JSString . toJSString $ "generationInfo" ) ,
+  ("i"      , toRat genI ) ,
+  ("ffvals" , toObj [
+      ( "best"  , toRat best  ) ,
+      ( "avg"   , toRat avg   ) ,
+      ( "worst" , toRat worst )
+  ] ) ]
+ where
+  toObj x = JSObject . toJSObject $ x
+  toRat x = JSRational True ( toRational x )
 
-
-
+-- {
+--   type   : "generationInfo",
+--   i      : 0,
+--   ffvals : {
+--     best  : 0.56473324 ,
+--     avg   : 0.26871469 ,
+--     worst : 0.11201199 
+--   }
+-- }

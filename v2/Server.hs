@@ -7,6 +7,8 @@ import Blaze.ByteString.Builder (copyByteString)
 import qualified Data.ByteString.UTF8 as BU
 import Data.Monoid
 import Data.Enumerator (run_, enumList, ($$))
+
+import Text.JSON ( encode )
  
 -- já
 import Control.Concurrent  
@@ -118,12 +120,12 @@ hardWork workerId param = do
 
 runCmd :: Int -> String -> IO ()
 runCmd workerId cmd = do
+  let logg = writeNextOutput workerId . encode . stdoutCmd 
   isWorkingSomeone <- isAnyoneWorking
   if isWorkingSomeone then do
-    writeNextOutput workerId $ "Někdo již pracuje, zařazuji se do fronty........"
+    logg $ "Někdo již pracuje, zařazuji se do fronty........"
     setWaiting   workerId cmd
    else do
-    let logg = writeNextOutput workerId
     setIsWorking workerId True
     logg $ replicate 80 '─'
     logg $ "run/" ++ cmd
@@ -170,6 +172,9 @@ app req =
     ["js",filename] -> do
       return $ myJSFile (init . tail . show $ filename)
 
+    ["css",filename] -> do
+      return $ myCSSFile (init . tail . show $ filename)
+
     ["files",filename] -> do
       return $ myFile (init . tail . show $ filename)
 
@@ -192,8 +197,9 @@ yay x = ResponseBuilder status200 [ ("Content-Type", "text/plain") ] $ mconcat $
 
 myIndex = ResponseFile status200 [ ("Content-Type", "text/html") ] "server/index.html" Nothing
 
-myFile   filename = ResponseFile status200 [  ] ("server/files/" ++ filename ) Nothing
-myJSFile filename = ResponseFile status200 [ ("Content-Type", "text/javascript") ] ("server/js/" ++ filename ) Nothing
+myFile    filename = ResponseFile status200 [  ] ("server/files/" ++ filename ) Nothing
+myJSFile  filename = ResponseFile status200 [ ("Content-Type", "text/javascript") ] ("server/js/" ++ filename ) Nothing
+myCSSFile filename = ResponseFile status200 [ ("Content-Type", "text/css") ] ("server/css/" ++ filename ) Nothing
 
 my404 = ResponseBuilder status200 [ ("Content-Type", "text/plain") ] $ mconcat $ map copyByteString
     [ "404" ]
