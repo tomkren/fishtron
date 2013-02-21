@@ -1,3 +1,5 @@
+{-# LANGUAGE FlexibleInstances, UndecidableInstances #-}
+
 module Utils where
 
 
@@ -9,6 +11,8 @@ import System.Random
 import Control.Monad.State
 import Data.Random.Normal
 
+
+import Text.JSON (JSValue (..) , toJSObject , toJSString )
 
 -- general ------------------------------------
 
@@ -201,5 +205,16 @@ align _     []  = []
 align width str = 
  let (line,rest) = splitAt width str
   in line : (align width rest)
+
+-- JSON-show stuff ----
+
+class (Show a) => JShow a where
+  jshow :: a -> JSValue
+
+instance Show a => JShow a where 
+  jshow x = JSObject $ toJSObject [ 
+   ("type" , JSString . toJSString $ "jsonout" ) ,
+   ("msg"  , JSString . toJSString $ show x   ) ]
+
 
 

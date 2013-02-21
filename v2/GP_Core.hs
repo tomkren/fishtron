@@ -17,7 +17,7 @@ import Control.Monad.State ( liftIO )
 import Dist ( Dist, mkDist, distGet, distMax,distMin,distAvg, distSize, distTake_new )
 import Eva (Eva,runEva,runEvaWith,statIt,evals,eval,GenInfoType(..),StatRecord(..)
            ,RunID,RunInfos,Stats , sendJSON )
-import Utils (logIt,boxIt,putList,boxThem)
+import Utils (logIt,boxIt,putList,boxThem,JShow,jshow)
 
 import ServerInterface (graphCmd)
 
@@ -61,7 +61,7 @@ class Cros term opt where
 class Evolvable term a gOpt mOpt cOpt where
   evolveIt :: RunInfo -> Problem term a gOpt mOpt cOpt -> Eva (term,FitVal,Maybe Int)
 
-instance (Gene term gOpt, Muta term mOpt, Cros term cOpt,Typeable a,Show term) => Evolvable term a gOpt mOpt cOpt where
+instance (Gene term gOpt, Muta term mOpt, Cros term cOpt,Typeable a,JShow term) => Evolvable term a gOpt mOpt cOpt where
  evolveIt runInfo p = do
    (pop0,mWin) <- evolveBegin runInfo p
    case mWin of
@@ -77,7 +77,7 @@ instance (Gene term gOpt, Muta term mOpt, Cros term cOpt,Typeable a,Show term) =
      Nothing  -> chain (n-1) f r a 
      Just (b,c) -> return (b,c,Just (numGens-n+1) ) 
  
-evolveBegin :: ( Gene t go, Typeable a,Show t) => RunInfo -> Problem t a go mo co -> Eva (Dist t , Maybe (t,FitVal) )
+evolveBegin :: ( Gene t go, Typeable a,JShow t) => RunInfo -> Problem t a go mo co -> Eva (Dist t , Maybe (t,FitVal) )
 evolveBegin runInfo p = do
  let n = popSize p 
  terms <- generateIt n (gOpt p)
@@ -85,7 +85,7 @@ evolveBegin runInfo p = do
  logGeneration runInfo 0 pop0
  return ret
 
-evolveStep ::(Muta t mo,Cros t co,Typeable a,Show t)=> RunInfo->Problem t a go mo co -> Int -> Dist t -> Eva(Dist t,Maybe(t,FitVal))
+evolveStep ::(Muta t mo,Cros t co,Typeable a,JShow t)=> RunInfo->Problem t a go mo co -> Int -> Dist t -> Eva(Dist t,Maybe(t,FitVal))
 evolveStep runInfo p i pop = do
  let best     =  getBest pop 
  terms        <- distTake_new (popSize p - 1) pop   
@@ -155,7 +155,7 @@ getBest :: Dist term -> term
 getBest pop = best 
  where Just (best,_) = distMax pop 
 
-logGeneration :: (Show term) => RunInfo -> Int -> Dist term -> Eva ()
+logGeneration :: (JShow term) => RunInfo -> Int -> Dist term -> Eva ()
 logGeneration (actRun,allRuns) i pop = do  
  let Just (best,b) = distMax pop
      a             = distAvg pop
@@ -177,9 +177,8 @@ logGeneration (actRun,allRuns) i pop = do
  statIt $ GenInfo actRun i BestOfGen  b
  statIt $ GenInfo actRun i AvgOfGen   a
  statIt $ GenInfo actRun i WorstOfGen w
- liftIO . putStrLn $ ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>"
  sendJSON $ graphCmd i (b,a,w)
- --liftIO $ writeNextOutput (read jobID) (stdoutCmd str)
+ sendJSON $ jshow best
 
   
 -- statIt $ SR_Best  i b
