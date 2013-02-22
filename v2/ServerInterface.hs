@@ -42,10 +42,11 @@ stdoutCmd str = JSObject $ toJSObject [
   ("type" , JSString . toJSString $ "stdout" ) ,
   ("msg"  , JSString . toJSString $ str      ) ]
 
-graphCmd :: Int -> (Double,Double,Double) -> JSValue
-graphCmd genI (best,avg,worst) = toObj $ [ 
+graphCmd :: Int -> Int -> (Double,Double,Double) -> JSValue
+graphCmd runI genI (best,avg,worst) = toObj $ [ 
   ("type"   , JSString . toJSString $ "generationInfo" ) ,
   ("i"      , toRat genI ) ,
+  ("run"    , toRat runI ) ,
   ("ffvals" , toObj [
       ( "best"  , toRat best  ) ,
       ( "avg"   , toRat avg   ) ,

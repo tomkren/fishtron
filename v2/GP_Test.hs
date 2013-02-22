@@ -24,8 +24,13 @@ job1 :: String -> String -> IO ()
 job1 jobID cmd = 
   let parts   = wordsWhen (==' ') cmd
       problem = head parts
-      numGene = read ( parts !! 1 ) :: Int
-   in runByServer jobID (pro_cttSSR_2 numGene)
+      numRuns = (read $ parts !! 1)::Int
+      numGene = read $ parts !! 2  
+      popSize = read $ parts !! 3
+   in do
+    putStrLn cmd
+    --runByServer jobID (pro_cttSSR_2 numGene)
+    nRunsByServer jobID numRuns (pro_cttSSR_2 numGene popSize)
 
 wordsWhen     :: (Char -> Bool) -> String -> [String]
 wordsWhen p s =  case dropWhile p s of
@@ -39,8 +44,8 @@ run_boolAlternate = run pro_boolAlternate
 run_ttSSR         = run pro_ttSSR
 run_ttSSR_mini    = run pro_ttSSR_mini
 
-run_cttSSR        = run (pro_cttSSR 50)
-run_cttSSR_2      = run (pro_cttSSR_2 50)
+run_cttSSR        = run (pro_cttSSR 50 500)
+run_cttSSR_2      = run (pro_cttSSR_2 50 500)
 
  
 run_kozaSSR       = run (pro_kozaSSR   50)
@@ -48,16 +53,16 @@ run_kozaSSR_2     = run (pro_kozaSSR_2 50)
 runs_kozaSSR      = nRuns 20 (pro_kozaSSR 25)
 
 runs_kozaSSR_2    = nRuns 113 (pro_kozaSSR_2 25)
-runs_cttSSR_2     = nRuns 2  (pro_cttSSR_2 3)
+runs_cttSSR_2     = nRuns 2  (pro_cttSSR_2 3 500)
 
 
-run_M11_ctt = run (pro_M11_ctt 50)
-run_M6_ctt = run (pro_M6_ctt 50)
+run_M11_ctt = run (pro_M11_ctt 50 500)
+run_M6_ctt = run (pro_M6_ctt 50 500)
 
-runs_M6_ctt = nRuns 20 (pro_M6_ctt 100)
+runs_M6_ctt = nRuns 20 (pro_M6_ctt 100 500)
 
-run_EP3 = run (pro_EP3 50)
-run_EP = run (pro_EP 50)
+run_EP3 = run (pro_EP3 50 500)
+run_EP = run (pro_EP 50 500)
 
 
 -- Problems & Fitnes Functions -------------------------------------------
@@ -297,10 +302,9 @@ type TTProblem   a   = Problem TTerm  a  TTermGen          ()                TTe
 type KozaProblem a   = Problem KTree  a  KTreeGen          KTreeMut          KTreeCro
 type BoolListProblem = Problem [Bool] () (ListGen BoolGen) (ListMut BoolMut) (ListCro () )
 
-cttProblem :: String -> FitFun CTT a -> Typ -> Context -> NumGene -> CTTProblem a
-cttProblem problemName ff typ ctx numGene =
- let popSize    = 500   
-     genOpProbs = (10,0,90)
+cttProblem :: String -> FitFun CTT a -> Typ -> Context -> NumGene -> PopSize -> CTTProblem a
+cttProblem problemName ff typ ctx numGene popSize =
+ let genOpProbs = (10,0,90)
      gOpt       = CTTG_Koza typ ctx 1000 
      mOpt       = ()
      cOpt       = CTTC_Koza

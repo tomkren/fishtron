@@ -177,7 +177,7 @@ logGeneration (actRun,allRuns) i pop = do
  statIt $ GenInfo actRun i BestOfGen  b
  statIt $ GenInfo actRun i AvgOfGen   a
  statIt $ GenInfo actRun i WorstOfGen w
- sendJSON $ graphCmd i (b,a,w)
+ sendJSON $ graphCmd actRun i (b,a,w)
  sendJSON $ jshow best
 
   
@@ -214,6 +214,13 @@ runByServer jobID problem =
     -- writeStats problem stats []
     putStrLn . show $ ret
 
+nRunsByServer :: (Show term , Evolvable term a gOpt mOpt cOpt) => 
+                 String -> Int -> Problem term a gOpt mOpt cOpt -> IO ()
+nRunsByServer jobID numRuns problem = do
+  (ret,stats) <- runEva $ statIt (StrInfo "jobID" jobID) >> multipleRuns numRuns problem
+  -- writeStats problem stats ret
+  putList ret
+
 
 run :: (Show term , Evolvable term a gOpt mOpt cOpt) => Problem term a gOpt mOpt cOpt -> IO ()
 run problem = do 
@@ -235,12 +242,17 @@ nRuns numRuns p = do
   --putStrLn kozaPerfStr
   --writeFile "kozaPerf.txt" kozaPerfStr
   putList ret
+
+-- where
+
+multipleRuns :: Evolvable t a go mo co => Int -> Problem t a go mo co -> Eva [(t,FitVal,Maybe Int)]
+multipleRuns numRuns problem = multipleRuns' numRuns problem
  where
-  multipleRuns :: Evolvable t a go mo co => Int -> Problem t a go mo co -> Eva [(t,FitVal,Maybe Int)]
-  multipleRuns 0 _ = return [] 
-  multipleRuns n p = do 
+  multipleRuns' :: Evolvable t a go mo co => Int -> Problem t a go mo co -> Eva [(t,FitVal,Maybe Int)]
+  multipleRuns' 0 _ = return [] 
+  multipleRuns' n p = do 
    x  <- evolveIt ( numRuns-n+1 , numRuns ) p
-   xs <- multipleRuns (n-1) p
+   xs <- multipleRuns' (n-1) p
    return (x:xs)
 
 

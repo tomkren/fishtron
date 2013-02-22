@@ -134,8 +134,8 @@ runCmd workerId cmd = do
     logg $ "Done!"
     closeWorker workerId
 
-serveOutput2 :: Int -> Int -> IO String
-serveOutput2 wid oid = do
+serveOutput :: Int -> Int -> IO String
+serveOutput wid oid = do
   let filename = "server/output/" ++ (show wid) ++ "/" ++ (show oid) ++ ".txt"
   itExists <- doesFileExist filename 
   if itExists 
@@ -158,7 +158,7 @@ app req =
     ["out",i,j] -> do
       let workerId = ( read . init . tail . show $ i ) :: Int
       let outputId = ( read . init . tail . show $ j ) :: Int
-      outString <- liftIO $ serveOutput2 workerId outputId
+      outString <- liftIO $ serveOutput workerId outputId
       return $ yay outString
 
     [ ] -> return $ myIndex
@@ -177,6 +177,12 @@ app req =
 
     ["files",filename] -> do
       return $ myFile (init . tail . show $ filename)
+
+
+    ["css","images",filename] -> do
+      return $ myCssImageFile (init . tail . show $ filename)
+
+
 
     ["yay",n] -> do 
       let num = ( read . init . tail . show $ n ) :: Int
@@ -197,9 +203,10 @@ yay x = ResponseBuilder status200 [ ("Content-Type", "text/plain") ] $ mconcat $
 
 myIndex = ResponseFile status200 [ ("Content-Type", "text/html") ] "server/index.html" Nothing
 
-myFile    filename = ResponseFile status200 [  ] ("server/files/" ++ filename ) Nothing
-myJSFile  filename = ResponseFile status200 [ ("Content-Type", "text/javascript") ] ("server/js/" ++ filename ) Nothing
-myCSSFile filename = ResponseFile status200 [ ("Content-Type", "text/css") ] ("server/css/" ++ filename ) Nothing
+myFile         filename = ResponseFile status200 [  ] ("server/files/" ++ filename ) Nothing
+myJSFile       filename = ResponseFile status200 [ ("Content-Type", "text/javascript") ] ("server/js/" ++ filename ) Nothing
+myCSSFile      filename = ResponseFile status200 [ ("Content-Type", "text/css") ] ("server/css/" ++ filename ) Nothing
+myCssImageFile filename = ResponseFile status200 [ ("Content-Type", "image/png") ] ("server/css/images/" ++ filename ) Nothing
 
 my404 = ResponseBuilder status200 [ ("Content-Type", "text/plain") ] $ mconcat $ map copyByteString
     [ "404" ]

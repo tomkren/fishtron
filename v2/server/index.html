@@ -7,21 +7,27 @@
 
     <link href="css/bootstrap.min.css" rel="stylesheet" media="screen">
     <link href="css/my.css" rel="stylesheet" media="screen">
+    <link href="css/jquery-ui.css" rel="stylesheet" media="screen">
 
     <style>
-      .main-input { width : 620px; }
+      .main-input { width : 697px; }
       .stdout     { width : 767px; }
       .graph1     { width : 786px; 
                     height: 400px; }
       #texta      { font: 15px Courier, monospace;
                     background-image: url('files/logo3.png'); }
 
+      .slider     { width:400px; position: relative; top:0px;left:10px; }
+      .input-for-slider { width:32px; }
+
     </style>
 
     <script src="js/jquery.js"></script>
+    <script src="js/jquery.ui.js"></script>
+    <script src="js/jquery.flot.js"></script>
     <script src="js/underscore.js"></script>
     <script src="js/bootstrap.min.js"></script>
-    <script src="js/jquery.flot.js"></script>
+
 
     <script>
 
@@ -39,6 +45,8 @@ var yay = function(){
     type: 'GET'  ,
     success: function(wid) {  
         console.log( wid + ' [VYTVOREN]' );
+
+        $('#graph1-link').tab('show');
 
         setTimeout( function(){out( wid , 1 )} , 100 );
     }
@@ -106,10 +114,40 @@ var drawPlot = function(){
 
 $(document).ready(function() {
 
+  $('#opts').change(function(){
+    var numruns = $('#numruns-input').attr('value');
+    var numgens = $('#numgens-input').attr('value');
+    var popsize = $('#popsize-input').attr('value');
+    $('#yayi').attr('value', 'ssr ' + numruns + ' ' + numgens + ' ' + popsize );
+  }) ;
+
   $('#myTab a').click(function (e) {
     e.preventDefault();
-    $(this).tab('show');
+    $( this ).tab('show');
   });
+
+
+  var initSlider = function( name , opts ){
+
+    var update = function(){
+      $('#'+ name +'-input').attr('value' , $('#'+ name +'-slider').slider('value') );
+      $('#opts').change();
+    };
+
+    $('#'+ name +'-slider').slider({
+      min    : opts.min ,
+      max    : opts.max ,
+      value  : opts.value ,
+      change : update,
+      slide  : update,
+    });
+
+    update();    
+  };
+
+  initSlider( 'numruns' , { min : 1 , max : 10    , value : 2   } );
+  initSlider( 'numgens' , { min : 0 , max : 100   , value : 10  } );
+  initSlider( 'popsize' , { min : 1 , max : 5000  , value : 500 } );
 
   drawPlot();
 
@@ -181,10 +219,9 @@ var runCmd = function(){
   var cmdHandlers = {
 
     stdout : function( cmdObj ){
-      //console.log( 'hell yeah: ' + cmdObj.msg );
-      $('#texta').append( cmdObj.msg + '\n' );
-      var textArea = document.getElementById('texta');
-      textArea.scrollTop = textArea.scrollHeight;
+      var texta = $('#texta');
+      texta.append( cmdObj.msg + '\n' );
+      texta[0].scrollTop = texta[0].scrollHeight;
     },
 
     graph : function( cmdObj ){
@@ -208,9 +245,9 @@ var runCmd = function(){
                   data :  [x,y] } );
       };
 
-      runGraphCmd( 'best' , cmdObj.i , cmdObj.ffvals.best  );
-      runGraphCmd( 'avg'  , cmdObj.i , cmdObj.ffvals.avg   );
-      runGraphCmd( 'worst', cmdObj.i , cmdObj.ffvals.worst );
+      runGraphCmd( 'best'  + cmdObj.run , cmdObj.i , cmdObj.ffvals.best  );
+      runGraphCmd( 'avg'   + cmdObj.run , cmdObj.i , cmdObj.ffvals.avg   );
+      runGraphCmd( 'worst' + cmdObj.run , cmdObj.i , cmdObj.ffvals.worst );
 
     },
 
@@ -251,15 +288,15 @@ var runCmd = function(){
 
       <div class="span10">
 
-      <form class="form-inline">
-        <input type="text" class="input-small main-input" id="yayi" value="ssr 11">
-        &nbsp;
-        <a class="btn" onclick="yay()">Run!</a>
-        &nbsp;&nbsp;
-        <a class="btn" onclick="clrscr()">clrscr</a>
-      </form>
+        <div class="form-inline">
+          <input type="text" class="input-small main-input" id="yayi">
+          &nbsp;
+          <a class="btn" onclick="yay()">Run!</a>
+        </div>
 
       </div>
+
+      <div class="span10">&nbsp;</div>
 
     </div>
 
@@ -270,8 +307,9 @@ var runCmd = function(){
       <div class="span10">
 
         <ul class="nav nav-tabs" id="myTab">
-          <li class="active"><a href="#stdout">stdout</a></li>
-          <li><a href="#graph1">graph 1</a></li>
+          <li class="active"><a href="#opts">options</a></li>
+          <li><a href="#stdout" id="stdout-link">stdout</a></li>
+          <li><a href="#graph1" id="graph1-link">graph 1</a></li>
           <li><a href="#graph2">graph 2</a></li>
         </ul>
 
@@ -287,14 +325,68 @@ var runCmd = function(){
 
       <div class="tab-content">
 
-        <div class="tab-pane active span7" id="stdout">
+        <div class="active tab-pane span7" id="opts">
+          <div class="form-horizontal">
+
+            <div class="control-group">
+              <label class="control-label" for="problem-select">Problem</label>
+              <div class="controls">
+                <select id="problem-select">
+                  <option>Simple Symbolic Regression [ssr]</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="control-group">
+              <label class="control-label" for="numruns-input">Runs</label>
+              <div class="controls">
+                <table>
+                  <tr>
+                    <td><input id="numruns-input" type="text" class="input-for-slider"></td>
+                    <td><div id="numruns-slider" class="slider"></div></td>
+                  </tr>
+                </table>
+              </div>
+            </div>
+
+            <div class="control-group">
+              <label class="control-label" for="numgens-input">Generations</label>
+              <div class="controls">
+                <table>
+                  <tr>
+                    <td><input id="numgens-input" type="text" class="input-for-slider"></td>
+                    <td><div id="numgens-slider" class="slider"></div></td>
+                  </tr>
+                </table>
+              </div>
+            </div>
+
+            <div class="control-group">
+              <label class="control-label" for="popsize-input">Population size</label>
+              <div class="controls">
+                <table>
+                  <tr>
+                    <td><input id="popsize-input" type="text" class="input-for-slider"></td>
+                    <td><div id="popsize-slider" class="slider"></div></td>
+                  </tr>
+                </table>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <div class="tab-pane span7" id="stdout">
           <textarea rows="23" class="stdout" id="texta"></textarea>
+          <a class="btn" onclick="clrscr()">clrscr</a>
         </div>
 
         <div class="tab-pane span7" id="graph1">
           <div id="placeholder" class="graph1"></div>
         </div>
+
         <div class="tab-pane span7" id="graph2">Graph 2</div>
+
       </div>
 
     </div>
