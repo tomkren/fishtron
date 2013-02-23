@@ -99,6 +99,68 @@ var plotData_ = {
 
 var plotData = { };
 
+var isBestName = function( graphName ){
+  return graphName.match(/^best.*/) != null ;
+};
+
+var transposePlotData = function( plotData , isWantedGraph ){
+  var ret = []
+  for( var graphName in plotData ){
+    if( isWantedGraph( graphName ) ){
+      var graphData = plotData[graphName];
+      for( var i in graphData ){
+        if( !ret[i] ){ ret[i] = []; }
+        ret[i].push( graphData[i][1] );
+      }
+    }
+  }
+  return ret;
+};
+
+var findBest = function( arr ){
+  var best = -Number.MAX_VALUE;
+  _.each( arr , function(x){if( x > best ){ best = x; }});  
+  return best;
+};
+
+var findWorst = function( arr ){
+  var worst = Number.MAX_VALUE;
+  _.each( arr , function(x){if( x < worst ){ worst = x; }});  
+  return worst;
+};
+
+var findAvg = function( arr ){
+  var sum = 0;
+  var num = 0;
+  _.each( arr , function(x){ sum += x ; num++ ; } );
+  return sum/num ;
+};
+
+var mkPilatPlotData = function( plotData ){
+
+  var transBest = transposePlotData( plotData , isBestName );
+
+  var ret = {
+    bestBest  : [],
+    avgBest   : [],
+    worstBest : []
+  }
+
+  for( var genI in transBest ){
+
+    var genBests = transBest[genI];
+
+    ret.bestBest .push( [ genI , findBest ( genBests ) ] );
+    ret.avgBest  .push( [ genI , findAvg  ( genBests ) ] );
+    ret.worstBest.push( [ genI , findWorst( genBests ) ] );
+
+  }
+
+  return ret ;
+
+};
+
+
 
 var flattenPlotData = function( plotData ){
   var ret = [];
@@ -108,8 +170,8 @@ var flattenPlotData = function( plotData ){
   return ret;
 };
 
-var drawPlot = function(){
-  $.plot("#placeholder",  flattenPlotData( plotData ) );
+var drawPlot = function( graphI , plotData ){
+  $.plot('#graph'+ graphI +'-div',  flattenPlotData( plotData ) );
 };
 
 $(document).ready(function() {
@@ -145,11 +207,13 @@ $(document).ready(function() {
     update();    
   };
 
-  initSlider( 'numruns' , { min : 1 , max : 10    , value : 2   } );
+  initSlider( 'numruns' , { min : 1 , max : 10    , value : 4   } );
   initSlider( 'numgens' , { min : 0 , max : 100   , value : 10  } );
   initSlider( 'popsize' , { min : 1 , max : 5000  , value : 500 } );
 
-  drawPlot();
+  drawPlot(1,plotData);
+  drawPlot(2,plotData);
+
 
 });
 
@@ -228,7 +292,8 @@ var runCmd = function(){
       var newPoints = !_.isArray( cmdObj.data[0] )  ? [cmdObj.data] : cmdObj.data ;
       var oldPoints = plotData[cmdObj.graph] ? plotData[cmdObj.graph] : [] ;
       plotData[cmdObj.graph] = oldPoints.concat(newPoints);
-      drawPlot();
+      drawPlot(1,plotData);
+      drawPlot(2,mkPilatPlotData(plotData));
     },
 
     multi : function( cmdObj ){
@@ -382,11 +447,13 @@ var runCmd = function(){
         </div>
 
         <div class="tab-pane span7" id="graph1">
-          <div id="placeholder" class="graph1"></div>
+          <div id="graph1-div" class="graph1"></div>
         </div>
 
-        <div class="tab-pane span7" id="graph2">Graph 2</div>
-
+        <div class="tab-pane span7" id="graph2">
+          <div id="graph2-div" class="graph1"></div>
+        </div>
+          
       </div>
 
     </div>

@@ -52,14 +52,18 @@ createOutputFolder i = do
   
 clearServer :: IO ()
 clearServer = do
-  removeDirectoryRecursive "server/output"
-  removeDirectoryRecursive "server/working"
-  removeDirectoryRecursive "server/queue"
+  myRemoveDir "server/output"
+  myRemoveDir "server/working"
+  myRemoveDir "server/queue"
   createDirectory "server/output"
   createDirectory "server/working"
   createDirectory "server/queue"  
   myWriteFile "server/current.txt" "0"  
 
+myRemoveDir :: String -> IO ()
+myRemoveDir filename = do
+  does <- doesDirectoryExist filename
+  if does then removeDirectoryRecursive filename else return ()
 
 
 workerFilename :: Int -> String
