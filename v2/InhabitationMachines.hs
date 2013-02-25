@@ -206,7 +206,7 @@ strategyProveOne strategy graph limit typ ctx =
     Nothing -> strategyProveOne strategy graph (limit+10) typ ctx
     Just toks -> do
      let tterm = ttParse' ctx toks
-     logIt2 $ show tterm
+     -- logIt2 $ show tterm
      return tterm  
  
 

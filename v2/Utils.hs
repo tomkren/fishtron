@@ -163,7 +163,7 @@ boxIt str =
 data BoxType = AloneBox | TopBox | MiddleBox | BottomBox
 
 maxMsgLength :: Int
-maxMsgLength = 75
+maxMsgLength = 74
 
 boxAs :: (Logable m) => Int -> BoxType -> [String] -> m ()
 boxAs lineLen boxType strs = 

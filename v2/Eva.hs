@@ -37,14 +37,47 @@ instance EvaMonad Eva where
 instance Logable Eva where
  --logIt = liftIO . putStrLn
  logIt2 str = liftIO . putStrLn $ str
- logIt str = do
-  (_,strs) <- lift get
-  case Map.lookup "jobID" strs of
-    Nothing    -> liftIO . putStrLn $ str
-    Just jobID -> do
-      liftIO $ writeNextOutput (read jobID) (encode $ stdoutCmd str)
-      liftIO . putStrLn $ str
 
+ logIt str = do
+  liftIO . putStrLn $ str
+  (stats,strs) <- lift get
+  case Map.lookup "jobID" strs of
+    Nothing -> return ()
+    Just jobID -> do
+      let stdout = case Map.lookup "stdout" strs of
+                     Nothing -> []
+                     Just s  -> s
+          strs'  = Map.insert "stdout" ( stdout ++ "\n" ++ str) strs
+      lift . put $ ( stats , strs' )
+
+    -- case Map.lookup "stdout" strs of
+    --  Nothing -> do
+    --    let strs' = Map.insert "stdout" str strs
+    --    lift . put $ ( stats , strs' )
+    --  Just stdout -> do
+    --    let strs' = Map.insert "stdout" ( stdout ++ "\n" ++ str) strs
+        
+ --logIt str = do
+ -- (_,strs) <- lift get
+ -- case Map.lookup "jobID" strs of
+ --   Nothing    -> liftIO . putStrLn $ str
+ --   Just jobID -> do
+ --     liftIO $ writeNextOutput (read jobID) (encode $ stdoutCmd str)
+ --     liftIO . putStrLn $ str 
+
+flushStdout :: Eva JSValue
+flushStdout = do
+  (stats,strs) <- lift get
+  case Map.lookup "jobID" strs of
+    Nothing -> return jsEmptyObj
+    Just jobID -> do
+      let stdout = case Map.lookup "stdout" strs of
+                     Nothing -> []
+                     Just s  -> s
+          strs'  = Map.insert "stdout" [] strs
+      lift . put $ ( stats , strs' )  
+      return $ stdoutCmd stdout
+      
 
 sendJSON :: JSValue -> Eva ()
 sendJSON json = do
@@ -52,10 +85,11 @@ sendJSON json = do
   (_,strs) <- lift get
   case Map.lookup "jobID" strs of
     Nothing -> 
-      liftIO . putStrLn $ jsonStr
+      --liftIO . putStrLn $ jsonStr
+      return ()
     Just jobID -> do
       liftIO $ writeNextOutput (read jobID) jsonStr
-      liftIO . putStrLn $ jsonStr
+      --liftIO . putStrLn $ jsonStr
   
 
 instance Randable Eva where

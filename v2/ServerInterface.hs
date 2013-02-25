@@ -37,6 +37,9 @@ myReadFile filename = do
  return str
 
 
+jsEmptyObj :: JSValue
+jsEmptyObj = JSObject $ toJSObject []
+
 stdoutCmd :: String -> JSValue
 stdoutCmd str = JSObject $ toJSObject [ 
   ("type" , JSString . toJSString $ "stdout" ) ,
@@ -55,6 +58,12 @@ graphCmd runI genI (best,avg,worst) = toObj $ [
  where
   toObj x = JSObject . toJSObject $ x
   toRat x = JSRational True ( toRational x )
+
+multiCmd :: [JSValue] -> JSValue
+multiCmd cmds = JSObject . toJSObject $ [
+   ( "type" , JSString . toJSString $ "multi" ),
+   ( "cmds" , JSArray cmds )
+ ]
 
 -- {
 --   type   : "generationInfo",

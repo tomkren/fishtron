@@ -16,9 +16,18 @@ import Control.Monad
 import Control.Monad.State
 import System.IO
 import System.Directory
+import System.Environment
 
 import GP_Test
 import ServerInterface
+
+
+main = do
+    clearServer
+    (port:_) <- getArgs
+    putStrLn $ "Listening on port " ++ port
+    run (read port) app
+
 
 foo num = do
 
@@ -117,10 +126,10 @@ isAnyoneWorking = do
   dir <- getDirectoryContents "server/working"
   return $ length dir > 2 
 
-hardWork :: Int -> Int -> IO ()
-hardWork workerId param = do
-  forM_ [1..param] (\ n -> writeNextOutput workerId ( replicate n 'x' ) )
-  closeWorker workerId
+-- hardWork :: Int -> Int -> IO ()
+-- hardWork workerId param = do
+--   forM_ [1..param] (\ n -> writeNextOutput workerId ( replicate n 'x' ) )
+--   closeWorker workerId
 
 runCmd :: Int -> String -> IO ()
 runCmd workerId cmd = do
@@ -143,17 +152,14 @@ serveOutput wid oid = do
   let filename = "server/output/" ++ (show wid) ++ "/" ++ (show oid) ++ ".txt"
   itExists <- doesFileExist filename 
   if itExists 
-   then myReadFile filename
+   then do
+    output <- myReadFile filename
+    removeFile filename
+    return output
    else do
     stillWorking <- isWorkingOrWaiting wid
-    return $ if stillWorking then "_" else ""
+    return $ if stillWorking then "_" else "" 
 
-
-main = do
-    clearServer
-    let port = 3000
-    putStrLn $ "Listening on port " ++ show port
-    run port app
 
 app :: Application
 app req = 
@@ -188,12 +194,12 @@ app req =
 
 
 
-    ["yay",n] -> do 
-      let num = ( read . init . tail . show $ n ) :: Int
-      liftIO $ putStrLn ( "yay = " ++ show (num) )
-      workerId <- liftIO $ newWorker 
-      liftIO $ forkIO ( hardWork workerId num )
-      return $ yay (show workerId)
+--    ["yay",n] -> do 
+--      let num = ( read . init . tail . show $ n ) :: Int
+--      liftIO $ putStrLn ( "yay = " ++ show (num) )
+--      workerId <- liftIO $ newWorker 
+--      liftIO $ forkIO ( hardWork workerId num )
+--      return $ yay (show workerId)
 
     _ -> do
       --index <- liftIO $ readFile "server/index.html"

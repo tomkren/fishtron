@@ -16,10 +16,10 @@ import Control.Monad.State ( liftIO )
 
 import Dist ( Dist, mkDist, distGet, distMax,distMin,distAvg, distSize, distTake_new )
 import Eva (Eva,runEva,runEvaWith,statIt,evals,eval,GenInfoType(..),StatRecord(..)
-           ,RunID,RunInfos,Stats , sendJSON )
+           ,RunID,RunInfos,Stats , sendJSON , flushStdout )
 import Utils (logIt,boxIt,putList,boxThem,JShow,jshow)
 
-import ServerInterface (graphCmd)
+import ServerInterface (graphCmd, multiCmd )
 
 type PopSize = Int
 type NumGene = Int
@@ -177,9 +177,8 @@ logGeneration (actRun,allRuns) i pop = do
  statIt $ GenInfo actRun i BestOfGen  b
  statIt $ GenInfo actRun i AvgOfGen   a
  statIt $ GenInfo actRun i WorstOfGen w
- sendJSON $ graphCmd actRun i (b,a,w)
- sendJSON $ jshow best
-
+ stdout <- flushStdout 
+ sendJSON $ multiCmd [ stdout , graphCmd actRun i (b,a,w) , jshow best ]
   
 -- statIt $ SR_Best  i b
 -- statIt $ SR_Avg   i a 

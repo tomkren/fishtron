@@ -10,7 +10,6 @@
     <link href="css/jquery-ui.css" rel="stylesheet" media="screen">
 
     <style>
-      .main-input { width : 697px; }
       .stdout     { width : 767px; }
       .graph1     { width : 786px; 
                     height: 400px; }
@@ -31,9 +30,38 @@
 
     <script>
 
+var plotData = { };
+  
+var plotData_ = {
+  g1 : function(d){for(var i=0;i<14;i+=0.5){d.push([i,Math.sin(i)]);}return d;}([]) ,
+  g2 : [[0, 3], [4, 8], [8, 5], [9, 13]],
+  g3 : [[0, 12], [7, 12], null, [7, 2.5], [12, 2.5]]
+};
+
+var Global = {
+  numruns : undefined ,
+  numgens : undefined ,
+  popsize : undefined ,
+
+  startTime : undefined ,
+};
+
+
+
 var yay = function(){
 
+  Global.startTime = new Date().getTime();
+
+  $('#progressbar').css('width','0%');
+  $('#progressfutral').show('slow');
+
   var input = $('#yayi').attr('value') ;
+
+  var parts = input.split(' ');
+  Global.numruns = Number( parts[1] );
+  Global.numgens = Number( parts[2] );
+  Global.popsize = Number( parts[3] );
+
 
   plotData = {} ;
 
@@ -63,6 +91,12 @@ var out = function( wid , oid ){
 
       if( output === '' ){
         console.log( wid + ' [HOTOVO]' ); 
+        $('#progressfutral').hide('slow');
+
+        var runTime = ( (new Date().getTime()) - Global.startTime ) * 0.001 ;
+        runCmd({type:'stdout',msg : 'Run time was ' + runTime + ' seconds.' });
+
+
       } else if( output === '_' ){
         //working ale zatim žadnej output
         //console.log( wid + ': working ...' );
@@ -88,16 +122,16 @@ var clrscr = function(){
     $('textarea').html('');
 };
 
-//------------------------
-
-  
-var plotData_ = {
-  g1 : function(d){for(var i=0;i<14;i+=0.5){d.push([i,Math.sin(i)]);}return d;}([]) ,
-  g2 : [[0, 3], [4, 8], [8, 5], [9, 13]],
-  g3 : [[0, 12], [7, 12], null, [7, 2.5], [12, 2.5]]
+var scrollDown = function(){
+  var texta = $('#texta');
+  texta[0].scrollTop = texta[0].scrollHeight - texta[0].clientHeight;
 };
 
-var plotData = { };
+//------------------------
+
+
+
+
 
 var isBestName = function( graphName ){
   return graphName.match(/^best.*/) != null ;
@@ -176,6 +210,8 @@ var drawPlot = function( graphI , plotData ){
 
 $(document).ready(function() {
 
+  $('#progressfutral').hide();
+
   $('#opts').change(function(){
     var numruns = $('#numruns-input').attr('value');
     var numgens = $('#numgens-input').attr('value');
@@ -192,7 +228,9 @@ $(document).ready(function() {
   var initSlider = function( name , opts ){
 
     var update = function(){
-      $('#'+ name +'-input').attr('value' , $('#'+ name +'-slider').slider('value') );
+      var newVal = $('#'+ name +'-slider').slider('value');
+      Global[ name ] = newVal ;
+      $('#'+ name +'-input').attr('value' , newVal );
       $('#opts').change();
     };
 
@@ -285,7 +323,7 @@ var runCmd = function(){
     stdout : function( cmdObj ){
       var texta = $('#texta');
       texta.append( cmdObj.msg + '\n' );
-      texta[0].scrollTop = texta[0].scrollHeight;
+      scrollDown();
     },
 
     graph : function( cmdObj ){
@@ -310,6 +348,12 @@ var runCmd = function(){
                   data :  [x,y] } );
       };
 
+      var procent = 100*(cmdObj.i+1+(cmdObj.run-1)*(1+Global.numgens))/(Global.numruns*(1+Global.numgens)); 
+
+      // console.log( procent + '%' );
+
+      $('#progressbar').css('width' , procent + '%' );
+
       runGraphCmd( 'best'  + cmdObj.run , cmdObj.i , cmdObj.ffvals.best  );
       runGraphCmd( 'avg'   + cmdObj.run , cmdObj.i , cmdObj.ffvals.avg   );
       runGraphCmd( 'worst' + cmdObj.run , cmdObj.i , cmdObj.ffvals.worst );
@@ -318,7 +362,7 @@ var runCmd = function(){
 
     jsonout : function( cmdObj ){
 
-      console.log( 'jsonout: ' + JSON.stringify( cmdObj ) ) ;
+      //console.log( 'jsonout: ' + JSON.stringify( cmdObj ) ) ;
 
     },
 
@@ -351,19 +395,29 @@ var runCmd = function(){
 
       <div class="span0"></div>
 
+      
+      <div class="input-append span10">
+        <input class="span9" id="yayi" type="text">
+        <a onclick="yay()" class="btn" style="width:55px">Go!</a>
+      </div>
+
+    </div>
+
+    <div class="row">&nbsp;</div>
+
+    <div class="row">
+
+      <div class="span0"></div>
+      
       <div class="span10">
 
-        <div class="form-inline">
-          <input type="text" class="input-small main-input" id="yayi">
-          &nbsp;
-          <a class="btn" onclick="yay()">Run!</a>
+        <div class="progress progress-striped active" id="progressfutral">
+          <div id="progressbar" class="bar" style="width: 40%;"></div>
         </div>
 
       </div>
-
-      <div class="span10">&nbsp;</div>
-
     </div>
+
 
     <div class="row">
 
@@ -444,6 +498,7 @@ var runCmd = function(){
         <div class="tab-pane span7" id="stdout">
           <textarea rows="23" class="stdout" id="texta"></textarea>
           <a class="btn" onclick="clrscr()">clrscr</a>
+          <a class="btn" onclick="scrollDown()">down</a>
         </div>
 
         <div class="tab-pane span7" id="graph1">
