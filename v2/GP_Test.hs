@@ -35,10 +35,15 @@ job1 jobID cmd =
       numRuns = (read $ parts !! 1)::Int
       numGene = read $ parts !! 2  
       popSize = read $ parts !! 3
+      go p    = nRunsByServer jobID numRuns ( p numGene popSize )  
    in do
     putStrLn cmd
-    --runByServer jobID (pro_cttSSR_2 numGene)
-    nRunsByServer jobID numRuns (pro_cttSSR_2 numGene popSize)
+    case problem of
+      "ba"  -> go problem_ba  
+      "ssr" -> go problem_ssr  
+
+problem_ssr = cttProblem "ssr"  ff_cttSSR_2 dou1 ctx_ttSSR
+problem_ba  = boolListProblem2 "ba" (33,33,33) 100 ff_boolAlternate
 
 wordsWhen     :: (Char -> Bool) -> String -> [String]
 wordsWhen p s =  case dropWhile p s of
@@ -74,6 +79,7 @@ run_EP = run (pro_EP 50 500)
 
 
 -- Problems & Fitnes Functions -------------------------------------------
+
 
 
 pro_boolAlternate = boolListProblem "boolAlt" 50 50 (33,33,33) 100 ff_boolAlternate
@@ -309,6 +315,15 @@ type CTTProblem  a   = Problem CTT    a  CTTGen            ()                CTT
 type TTProblem   a   = Problem TTerm  a  TTermGen          ()                TTermCro
 type KozaProblem a   = Problem KTree  a  KTreeGen          KTreeMut          KTreeCro
 type BoolListProblem = Problem [Bool] () (ListGen BoolGen) (ListMut BoolMut) (ListCro () )
+
+boolListProblem2 :: String -> GenOpProbs -> Len -> ([Bool]->FitVal) -> NumGene -> PopSize -> BoolListProblem
+boolListProblem2 problemName genOpProbs len ff numGene popSize = 
+ let gOpt   = LG_ BG_ len
+     mOpt   = LM_OnePoint BM_Not len 
+     cOpt   = LC_OnePoint () len
+     genOps = mkGenOps (mOpt,cOpt) genOpProbs
+     fitFun = mkFF1 $ return . ff
+  in Problem problemName popSize numGene genOps gOpt mOpt cOpt fitFun
 
 cttProblem :: String -> FitFun CTT a -> Typ -> Context -> NumGene -> PopSize -> CTTProblem a
 cttProblem problemName ff typ ctx numGene popSize =

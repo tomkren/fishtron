@@ -44,6 +44,7 @@ var Global = {
   popsize : undefined ,
 
   startTime : undefined ,
+  isLoggingOn : true ,
 };
 
 
@@ -198,6 +199,7 @@ var drawPlot = function( graphI , plotData ){
 $(document).ready(function() {
 
   $('#progressfutral').hide();
+  $('#stdout-on').button('toggle');
 
   $('#opts').change(function(){
     var numruns = $('#numruns-input').attr('value');
@@ -209,7 +211,6 @@ $(document).ready(function() {
     if( problemCode === null ) { problemCode = 'ssr'; } 
 
     $('#yayi').attr('value', problemCode + ' ' + numruns + ' ' + numgens + ' ' + popsize );
-    console.log('CH! ' + problemCode );
   }) ;
 
   $.ajax({
@@ -235,6 +236,15 @@ $(document).ready(function() {
   $('#myTab a').click(function (e) {
     e.preventDefault();
     $( this ).tab('show');
+  });
+
+  $('#stdout-on').click( function(e){
+    console.log( 'on!' );
+    Global.isLoggingOn = true ;
+  });
+  $('#stdout-off').click( function(e){
+    console.log( 'off!' );
+    Global.isLoggingOn = false ;
   });
 
 
@@ -334,9 +344,11 @@ var runCmd = function(){
   var cmdHandlers = {
 
     stdout : function( cmdObj ){
-      var texta = $('#texta');
-      texta.append( cmdObj.msg + '\n' );
-      scrollDown();
+      if( Global.isLoggingOn ){
+        var texta = $('#texta');
+        texta.append( cmdObj.msg + '\n' );
+        scrollDown();        
+      }
     },
 
     graph : function( cmdObj ){
@@ -508,6 +520,12 @@ var runCmd = function(){
 
         <div class="tab-pane span7" id="stdout">
           <textarea rows="23" class="stdout" id="texta"></textarea>
+
+          <div class="btn-group" data-toggle="buttons-radio">
+            <button id="stdout-on" type="button" class="btn">On</button>
+            <button id="stdout-off" type="button" class="btn">Off</button>
+          </div>
+
           <a class="btn" onclick="clrscr()">clrscr</a>
           <a class="btn" onclick="scrollDown()">down</a>
         </div>
