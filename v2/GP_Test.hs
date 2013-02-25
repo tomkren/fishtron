@@ -14,11 +14,19 @@ import InhabitationMachines ( proveN , randProveN, randProveUnique, proveOneWith
 import Eva
 -- 
 import TTree
+
+
 -- 
 -- import Data.Typeable
 -- import Heval
 
 -- for Server to call ... -----------------------------------------------
+
+problemList :: [(String,String)]
+problemList = [ 
+  ("ssr","Simple Symbolic Regression") ,
+  ("ba" ,"Bool Alternate")
+ ]
 
 job1 :: String -> String -> IO ()
 job1 jobID cmd = 

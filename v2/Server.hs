@@ -126,11 +126,6 @@ isAnyoneWorking = do
   dir <- getDirectoryContents "server/working"
   return $ length dir > 2 
 
--- hardWork :: Int -> Int -> IO ()
--- hardWork workerId param = do
---   forM_ [1..param] (\ n -> writeNextOutput workerId ( replicate n 'x' ) )
---   closeWorker workerId
-
 runCmd :: Int -> String -> IO ()
 runCmd workerId cmd = do
   let logg = writeNextOutput workerId . encode . stdoutCmd 
@@ -169,7 +164,7 @@ app req =
       let workerId = ( read . init . tail . show $ i ) :: Int
       let outputId = ( read . init . tail . show $ j ) :: Int
       outString <- liftIO $ serveOutput workerId outputId
-      return $ yay outString
+      return $ myTextPlain outString
 
     [ ] -> return $ myIndex
 
@@ -177,29 +172,21 @@ app req =
       workerId <- liftIO newWorker
       let cmdStr = init . tail . show $ cmd 
       liftIO . forkIO $ runCmd workerId cmdStr
-      return . yay . show $ workerId
+      return . myTextPlain . show $ workerId
+
+    ["problems"] -> return . myTextPlain . encode . problemListToJSON $ problemList
 
     ["js",filename] -> do
       return $ myJSFile (init . tail . show $ filename)
 
-    ["css",filename] -> do
-      return $ myCSSFile (init . tail . show $ filename)
-
     ["files",filename] -> do
       return $ myFile (init . tail . show $ filename)
 
+    ["css",filename] -> do
+      return $ myCSSFile (init . tail . show $ filename)
 
     ["css","images",filename] -> do
       return $ myCssImageFile (init . tail . show $ filename)
-
-
-
---    ["yay",n] -> do 
---      let num = ( read . init . tail . show $ n ) :: Int
---      liftIO $ putStrLn ( "yay = " ++ show (num) )
---      workerId <- liftIO $ newWorker 
---      liftIO $ forkIO ( hardWork workerId num )
---      return $ yay (show workerId)
 
     _ -> do
       --index <- liftIO $ readFile "server/index.html"
@@ -207,7 +194,7 @@ app req =
     --x -> return $ index x
 
  
-yay x = ResponseBuilder status200 [ ("Content-Type", "text/plain") ] $ mconcat $ map copyByteString
+myTextPlain x = ResponseBuilder status200 [ ("Content-Type", "text/plain") ] $ mconcat $ map copyByteString
     [ BU.fromString x ]
 
 
