@@ -21,25 +21,81 @@ import System.Environment
 import GP_Test
 import ServerInterface
 
-
 main = do
     clearServer
     (port:_) <- getArgs
-    putStrLn $ "Listening on port " ++ port
+    putStrLn $ "Fishtron GUI is on http://localhost:" ++ port 
     run (read port) app
 
+app :: Application
+app req = 
+ case pathInfo req of
 
-foo num = do
+    ["out",i,j] -> do
+      let workerId = ( read . init . tail . show $ i ) :: Int
+      let outputId = ( read . init . tail . show $ j ) :: Int
+      outString <- liftIO $ serveOutput workerId outputId
+      return $ myTextPlain outString
 
-  forM_ [1..num] (\ n -> (putStrLn . show $ n) )
+    [ ] -> return $ myIndex
 
-bar = replicateM_ 100 (putStrLn "bar")
+    ["run",cmd] -> do 
+      workerId <- liftIO newWorker
+      let cmdStr = init . tail . show $ cmd 
+      liftIO . forkIO $ runCmd workerId cmdStr
+      return . myTextPlain . show $ workerId
 
-baz = do
-  forkIO $ foo 10
-  bar
+    ["problems"] -> return . myTextPlain . encode . problemListToJSON $ problemList
 
---konec ja
+    ["js",filename] -> do
+      return $ myJSFile (init . tail . show $ filename)
+
+    ["js","libs",filename] -> do
+      return $ myJSFile $ "libs/" ++ (init . tail . show $ filename)
+
+    ["files",filename] -> do
+      return $ myFile (init . tail . show $ filename)
+
+    ["css",filename] -> do
+      return $ myCSSFile (init . tail . show $ filename)
+
+    ["css","images",filename] -> do
+      return $ myCssImageFile (init . tail . show $ filename)
+
+    _ -> return $ my404
+
+
+
+runCmd :: Int -> String -> IO ()
+runCmd workerId cmd = do
+  let logg = writeNextOutput workerId . encode . stdoutCmd 
+  isWorkingSomeone <- isAnyoneWorking
+  if isWorkingSomeone then do
+    logg $ "Někdo již pracuje, zařazuji se do fronty........"
+    setWaiting   workerId cmd
+   else do
+    setIsWorking workerId True
+    logg $ replicate 80 '─'
+    logg $ "run/" ++ cmd
+    logg $ replicate 80 '─'
+    job1 (show workerId) cmd
+    logg $ "Done!"
+    closeWorker workerId
+
+serveOutput :: Int -> Int -> IO String
+serveOutput wid oid = do
+  let filename = "server/output/" ++ (show wid) ++ "/" ++ (show oid) ++ ".txt"
+  itExists <- doesFileExist filename 
+  if itExists 
+   then do
+    output <- myReadFile filename
+    removeFile filename
+    return output
+   else do
+    stillWorking <- isWorkingOrWaiting wid
+    return $ if stillWorking then "_" else "" 
+
+
 
 currentWorkerIdFile :: String
 currentWorkerIdFile = "server/current.txt"
@@ -126,72 +182,9 @@ isAnyoneWorking = do
   dir <- getDirectoryContents "server/working"
   return $ length dir > 2 
 
-runCmd :: Int -> String -> IO ()
-runCmd workerId cmd = do
-  let logg = writeNextOutput workerId . encode . stdoutCmd 
-  isWorkingSomeone <- isAnyoneWorking
-  if isWorkingSomeone then do
-    logg $ "Někdo již pracuje, zařazuji se do fronty........"
-    setWaiting   workerId cmd
-   else do
-    setIsWorking workerId True
-    logg $ replicate 80 '─'
-    logg $ "run/" ++ cmd
-    logg $ replicate 80 '─'
-    job1 (show workerId) cmd
-    logg $ "Done!"
-    closeWorker workerId
-
-serveOutput :: Int -> Int -> IO String
-serveOutput wid oid = do
-  let filename = "server/output/" ++ (show wid) ++ "/" ++ (show oid) ++ ".txt"
-  itExists <- doesFileExist filename 
-  if itExists 
-   then do
-    output <- myReadFile filename
-    removeFile filename
-    return output
-   else do
-    stillWorking <- isWorkingOrWaiting wid
-    return $ if stillWorking then "_" else "" 
 
 
-app :: Application
-app req = 
- case pathInfo req of
 
-    ["out",i,j] -> do
-      let workerId = ( read . init . tail . show $ i ) :: Int
-      let outputId = ( read . init . tail . show $ j ) :: Int
-      outString <- liftIO $ serveOutput workerId outputId
-      return $ myTextPlain outString
-
-    [ ] -> return $ myIndex
-
-    ["run",cmd] -> do 
-      workerId <- liftIO newWorker
-      let cmdStr = init . tail . show $ cmd 
-      liftIO . forkIO $ runCmd workerId cmdStr
-      return . myTextPlain . show $ workerId
-
-    ["problems"] -> return . myTextPlain . encode . problemListToJSON $ problemList
-
-    ["js",filename] -> do
-      return $ myJSFile (init . tail . show $ filename)
-
-    ["files",filename] -> do
-      return $ myFile (init . tail . show $ filename)
-
-    ["css",filename] -> do
-      return $ myCSSFile (init . tail . show $ filename)
-
-    ["css","images",filename] -> do
-      return $ myCssImageFile (init . tail . show $ filename)
-
-    _ -> do
-      --index <- liftIO $ readFile "server/index.html"
-      return $ my404 --htmlPage index
-    --x -> return $ index x
 
  
 myTextPlain x = ResponseBuilder status200 [ ("Content-Type", "text/plain") ] $ mconcat $ map copyByteString
