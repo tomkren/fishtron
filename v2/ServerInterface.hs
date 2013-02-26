@@ -40,40 +40,56 @@ myReadFile filename = do
 
 
 problemListToJSON :: [(String,String)] -> JSValue
-problemListToJSON problemList =  JSArray . map toProblemObj $ problemList
+problemListToJSON problemList =  jsArr . map toProblemObj $ problemList
  where
   toProblemObj :: (String,String) -> JSValue
-  toProblemObj ( code , name ) = JSObject $ toJSObject [
-    ( "code" , JSString . toJSString $ code ) ,
-    ( "name" , JSString . toJSString $ name )
+  toProblemObj ( code , name ) = jsObj [
+    ( "code" , jsStr code ) ,
+    ( "name" , jsStr name )
    ]
 
 
 jsEmptyObj :: JSValue
-jsEmptyObj = JSObject $ toJSObject []
+jsEmptyObj = jsObj []
 
 stdoutCmd :: String -> JSValue
-stdoutCmd str = JSObject $ toJSObject [ 
-  ("type" , JSString . toJSString $ "stdout" ) ,
-  ("msg"  , JSString . toJSString $ str      ) ]
+stdoutCmd str = jsObj [ 
+  ("type" , jsStr "stdout" ) ,
+  ("msg"  , jsStr str      ) ]
 
 graphCmd :: Int -> Int -> (Double,Double,Double) -> JSValue
-graphCmd runI genI (best,avg,worst) = toObj $ [ 
-  ("type"   , JSString . toJSString $ "generationInfo" ) ,
-  ("i"      , toRat genI ) ,
-  ("run"    , toRat runI ) ,
-  ("ffvals" , toObj [
-      ( "best"  , toRat best  ) ,
-      ( "avg"   , toRat avg   ) ,
-      ( "worst" , toRat worst )
+graphCmd runI genI (best,avg,worst) = jsObj [ 
+  ("type"   , jsStr "generationInfo" ) ,
+  ("i"      , jsNum genI ) ,
+  ("run"    , jsNum runI ) ,
+  ("ffvals" , jsObj [
+      ( "best"  , jsNum best  ) ,
+      ( "avg"   , jsNum avg   ) ,
+      ( "worst" , jsNum worst )
   ] ) ]
- where
-  toObj x = JSObject . toJSObject $ x
-  toRat x = JSRational True ( toRational x )
 
 multiCmd :: [JSValue] -> JSValue
-multiCmd cmds = JSObject . toJSObject $ [
-   ( "type" , JSString . toJSString $ "multi" ),
-   ( "cmds" , JSArray cmds )
+multiCmd cmds = jsObj [
+   ( "type" , jsStr "multi" ),
+   ( "cmds" , jsArr cmds )
  ]
+
+
+jsObj :: [(String, JSValue)] -> JSValue
+jsObj = JSObject . toJSObject  
+
+jsArr :: [JSValue] -> JSValue
+jsArr = JSArray
+
+jsStr :: String -> JSValue
+jsStr = JSString . toJSString
+
+jsNum :: Real a => a -> JSValue
+jsNum = JSRational True . toRational
+
+
+
+
+
+
 
