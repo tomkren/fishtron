@@ -178,7 +178,7 @@ logGeneration (actRun,allRuns) i pop = do
  statIt $ GenInfo actRun i AvgOfGen   a
  statIt $ GenInfo actRun i WorstOfGen w
  stdout <- flushStdout 
- sendJSON $ multiCmd [ stdout , graphCmd actRun i (b,a,w) , jshow best ]
+ sendJSON $ multiCmd [ graphCmd actRun i (b,a,w) , stdout , jshow best ]
   
 -- statIt $ SR_Best  i b
 -- statIt $ SR_Avg   i a 

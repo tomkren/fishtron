@@ -1,3 +1,5 @@
+{-# LANGUAGE OverlappingInstances #-}
+
 module TTree 
 ( CTT (..),
   TTree (..),
@@ -16,6 +18,9 @@ module TTree
 import Data.List
 import Data.Either
 
+import Text.JSON (JSValue (..) , toJSObject , toJSString )
+import Utils ( JShow , jshow )
+
 import TTerm
 
 data CTT = CTT Context TTree 
@@ -30,6 +35,35 @@ instance Show CTT where
   _  -> let vars = intercalate " " . map fst $ ctx
          in "\\ "++ vars ++ " -> " ++ show ttree 
 
+instance JShow CTT where
+  jshow ctt = JSObject $ toJSObject [ 
+   ("type"     , JSString . toJSString $ "jsonout"  ) ,
+   ("haskell"  , JSString . toJSString $ show ctt   )  ,
+   ("js"       , JSString . toJSString $ jsShow ctt ) ]
+
+
+jsShow :: CTT -> String
+jsShow (CTT ctx ttree) =
+ let vars = intercalate "," . map fst $ ctx
+  in "function("++ vars ++ "){return " ++ jsShowBody ttree ++ ";}"
+
+jsShowBody :: TTree -> String
+jsShowBody (TTree symbol typ ttrees ) =
+ case ttrees of
+  [] -> symbol
+  _  ->
+   if isBinop symbol && length ttrees == 2
+    then let [l,r]    = ttrees
+             [_,op,_] = symbol
+          in "(" ++ jsShowBody l ++ [op] ++ jsShowBody r ++ ")"
+    else let inside = intercalate "," . map jsShowBody $ ttrees 
+          in symbol ++ "(" ++ inside ++ ")"
+
+isBinop :: Symbol -> Bool
+isBinop ['(',x,')'] = x `elem` ['*','+','-','/','%']
+isBinop _ = False
+
+
 instance Show TTree where
  show ttree = case showPars ttree of
    '(' : str -> init str
@@ -38,7 +72,6 @@ instance Show TTree where
    showPars (TTree x _ ts) = case ts of
     [] -> x
     _  -> "(" ++ x ++ " " ++ (intercalate " " (map showPars ts)) ++ ")"
-
 
 
 ttreeDepth :: TTree -> Int

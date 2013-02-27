@@ -213,8 +213,8 @@ class (Show a) => JShow a where
 
 instance Show a => JShow a where 
   jshow x = JSObject $ toJSObject [ 
-   ("type" , JSString . toJSString $ "jsonout" ) ,
-   ("msg"  , JSString . toJSString $ show x   ) ]
+   ("type"     , JSString . toJSString $ "jsonout" ) ,
+   ("haskell"  , JSString . toJSString $ show x   ) ]
 
 
 
