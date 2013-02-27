@@ -49,14 +49,15 @@
           // pt1:  {x:#, y:#}  source position in screen coords
           // pt2:  {x:#, y:#}  target position in screen coords
 
+
+
           if( edge.data.dir ){
             var backVec = [ pt1.x - pt2.x , pt1.y - pt2.y ];
             var backSize = 0.04*Math.sqrt( backVec[0]*backVec[0] + backVec[1]*backVec[1] );
-
             backVec[0] /= backSize ;
             backVec[1] /= backSize ;
 
-            var alpha = 0.61803398875;
+            var alpha = 0.3;
             var kolmVec = [ - alpha*backVec[1] , alpha*backVec[0] ];            
           }
 
@@ -74,6 +75,14 @@
           }
 
           ctx.stroke();
+
+          hax= edge;
+          if( edge.source.name == edge.target.name ){
+            ctx.beginPath();
+            ctx.arc(pt1.x+15,pt1.y,15,0,2*Math.PI);
+            ctx.stroke();            
+          }
+
 
         })
 
@@ -169,10 +178,13 @@
     sys.addNode('d',{sq:1});
     sys.addNode('e',{sq:1});
     
-    sys.addEdge('a','b',{dir:1})
-    sys.addEdge('a','c')
-    sys.addEdge('a','d')
-    sys.addEdge('a','e')
+    sys.addEdge('a','b',{dir:1,n:2});
+    sys.addEdge('c','c');
+    sys.addEdge('a','c');
+    sys.addEdge('a','d');
+    sys.addEdge('a','e');
+
+
     //sys.addNode('f', {alone:true, mass:.25})
 
     // or, equivalently:

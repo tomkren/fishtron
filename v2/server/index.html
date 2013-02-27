@@ -93,7 +93,8 @@ var Global = {
   bests : [],
   actRun : undefined ,
   actGen : undefined,
-  fenotyp : ssr
+  fenotyp : ssr,
+  defaultTab : 'im'
 };
 
 
@@ -206,8 +207,9 @@ $(document).ready(function() {
 
   $('#progressfutral').hide();
   $('#stdout-on').button('toggle');
-
   $("[rel=tooltip]").tooltip();
+
+  $('#'+ Global.defaultTab +'-link').tab('show');
 
   $('#opts').change(function(){
     var numruns = $('#numruns-input').attr('value');
@@ -396,8 +398,9 @@ var runCmd = function(){
 
     jsonout : function( cmdObj ){
 
-      console.log( 'jsonout: ' + JSON.stringify( cmdObj ) ) ;
+      //console.log( 'jsonout: ' + JSON.stringify( cmdObj ) ) ;
       
+      if( ! cmdObj.js ){ return; }
 
       if( Global.actGen == 0 ){
         Global.bests[ Global.actRun ] = [] ;
@@ -476,7 +479,7 @@ var runCmd = function(){
       <div class="span10">
 
         <ul class="nav nav-tabs" id="myTab">
-          <li class="active"><a href="#opts">Params</a></li>
+          <li class="active"><a href="#opts" id="opts-link">Params</a></li>
           <li><a href="#stdout" id="stdout-link">stdout</a></li>
           <li class="dropdown">
             <a href="#" class="dropdown-toggle" data-toggle="dropdown">Graphs<b class="caret"></b></a>
@@ -491,7 +494,7 @@ var runCmd = function(){
                      BB-AB-WB</a></li>
             </ul>
           </li>
-          <li><a href="#im">IM</a></li>
+          <li><a href="#im" id="im-link">IM</a></li>
           <li><a href="#special"  id="special-link">Special</a></li>
         </ul>
 
