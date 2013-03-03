@@ -1,12 +1,22 @@
+{-# LANGUAGE  FlexibleInstances , 
+              TypeSynonymInstances , 
+              StandaloneDeriving ,
+              DeriveDataTypeable #-}
+
+
 module Heval 
 ( heval
 , hevals
+, hevals_uneff
 ) where
 
 import Data.Typeable
 import System.IO.Unsafe
 import Data.List
 import Control.Monad
+
+import Ant
+
 
 import qualified Language.Haskell.Interpreter as Hint
 
@@ -32,6 +42,14 @@ heval expr as = do
     printInterpreterError err
     return as
    Right x  -> return x    
+
+
+deriving instance Typeable AAnt 
+
+--instance Typeable Ant  where
+--  typeOf _ = mkTyConApp (mkTyCon "Ant") []
+
+
 
 
 printInterpreterError :: Hint.InterpreterError -> IO ()

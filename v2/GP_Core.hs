@@ -41,7 +41,8 @@ data Problem term a gOpt mOpt cOpt = Problem
 data FitFun term a = 
   FF1 (term -> Eva FitVal) a | 
   FF2 (term->String) a (a->Eva FitVal) |
-  FF3 (term->String) a (a->Eva (FitVal,Bool) )
+  FF3 (term->String) a (a->Eva (FitVal,Bool) ) |
+  FF4 (term->String) String a  -- poslední a je fake jako u FF1, String je jmeno ff
 
 type GenOpProbs = (Prob,Prob,Prob)
 data GenOpType = Reproduction | Mutation | Crossover
@@ -56,7 +57,10 @@ class Muta term opt where
  mutateIt :: opt -> term -> Eva term 
 
 class Cros term opt where
- crossIt :: opt -> term -> term -> Eva (term,term)  
+ crossIt :: opt -> term -> term -> Eva (term,term) 
+
+class Feno term opt where
+  fenoIt :: opt -> term -> Eva String 
 
 class Evolvable term a gOpt mOpt cOpt where
   evolveIt :: RunInfo -> Problem term a gOpt mOpt cOpt -> Eva (term,FitVal,Maybe Int)
@@ -106,6 +110,14 @@ evalFF ff ts = case ff of
   let strs = map toStr ts
   xs <- evals strs a
   resultFF3 `liftM` mapM (\(t,a)->(t,) `liftM` (ff a >>= checkNaN_FF3) ) (zip ts xs)
+ FF4 toStr ffName _ -> do
+  let strs = map (\t-> ffName ++ " $ " ++ (toStr t) ) ts
+  xs  <- evals strs (1::FitVal,True::Bool) 
+  xs' <- mapM checkNaN_FF3 xs
+  return $ resultFF3 (zip ts xs')
+
+
+  
  
 resultFF3 :: [(t,(FitVal,Bool))] -> ( Dist t , Maybe (t,FitVal) )   
 resultFF3 xs = 

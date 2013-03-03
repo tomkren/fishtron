@@ -59,8 +59,9 @@ app req =
     ["css",filename] -> do
       return $ myCSSFile (init . tail . show $ filename)
 
-    ["css","images",filename] -> do
-      return $ myCssImageFile (init . tail . show $ filename)
+    ["css","images",filename] -> return $ myCssImageFile (init . tail . show $ filename)
+
+    ["img",filename] -> return $ myPng (init . tail . show $ filename)
 
     _ -> return $ my404
 
@@ -197,6 +198,9 @@ myFile         filename = ResponseFile status200 [  ] ("server/files/" ++ filena
 myJSFile       filename = ResponseFile status200 [ ("Content-Type", "text/javascript") ] ("server/js/" ++ filename ) Nothing
 myCSSFile      filename = ResponseFile status200 [ ("Content-Type", "text/css") ] ("server/css/" ++ filename ) Nothing
 myCssImageFile filename = ResponseFile status200 [ ("Content-Type", "image/png") ] ("server/css/images/" ++ filename ) Nothing
+
+myPng filename = ResponseFile status200 [ ("Content-Type", "image/png") ] ("server/img/" ++ filename ) Nothing
+
 
 my404 = ResponseBuilder status200 [ ("Content-Type", "text/plain") ] $ mconcat $ map copyByteString
     [ "404" ]

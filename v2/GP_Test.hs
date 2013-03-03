@@ -15,6 +15,8 @@ import Eva
 -- 
 import TTree
 
+import Ant
+
 
 -- 
 -- import Data.Typeable
@@ -24,8 +26,9 @@ import TTree
 
 problemList :: [(String,String)]
 problemList = [ 
-  ("ssr","Simple Symbolic Regression") ,
-  ("ba" ,"Bool Alternate")
+  ("ssr" , "Simple Symbolic Regression") ,
+  ("ba"  , "Bool Alternate") ,
+  ("ant" , "Artifical Ant")
  ]
 
 job1 :: String -> String -> IO ()
@@ -39,10 +42,12 @@ job1 jobID cmd =
    in do
     putStrLn cmd
     case problem of
+      "ant" -> go problem_ant 
       "ba"  -> go problem_ba  
-      "ssr" -> go problem_ssr  
+      "ssr" -> go problem_ssr 
 
 problem_ssr = cttProblem "ssr"  ff_cttSSR_2 dou1 ctx_ttSSR
+problem_ant = cttProblem "ant"  ff_ant2 ant ctx_ant
 problem_ba  = boolListProblem2 "ba" (33,33,33) 100 ff_boolAlternate
 
 wordsWhen     :: (Char -> Bool) -> String -> [String]
@@ -60,6 +65,7 @@ run_ttSSR_mini    = run pro_ttSSR_mini
 run_cttSSR        = run (pro_cttSSR 50 500)
 run_cttSSR_2      = run (pro_cttSSR_2 50 500)
 
+run_ant           = run (pro_ant 50 500)
  
 run_kozaSSR       = run (pro_kozaSSR   50)
 run_kozaSSR_2     = run (pro_kozaSSR_2 50)
@@ -96,6 +102,8 @@ pro_kozaSSR_2  = kozaProblem "kozaSSRhits" ff_kozaSSR_2     env_kozaSSR
 pro_cttSSR     = cttProblem  "cttSSR"      ff_cttSSR   dou1 ctx_ttSSR
 pro_cttSSR_2   = cttProblem  "cttSSRhits"  ff_cttSSR_2 dou1 ctx_ttSSR
 
+pro_ant        = cttProblem "ant"          ff_ant      ant  ctx_ant
+
 pro_ttSSR      = ttProblem   "ttSSR"       ff_ttSSR    dou1 ctx_ttSSR
 pro_ttSSR_mini = ttProblem   "ttSSRmini"   ff_ttSSR    dou1 ctx_ttSSR_mini
  
@@ -107,9 +115,18 @@ dou  = Typ "Double"
 dou1 = dou :-> dou
 dou2 = dou :-> dou :-> dou
 
+ant, ant2, ant3 :: Typ
+ant  = Typ "AAnt"
+--ant  = Typ "Ant"
+ant2 = ant :-> ant :-> ant
+ant3 = ant :-> ant :-> ant :-> ant
+
 ctx_ttSSR :: Context
 ctx_ttSSR = ([("(+)",dou2),("(-)",dou2),("(*)",dou2),("rdiv",dou2),("sin",dou1),("cos",dou1),("exp",dou1),("rlog",dou1)])
  
+ctx_ant :: Context
+ctx_ant = [ ("l",ant), ("r",ant), ("m",ant), ("ifa",ant2), ("p2",ant2), ("p3",ant3) ]
+
 ctx_ttSSR_mini :: Context
 ctx_ttSSR_mini = ([("plus",dou2),("krat",dou2)])
  
@@ -128,6 +145,18 @@ ff_cttSSR = FF2 show (asType::Double->Double) (return . rawFF_SSR)
 
 ff_cttSSR_2 :: FitFun CTT (Double->Double)
 ff_cttSSR_2 = FF3 show (asType::Double->Double) (return . rawFF_SSR_2)
+
+ff_ant2 :: FitFun CTT ()
+ff_ant2 = FF4 show "ffAnt" ()
+
+ff_ant :: FitFun CTT AAnt
+ff_ant = FF3 show (asType::AAnt) (return . rawFF_ant)
+
+rawFF_ant :: AAnt -> (FitVal,Bool)
+rawFF_ant ant =
+ let eaten = evalAnt antWorld (unAAnt ant) --ant
+  in ( fromIntegral eaten , eaten == 89 )
+  
 
 
 rawFF_SSR :: (Double->Double) -> FitVal

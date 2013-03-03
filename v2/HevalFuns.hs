@@ -1,5 +1,7 @@
 module HevalFuns where
 
+import Ant
+
 plus :: Num a => a -> a -> a
 plus = (+)
 
@@ -46,3 +48,47 @@ k x y = x
 
 i :: a -> a
 i x = x
+
+-- ant :
+
+
+--l   :: AAnt   
+--l = toAAnt doLeft
+--
+--r   :: AAnt
+--r = toAAnt doRight
+--
+--m   :: AAnt                        
+--m = toAAnt doMove
+--
+--ifa :: AAnt -> AAnt -> AAnt        
+--ifa = toAAnt2 ifFoodAhead
+--
+--p2  :: AAnt -> AAnt -> AAnt 
+--p2 = toAAnt2 progn2
+--
+--p3  :: AAnt -> AAnt -> AAnt -> AAnt
+--p3 = toAAnt3 progn3
+
+l   :: Ant   
+l = doLeft
+
+r   :: Ant
+r = doRight
+
+m   :: Ant                        
+m = doMove
+
+ifa :: Ant -> Ant -> Ant        
+ifa = ifFoodAhead
+
+p2  :: Ant -> Ant -> Ant 
+p2 =  progn2
+
+p3  :: Ant -> Ant -> Ant -> Ant
+p3 =  progn3
+
+ffAnt :: Ant -> (Double,Bool)
+ffAnt ant =
+ let eaten = fromIntegral $ evalAnt antWorld ant
+  in ( eaten , eaten == 89 )
