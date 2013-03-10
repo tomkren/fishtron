@@ -1,7 +1,12 @@
+{-# LANGUAGE TemplateHaskell , TupleSections #-}
+
 module Ekon where
 
+import Data.Tuple
 import Data.List
-
+import Test.QuickCheck
+import Test.QuickCheck.All
+--import Test.QuickCheck.Batch
 
 import qualified Data.Vector.Unboxed as U
 import Statistics.LinearRegression
@@ -17,6 +22,33 @@ test k = do
   putStrLn "linearRegression:"
   print $ linearRegression xs ys
 
+-- tests ----------------------------------------
+
+runTests = $quickCheckAll
+
+prop_linDemMaxes x@(maxPrice,maxQant) = 
+  (maxPrice /= 0 && maxQant /= 0 ) ==>
+   let ( x,y,(a,b) ) = mkLinDemand [(0,maxQant),(maxPrice,0)]
+    in   x `isAround` maxPrice
+     &&  y `isAround` maxQant 
+     &&  a `isAround` ((-maxQant)/maxPrice)
+     &&  b `isAround` maxQant 
+
+mkLinDemand :: [(Price,Qant)] -> (Price,Qant,(Double,Double))  
+mkLinDemand datas = 
+  let (alpha,beta) = linReg datas
+      maxPrice = (-beta) / alpha
+      maxQant  = beta
+   in ( maxPrice , maxQant , (alpha,beta) )
+
+
+--isAround2 :: (Double,Double) -> (Double,Double) -> Bool
+--isAround2 (x1,x2) (y1,y2) = (isAround x1 y1) && (isAround x2 y2)
+
+isAround :: Double -> Double -> Bool
+isAround x y = abs (x-y) < 1e-11+1
+
+-- end tests ----------------------------------------
 
 
 type Qant     = Double
@@ -72,7 +104,32 @@ type FirmProgram = Firm -> History -> ( [Qant] , [MachOrder] , [Price]  )
 
 
 myProg :: Firm -> History -> ( [Qant], [MachOrder] , [Price] )
-myProg firm history = undefined
+myProg firm history@( inputPriceHistory , outputHistory ) = 
+  let expeInputPrices = map mean inputPriceHistory
+      expeMakePrices  = undefined
+      linDemands      = map linReg outputHistory  
+      (wantedQants,sellPrices) = unzip $ map (uncurry opti) (zip expeMakePrices linDemands)  --undefined
+      qantsToMake = wantedQants `minus` (fProperty firm)  
+      qantsToBuy  = undefined
+      machOrders  = undefined
+   in ( qantsToBuy , machOrders , sellPrices )
+
+
+-- makePrice :: Mach -> [Price] -> Price
+-- makePrice mach prices = (inMoney mach) 
+
+
+opti :: Price -> (Double,Double) -> ( Qant , Price )
+opti makePrice (alpha,beta) = 
+  if maxPrice < makePrice then
+    ( 0 , makePrice )
+  else 
+   let sellPrice = (maxPrice + makePrice) / 2 
+    in ( alpha*sellPrice + beta  , sellPrice )
+ where maxPrice = (-beta) / alpha
+
+
+
 
 inputPricesEstimate :: [[Price]] -> [Price]
 inputPricesEstimate pss = map mean pss
@@ -81,13 +138,13 @@ demandsEstimate :: [[(Price,Qant)]] -> [Demand]
 demandsEstimate dds = map demandEstimate dds
  where
   demandEstimate dd = \ x -> alpha*x + beta
-    where ( beta , alpha ) = linReg dd 
+    where ( alpha , beta ) = linReg dd 
 
 
 
 
 linReg :: [(Double,Double)] -> (Double,Double)
-linReg datas = linearRegression (U.fromList xs) (U.fromList ys)
+linReg datas = swap $ linearRegression (U.fromList xs) (U.fromList ys)
  where (xs,ys) = unzip datas
 
 
@@ -137,7 +194,7 @@ runMachs firm machOrders = foldl runMach firm (zip (fMachs firm) (map fst $ sort
 runMach :: Firm -> (Mach,Power)  -> Firm
 runMach firm (mach,power)  =
  let (costMoney,realInputQants) = checkMachInput mach power firm
-     property'                  = minus (fProperty firm) realInputQants
+     property'                  = (fProperty firm) `minus` realInputQants
      property''                 = updateAt (outIndex mach) property' (+ (outQant mach))
      money'                     = (fMoney firm) - costMoney
   in firm { fMoney = money' , fProperty = property'' }
@@ -160,7 +217,7 @@ setPrices firm sellPrices outputDemands =
      realQants   = fProperty firm
      sellQants   = map (\(want,real)-> if want > real then real else want ) (zip wantQants realQants)
      money'      = (fMoney firm) + (sum $ sellQants `krat` sellPrices)
-     property'   = minus realQants sellQants 
+     property'   = realQants `minus` sellQants 
   in ( firm { fMoney = money' , fProperty = property' }  ,  zip sellPrices wantQants )
 
 
