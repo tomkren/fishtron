@@ -6,3 +6,4 @@ cabal install containers-0.5.1.0
 cabal install enumerator-0.4.19
 cabal install json-0.7
 cabal install normaldistribution-1.1.0.3
+cabal install statistics-linreg-0.2.2
