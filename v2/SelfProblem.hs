@@ -30,7 +30,7 @@ my_head (x:_) = Just x
 --}
 
 my_null :: [a] -> Bool
-my_null xs = maybe True (\_->False) (my_head xs)
+my_null xs = listCase xs True (\_ _->False) 
 
 my_elem ::Eq a => a -> [a] -> Bool 
 my_elem x ys = foldr (\y acc-> my_if (y==x) True acc ) False ys 
@@ -52,6 +52,17 @@ my_insert x []     = [x]
 my_insert x (y:ys) = if y <= x then y : ( my_insert x ys ) else x:y:ys 
 --lépe by poupravené : my_insert x ys = maybe (x:[]) ( my_if (y<=x) (y:(my_insert x ys)) (x:y:ys) ) (my_head ys)
 
+
+
+listCase :: [a] -> b -> (a->[a]->b) -> b
+listCase as b1 b2 = case as of
+ []   -> b1
+ x:xs -> b2 x xs 
+
+maybeCase :: Maybe a -> b -> (a->b) -> b
+maybeCase ma b1 b2 = case ma of
+ Nothing -> b1
+ Just a  -> b2 a
 
 {--
 qsort :: Ord a => [a] -> [a]
