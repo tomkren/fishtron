@@ -51,3 +51,17 @@ my_insert :: Ord a => a -> [a] -> [a]
 my_insert x []     = [x]
 my_insert x (y:ys) = if y <= x then y : ( my_insert x ys ) else x:y:ys 
 --lépe by poupravené : my_insert x ys = maybe (x:[]) ( my_if (y<=x) (y:(my_insert x ys)) (x:y:ys) ) (my_head ys)
+
+
+{--
+qsort :: Ord a => [a] -> [a]
+qsort []     = []
+qsort (x:xs) = ( qsort $ filter (<=x) xs ) ++ [x] ++ ( qsort $ filter (>x) xs )  
+
+
+sort2 :: Ord a => [a] -> [a]
+sort2 xs = foldr zarad [] xs
+  where
+    zarad :: Ord a => a -> [a] -> [a]
+    zarad x acc = undefined 
+--}

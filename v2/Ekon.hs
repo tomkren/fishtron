@@ -102,18 +102,6 @@ type FirmProgram = Firm -> History -> ( [Qant] , [MachOrder] , [Price]  )
 
 -- my firm-program --------------------
 
-qsort :: Ord a => [a] -> [a]
-qsort []     = []
-qsort (x:xs) = ( qsort $ filter (<=x) xs ) ++ [x] ++ ( qsort $ filter (>x) xs )  
-
-
-sort2 :: Ord a => [a] -> [a]
-sort2 xs = foldr zarad [] xs
-  where
-    zarad :: Ord a => a -> [a] -> [a]
-    zarad x acc = undefined 
-
-
 myProg :: Firm -> History -> ( [Qant], [MachOrder] , [Price] )
 myProg firm history@( inputPriceHistory , outputHistory ) = 
   let expeInputPrices = map mean inputPriceHistory
