@@ -102,6 +102,17 @@ type FirmProgram = Firm -> History -> ( [Qant] , [MachOrder] , [Price]  )
 
 -- my firm-program --------------------
 
+qsort :: Ord a => [a] -> [a]
+qsort []     = []
+qsort (x:xs) = ( qsort $ filter (<=x) xs ) ++ [x] ++ ( qsort $ filter (>x) xs )  
+
+
+sort2 :: Ord a => [a] -> [a]
+sort2 xs = foldr zarad [] xs
+  where
+    zarad :: Ord a => a -> [a] -> [a]
+    zarad x acc = undefined 
+
 
 myProg :: Firm -> History -> ( [Qant], [MachOrder] , [Price] )
 myProg firm history@( inputPriceHistory , outputHistory ) = 
@@ -109,7 +120,7 @@ myProg firm history@( inputPriceHistory , outputHistory ) =
       expeMakePrices  = undefined
       linDemands      = map linReg outputHistory  
       (wantedQants,sellPrices) = unzip $ map (uncurry opti) (zip expeMakePrices linDemands)  --undefined
-      qantsToMake = wantedQants `minus` (fProperty firm)  
+      qantsToMake = map (\q->if q<0 then 0 else q) $ wantedQants `minus` (fProperty firm)  
       qantsToBuy  = undefined
       machOrders  = undefined
    in ( qantsToBuy , machOrders , sellPrices )
@@ -201,8 +212,9 @@ runMach firm (mach,power)  =
 
 checkMachInput :: Mach -> Power -> Firm -> (Money , [Qant])
 checkMachInput mach power firm = 
- let machIn     = map (*power) $ (inMoney mach) : (inQants   mach)
-     firmHas    =                (fMoney  firm) : (fProperty firm)
+ let power'     = if power > 1 then 1 else ( if power < 0 then 0 else power )
+     machIn     = map (*power') $ (inMoney mach) : (inQants   mach)
+     firmHas    =                 (fMoney  firm) : (fProperty firm)
      worstRatio = minimum $ zipWith (/) firmHas machIn
      machIn'    = if worstRatio < 1 then map (*worstRatio) machIn else machIn
   in ( head machIn' , tail machIn' )
