@@ -48,10 +48,26 @@ pairCase (x,y) f = f x y
 
 --}
 
-ff_head :: ( [Int] -> Maybe Int ) -> IO Double
-ff_head prog = do 
+
+{- sada pro head : 
+
+  listCase  :: [Int] -> Maybe Int -> (Int->[Int]->Maybe Int) -> Maybe Int
+  Nothing   :: Maybe Int
+  Just      :: a -> Maybe Int  
+
+-}
+
+ff_head_qc :: ( [Int] -> Maybe Int ) -> IO Double
+ff_head_qc prog = do 
  result <- quickCheckWithResult (stdArgs{chatty=False}) $ prop_isHead prog
  return . fromIntegral . numTests $ result 
+
+ff_head :: ( [Int] -> Maybe Int ) -> Double
+ff_head prog = 
+  ( if prog []       == Nothing then 1 else 0 ) +
+  ( if prog [1]      == Just 1  then 1 else 0 ) +
+  ( if prog [42,7,3] == Just 42 then 1 else 0 )
+
 
 
 

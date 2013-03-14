@@ -28,7 +28,8 @@ problemList :: [(String,String)]
 problemList = [ 
   ("ssr" , "Simple Symbolic Regression") ,
   ("ba"  , "Bool Alternate") ,
-  ("ant" , "Artifical Ant")
+  ("ant" , "Artifical Ant") ,
+  ("head", "Trivial Head problem" )
  ]
 
 job1 :: String -> String -> IO ()
@@ -42,13 +43,16 @@ job1 jobID cmd =
    in do
     putStrLn cmd
     case problem of
-      "ant" -> go problem_ant 
-      "ba"  -> go problem_ba  
-      "ssr" -> go problem_ssr 
+      "ant"  -> go problem_ant 
+      "ba"   -> go problem_ba  
+      "ssr"  -> go problem_ssr
+      "head" -> go problem_head 
 
-problem_ssr = cttProblem "ssr"  ff_cttSSR_2 dou1 ctx_ttSSR
-problem_ant = cttProblem "ant"  ff_ant2 ant ctx_ant
-problem_ba  = boolListProblem2 "ba" (33,33,33) 100 ff_boolAlternate
+problem_ssr  = cttProblem "ssr"  ff_cttSSR_2 dou1 ctx_ttSSR
+problem_ant  = cttProblem "ant"  ff_ant2 ant ctx_ant
+problem_ba   = boolListProblem2 "ba" (33,33,33) 100 ff_boolAlternate
+problem_head = cttProblem "head" ff_head_ (l_int :-> m_int) ctx_head
+
 
 wordsWhen     :: (Char -> Bool) -> String -> [String]
 wordsWhen p s =  case dropWhile p s of
@@ -121,8 +125,23 @@ ant  = Typ "AAnt"
 ant2 = ant :-> ant :-> ant
 ant3 = ant :-> ant :-> ant :-> ant
 
+
+int :: Typ
+int   = Typ "Int"
+m_int = Typ "Maybe Int"
+l_int = Typ "[Int]"
+
+
+ctx_head :: Context
+ctx_head = [  ( "listCase" , l_int :-> m_int :-> (int:->l_int:->m_int) :-> m_int ),
+              ( "Nothing"  , m_int ),
+              ( "Just"     , int :-> m_int ) ]
+
+ff_head_ :: FitFun CTT ()
+ff_head_ = FF4 show "ff_head" () 
+
 ctx_ttSSR :: Context
-ctx_ttSSR = ([("(+)",dou2),("(-)",dou2),("(*)",dou2),("rdiv",dou2),("sin",dou1),("cos",dou1),("exp",dou1),("rlog",dou1)])
+ctx_ttSSR = [("(+)",dou2),("(-)",dou2),("(*)",dou2),("rdiv",dou2),("sin",dou1),("cos",dou1),("exp",dou1),("rlog",dou1)]
  
 ctx_ant :: Context
 ctx_ant = [ ("l",ant), ("r",ant), ("m",ant), ("ifa",ant2), ("p2",ant2), ("p3",ant3) ]
