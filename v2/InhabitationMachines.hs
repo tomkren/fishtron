@@ -69,6 +69,27 @@ ctx_ttSSR = ([("plus",dou2),("minus",dou2),("krat",dou2),("rdiv",dou2),("sin",do
 ctx_mini :: Context
 ctx_mini = ([("plus",dou2),("sin",dou1)])
 
+int :: Typ
+int   = Typ "Int"
+m_int = Typ "Maybe Int"
+l_int = Typ "[Int]"
+
+ctx_head :: Context
+ctx_head = [  ( "listCase" , l_int :-> m_int :-> (int:->l_int:->m_int) :-> m_int ),
+              ( "Nothing"  , m_int ),
+              ( "Just"     , int :-> m_int ) ]
+
+type_head :: Typ
+type_head = l_int :-> m_int
+
+headTest1 n = do
+  (ret,_) <- runEva $ strategyProveUnique defaultStrategy n 100 type_head ctx_head 
+  return ret
+
+headTest2 n = do
+  (ret,_) <- runEva $ kozaProveN n 100 type_head ctx_head 
+  return ret
+
 
 testIM :: Int -> IO [TTerm]
 testIM n = do 
