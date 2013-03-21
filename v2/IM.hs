@@ -18,34 +18,43 @@ import System.Random
 
 import qualified Data.PSQueue as Q
 
-test_head = do
+testSO :: (StdGen->SearchOptions) -> IO ()
+testSO soFun = do
   stdGen <- newStdGen
-  let so = SearchOptions {
-    so_n                  = 5000       ,
-    so_typ                = type_head ,
-    so_ctx                = ctx_head  ,
-    so_runLen             = Nothing   ,
-    so_stdGen             = stdGen    ,
-    so_edgeSelectionModel = AllEdges  ,
-    so_randomRunState     = NoRandomRunState 
-  } 
-  let trees = proveWith so
+  let trees = proveWith (soFun stdGen)
   mapM_ (putStrLn . show) trees
   putStrLn $ "num terms : " ++ (show $ length trees)
 
-test_head_2 = do
-  stdGen <- newStdGen
-  let so = SearchOptions {
-    so_n                  = 100       ,
+test_head = testSO $ \ stdGen -> SearchOptions {
+    so_n                  = 500       ,
     so_typ                = type_head ,
     so_ctx                = ctx_head  ,
-    so_runLen             = Just 1    ,  --Nothing   ,
     so_stdGen             = stdGen    ,
-    so_edgeSelectionModel = OneRandomEdgeWithPedicat (const True) , --AllEdges  ,
-    so_randomRunState     = NoRandomRunState 
+    so_runLen             = Nothing   ,
+    so_randomRunState     = NoRandomRunState , 
+    so_edgeSelectionModel = AllEdges  
+  }
+
+test_head_2 = testSO $ \ stdGen -> SearchOptions {
+    so_n                  = 500       ,
+    so_typ                = type_head ,
+    so_ctx                = ctx_head  ,
+    so_stdGen             = stdGen    ,
+    so_runLen             = Just 1    ,  --Nothing   ,
+    so_randomRunState     = NoRandomRunState,
+    so_edgeSelectionModel = OneRandomEdgeWithPedicat (const True)  --AllEdges  , 
   } 
-  let trees = proveWith so
-  mapM_ (putStrLn . show) trees
+
+test_head_koza = testSO $ \ stdGen -> SearchOptions {
+    so_n                  = 500       ,
+    so_typ                = type_head ,
+    so_ctx                = ctx_head  ,
+    so_stdGen             = stdGen    ,
+    so_runLen             = Just 1    ,  --Nothing   ,
+    so_randomRunState     = KozaRandomRunState Nothing Nothing ,
+    so_edgeSelectionModel = KozaESM
+  } 
+
 
 
 data ZTree = ZTree { 
@@ -67,6 +76,22 @@ data ZTree = ZTree {
 
  } --deriving ( Eq , Ord )
 
+mkZTree :: SearchOptions -> ZTree
+mkZTree so    = ZTree                  { 
+  current     = TreeTyp (so_typ so)    , 
+  dads        = []                     ,  
+  locals      = emptyTable             , 
+  globals     = ctxToTable (so_ctx so) , 
+  depth       = 0                      , 
+  nextVar     = 0                      ,
+  numUnsolved = 1                      ,
+  numSteps    = 0                      ,
+  zTreeID     = []                     ,
+  searchOpts  = so                     ,
+  rand        = so_stdGen so           
+ } 
+
+
 data Tree = TreeApp  Symbol  SymbolOfAtomicType [Tree] 
           | TreeLam [Symbol] Typ  Tree
           | TreeTyp Typ
@@ -81,6 +106,8 @@ data Entry = Entry [Typ] Symbol deriving (Eq,Ord)
 type SymbolOfAtomicType = Symbol
 type PriorityQueue = Q.PSQ ZTree Int
 
+type Edge = (Symbol,[Typ],SymbolOfAtomicType)
+type Depth = Int
 
 -- snad neni nebezpečné, je tu kvuli zatřiďování do prioritní fronty
 instance Eq  ZTree where zt1 == zt2 = zTreeID zt1 == zTreeID zt2  
@@ -97,17 +124,6 @@ data SearchOptions = SearchOptions{
   so_randomRunState     :: RandomRunState 
  }
 
-data EdgeSelectionModel = 
-  AllEdges | 
-  OneRandomEdgeWithPedicat ((Symbol,[Typ],SymbolOfAtomicType)->Bool)
-
-data RandomRunState =
-  NoRandomRunState |
-  KozaRandomRunState IsFullMethod MaximalDepth
-
-type IsFullMethod = Maybe Bool -- Nothing značí že chci aby se vygeneroval
-type MaximalDepth = Maybe Int  -- 
-
 defaultSearchOptions :: Int -> Typ -> Context -> SearchOptions
 defaultSearchOptions n typ ctx = SearchOptions {
   so_n                  = n ,
@@ -118,6 +134,63 @@ defaultSearchOptions n typ ctx = SearchOptions {
   so_edgeSelectionModel = AllEdges ,
   so_randomRunState     = NoRandomRunState
  }
+
+
+data RandomRunState =
+  NoRandomRunState |
+  KozaRandomRunState (Maybe IsFullMethod) (Maybe MaximalDepth)
+
+type IsFullMethod = Bool -- Nothing značí že chci aby se vygeneroval
+type MaximalDepth = Int  -- 
+
+spinRandomRunState :: RandomRunState -> StdGen -> (RandomRunState, StdGen)
+spinRandomRunState rrs gen0 = case rrs of
+  NoRandomRunState -> ( NoRandomRunState , gen0 )
+  KozaRandomRunState _ _ -> 
+    let (     isFull , gen1 ) = random gen0
+        ( m_maxDepth , gen2 ) = randomL [2..7] gen1 --randomL [1..6] gen1
+     in ( KozaRandomRunState (Just isFull) m_maxDepth , gen2 )     
+
+
+
+data EdgeSelectionModel = 
+  AllEdges | 
+  OneRandomEdgeWithPedicat (Edge->Bool) |
+  KozaESM 
+
+selectEdges :: EdgeSelectionModel -> ZTree -> [Edge] -> StdGen -> ( [Edge] , StdGen ) 
+selectEdges esm zt edges gen0 = case esm of
+  AllEdges                   -> ( edges, gen0 )
+  OneRandomEdgeWithPedicat p -> oneRandomEdgeWithPedicat edges p gen0
+  KozaESM                    -> 
+    let KozaRandomRunState (Just isFull) (Just maxDepth) = so_randomRunState (searchOpts zt)
+     in kozaESM isFull maxDepth (depth zt) edges gen0
+
+kozaESM :: IsFullMethod -> MaximalDepth -> Depth -> [Edge] -> StdGen -> ( [Edge] , StdGen )
+kozaESM isFull maxDepth depth edges gen0 =
+ let (ts,ns) = partition isTerminal edges
+     candids | depth == 1        = ns -- 0
+             | depth == maxDepth = ts
+             | depth >  maxDepth = []
+             | isFull            = ns
+             | otherwise         = edges
+     ( m_edge , gen1 ) = randomL candids gen0
+  in ( maybeToList m_edge , gen1 )
+
+isTerminal :: Edge -> Bool
+isTerminal (_,[],_) = True
+isTerminal _        = False
+
+
+oneRandomEdgeWithPedicat :: [Edge] -> (Edge->Bool) -> StdGen -> ( [Edge] , StdGen )
+oneRandomEdgeWithPedicat edges p gen0 = 
+  let okEdges = filter p edges
+      ( m_edge , gen1 ) = randomL okEdges gen0
+   in ( maybeToList m_edge , gen1 )
+
+
+
+
 
 proveN :: Int -> Typ -> Context -> [Tree]
 proveN n typ ctx = proveWith $ defaultSearchOptions n typ ctx
@@ -135,7 +208,7 @@ proveWith so = case m_runLen of
    | toMake <= 0 = []
    | otherwise   = 
      let (so1,so2)= splitSearchOptions so0  --         <=============================
-         trees    = proveN_ (min runLen toMake) so1  
+         trees    = proveN_ (min runLen toMake) (spinRandomRunState_ so1)
          numTrees = length trees
       in if numTrees < toMake then
           trees ++ ( proveWith' so2 (toMake - numTrees) )  
@@ -144,6 +217,15 @@ proveWith so = case m_runLen of
 
 splitSearchOptions :: SearchOptions -> (SearchOptions,SearchOptions)
 splitSearchOptions so = let (g1,g2) = split (so_stdGen so) in ( so{ so_stdGen = g1 } , so{ so_stdGen = g2 } )
+
+spinRandomRunState_ :: SearchOptions -> SearchOptions
+spinRandomRunState_ so0 = 
+  let gen0            = so_stdGen so0
+      rrs0            = so_randomRunState so0
+      ( rrs1 , gen1 ) = spinRandomRunState rrs0 gen0
+   in so0{ so_randomRunState = rrs1 , 
+           so_stdGen         = gen1 }
+
 
 proveN_ :: Int -> SearchOptions -> [Tree]
 proveN_ n so = map zTreeToTree . proveN' n $ (initQueue $ mkZTree so )
@@ -186,6 +268,8 @@ expand zt = case current zt of
   _ -> error "expand : Only type-node can be expanded !"
 
 
+
+
 splitInf :: StdGen -> [StdGen]
 splitInf g0 = let (g1,g2) = split g0 in g1 : splitInf g2
 
@@ -198,14 +282,13 @@ randomL xs g = let (i,g') = randomR (0,length xs - 1) g in ( Just $ xs !! i , g'
 getEdges :: ZTree -> ( [ (Symbol,[Typ],SymbolOfAtomicType) ] , ZTree )
 getEdges zt = case current zt of
   TreeTyp (Typ alpha) -> 
-    let edges = (getEdges' (locals zt) alpha ) ++ (getEdges' (globals zt) alpha )
-     in case so_edgeSelectionModel (searchOpts zt) of
-         AllEdges -> (edges,zt)
-         OneRandomEdgeWithPedicat p -> 
-          let okEdges = filter p edges
-              ( m_edge , gen' ) = randomL okEdges (rand zt)
-           in ( maybeToList m_edge , zt{ rand = gen' } )
+    let edges               = (getEdges' (locals zt) alpha ) ++ (getEdges' (globals zt) alpha )
+        esm                 = so_edgeSelectionModel (searchOpts zt)
+        ( edges' , gen' )   = selectEdges esm zt edges (rand zt)
+     in ( edges' , zt{ rand = gen' }) 
+
   _ -> error "getEdges : Only applicable in atomic-type-node !"
+
 
 getEdges' :: Table -> SymbolOfAtomicType -> [ (Symbol,[Typ],SymbolOfAtomicType) ]
 getEdges' table alpha = case Map.lookup alpha table of
@@ -235,21 +318,6 @@ expandLam' i (ts,alpha) =
   f typ1 (ss,typ2,i) = ( ('x' : show i) : ss , typ1 :-> typ2 , i-1 )
 
 
-
-mkZTree :: SearchOptions -> ZTree
-mkZTree so    = ZTree                  { 
-  current     = TreeTyp (so_typ so)    , 
-  dads        = []                     ,  
-  locals      = emptyTable             , 
-  globals     = ctxToTable (so_ctx so) , 
-  depth       = 0                      , 
-  nextVar     = 0                      ,
-  numUnsolved = 1                      ,
-  numSteps    = 0                      ,
-  zTreeID     = []                     ,
-  searchOpts  = so                     ,
-  rand        = so_stdGen so           
- } 
 
 zTreeToTree :: ZTree -> Tree
 zTreeToTree zt = current $ goTop zt
