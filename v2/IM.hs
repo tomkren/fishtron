@@ -3,9 +3,12 @@
 --  Asi by to chtělo celý předelat tak, že ZTree bude stavová monada, ale radši 
 -- to nejdřív už dodělat když je to takle rozdělaný a až pak dyštak překopat.
 
+
+
+
 module IM where
 
-import TTerm (Symbol,Typ(..),TTerm(..),Context,typeArgs)
+import TTerm (Symbol,Typ(..),TTerm(..),Context,typeArgs,ttermTyp,toSki,toSki',checkTyp)
 
 import Data.List
 import Data.Maybe
@@ -18,11 +21,87 @@ import System.Random
 
 import qualified Data.PSQueue as Q
 
+-- funkyProve :: 
+
+
+-- ---------------!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+-- BUG : našel se tterm kerej se blbě převedl do ski :
+-- 79tej z test_head
+-- ( ( ( listCase x0) ( ( ( listCase x0) Nothing) ( k ( ( s ( ( s ( ( s ( k listCase)) i)) ( k Nothing))) ( k ( k ( k Nothing))))))) ( k ( k ( Just _0))))
+
+--(listCase x0 
+--  (listCase x0 Nothing (\ _0:Int _1:[Int] . (listCase _1 Nothing (\ _2:Int _3:[Int] . Nothing)))) 
+--  (\ _4:Int _5:[Int] . (Just _0))
+--)
+
+--(listCase _0 
+--  (listCase _0 Nothing (\ _1:Int _2:[Int] . (listCase _2 Nothing (\ _3:Int _4:[Int] . Nothing)))) 
+--  (\ _5:Int _6:[Int] . (Just _1))
+--)
+
+-- Chyba je v tom, že se nesmazala správně proměnná _0
+
+b0' = mkZTree $ defaultSearchOptions 100 type_head ctx_head 
+b0  = Just b0'
+b1  = b0 >>= step >>= return . head 
+b2  = b1 >>= step >>= return . last 
+b3  = b2 >>= step >>= return . head
+b4  = b3 >>= step >>= return . head . drop 2 
+b5  = b4 >>= step >>= return . head
+b6  = b5 >>= step >>= return . head 
+b7  = b6 >>= step >>= return . head 
+b8  = b7 >>= step >>= return . head . drop 2
+b9  = b8 >>= step >>= return . head . drop 1
+b10 = b9 >>= step >>= return . head 
+b11 = b10>>= step >>= return . head 
+b12 = b11>>= step >>= return . head 
+b13 = b12>>= step >>= return . head 
+
+bullShit2 = b12 >>= goUp >>= goUp >>= goUp >>= goUp >>= rightBrother
+
+-- b12 -> b13
+-- melo zmizet    _1 _2 _3 _4
+-- ale zmizelo _0       _3 _4
+
+
+--b8  = b7 >>= step
+
+
+
+bugg = 
+  let so = SearchOptions {
+      so_n                  = 500       ,
+      so_typ                = type_head ,
+      so_ctx                = ctx_head  ,
+      so_stdGen             = mkStdGen 0    ,
+      so_runLen             = Nothing   ,
+      so_randomRunState     = NoRandomRunState ,
+      so_naturalVars        = [] , 
+      so_edgeSelectionModel = AllEdges  
+    }
+   in head $ drop 78 $ proveWith so
+
+test_so = 
+  let so = SearchOptions {
+      so_n                  = 500       ,
+      so_typ                = type_head ,
+      so_ctx                = ctx_head  ,
+      so_stdGen             = mkStdGen 0    ,
+      so_runLen             = Nothing   ,
+      so_randomRunState     = NoRandomRunState , 
+      so_naturalVars        = [] ,
+      so_edgeSelectionModel = AllEdges  
+    }
+   in proveFin so
+
+
+
 testSO :: (StdGen->SearchOptions) -> IO ()
 testSO soFun = do
   stdGen <- newStdGen
   let trees = proveWith (soFun stdGen)
-  mapM_ (putStrLn . show) trees
+  mapM_ (putStrLn . show . toSki . tree2tterm) trees
   putStrLn $ "num terms : " ++ (show $ length trees)
 
 test_head = testSO $ \ stdGen -> SearchOptions {
@@ -32,6 +111,7 @@ test_head = testSO $ \ stdGen -> SearchOptions {
     so_stdGen             = stdGen    ,
     so_runLen             = Nothing   ,
     so_randomRunState     = NoRandomRunState , 
+    so_naturalVars        = [] ,
     so_edgeSelectionModel = AllEdges  
   }
 
@@ -42,6 +122,7 @@ test_head_2 = testSO $ \ stdGen -> SearchOptions {
     so_stdGen             = stdGen    ,
     so_runLen             = Just 1    ,  --Nothing   ,
     so_randomRunState     = NoRandomRunState,
+    so_naturalVars        = [] ,
     so_edgeSelectionModel = OneRandomEdgeWithPedicat (const True)  --AllEdges  , 
   } 
 
@@ -52,6 +133,7 @@ test_head_koza = testSO $ \ stdGen -> SearchOptions {
     so_stdGen             = stdGen    ,
     so_runLen             = Just 1    ,  --Nothing   ,
     so_randomRunState     = KozaRandomRunState Nothing Nothing ,
+    so_naturalVars        = [] ,
     so_edgeSelectionModel = KozaESM
   } 
 
@@ -96,6 +178,30 @@ data Tree = TreeApp  Symbol  SymbolOfAtomicType [Tree]
           | TreeLam [Symbol] Typ  Tree
           | TreeTyp Typ
 
+
+tree2tterm :: Tree -> TTerm
+tree2tterm tree = case tree of
+  TreeTyp _      -> t2tError "Tree must be without type-nodes."
+  TreeLam [] _ _ -> t2tError "Lambda with no vars."
+  TreeLam ss typ t -> 
+   let (typs,alpha) = typeArgs typ
+       tt0 = tree2tterm t
+    in fst $ foldr (\(s,ty1) (tt,ty2)->let ty = ty1:->ty2 in(TLam s tt ty,ty) ) (tt0,Typ alpha) (zip ss typs)
+  TreeApp s alpha ts -> 
+   let tts  = map tree2tterm ts
+       tys  = map ttermTyp tts
+       sTyp = foldr (:->) (Typ alpha) tys
+    in fst $ foldl (\(f,_:->ty) tt-> (TApp f tt ty,ty) ) (varOrVal s sTyp,sTyp) tts
+
+ where
+  varOrVal :: String -> Typ -> TTerm
+  varOrVal s@('_':_) typ = TVar s typ
+  varOrVal s         typ = TVal s typ    
+
+t2tError str = error $ "ERROR in tree2tterm : " ++ str
+
+
+
 data DTree = DTreeApp [Tree] Symbol SymbolOfAtomicType [Tree]
            | DTreeLam [Symbol] Typ
 
@@ -118,6 +224,7 @@ data SearchOptions = SearchOptions{
   so_n                  :: Int                , 
   so_typ                :: Typ                ,  
   so_ctx                :: Context            ,
+  so_naturalVars        :: Context            ,
   so_runLen             :: Maybe Int          , -- Nothing means unlimited runLen 
   so_stdGen             :: StdGen             ,
   so_edgeSelectionModel :: EdgeSelectionModel ,
@@ -129,11 +236,25 @@ defaultSearchOptions n typ ctx = SearchOptions {
   so_n                  = n ,
   so_typ                = typ ,
   so_ctx                = ctx ,
+  so_naturalVars        = [] ,
   so_runLen             = Nothing ,
   so_stdGen             = mkStdGen 42424242 ,
   so_edgeSelectionModel = AllEdges ,
   so_randomRunState     = NoRandomRunState
  }
+
+initSO :: SearchOptions -> SearchOptions
+initSO pre_so = 
+  let (typ,ctx,naturalVars) = problemHeadPreproccess (so_typ pre_so) (so_ctx pre_so)
+   in pre_so{ so_typ = typ , so_ctx = ctx , so_naturalVars = naturalVars }
+
+problemHeadPreproccess :: Typ -> Context -> (Typ,Context,Context)
+problemHeadPreproccess typ ctx = 
+  let (ts,alpha)  = typeArgs typ
+      ss          = map (\i->'x':show i) [0..]
+      naturalVars = zip ss ts
+   in (Typ alpha , naturalVars ++ ctx , naturalVars )
+
 
 
 data RandomRunState =
@@ -191,15 +312,25 @@ oneRandomEdgeWithPedicat edges p gen0 =
 
 
 
-
 proveN :: Int -> Typ -> Context -> [Tree]
 proveN n typ ctx = proveWith $ defaultSearchOptions n typ ctx
 
+
+proveFin :: SearchOptions -> [TTerm]
+proveFin so = 
+  let trees = proveWith so
+      naturalVars = so_naturalVars (initSO so) --           <=== hnus!
+   in map ( addProblemHead naturalVars . tree2tterm ) trees   
+
+addProblemHead :: Context -> TTerm -> TTerm
+addProblemHead ctx tt = fst $ foldr (\(s,ty1) (tt,ty2)->let ty = ty1:->ty2 in(TLam s tt ty,ty) ) (tt,ttermTyp tt) ctx    
+
 proveWith :: SearchOptions -> [Tree]
-proveWith so = case m_runLen of
+proveWith pre_so = case m_runLen of
   Nothing -> proveN_ n so
   _       -> proveWith' so n
  where
+  so       = initSO pre_so
   n        = so_n so
   m_runLen = so_runLen so
   runLen   = fromJust m_runLen
@@ -315,7 +446,7 @@ expandLam' i (ts,alpha) =
     in ( TreeLam ss typ (TreeTyp (Typ alpha)) , i+n )
  where
   f :: Typ -> ([Symbol],Typ,Int) -> ([Symbol],Typ,Int)
-  f typ1 (ss,typ2,i) = ( ('x' : show i) : ss , typ1 :-> typ2 , i-1 )
+  f typ1 (ss,typ2,i) = ( ('_' : show i) : ss , typ1 :-> typ2 , i-1 )
 
 
 
@@ -333,12 +464,12 @@ emptyTable :: Table
 emptyTable = Map.empty
 
 addToTableWith :: (Set Entry->Set Entry->Set Entry) -> Table -> Context -> Table
-addToTableWith op table ctx = foldr f table ctx
- where
-  f :: (Symbol,Typ) -> Table -> Table
-  f (sym,typ) acc = 
-    let (ts,alpha) = typeArgs typ
-     in Map.insertWith op alpha (Set.singleton $ Entry ts sym) acc 
+addToTableWith op table ctx = foldr (f op) table ctx
+-- where
+f :: (Set Entry->Set Entry->Set Entry)->        (Symbol,Typ) -> Table -> Table
+f op      (sym,typ) acc = 
+  let (ts,alpha) = typeArgs typ
+   in Map.insertWith op alpha (Set.singleton $ Entry ts sym) acc 
 
 ctxToTable :: Context -> Table
 ctxToTable ctx = addToTableWith Set.union emptyTable ctx
@@ -346,10 +477,30 @@ ctxToTable ctx = addToTableWith Set.union emptyTable ctx
 addToTable   :: Table -> [Symbol] -> Typ -> Table
 addToTable   table ss typ = addToTableWith Set.union table (zip ss (fst $ typeArgs typ))
 
+subFromTable_bug :: Table -> [Symbol] -> Typ -> Table
+subFromTable_bug table ss typ = addToTableWith (Set.\\)  table (zip ss (fst $ typeArgs typ))
+
 subFromTable :: Table -> [Symbol] -> Typ -> Table
-subFromTable table ss typ = addToTableWith (Set.\\)  table (zip ss (fst $ typeArgs typ))
+subFromTable table ss typ = addToTableWith (flip (Set.\\))  table (zip ss (fst $ typeArgs typ))
 
 
+
+-- total bullshit :    b12 >>= goUp
+
+Just b12' = b12
+lv12 = locals b12'
+dads12 = dads b12'
+DTreeLam ss12 typ12  = head dads12
+
+tab12a = putStrLn $ showTable lv12
+tab12b = putStrLn . showTable $ subFromTable_bug lv12 ss12 typ12
+
+ctx12c  = zip ss12 (fst $ typeArgs typ12)
+tri = head ctx12c
+
+tab12c = putStrLn . showTable $ addToTableWith (Set.\\) lv12 ctx12c
+
+tab12d = putStrLn . showTable  $ f (Set.\\) tri  lv12
 
 nextTreeTypNode :: ZTree -> Maybe ZTree 
 nextTreeTypNode zt = case current zt of 
@@ -379,6 +530,8 @@ rightBrother zt = case dads zt of
     DTreeApp leftBrothers s typ (thatBrother:rightBrothers) ->
       Just $ zt{ current = thatBrother , 
                  dads    = (DTreeApp ( current zt :leftBrothers) s typ rightBrothers )  : ancestors  }
+
+
 
 goUp :: ZTree -> Maybe ZTree
 goUp zt = case dads zt of
@@ -438,7 +591,7 @@ instance Show ZTree where
    where 
     f :: String -> DTree -> String
     f str dt = case dt of
-      DTreeApp ts1 s _ ts2 -> "(" ++ s ++ " " ++ (fillSpaces ts1) ++ str ++ (fillSpaces ts2) ++ ")"
+      DTreeApp ts1 s _ ts2 -> "(" ++ s ++ " " ++ (fillSpaces (reverse ts1)) ++ str ++ (fillSpaces ts2) ++ ")"
       DTreeLam ss _        -> "(\\ " ++ (intercalate " " ss) ++ " . " ++ str ++ ")" 
 
 showTable :: Table -> String
@@ -498,4 +651,5 @@ ctx_head :: Context
 ctx_head = [  ( "listCase" , l_int :-> m_int :-> (int:->l_int:->m_int) :-> m_int ),
               ( "Nothing"  , m_int ),
               ( "Just"     , int :-> m_int ) ]
+
 
