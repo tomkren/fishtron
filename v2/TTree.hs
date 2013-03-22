@@ -4,7 +4,8 @@ module TTree
 ( CTT (..),
   TTree (..),
   TTPos,
-  mkCTT,
+  mkCTT, -- <============== možná bug v něm!!!! 
+  mkCTT2,
   ttreeSubtree,
   ttreeSubtrees,
   ttreeChangeSubtree,
@@ -28,6 +29,11 @@ data CTT = CTT Context TTree
 data TTree = TTree Symbol Typ [TTree] 
 
 type TTPos = [Int]
+
+
+mkCTT2 :: Context -> TTerm -> CTT
+mkCTT2 ctx tt = CTT ctx (fromTTerm tt)
+
 
 instance Show CTT where
  show (CTT ctx ttree) = case ctx of
@@ -146,7 +152,7 @@ changeVarsToVals :: [Symbol] -> TTerm -> TTerm
 changeVarsToVals xs tt = case tt of
  TVar x   t | x `elem` xs -> TVal x t
             | otherwise   -> TVar x t 
- TVal v   t -> TVar v t
+ TVal v   t -> TVar v t -- <=========================================================================== NENI TO BUG ???
  TLam x m t -> TLam x (changeVarsToVals (xs \\ [x]) m ) t
  TApp m n t -> TApp (changeVarsToVals xs m) (changeVarsToVals xs n) t
  

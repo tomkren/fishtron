@@ -27,6 +27,7 @@ import Ant
 problemList :: [(String,String)]
 problemList = [ 
   ("ssr" , "Simple Symbolic Regression") ,
+  ("ssr2", "Simple Symbolic Regression - new IM") ,
   ("ba"  , "Bool Alternate") ,
   ("ant" , "Artifical Ant") ,
   ("head", "Trivial Head problem" )
@@ -46,12 +47,14 @@ job1 jobID cmd =
       "ant"  -> go problem_ant 
       "ba"   -> go problem_ba  
       "ssr"  -> go problem_ssr
+      "ssr2" -> go problem_ssr2
       "head" -> go problem_head 
 
-problem_ssr  = cttProblem "ssr"  ff_cttSSR_2 dou1 ctx_ttSSR
-problem_ant  = cttProblem "ant"  ff_ant2 ant ctx_ant
+problem_ssr  = cttProblem  "ssr"  ff_cttSSR_2 dou1 ctx_ttSSR
+problem_ssr2 = cttProblem2 "ssr2" ff_cttSSR_2 dou1 ctx_ttSSR
+problem_ant  = cttProblem  "ant"  ff_ant2 ant ctx_ant
 problem_ba   = boolListProblem2 "ba" (33,33,33) 100 ff_boolAlternate
-problem_head = cttProblem "head" ff_head_ (l_int :-> m_int) ctx_head
+problem_head = cttProblem2 "head" ff_head_ (l_int :-> m_int) ctx_head
 
 
 wordsWhen     :: (Char -> Bool) -> String -> [String]
@@ -372,6 +375,15 @@ boolListProblem2 problemName genOpProbs len ff numGene popSize =
      genOps = mkGenOps (mOpt,cOpt) genOpProbs
      fitFun = mkFF1 $ return . ff
   in Problem problemName popSize numGene genOps gOpt mOpt cOpt fitFun
+
+cttProblem2 :: String -> FitFun CTT a -> Typ -> Context -> NumGene -> PopSize -> CTTProblem a
+cttProblem2 problemName ff typ ctx numGene popSize =
+ let genOpProbs = (10,0,90)
+     gOpt       = CTTG_Koza2 typ ctx 
+     mOpt       = ()
+     cOpt       = CTTC_Koza
+  in Problem problemName popSize numGene (mkGenOps (mOpt,cOpt) genOpProbs) gOpt mOpt cOpt ff
+
 
 cttProblem :: String -> FitFun CTT a -> Typ -> Context -> NumGene -> PopSize -> CTTProblem a
 cttProblem problemName ff typ ctx numGene popSize =

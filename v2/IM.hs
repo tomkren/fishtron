@@ -6,9 +6,11 @@
 
 
 
-module IM where
+module IM ( SearchOptions(..) , defaultSearchOptions , kozaSearchOptions , prove ) where
 
 import TTerm (Symbol,Typ(..),TTerm(..),Context,typeArgs,ttermTyp,toSki,toSki',checkTyp)
+
+import TTree (CTT,mkCTT2)
 
 import Data.List
 import Data.Maybe
@@ -21,79 +23,29 @@ import System.Random
 
 import qualified Data.PSQueue as Q
 
--- funkyProve :: 
 
 
--- ---------------!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+prove :: SearchOptions -> [CTT]
+prove so = 
+  let ( so' , problemHead ) = problemHeadPreproccess so
+      trees = proveWith so'
+   in map ( mkCTT2 problemHead . toSki' . tree2tterm ) trees   -- <============== toSki s ' je s typeCheckem ...........
 
--- BUG : našel se tterm kerej se blbě převedl do ski :
--- 79tej z test_head
--- ( ( ( listCase x0) ( ( ( listCase x0) Nothing) ( k ( ( s ( ( s ( ( s ( k listCase)) i)) ( k Nothing))) ( k ( k ( k Nothing))))))) ( k ( k ( Just _0))))
+problemHeadPreproccess :: SearchOptions -> ( SearchOptions , Context )
+problemHeadPreproccess so = 
+  let ( typ' , ctx' , problemHead ) = problemHeadPreproccess' (so_typ so) (so_ctx so)
+   in ( so{ so_typ = typ' , so_ctx = ctx' } , problemHead )
 
---(listCase x0 
---  (listCase x0 Nothing (\ _0:Int _1:[Int] . (listCase _1 Nothing (\ _2:Int _3:[Int] . Nothing)))) 
---  (\ _4:Int _5:[Int] . (Just _0))
---)
-
---(listCase _0 
---  (listCase _0 Nothing (\ _1:Int _2:[Int] . (listCase _2 Nothing (\ _3:Int _4:[Int] . Nothing)))) 
---  (\ _5:Int _6:[Int] . (Just _1))
---)
-
--- Chyba je v tom, že se nesmazala správně proměnná _0
-
-b0' = mkZTree $ defaultSearchOptions 100 type_head ctx_head 
-b0  = Just b0'
-b1  = b0 >>= step >>= return . head 
-b2  = b1 >>= step >>= return . last 
-b3  = b2 >>= step >>= return . head
-b4  = b3 >>= step >>= return . head . drop 2 
-b5  = b4 >>= step >>= return . head
-b6  = b5 >>= step >>= return . head 
-b7  = b6 >>= step >>= return . head 
-b8  = b7 >>= step >>= return . head . drop 2
-b9  = b8 >>= step >>= return . head . drop 1
-b10 = b9 >>= step >>= return . head 
-b11 = b10>>= step >>= return . head 
-b12 = b11>>= step >>= return . head 
-b13 = b12>>= step >>= return . head 
-
-bullShit2 = b12 >>= goUp >>= goUp >>= goUp >>= goUp >>= rightBrother
-
--- b12 -> b13
--- melo zmizet    _1 _2 _3 _4
--- ale zmizelo _0       _3 _4
-
-
---b8  = b7 >>= step
+problemHeadPreproccess' :: Typ -> Context -> (Typ,Context,Context)
+problemHeadPreproccess' typ ctx = 
+  let (ts,alpha)  = typeArgs typ
+      ss          = map (\i->'x':show i) [0..]
+      problemHead = zip ss ts
+   in (Typ alpha , problemHead ++ ctx , problemHead )
 
 
 
-bugg = 
-  let so = SearchOptions {
-      so_n                  = 500       ,
-      so_typ                = type_head ,
-      so_ctx                = ctx_head  ,
-      so_stdGen             = mkStdGen 0    ,
-      so_runLen             = Nothing   ,
-      so_randomRunState     = NoRandomRunState ,
-      so_naturalVars        = [] , 
-      so_edgeSelectionModel = AllEdges  
-    }
-   in head $ drop 78 $ proveWith so
 
-test_so = 
-  let so = SearchOptions {
-      so_n                  = 500       ,
-      so_typ                = type_head ,
-      so_ctx                = ctx_head  ,
-      so_stdGen             = mkStdGen 0    ,
-      so_runLen             = Nothing   ,
-      so_randomRunState     = NoRandomRunState , 
-      so_naturalVars        = [] ,
-      so_edgeSelectionModel = AllEdges  
-    }
-   in proveFin so
 
 
 
@@ -104,39 +56,52 @@ testSO soFun = do
   mapM_ (putStrLn . show . toSki . tree2tterm) trees
   putStrLn $ "num terms : " ++ (show $ length trees)
 
-test_head = testSO $ \ stdGen -> SearchOptions {
+testSO2 :: (StdGen->SearchOptions) -> IO ()
+testSO2 soFun = do
+  stdGen <- newStdGen
+  let ctts = prove (soFun stdGen)
+  mapM_ (putStrLn . show) ctts
+  putStrLn $ "num terms : " ++ (show $ length ctts)
+
+test_head = testSO2 $ \ stdGen -> SearchOptions {
     so_n                  = 500       ,
     so_typ                = type_head ,
     so_ctx                = ctx_head  ,
     so_stdGen             = stdGen    ,
     so_runLen             = Nothing   ,
     so_randomRunState     = NoRandomRunState , 
-    so_naturalVars        = [] ,
     so_edgeSelectionModel = AllEdges  
   }
 
-test_head_2 = testSO $ \ stdGen -> SearchOptions {
+test_head_2 = testSO2 $ \ stdGen -> SearchOptions {
     so_n                  = 500       ,
     so_typ                = type_head ,
     so_ctx                = ctx_head  ,
     so_stdGen             = stdGen    ,
     so_runLen             = Just 1    ,  --Nothing   ,
     so_randomRunState     = NoRandomRunState,
-    so_naturalVars        = [] ,
     so_edgeSelectionModel = OneRandomEdgeWithPedicat (const True)  --AllEdges  , 
   } 
 
-test_head_koza = testSO $ \ stdGen -> SearchOptions {
+test_head_koza = testSO2 $ \ stdGen -> SearchOptions {
     so_n                  = 500       ,
     so_typ                = type_head ,
     so_ctx                = ctx_head  ,
     so_stdGen             = stdGen    ,
     so_runLen             = Just 1    ,  --Nothing   ,
     so_randomRunState     = KozaRandomRunState Nothing Nothing ,
-    so_naturalVars        = [] ,
     so_edgeSelectionModel = KozaESM
   } 
 
+test_ssr_koza = testSO2 $ \ stdGen -> SearchOptions {
+    so_n                  = 500       ,
+    so_typ                = dou1 ,
+    so_ctx                = ctx_ttSSR  ,
+    so_stdGen             = stdGen    ,
+    so_runLen             = Just 1    ,  --Nothing   ,
+    so_randomRunState     = KozaRandomRunState Nothing Nothing ,
+    so_edgeSelectionModel = KozaESM
+  } 
 
 
 data ZTree = ZTree { 
@@ -224,7 +189,6 @@ data SearchOptions = SearchOptions{
   so_n                  :: Int                , 
   so_typ                :: Typ                ,  
   so_ctx                :: Context            ,
-  so_naturalVars        :: Context            ,
   so_runLen             :: Maybe Int          , -- Nothing means unlimited runLen 
   so_stdGen             :: StdGen             ,
   so_edgeSelectionModel :: EdgeSelectionModel ,
@@ -236,24 +200,23 @@ defaultSearchOptions n typ ctx = SearchOptions {
   so_n                  = n ,
   so_typ                = typ ,
   so_ctx                = ctx ,
-  so_naturalVars        = [] ,
   so_runLen             = Nothing ,
   so_stdGen             = mkStdGen 42424242 ,
   so_edgeSelectionModel = AllEdges ,
   so_randomRunState     = NoRandomRunState
  }
 
-initSO :: SearchOptions -> SearchOptions
-initSO pre_so = 
-  let (typ,ctx,naturalVars) = problemHeadPreproccess (so_typ pre_so) (so_ctx pre_so)
-   in pre_so{ so_typ = typ , so_ctx = ctx , so_naturalVars = naturalVars }
+kozaSearchOptions :: Int -> Typ -> Context -> StdGen -> SearchOptions
+kozaSearchOptions n typ ctx stdGen =  SearchOptions {
+    so_n                  = n      ,
+    so_typ                = typ    ,
+    so_ctx                = ctx    ,
+    so_stdGen             = stdGen ,
+    so_runLen             = Just 1 , 
+    so_randomRunState     = KozaRandomRunState Nothing Nothing ,
+    so_edgeSelectionModel = KozaESM
+  } 
 
-problemHeadPreproccess :: Typ -> Context -> (Typ,Context,Context)
-problemHeadPreproccess typ ctx = 
-  let (ts,alpha)  = typeArgs typ
-      ss          = map (\i->'x':show i) [0..]
-      naturalVars = zip ss ts
-   in (Typ alpha , naturalVars ++ ctx , naturalVars )
 
 
 
@@ -269,7 +232,7 @@ spinRandomRunState rrs gen0 = case rrs of
   NoRandomRunState -> ( NoRandomRunState , gen0 )
   KozaRandomRunState _ _ -> 
     let (     isFull , gen1 ) = random gen0
-        ( m_maxDepth , gen2 ) = randomL [2..7] gen1 --randomL [1..6] gen1
+        ( m_maxDepth , gen2 ) = randomL [1..6] gen1 --randomL [1..6] gen1
      in ( KozaRandomRunState (Just isFull) m_maxDepth , gen2 )     
 
 
@@ -290,7 +253,7 @@ selectEdges esm zt edges gen0 = case esm of
 kozaESM :: IsFullMethod -> MaximalDepth -> Depth -> [Edge] -> StdGen -> ( [Edge] , StdGen )
 kozaESM isFull maxDepth depth edges gen0 =
  let (ts,ns) = partition isTerminal edges
-     candids | depth == 1        = ns -- 0
+     candids | depth == 0        = ns -- 0
              | depth == maxDepth = ts
              | depth >  maxDepth = []
              | isFull            = ns
@@ -312,25 +275,14 @@ oneRandomEdgeWithPedicat edges p gen0 =
 
 
 
-proveN :: Int -> Typ -> Context -> [Tree]
-proveN n typ ctx = proveWith $ defaultSearchOptions n typ ctx
 
-
-proveFin :: SearchOptions -> [TTerm]
-proveFin so = 
-  let trees = proveWith so
-      naturalVars = so_naturalVars (initSO so) --           <=== hnus!
-   in map ( addProblemHead naturalVars . tree2tterm ) trees   
-
-addProblemHead :: Context -> TTerm -> TTerm
-addProblemHead ctx tt = fst $ foldr (\(s,ty1) (tt,ty2)->let ty = ty1:->ty2 in(TLam s tt ty,ty) ) (tt,ttermTyp tt) ctx    
 
 proveWith :: SearchOptions -> [Tree]
-proveWith pre_so = case m_runLen of
+proveWith so = case m_runLen of
   Nothing -> proveN_ n so
   _       -> proveWith' so n
  where
-  so       = initSO pre_so
+  --so       = initSO pre_so
   n        = so_n so
   m_runLen = so_runLen so
   runLen   = fromJust m_runLen
@@ -485,22 +437,6 @@ subFromTable table ss typ = addToTableWith (flip (Set.\\))  table (zip ss (fst $
 
 
 
--- total bullshit :    b12 >>= goUp
-
-Just b12' = b12
-lv12 = locals b12'
-dads12 = dads b12'
-DTreeLam ss12 typ12  = head dads12
-
-tab12a = putStrLn $ showTable lv12
-tab12b = putStrLn . showTable $ subFromTable_bug lv12 ss12 typ12
-
-ctx12c  = zip ss12 (fst $ typeArgs typ12)
-tri = head ctx12c
-
-tab12c = putStrLn . showTable $ addToTableWith (Set.\\) lv12 ctx12c
-
-tab12d = putStrLn . showTable  $ f (Set.\\) tri  lv12
 
 nextTreeTypNode :: ZTree -> Maybe ZTree 
 nextTreeTypNode zt = case current zt of 
@@ -653,3 +589,10 @@ ctx_head = [  ( "listCase" , l_int :-> m_int :-> (int:->l_int:->m_int) :-> m_int
               ( "Just"     , int :-> m_int ) ]
 
 
+dou, dou1, dou2 :: Typ
+dou  = Typ "Double"
+dou1 = dou :-> dou
+dou2 = dou :-> dou :-> dou
+
+ctx_ttSSR :: Context
+ctx_ttSSR = [("(+)",dou2),("(-)",dou2),("(*)",dou2),("rdiv",dou2),("sin",dou1),("cos",dou1),("exp",dou1),("rlog",dou1)]

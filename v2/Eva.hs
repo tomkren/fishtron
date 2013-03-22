@@ -92,6 +92,13 @@ sendJSON json = do
       --liftIO . putStrLn $ jsonStr
   
 
+evaSplitStdGen :: Eva StdGen
+evaSplitStdGen = do
+  gen0 <- get
+  let (gen1,gen2) = split gen0
+  put gen1
+  return gen2
+
 instance Randable Eva where
  randLift f = do
   gen <- get

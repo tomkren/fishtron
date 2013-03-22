@@ -4,13 +4,14 @@
 
 module GP_Data where
 
-import Eva (Eva)
+import Eva (Eva,evaSplitStdGen)
 import GP_Core ( Gene, Muta, Cros, generateIt, mutateIt, crossIt , Prob )
 import Utils   ( getRandom, getRandomR, getRandomL, getNormal, randIf, randCase,logIt,boxIt,boxThem )
 
 import TTerm
 import TTree
 --
+import IM ( prove , kozaSearchOptions )
 import InhabitationMachines ( proveN , randProveN, randProveUnique, proveOneWithLimit, Limit, kozaProveN )
 --
 import KozaTree ( KTree(KNode), KPos, kSubtree, kChangeSubtree, kPoses, kPoses2, kDepth ) 
@@ -30,11 +31,17 @@ type StdDev = Double
 instance Gene CTT CTTGen where generateIt = cttGen
 instance Cros CTT CTTCro where crossIt    = cttCro2
 
-data CTTGen = CTTG_Koza Typ Context Limit 
+data CTTGen = 
+  CTTG_Koza  Typ Context Limit |
+  CTTG_Koza2 Typ Context -- pomocí novýho IM
+
 data CTTCro = CTTC_Koza
 
 cttGen :: Int -> CTTGen -> Eva [CTT]
-cttGen n (CTTG_Koza typ ctx limit) = map mkCTT `liftM` kozaProveN n limit typ ctx
+cttGen n (CTTG_Koza2 typ ctx) = do
+  gen <- evaSplitStdGen
+  return . prove $ kozaSearchOptions n typ ctx gen 
+cttGen n (CTTG_Koza  typ ctx limit) = map mkCTT `liftM` kozaProveN n limit typ ctx
 
 cttCro :: CTTCro -> CTT -> CTT -> Eva (CTT,CTT)
 cttCro CTTC_Koza (CTT v1 tree1) (CTT v2 tree2) = do
