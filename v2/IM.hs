@@ -24,6 +24,7 @@ import System.Random
 import qualified Data.PSQueue as Q
 
 
+--proveAll :: Int -> Typ -> Context -> [CTT]
 
 prove :: SearchOptions -> [CTT]
 prove so = 
@@ -46,62 +47,6 @@ problemHeadPreproccess' typ ctx =
 
 
 
-
-
-
-testSO :: (StdGen->SearchOptions) -> IO ()
-testSO soFun = do
-  stdGen <- newStdGen
-  let trees = proveWith (soFun stdGen)
-  mapM_ (putStrLn . show . toSki . tree2tterm) trees
-  putStrLn $ "num terms : " ++ (show $ length trees)
-
-testSO2 :: (StdGen->SearchOptions) -> IO ()
-testSO2 soFun = do
-  stdGen <- newStdGen
-  let ctts = prove (soFun stdGen)
-  mapM_ (putStrLn . show) ctts
-  putStrLn $ "num terms : " ++ (show $ length ctts)
-
-test_head = testSO2 $ \ stdGen -> SearchOptions {
-    so_n                  = 500       ,
-    so_typ                = type_head ,
-    so_ctx                = ctx_head  ,
-    so_stdGen             = stdGen    ,
-    so_runLen             = Nothing   ,
-    so_randomRunState     = NoRandomRunState , 
-    so_edgeSelectionModel = AllEdges  
-  }
-
-test_head_2 = testSO2 $ \ stdGen -> SearchOptions {
-    so_n                  = 500       ,
-    so_typ                = type_head ,
-    so_ctx                = ctx_head  ,
-    so_stdGen             = stdGen    ,
-    so_runLen             = Just 1    ,  --Nothing   ,
-    so_randomRunState     = NoRandomRunState,
-    so_edgeSelectionModel = OneRandomEdgeWithPedicat (const True)  --AllEdges  , 
-  } 
-
-test_head_koza = testSO2 $ \ stdGen -> SearchOptions {
-    so_n                  = 500       ,
-    so_typ                = type_head ,
-    so_ctx                = ctx_head  ,
-    so_stdGen             = stdGen    ,
-    so_runLen             = Just 1    ,  --Nothing   ,
-    so_randomRunState     = KozaRandomRunState Nothing Nothing ,
-    so_edgeSelectionModel = KozaESM
-  } 
-
-test_ssr_koza = testSO2 $ \ stdGen -> SearchOptions {
-    so_n                  = 500       ,
-    so_typ                = dou1 ,
-    so_ctx                = ctx_ttSSR  ,
-    so_stdGen             = stdGen    ,
-    so_runLen             = Just 1    ,  --Nothing   ,
-    so_randomRunState     = KozaRandomRunState Nothing Nothing ,
-    so_edgeSelectionModel = KozaESM
-  } 
 
 
 data ZTree = ZTree { 
@@ -238,17 +183,33 @@ spinRandomRunState rrs gen0 = case rrs of
 
 
 data EdgeSelectionModel = 
-  AllEdges | 
-  OneRandomEdgeWithPedicat (Edge->Bool) |
-  KozaESM 
+  AllEdges                               | 
+  OneRandomEdgeWithPedicat (Edge->Bool)  |
+  KozaESM                                |
+  ContinueProbESM Double                 |
+  ContinueProbGeomWithDepth Double
 
 selectEdges :: EdgeSelectionModel -> ZTree -> [Edge] -> StdGen -> ( [Edge] , StdGen ) 
 selectEdges esm zt edges gen0 = case esm of
-  AllEdges                   -> ( edges, gen0 )
-  OneRandomEdgeWithPedicat p -> oneRandomEdgeWithPedicat edges p gen0
-  KozaESM                    -> 
+  AllEdges                    -> ( edges, gen0 )
+  OneRandomEdgeWithPedicat p  -> oneRandomEdgeWithPedicat edges p gen0
+  ContinueProbESM prob        -> continueProbESM edges prob gen0
+  ContinueProbGeomWithDepth q -> continueProbGeomWithDepth edges q (depth zt) gen0
+  KozaESM                     -> 
     let KozaRandomRunState (Just isFull) (Just maxDepth) = so_randomRunState (searchOpts zt)
      in kozaESM isFull maxDepth (depth zt) edges gen0
+
+
+continueProbESM :: [a] -> Double -> StdGen -> ( [a] , StdGen )
+continueProbESM edges prob gen0 = 
+  let len = length edges
+      (gen1,gen2) = split gen0
+      ds          = take len $ randomRs (0.0,1.0) gen1
+   in ( map fst . filter (\(e,d)->d<=prob) $ zip edges ds , gen2)
+
+continueProbGeomWithDepth :: [a] -> Double -> Int -> StdGen -> ( [a] , StdGen )
+continueProbGeomWithDepth edges q currDepth gen0 = 
+  continueProbESM edges (q**(fromIntegral currDepth)) gen0
 
 kozaESM :: IsFullMethod -> MaximalDepth -> Depth -> [Edge] -> StdGen -> ( [Edge] , StdGen )
 kozaESM isFull maxDepth depth edges gen0 =
@@ -579,6 +540,8 @@ int :: Typ
 int   = Typ "Int"
 m_int = Typ "MaybeInt"
 l_int = Typ "[Int]"
+int1 = int :-> int
+int2 = int :-> int :-> int
 
 type_head :: Typ
 type_head = l_int :-> m_int
@@ -588,6 +551,19 @@ ctx_head = [  ( "listCase" , l_int :-> m_int :-> (int:->l_int:->m_int) :-> m_int
               ( "Nothing"  , m_int ),
               ( "Just"     , int :-> m_int ) ]
 
+ctx_map :: Context
+ctx_map = [
+  ( "foldr" , (int:->l_int:->l_int) :-> l_int :-> l_int :-> l_int ),
+  ( "(:)"   , int  :-> l_int :-> l_int         ),
+  ( "[]"    , l_int                            )
+ ]
+
+ctx_big = ctx_head ++ ctx_map
+
+type_map :: Typ
+type_map = int1 :-> l_int :-> l_int
+
+
 
 dou, dou1, dou2 :: Typ
 dou  = Typ "Double"
@@ -596,3 +572,106 @@ dou2 = dou :-> dou :-> dou
 
 ctx_ttSSR :: Context
 ctx_ttSSR = [("(+)",dou2),("(-)",dou2),("(*)",dou2),("rdiv",dou2),("sin",dou1),("cos",dou1),("exp",dou1),("rlog",dou1)]
+
+
+
+
+
+
+testSO :: (StdGen->SearchOptions) -> IO ()
+testSO soFun = do
+  stdGen <- newStdGen
+  let trees = proveWith (soFun stdGen)
+  mapM_ (putStrLn . show) trees
+  putStrLn $ "num terms : " ++ (show $ length trees)
+
+testSO2 :: (StdGen->SearchOptions) -> IO ()
+testSO2 soFun = do
+  stdGen <- newStdGen
+  let ctts = prove (soFun stdGen)
+  mapM_ (putStrLn . show) ctts
+  putStrLn $ "num terms : " ++ (show $ length ctts)
+
+test_head = testSO2 $ \ stdGen -> SearchOptions {
+    so_n                  = 500       ,
+    so_typ                = type_head ,
+    so_ctx                = ctx_head  ,
+    so_stdGen             = stdGen    ,
+    so_runLen             = Nothing   ,
+    so_randomRunState     = NoRandomRunState , 
+    so_edgeSelectionModel = ContinueProbGeomWithDepth 0.99  --0.9  --AllEdges  
+  }
+
+-- \ x0 -> listCase x0 (listCase x0 Nothing (s (s (k s) (s (k (s (s (k listCase) i))) (s (k k) (s (k Ju
+-- st) i)))) (k (k (k (k (listCase x0 Nothing (k (k Nothing))))))))) (k (k Nothing))
+
+test_map = testSO2 $ \ stdGen -> SearchOptions {
+    so_n                  = 500       ,
+    so_typ                = type_map ,
+    so_ctx                = ctx_map  ,
+    so_stdGen             = stdGen    ,
+    so_runLen             = Nothing   ,
+    so_randomRunState     = NoRandomRunState , 
+    so_edgeSelectionModel = ContinueProbGeomWithDepth 0.85
+  }
+
+test_ssr = testSO2 $ \ stdGen -> SearchOptions {
+    so_n                  = 500       ,
+    so_typ                = dou1 ,
+    so_ctx                = ctx_ttSSR  ,
+    so_stdGen             = stdGen    ,
+    so_runLen             = Nothing   ,
+    so_randomRunState     = NoRandomRunState ,
+    so_edgeSelectionModel = ContinueProbGeomWithDepth 1--0.64
+  } 
+
+test_big = testSO $ \ stdGen -> SearchOptions {
+    so_n                  = 500       ,
+    so_typ                = type_map ,
+    so_ctx                = ctx_big  ,
+    so_stdGen             = stdGen    ,
+    so_runLen             = Nothing   ,
+    so_randomRunState     = NoRandomRunState , 
+    so_edgeSelectionModel = AllEdges  
+  }
+
+test_head_2 = testSO2 $ \ stdGen -> SearchOptions {
+    so_n                  = 500       ,
+    so_typ                = type_head ,
+    so_ctx                = ctx_head  ,
+    so_stdGen             = stdGen    ,
+    so_runLen             = Just 1    ,  --Nothing   ,
+    so_randomRunState     = NoRandomRunState,
+    so_edgeSelectionModel = OneRandomEdgeWithPedicat (const True)  --AllEdges  , 
+  } 
+
+test_head_koza = testSO2 $ \ stdGen -> SearchOptions {
+    so_n                  = 500       ,
+    so_typ                = type_head ,
+    so_ctx                = ctx_head  ,
+    so_stdGen             = stdGen    ,
+    so_runLen             = Just 1    ,  --Nothing   ,
+    so_randomRunState     = KozaRandomRunState Nothing Nothing ,
+    so_edgeSelectionModel = KozaESM
+  } 
+
+test_map_koza = testSO $ \ stdGen -> SearchOptions {
+    so_n                  = 500       ,
+    so_typ                = type_map ,
+    so_ctx                = ctx_map  ,
+    so_stdGen             = stdGen    ,
+    so_runLen             = Just 1    ,  --Nothing   ,
+    so_randomRunState     = KozaRandomRunState Nothing Nothing ,
+    so_edgeSelectionModel = KozaESM
+  }
+
+
+test_ssr_koza = testSO2 $ \ stdGen -> SearchOptions {
+    so_n                  = 500       ,
+    so_typ                = dou1 ,
+    so_ctx                = ctx_ttSSR  ,
+    so_stdGen             = stdGen    ,
+    so_runLen             = Just 1    ,  --Nothing   ,
+    so_randomRunState     = KozaRandomRunState Nothing Nothing ,
+    so_edgeSelectionModel = KozaESM
+  } 

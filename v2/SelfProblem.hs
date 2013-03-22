@@ -49,35 +49,24 @@ pairCase (x,y) f = f x y
 --}
 
 
-{- sada pro head : 
+{- 
 
-  listCase  :: [Int] -> Maybe Int -> (Int->[Int]->Maybe Int) -> Maybe Int
-  Nothing   :: Maybe Int
-  Just      :: a -> Maybe Int  
+  -- head , tail :
+  listCase   :: [Int] -> Maybe Int -> (Int->[Int]->Maybe Int) -> Maybe Int
+  Nothing    :: Maybe Int
+  Just       :: a -> Maybe Int  
+
+  -- map :
+  foldr      :: (Int->[Int]->[Int]) -> [Int] -> [Int] -> [Int]
+  (:)        :: Int -> [Int] -> [Int]
+  []         :: [Int]
+
+  -- filter:
+  if'        :: Bool -> [Int] -> [Int] -> [Int] 
+  (foldr,[],(:))
 
 -}
 
-ff_head_qc :: ( [Int] -> Maybe Int ) -> IO Double
-ff_head_qc prog = do 
- result <- quickCheckWithResult (stdArgs{chatty=False}) $ prop_isHead prog
- return . fromIntegral . numTests $ result 
-
-ff_head :: ( [Int] -> Maybe Int ) -> Double
-ff_head prog = 
-  ( if prog []       == Nothing then 1 else 0 ) +
-  ( if prog [1]      == Just 1  then 1 else 0 ) +
-  ( if prog [42,7,3] == Just 42 then 1 else 0 )
-
-
-
-
-prop_isHead prog xs = prog xs == my_head xs
-
-fake_head :: [a] -> Maybe a
-fake_head _ = Nothing
-
-false_head [] = Just 1
-false_head _  = Nothing
 
 my_head :: [a] -> Maybe a
 my_head xs = listCase xs Nothing (\x _->Just x)
@@ -111,6 +100,28 @@ my_minimum xs = foldr (\ x y -> maybeCase y (Just x) (\ z -> if' (x<=z) (Just x)
 my_insert :: Ord a => a -> [a] -> [a]
 my_insert x xs = listCase xs [x] (\y ys -> if'(y<=x) (y : my_insert x ys) (x:y:ys) )
 
+
+-- ffs : --
+
+ff_head :: ( [Int] -> Maybe Int ) -> Double
+ff_head prog = 
+  ( if prog []       == Nothing then 1 else 0 ) +
+  ( if prog [1]      == Just 1  then 1 else 0 ) +
+  ( if prog [42,7,3] == Just 42 then 1 else 0 )
+
+ff_tail :: ( [Int] -> Maybe [Int] ) -> Double
+ff_tail prog = 
+  ( if prog []       == Nothing     then 1 else 0 ) +
+  ( if prog [1]      == Just []     then 1 else 0 ) +
+  ( if prog [42,7,3] == Just [7,3]  then 1 else 0 ) +
+  ( if prog [1..5]   == Just [2..5] then 1 else 0 ) +
+
+
+
+
+-------------------------------------------------------------------------
+
+
 --my_insert a xs = 
 -- pairCase 
 --  ( foldr 
@@ -137,3 +148,22 @@ sort2 xs = foldr zarad [] xs
     zarad :: Ord a => a -> [a] -> [a]
     zarad x acc = undefined 
 --}
+
+
+
+
+--head stuff :
+
+ff_head_qc :: ( [Int] -> Maybe Int ) -> IO Double
+ff_head_qc prog = do 
+ result <- quickCheckWithResult (stdArgs{chatty=False}) $ prop_isHead prog
+ return . fromIntegral . numTests $ result 
+
+
+prop_isHead prog xs = prog xs == my_head xs
+
+fake_head :: [a] -> Maybe a
+fake_head _ = Nothing
+
+false_head [] = Just 1
+false_head _  = Nothing
