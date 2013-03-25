@@ -22,13 +22,15 @@ import ServerInterface
 type Eva = StateT StdGen ( StateT Stats IO ) 
 
 class ( Randable m , Logable m  ) => EvaMonad m where 
- eval   :: (Typeable a) =>  String  -> a -> m  a
- evals  :: (Typeable a) => [String] -> a -> m [a]
- statIt :: StatRecord -> m ()
+ eval      :: (Typeable a) =>  String  -> a -> m  a
+ evals     :: (Typeable a) => [String] -> a -> m [a]
+ evalsWith :: (Typeable a) => String -> [String] -> a -> m [a]
+ statIt    :: StatRecord -> m ()
 
 instance EvaMonad Eva where 
- eval  str  as = liftIO $ heval  str  as
- evals strs as = liftIO $ hevals strs as
+ eval  str  as          = liftIO $ heval  str  as
+ evals strs as          = liftIO $ hevals strs as
+ evalsWith file strs as = liftIO $ hevalsWith file strs as
  statIt = statIt_
  --statIt sr = do
  -- stats <- lift get

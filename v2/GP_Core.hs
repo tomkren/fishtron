@@ -42,7 +42,8 @@ data FitFun term a =
   FF1 (term -> Eva FitVal) a | 
   FF2 (term->String) a (a->Eva FitVal) |
   FF3 (term->String) a (a->Eva (FitVal,Bool) ) |
-  FF4 (term->String) String a  -- poslední a je fake jako u FF1, String je jmeno ff
+  FF4 (term->String) String a | -- poslední a je fake jako u FF1, String je jmeno ff
+  FF5 (term->String) String a FilePath
 
 type GenOpProbs = (Prob,Prob,Prob)
 data GenOpType = Reproduction | Mutation | Crossover

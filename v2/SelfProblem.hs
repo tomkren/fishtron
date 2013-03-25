@@ -103,19 +103,53 @@ my_insert x xs = listCase xs [x] (\y ys -> if'(y<=x) (y : my_insert x ys) (x:y:y
 
 -- ffs : --
 
-ff_head :: ( [Int] -> Maybe Int ) -> Double
-ff_head prog = 
-  ( if prog []       == Nothing then 1 else 0 ) +
-  ( if prog [1]      == Just 1  then 1 else 0 ) +
-  ( if prog [42,7,3] == Just 42 then 1 else 0 )
+infixl 2 +|+
+(+|+) :: (Double,Bool) -> Bool -> (Double,Bool)
+(d,b) +|+ True  = (d+1,b)
+(d,b) +|+ False = (d  ,False)
 
-ff_tail :: ( [Int] -> Maybe [Int] ) -> Double
-ff_tail prog = 
-  ( if prog []       == Nothing     then 1 else 0 ) +
-  ( if prog [1]      == Just []     then 1 else 0 ) +
-  ( if prog [42,7,3] == Just [7,3]  then 1 else 0 ) +
-  ( if prog [1..5]   == Just [2..5] then 1 else 0 ) +
+mkCaseFF :: (Double,Bool)
+mkCaseFF = (0,True)
 
+
+
+ff_head :: ( [Int] -> Maybe Int ) -> (Double,Bool)
+ff_head prog = mkCaseFF      +|+
+   prog []       == Nothing  +|+
+   prog [1]      == Just 1   +|+
+   prog [42,7,3] == Just 42  
+
+ff_tail :: ( [Int] -> Maybe [Int] ) -> (Double,Bool)
+ff_tail prog = mkCaseFF        +|+
+  prog []       == Nothing     +|+
+  prog [1]      == Just []     +|+
+  prog [42,7,3] == Just [7,3]  +|+
+  prog [1..5]   == Just [2..5]  
+
+ff_map :: ( (Int->Int) -> [Int] -> [Int] ) -> (Double,Bool)
+ff_map prog = mkCaseFF            +|+
+  prog id      []      == []      +|+
+  prog (+1234) [0]     == [1234]  +|+
+  prog (*2)    [1,2,3] == [2,4,6]
+
+ff_filter :: ((Int->Bool)->[Int]->[Int]) -> (Double,Bool)
+ff_filter prog = mkCaseFF               +|+
+ prog odd           []     == []        +|+
+ prog odd           [1..5] == [1,3,5]   +|+
+ prog even          [1..5] == [2,4]     +|+
+ prog (const True)  [1..4] == [1..4]    +|+
+ prog (const False) [1..4] == []        
+  
+ff_elem :: ( Int -> [Int] -> Bool ) -> (Double,Bool)
+ff_elem prog = mkCaseFF          +|+
+ prog 42 []            == False  +|+
+ prog 1  [1]           == True   +|+
+ prog 1  [2]           == False  +|+
+ prog 1  [1,2]         == True   +|+
+ prog 2  [1,2]         == True   +|+
+ prog 3  [1,2]         == False  +|+
+ prog 5  [3,1,4,7,5,6] == True   +|+
+ prog 2  [3,1,4,7,5,6] == False 
 
 
 
