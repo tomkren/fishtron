@@ -1,4 +1,4 @@
-module SSR where
+module Problems.SSR where
 
 
 foo :: Int -> Int

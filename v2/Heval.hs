@@ -54,6 +54,20 @@ hevalWith file expr as = do
    Right x  -> return x    
 
 
+hevalWith2 :: (Typeable a) => String -> String -> String -> a -> IO a
+hevalWith2 file modul expr as = do 
+  r <- Hint.runInterpreter $ do 
+   Hint.loadModules [file++".hs"]
+   Hint.setTopLevelModules [modul]
+   Hint.setImportsQ [("Prelude", Nothing)]
+   Hint.interpret expr as
+  case r of
+   Left err -> do 
+    printInterpreterError err
+    return as
+   Right x  -> return x    
+
+
 heval :: (Typeable a) => String -> a -> IO a
 heval = hevalWith "HevalFuns"
 
