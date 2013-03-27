@@ -8,16 +8,17 @@ import GP_Core ( nRunsByServer )
 
 import GP_Test (problem_ssr,problem_ssr2,problem_ant,problem_ba,problem_head)
 
-import qualified Problems.SSR as SSR
+import qualified Problems.SSR.Problem as SSR
 
 
 
 
 problemList :: [(String,String)]
 problemList = [ 
-  ("ssr" , "Simple Symbolic Regression") ,
+  ("ssr" , "Simple Symbolic Regression - old IM") ,
   ("ssr2", "Simple Symbolic Regression - new IM") ,
-  ("ssr3", "Simple Symbolic Regression - new IM and insideFF") ,
+  ("ssr3", "Simple Symbolic Regression - new IM & single-filed & inside-FF") ,
+  ("ssr4", "Simple Symbolic Regression - new IM & single-filed"),
   ("ba"  , "Bool Alternate") ,
   ("ant" , "Artifical Ant") ,
   ("head", "Trivial Head problem" )
@@ -39,9 +40,10 @@ job jobID cmd =
     case problem of
       "ant"  -> go problem_ant 
       "ba"   -> go problem_ba  
-      "ssr"  -> go problem_ssr
-      "ssr2" -> go problem_ssr2
-      "ssr3" -> go SSR.problem
+      "ssr"  -> go SSR.problem1 -- problem_ssr
+      "ssr2" -> go SSR.problem2 -- problem_ssr2
+      "ssr3" -> go SSR.problem3
+      "ssr4" -> go SSR.problem4
       "head" -> go problem_head 
 
 

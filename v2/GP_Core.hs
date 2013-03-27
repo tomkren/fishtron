@@ -43,7 +43,8 @@ data FitFun term a =
   FF2 (term->String) a (a->Eva FitVal) |
   FF3 (term->String) a (a->Eva (FitVal,Bool) ) |
   FF4 (term->String) String a | -- poslední a je fake jako u FF1, String je jmeno ff
-  FF5 String String a -- jemeno FF , jmeno modulu , fake (showStr předpokladá show) 
+  FF5 String String a | -- jemeno FF , jmeno modulu , fake (showStr předpokladá show)
+  FF6 a (a->(FitVal,Bool)) String -- asType , ff , jmeno modulu 
 
 type GenOpProbs = (Prob,Prob,Prob)
 data GenOpType = Reproduction | Mutation | Crossover
@@ -121,6 +122,14 @@ evalFF ff ts = case ff of
   xs  <- evalsWith modul strs (1::FitVal,True::Bool) 
   xs' <- mapM checkNaN_FF3 xs
   return $ resultFF3 (zip ts xs')
+ FF6 as ff modul -> do
+  let strs = map show ts
+  xs <- evalsWith modul strs as
+  let results = map ff xs
+  results' <- mapM checkNaN_FF3 results
+  return $ resultFF3 (zip ts results')
+
+
 
 
   
