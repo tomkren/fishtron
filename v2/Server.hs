@@ -18,7 +18,9 @@ import System.IO
 import System.Directory
 import System.Environment
 
-import GP_Test
+
+import Job (job,problemList)
+
 import ServerInterface
 
 main = do
@@ -79,7 +81,7 @@ runCmd workerId cmd = do
     logg $ replicate 80 '─'
     logg $ "run/" ++ cmd
     logg $ replicate 80 '─'
-    job1 (show workerId) cmd
+    job (show workerId) cmd
     logg $ "Done!"
     closeWorker workerId
 

@@ -15,7 +15,7 @@ import System.Directory
 import Control.Monad.State ( liftIO )
 
 import Dist ( Dist, mkDist, distGet, distMax,distMin,distAvg, distSize, distTake_new )
-import Eva (Eva,runEva,runEvaWith,statIt,evals,eval,GenInfoType(..),StatRecord(..)
+import Eva (Eva,runEva,runEvaWith,statIt,evals,eval,evalsWith,GenInfoType(..),StatRecord(..)
            ,RunID,RunInfos,Stats , sendJSON , flushStdout )
 import Utils (logIt,boxIt,putList,boxThem,JShow,jshow)
 
@@ -43,7 +43,7 @@ data FitFun term a =
   FF2 (term->String) a (a->Eva FitVal) |
   FF3 (term->String) a (a->Eva (FitVal,Bool) ) |
   FF4 (term->String) String a | -- poslední a je fake jako u FF1, String je jmeno ff
-  FF5 (term->String) String a FilePath
+  FF5 String String a -- jemeno FF , jmeno modulu , fake (showStr předpokladá show) 
 
 type GenOpProbs = (Prob,Prob,Prob)
 data GenOpType = Reproduction | Mutation | Crossover
@@ -114,6 +114,11 @@ evalFF ff ts = case ff of
  FF4 toStr ffName _ -> do
   let strs = map (\t-> ffName ++ " $ " ++ (toStr t) ) ts
   xs  <- evals strs (1::FitVal,True::Bool) 
+  xs' <- mapM checkNaN_FF3 xs
+  return $ resultFF3 (zip ts xs')
+ FF5 ffName modul _ -> do
+  let strs = map (\t-> ffName ++ " $ " ++ (show t) ) ts
+  xs  <- evalsWith modul strs (1::FitVal,True::Bool) 
   xs' <- mapM checkNaN_FF3 xs
   return $ resultFF3 (zip ts xs')
 
