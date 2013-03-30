@@ -18,7 +18,14 @@ dou1 = dou :-> dou
 dou2 = dou :-> dou :-> dou
 
 ctx :: Context
-ctx = [("(+)",dou2),("(-)",dou2),("(*)",dou2),("rdiv",dou2),("sin",dou1),("cos",dou1),("exp",dou1),("rlog",dou1)]
+ctx = [( "(+)"  , dou2 ),
+       ( "(-)"  , dou2 ),
+       ( "(*)"  , dou2 ),
+       ( "rdiv" , dou2 ),
+       ( "sin"  , dou1 ),
+       ( "cos"  , dou1 ),
+       ( "exp"  , dou1 ),
+       ( "rlog" , dou1 )]
 
 
 

@@ -1,8 +1,6 @@
 module Problems.SSR.Funs where
 
 
-
-
 rdiv :: Double -> Double -> Double
 rdiv _ 0 = 1
 rdiv x y = x / y

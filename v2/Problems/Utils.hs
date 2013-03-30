@@ -1,4 +1,5 @@
 module Problems.Utils (
+  cttProblem5,
   cttProblem4,
   cttProblem3,
   cttProblem2,
@@ -23,6 +24,10 @@ asType = undefined
 
 type CTTProblem a = Problem CTT a CTTGen () CTTCro
 type BoolListProblem = Problem [Bool] () (ListGen BoolGen) (ListMut BoolMut) (ListCro () )
+
+cttProblem5 :: String -> (a -> (FitVal,Bool)) -> Typ -> Context -> a -> NumGene -> PopSize -> CTTProblem a
+cttProblem5 name ff typ ctx as = cttProblem2 name (FF6 as ff modul) typ ctx
+ where modul = "Problems." ++ name ++ ".Funs"
 
 cttProblem4 :: String -> String -> (a -> (FitVal,Bool)) -> Typ -> Context -> a -> NumGene -> PopSize -> CTTProblem a
 cttProblem4 name modul ff typ ctx as = cttProblem2 name (FF6 as ff modul) typ ctx
