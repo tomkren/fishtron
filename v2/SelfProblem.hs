@@ -65,6 +65,13 @@ pairCase (x,y) f = f x y
   if'        :: Bool -> [Int] -> [Int] -> [Int] 
   (foldr,[],(:))
 
+  -- elem :
+  (==)       :: Int->Int->Bool
+  True       :: Bool
+  False      :: Bool
+  foldr      :: (Int->Bool->Bool) -> Bool -> [Int] -> Bool
+  (if')
+
 -}
 
 
@@ -85,6 +92,7 @@ my_null xs = listCase xs True (\_ _->False)
 
 my_elem ::Eq a => a -> [a] -> Bool 
 my_elem x ys = foldr (\y acc-> if' (y==x) True acc ) False ys 
+
 
 my_min :: Ord a => a -> a -> a
 my_min a b = if' ( a <= b ) a b 

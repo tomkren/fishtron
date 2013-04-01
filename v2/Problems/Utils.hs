@@ -7,7 +7,8 @@ module Problems.Utils (
   cttProblem ,
   cttProblem',
   boolListProblem2,
-  asType
+  asType,
+  casesFF
 ) where
 
 import GP_Core (FitFun(..),Problem(..),NumGene,PopSize,mkGenOps)
@@ -18,6 +19,10 @@ import GP_Data (ListGen(..),ListCro(..),ListMut(..), BoolGen(..), BoolMut(..), L
 import TTree (CTT)
 import TTerm (Typ,Context)
 
+casesFF :: [Bool] -> (Double,Bool)
+casesFF conds = 
+  let (d,b) = foldr (\cond (d,b)->if cond then (d+1,b) else (d,False) ) (0,True) conds 
+   in ( d / (fromIntegral $ length conds) , b )
 
 asType :: a
 asType = undefined

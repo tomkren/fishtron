@@ -16,11 +16,9 @@ listCase as b1 b2 = case as of
  []   -> b1
  x:xs -> b2 x xs 
 
-ff_head :: ( [Int] -> Maybe Int ) -> (Double,Bool)
-ff_head prog = 
-  let ffval = ( if prog []       == Nothing then 1 else 0 ) +
-              ( if prog [1]      == Just 1  then 1 else 0 ) +
-              ( if prog [42,7,3] == Just 42 then 1 else 0 )
-   in (ffval,ffval == 3)
+if' :: Bool -> a -> a -> a
+if' p q r = if p then q else r 
 
 
+lol :: Int -> [Int] -> Bool
+lol = \ x0 x1 -> foldr (s (s (k if') (s (k ((==) x0)) i)) (k True )) False x1

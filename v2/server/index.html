@@ -33,6 +33,63 @@
 
     <script>
 
+
+var curr = function( fun ){
+  return curryfy( fun.length , fun , [] );
+};
+
+var curryfy = function( i , fun , args ){
+
+  if( i == 0 ){
+    return fun.apply( null , args );
+  }
+
+  return function(){
+
+    var args2 = args;
+    for (var j = 0; j < arguments.length; j++) {
+      args2 = args2.concat( [arguments[j]] );
+    }
+
+    return curryfy( i-arguments.length , fun , args2 );
+  };
+
+};
+
+
+var k = curr( function( x , y ){
+  return x;
+});
+
+var s = curr( function( x , y , z ){
+  return x( z , y(z) );
+});
+
+var i = curr(function( x ){
+  return x;
+});
+
+
+var cons = curr(function( x , xs ){
+  return [x].concat(xs);
+});
+
+var foldr = curr(function( f , z , xs ){
+
+  var ret = z;
+  for( var i = xs.length-1 ; i >= 0 ; i-- ){
+    ret = f( xs[i] , ret );
+  } 
+  return ret;
+
+});
+
+
+var f00 = function (x0,x1){return foldr( s(k(cons),s(k(x0),i)) , [] , x1  );}
+var foo = function (x0,x1){return foldr( s(k(cons),s(k(x0),i)) , [] , x1  );}
+var foo2= function (x0,x1){return foldr( function(a,b){ return cons(x0(a),b)   } , [] , x1  );}
+
+
 var sin  = Math.sin ;
 var cos  = Math.cos ;
 var exp  = Math.exp ;
@@ -342,7 +399,7 @@ var Global = {
   actRun : undefined ,
   actGen : undefined,
   fenotyp : undefined,
-  defaultTab : 'params' //'im'
+  defaultTab : 'opts' //'im'
 };
 
 
@@ -485,7 +542,7 @@ $(document).ready(function() {
         $.each( problems , function() {
             select.append($("<option />")
                   .val( this.code )
-                  .text( this.name + ' [' + this.code + ']' ));
+                  .text( '[' + this.code + '] ' + this.name ));
         });
 
         $('#opts').change();
@@ -572,8 +629,13 @@ var go = function(){
     success: function(wid) {  
         console.log( wid + ' [VYTVOREN]' );
 
-        if( $('#opts').attr('class').match(/.*(active)/) ){
-          $('#special-link').tab('show');
+        if( $('#opts').attr('class').match(/.*(active)/ ) ){
+
+          if( Global.fenotyp !== undefined ){
+            $('#special-link').tab('show');
+          }else{
+            $('#stdout-link').tab('show');
+          }
         }
 
         setTimeout( function(){out( wid , 1 )} , 100 );
@@ -671,6 +733,8 @@ var runCmd = function(){
 
       var solution ;
 
+      console.log( cmdObj.js );
+
       eval( "solution = " + cmdObj.js );
 
       Global.bests[ Global.actRun ][ Global.actGen ] = solution ;
@@ -692,7 +756,6 @@ var runCmd = function(){
   };
 
 }();
-
 
 
 

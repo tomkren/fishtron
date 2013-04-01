@@ -55,19 +55,27 @@ jsShow (CTT ctx ttree) =
 
 jsShowBody :: TTree -> String
 jsShowBody (TTree symbol typ ttrees ) =
- case ttrees of
-  [] -> symbol
-  _  ->
-   if isBinop symbol && length ttrees == 2
-    then let [l,r]    = ttrees
-             [_,op,_] = symbol
-          in "(" ++ jsShowBody l ++ [op] ++ jsShowBody r ++ ")"
-    else let inside = intercalate "," . map jsShowBody $ ttrees 
-          in symbol ++ "(" ++ inside ++ ")"
+ let symbol' = transformExceptions symbol 
+ in case ttrees of
+     [] -> symbol'
+     _  ->
+      if isBinop symbol' && length ttrees == 2
+       then let [l,r] = ttrees
+                op    = tail . init $ symbol'
+             in "(" ++ jsShowBody l ++ op ++ jsShowBody r ++ ")"
+       else let inside = intercalate "," . map jsShowBody $ ttrees 
+             in symbol' ++ "(" ++ inside ++ ")"
 
 isBinop :: Symbol -> Bool
-isBinop ['(',x,')'] = x `elem` ['*','+','-','/','%']
+isBinop ['(',x  ,')'] =  x    `elem` ['*','+','-','/','%']
+isBinop ['(',x,y,')'] = [x,y] `elem` ["=="]
 isBinop _ = False
+
+transformExceptions :: Symbol -> Symbol
+transformExceptions "(:)"  = "cons"
+transformExceptions "if'"  = "if_"
+transformExceptions "(==)" = "equals"
+transformExceptions x      = x
 
 
 instance Show TTree where
