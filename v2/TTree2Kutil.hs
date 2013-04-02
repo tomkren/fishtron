@@ -1,3 +1,7 @@
+
+-- nadále udržováno v TTree.hs
+
+
 module TTree2Kutil where
 
 import Data.List

@@ -7,3 +7,4 @@ cabal install enumerator
 cabal install json
 cabal install normaldistribution
 cabal install statistics-linreg
+cabal install PSQueue
