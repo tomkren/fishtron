@@ -4,9 +4,9 @@ import TTerm (Typ(..),Context)
 
 import Problems.Utils ( cttProblem5 , asType , casesFF )
 
-problem1 =
- cttProblem5 "BigCtx" ff typ ctx as
+--problem1 = go pr_head
 
+go (ff,ctx,typ,as) = cttProblem5 "BigCtx" ff typ ctx as
 
 
 bool   = Typ "Bool"
@@ -18,14 +18,14 @@ ml_int = Typ "Maybe [Int]"
 
 
 
-(ff,ctx,typ,as) = pr_head
+--(ff,ctx,typ,as) = pr_head
 
 
-pr_head   = ( ff_head   , ctx_combo , l_int :-> m_int                 , asType :: [Int] -> Maybe Int           )
-pr_tail   = ( ff_tail   , ctx_combo , l_int :-> ml_int                , asType :: [Int] -> Maybe [Int]         )
-pr_map    = ( ff_map    , ctx_combo , (int:->int) :-> l_int :-> l_int , asType :: (Int->Int) -> [Int] -> [Int] )
-pr_filter = ( ff_filter , ctx_combo , (int:->bool):-> l_int :-> l_int , asType :: (Int->Bool)-> [Int] -> [Int] )
-pr_elem   = ( ff_elem   , ctx_combo , int :-> l_int :-> bool          , asType :: Int -> [Int] -> Bool         )
+pr_head   = go ( ff_head   , ctx_combo , l_int :-> m_int                 , asType :: [Int] -> Maybe Int           )
+pr_tail   = go ( ff_tail   , ctx_combo , l_int :-> ml_int                , asType :: [Int] -> Maybe [Int]         )
+pr_map    = go ( ff_map    , ctx_combo , (int:->int) :-> l_int :-> l_int , asType :: (Int->Int) -> [Int] -> [Int] )
+pr_filter = go ( ff_filter , ctx_combo , (int:->bool):-> l_int :-> l_int , asType :: (Int->Bool)-> [Int] -> [Int] )
+pr_elem   = go ( ff_elem   , ctx_combo , int :-> l_int :-> bool          , asType :: Int -> [Int] -> Bool         )
 
 ctx_combo = ctx_head ++ ctx_tail ++ ctx_map ++ ctx_filter' ++ ctx_elem
 
@@ -48,7 +48,7 @@ ctx_filter' = [  ( "if'"      , bool :-> l_int :-> l_int :-> l_int              
 ctx_elem    = [  ( "foldr"    , (int:->bool:->bool) :-> bool :-> l_int :-> bool        ),
                  ( "if'"      , bool :-> bool :-> bool :-> bool                        ),
                  ( "(==)"     , int:->int:->bool                                       ),
-                 ( "True "    , bool                                                   ),
+                 ( "True"     , bool                                                   ),
                  ( "False"    , bool                                                   )]
 
 

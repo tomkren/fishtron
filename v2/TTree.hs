@@ -335,11 +335,17 @@ ttree2pre ctx tt = ttree2pre' ( "1" , [("_out_",0)] , (0,0) , 0 , tt)
 
     transform :: Symbol -> Int -> Val 
     transform sym numArgs = case sym of
-     "Nothing" -> "[Nothing]"
      "i" -> "id"
      "s" -> "s2"
      "k" | numArgs == 0 -> "const"
          | numArgs == 1 -> "k1" 
+     "Nothing" -> "[Nothing]"
+     "[]" -> "'()"
+     "if'" -> "if_"
+     "True" -> "[true]"
+     "False" -> "[false]"
+     "(:)"   -> ":"
+     "(==)"  -> "=="   
      x -> x 
 
 

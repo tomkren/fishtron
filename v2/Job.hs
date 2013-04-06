@@ -17,14 +17,18 @@ import qualified Problems.BigCtx.Problem as BigCtx
 
 problemList :: [(String,String)]
 problemList = [ 
+  ("head"   , "Problem with basic funs for types generating elementary funs." ),
+  ("tail"   , "..."),
+  ("map"    , "..."),
+  ("filter" , "..."),
+  ("elem"   , "..."),
   ("ssr"    , "Simple Symbolic Regression - old IM") ,
   ("ssr2"   , "Simple Symbolic Regression - new IM") ,
   ("ssr3"   , "Simple Symbolic Regression - new IM & single-filed & inside-FF") ,
   ("ssr4"   , "Simple Symbolic Regression - new IM & single-filed"),
   ("ba"     , "Bool Alternate") ,
   ("ant"    , "Artifical Ant") ,
-  ("head"   , "Trivial Head problem" ),
-  ("BigCtx" , "Problem with basic funs for types generating elementary funs." )
+  ("head_"  , "Trivial Head problem" )  
  ]
 
 
@@ -47,8 +51,12 @@ job jobID cmd =
       "ssr2"   -> go SSR.problem2 -- problem_ssr2
       "ssr3"   -> go SSR.problem3
       "ssr4"   -> go SSR.problem4
-      "head"   -> go problem_head 
-      "BigCtx" -> go BigCtx.problem1
+      "head_"  -> go problem_head 
+      "head"   -> go BigCtx.pr_head  
+      "tail"   -> go BigCtx.pr_tail  
+      "map"    -> go BigCtx.pr_map   
+      "filter" -> go BigCtx.pr_filter
+      "elem"   -> go BigCtx.pr_elem  
 
 
 
