@@ -1,6 +1,14 @@
 
 
+var dStay   = 0; 
+var dUp     = 1;
+var dDown   = 2;
+var dLeft   = 3; 
+var dRight  = 4; 
 
+var lt = function(x,y){
+  return (x<=y) ;
+};
 
 
 var output_ = function( dir_ ){
@@ -27,16 +35,16 @@ var inputEnergy_ = function( input_ ){
 var posToDir_ = function( posMy , posHer ){ 
       
   if( posHer === null ){
-    return 'stay' ;
+    return dStay ;
   }
        
   var d = minus( posHer , posMy );
   var dx = d[0] , dy = d[1];
        
-  if(   dx  > dy && (-dx) > dy ) { return 'up'   ; }
-  if(   dx  > dy               ) { return 'right'; }
-  if( (-dx) > dy               ) { return 'left' ; }
-  if( true                     ) { return 'down' ; }
+  if(   dx  > dy && (-dx) > dy ) { return dUp   ; }
+  if(   dx  > dy               ) { return dRight; }
+  if( (-dx) > dy               ) { return dLeft ; }
+  if( true                     ) { return dDown ; }
       
 };
 
@@ -58,7 +66,7 @@ Global.Problems.fly = Fly = {
 
   progLib : {
     prog1 : function (x0){return output_(posToDir_(  myPos_(x0)   , nearestApplePos_(x0) )   );},
-    prog2 : function (x0){return output_('right');},
+    prog2 : function (x0){return output_(dRight);},
     prog3 : function (x0){return output_(posToDir_(  myPos_(x0)   , nearestFlyPos_(x0) )  );},
   },
 
@@ -204,10 +212,11 @@ Global.Problems.fly = Fly = {
 
   fenotyp : function( solution , ffVal ){
     this.solutions[this.i] = solution ;
-    $('#fly-links').append( '<a href="#" onclick="Global.Problems.fly.flyLink('+this.i+')">' +ffVal + '</a> ' );
+    $('#fly-links').append( '<a href="#" title="'+ solution +'" '+
+      'onclick="Global.Problems.fly.flyLink('+this.i+')">' +ffVal + '</a> ' );
 
     if( this.i == 0 ){
-      console.log('roflik');
+      //console.log('roflik');
       this.defaultSolution = solution ;
       this.mapaAt( this.solutionFlyPos ).prog = this.defaultSolution ;
     }
@@ -218,7 +227,7 @@ Global.Problems.fly = Fly = {
 
   flyLink : function( i ){
     this.actualSolution = this.solutions[i];
-    console.log('lol : ' +i+ ' ' + this.actualSolution );
+    //console.log('lol : ' +i+ ' ' + this.actualSolution );
     this.restart( this.actualSolution );
     this.run();
   },
@@ -280,7 +289,7 @@ Global.Problems.fly = Fly = {
     var input         = this.prepareInput( currentFlyPos , fly ); 
     var output        = fly.prog( input ); 
 
-    console.log( fly.progName + ' ' + output );
+    //console.log( fly.progName + ' ' + output );
 
     var newFlyPos     = this.tryToMoveFly( output , currentFlyPos ) ;
     
@@ -359,11 +368,11 @@ Global.Problems.fly = Fly = {
     var y = pos[1];
 
     switch( dir ){
-      case 'up'    : return [x  ,y-1] ; 
-      case 'down'  : return [x  ,y+1] ; 
-      case 'left'  : return [x-1,y  ] ; 
-      case 'right' : return [x+1,y  ] ; 
-      case 'stay'  : return [x  ,y  ] ; 
+      case dUp    : return [x  ,y-1] ; 
+      case dDown  : return [x  ,y+1] ; 
+      case dLeft  : return [x-1,y  ] ; 
+      case dRight : return [x+1,y  ] ; 
+      case dStay  : return [x  ,y  ] ; 
     }
   },
 

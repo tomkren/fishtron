@@ -17,7 +17,7 @@ import Problems.Fly.Fly
 problem1 = cttProblem5 "Fly" ff prog_typ ctx prog_type
 
 
-jsData = worldToJSON ff_solutionFlyPos ff_world_withEnvirFlies 
+jsData = worldToJSON ff_solutionFlyPos2 ff_world_withEnvirFlies2 
 
 
 prog_type = asType :: Input_ -> Output_
@@ -27,16 +27,27 @@ input_typ  = Typ "Input_"
 output_typ = Typ "Output_"
 dir_typ    = Typ "Dir_"
 
-m_pos = Typ "Maybe Pos"
+m_pos   = Typ "Maybe Pos"
 pos_typ = Typ "Pos"
+
+dou     = Typ "Double"
+boolean = Typ "Bool"
 
 ctx :: Context
 ctx = [
-  ( "output_"          , dir_typ   :-> output_typ         ) ,
-  ( "nearestApplePos_" , input_typ :-> m_pos              ) ,
-  ( "nearestFlyPos_"   , input_typ :-> m_pos              ) ,
-  ( "myPos_"           , input_typ :-> pos_typ            ) ,
-  ( "posToDir_"        , pos_typ   :-> m_pos :-> dir_typ  )
+  ( "output_"          , dir_typ   :-> output_typ                     ) ,
+  ( "nearestApplePos_" , input_typ :-> m_pos                          ) ,
+  ( "nearestFlyPos_"   , input_typ :-> m_pos                          ) ,
+  ( "myPos_"           , input_typ :-> pos_typ                        ) ,
+  ( "posToDir_"        , pos_typ   :-> m_pos   :-> dir_typ            ) ,
+  ( "dist"             , pos_typ   :-> pos_typ :-> dou                ) ,
+  ( "dStay"            , dir_typ                                      ) ,
+  ( "dUp"              , dir_typ                                      ) ,
+  ( "dDown"            , dir_typ                                      ) ,
+  ( "dLeft"            , dir_typ                                      ) ,
+  ( "dRight"           , dir_typ                                      ) ,
+  ( "(<=)"             , dou :-> dou :-> boolean                      ) ,
+  ( "if'"              , boolean :-> dir_typ :-> dir_typ :-> dir_typ  )
  ]
 
 --  nearestApplePos :: Maybe Pos ,
@@ -58,7 +69,7 @@ numSteps = 100
 
 ff :: (Input_->Output_) -> (Double,Bool)
 ff prog_ = 
-  let w  = ff_world_complet prog_
+  let w  = ff_world_complet2 prog_
       w' = steps numSteps w
       finalEnergy = fromIntegral $ head $ energies w'
    in ( finalEnergy , False )
@@ -81,6 +92,65 @@ ff_world_withEnvirFlies  =
 
 ff_world_noFlies :: World
 ff_world_noFlies = w1 
+
+
+ff_world_complet2 :: Prog_ -> World
+ff_world_complet2 prog_ = 
+ foldr (uncurry putFly) ff_world_withEnvirFlies2
+  [ ( ff_solutionFlyPos2 , (prog_2prog prog_ , "_" ) ) ]
+
+ff_solutionFlyPos2 :: Pos
+ff_solutionFlyPos2 = (2,2)
+
+ff_world_withEnvirFlies2 :: World
+ff_world_withEnvirFlies2  = 
+ foldr (uncurry putFly) ff_world_noFlies2
+  [  ]
+
+ff_world_noFlies2 :: World
+ff_world_noFlies2 = worldFromStrs [
+--1234567890123456789012345678901234567890
+ "........................................",
+ ".WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW.",
+ ".W....A..A..A.A...A.A..A.A...A...A..AAW.",
+ ".W....WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW.W.",
+ ".WWW................................W.W.",
+ ".W.W................................W.W.",
+ ".W.W................................W.W.",
+ ".W.W................................W.W.",
+ ".W.W................................W.W.",
+ ".W.W................................WAW.",
+ ".W.W................................W.W.",
+ ".W.W.....AAAAAAAAAAAAAAAAAAAAA......W.W.",
+ ".W.W.....AAAAAAAAAAAAAAAAAAAAA......W.W.",
+ ".WAW.....AAAAAAAAAAAAAAAAAAAAA......WAW.",
+ ".W.W.....AAAAAAAAAAAAAAAAAAAAA......W.W.",
+ ".W.W.....AAAAAAAAAAAAAAAAAAAAA......W.W.",
+ ".W.W.....AAAAAAAAAAAAAAAAAAAAA......W.W.",
+ ".W.W.....AAAAAAAAAAAAAAAAAAAAA......W.W.",
+ ".W.W.....AAAAAAAAAAAAAAAAAAAAA......WAW.",
+ ".W.W.....AAAAAAAAAAAAAAAAAAAAA......W.W.",
+ ".WAW.....AAAAAAAAAAAAAAAAAAAAA......W.W.",
+ ".W.W.....AAAAAAAAAAAAAAAAAAAAA......W.W.",
+ ".W.W.....AAAAAAAAAAAAAAAAAAAAA......WAW.",
+ ".W.W.....AAAAAAAAAAAAAAAAAAAAA......W.W.",
+ ".W.W.....AAAAAAAAAAAAAAAAAAAAA......W.W.",
+ ".WAW.....AAAAAAAAAAAAAAAAAAAAA......WAW.",
+ ".W.W.....AAAAAAAAAAAAAAAAAAAAA......W.W.",
+ ".W.W.....AAAAAAAAAAAAAAAAAAAAA......W.W.",
+ ".W.W.....AAAAAAAAAAAAAAAAAAAAA......WAW.",
+ ".W.W................................W.W.",
+ ".W.W................................W.W.",
+ ".WAW................................W.W.",
+ ".WAW................................W.W.",
+ ".W.W................................WAW.",
+ ".W.W................................W.W.",
+ ".W.W................................W.W.",
+ ".W.WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW.W.",
+ ".WA....A....A.....A.....A.....A......AW.",
+ ".WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW.",
+ "........................................"]
+
 
 worldToJSON :: Pos -> World -> JSValue
 worldToJSON solutionFlyPos@(x,y) w =
@@ -110,6 +180,8 @@ worldToJSON solutionFlyPos@(x,y) w =
 --mapka = intercalate "\n" $ map (concatMap (\o-> objChar o : " ")) $ worldToLists view w 
 
 --worldToLists :: (Pos,Pos) -> World -> [[Object]]
+
+
 
 
 

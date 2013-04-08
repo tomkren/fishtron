@@ -19,6 +19,9 @@ k x y = x
 i :: a -> a
 i x = x
 
+if' :: Bool -> a -> a -> a
+if' p q r = if p then q else r 
+
 dStay , dUp , dDown , dLeft , dRight :: Dir_
 dStay   = 0 
 dUp     = 1
@@ -50,5 +53,12 @@ posToDir_ posMy (Just posHer)
   | otherwise                = dDown
  where (dx,dy) = posHer `minus` posMy
 
+--avg :: [Pos] -> Pos
+
+
 minus :: Pos -> Pos -> Pos
 minus (x1,y1) (x2,y2) = (x1-x2,y1-y2) 
+
+dist :: Pos -> Pos -> Double
+dist (x1,y1) (x2,y2) = sqrt $ (d2 x1 x2) + (d2 y1 y2)
+ where d2 a b = let c=a-b in fromIntegral $ c*c 

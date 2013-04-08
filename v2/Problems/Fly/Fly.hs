@@ -7,7 +7,7 @@ import Data.List
 import System.Random
 
 
-import Problems.Fly.Funs (Energy,Pos,minus)
+import Problems.Fly.Funs (Energy,Pos,minus,dist)
 
 data Input  = Input {
   nearestApplePos :: Maybe Pos ,
@@ -115,18 +115,6 @@ prepareInput w flyPos flyData =
           inputEnergy     = flyEnergy flyData ,
           myPos           = flyPos } 
 
--- getNearestAppleDir :: World -> Pos -> Dir
--- getNearestAppleDir w pos = getNearestDir w pos (applePoses w)
--- 
--- getNearestFlyDir :: World -> Pos -> Dir
--- getNearestFlyDir w pos = 
---   let flies = (( fliesToDo w ++ doneFlies w ) \\  [pos] )
---    in getNearestDir w pos flies 
--- 
--- getNearestDir :: World -> Pos -> [Pos] -> Dir
--- getNearestDir w pos poses = case sort $ map (\pos'->(dist pos pos',pos')) $ poses of -- !!!!!!!!! sort je asi blbost stačí min
---  []         -> DStay
---  xs@((_,pos'):_) -> posToDir pos pos' 
 
 getNearestPos :: World -> Pos -> [Pos] -> Maybe Pos
 getNearestPos w pos poses = case poses of
@@ -190,9 +178,6 @@ posToDir posMy (Just posHer)
  where (dx,dy) = posHer `minus` posMy
 
 
-dist :: Pos -> Pos -> Double
-dist (x1,y1) (x2,y2) = sqrt $ (d2 x1 x2) + (d2 y1 y2)
- where d2 a b = let c=a-b in fromIntegral $ c*c 
 
 
 w2 = foldr (uncurry putFly) w1 
@@ -291,6 +276,25 @@ worldToLists ((x1,y1),(x2,y2)) w =
   [ [ objOnPos w (x,y) | x <- [x1..x2] ] | y <- [y1..y2] ]
 
 
+worldFromStrs :: [String] -> World
+worldFromStrs strs = 
+  foldr (\(pos,obj) w -> f obj pos w ) emptyWorld (worldFromStrs' strs)
+ where
+  f obj = case obj of
+    Apple -> putApple 
+    _     -> putObjOnPos obj
+
+worldFromStrs' :: [String] -> [(Pos,Object)]
+worldFromStrs' strs = 
+  concatMap (\(str,y)-> map (\(ch,x)-> ((x,y),objectFromChar ch) ) (zip str [0..]) ) (zip strs [0..]) 
+
+objectFromChar :: Char -> Object
+objectFromChar ch = case ch of
+  '.' -> Free
+  'W' -> Wall
+  'A' -> Apple
+
+
 
 allFlyPoses :: World -> [Pos]
 allFlyPoses w = reverse (doneFlies w) ++ (fliesToDo w)
@@ -300,6 +304,9 @@ fliesInfo w = concatMap f (allFlyPoses w)
   where f pos = case objOnPos w pos of 
                  Fly flyData -> show pos ++ " : \t" ++ show flyData ++ "\n"
                  _ -> error $ "There shoud be a fly on " ++ show pos ++ "."
+
+
+
 
 
 instance Show Object where

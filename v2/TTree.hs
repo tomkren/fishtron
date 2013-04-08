@@ -78,6 +78,7 @@ transformExceptions :: Symbol -> Symbol
 transformExceptions "(:)"  = "cons"
 transformExceptions "if'"  = "if_"
 transformExceptions "(==)" = "equals"
+transformExceptions "(<=)" = "lt"
 transformExceptions x      = x
 
 
