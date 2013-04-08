@@ -1,7 +1,7 @@
 module Problems.Fly.Funs where
 
 
-type Input_  = ( Maybe Pos , Maybe Pos , Pos , Energy )
+type Input_  = ( [Pos] , Maybe Pos , Pos , Energy )
 type Output_ = Dir_
 type Dir_    = Int
 type Energy  = Int
@@ -22,6 +22,11 @@ i x = x
 if' :: Bool -> a -> a -> a
 if' p q r = if p then q else r 
 
+head_ :: [a] -> Maybe a
+head_ xs = case xs of
+  []  -> Nothing
+  x:_ -> Just x
+
 dStay , dUp , dDown , dLeft , dRight :: Dir_
 dStay   = 0 
 dUp     = 1
@@ -32,8 +37,8 @@ dRight  = 4
 output_ :: Dir_ -> Output_
 output_ = id
 
-nearestApplePos_ :: Input_ -> Maybe Pos
-nearestApplePos_ (x,_,_,_) = x
+myApplePoses_ :: Input_ -> [Pos]
+myApplePoses_ (x,_,_,_) = x
 
 nearestFlyPos_ :: Input_ -> Maybe Pos
 nearestFlyPos_ (_,x,_,_) = x
@@ -53,7 +58,15 @@ posToDir_ posMy (Just posHer)
   | otherwise                = dDown
  where (dx,dy) = posHer `minus` posMy
 
---avg :: [Pos] -> Pos
+avg :: [Pos] -> Maybe Pos
+avg xs = case xs of
+  [] -> Nothing
+  xs -> let (xs1,xs2) = unzip xs
+         in Just ( round $ mean xs1 , round $ mean xs2 )
+ where
+  mean :: [Int] -> Double
+  mean xs = (fromIntegral $ sum xs) / (fromIntegral $ length xs)
+
 
 
 minus :: Pos -> Pos -> Pos

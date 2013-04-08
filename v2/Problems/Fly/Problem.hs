@@ -9,8 +9,8 @@ import Problems.Utils ( cttProblem5 , asType )
 import Text.JSON
 import JSONUtils
 
-import Problems.Fly.Funs ( Input_ , Output_ , Dir_  , Energy , Pos ,  
-                           output_ , nearestApplePos_ ,nearestFlyPos_, myPos_ , posToDir_  ,
+import Problems.Fly.Funs ( Input_ , Output_ , Dir_  , Energy , Pos , avg , 
+                           output_ , myApplePoses_ ,nearestFlyPos_, myPos_ , posToDir_  ,
                            dStay , dUp , dDown , dLeft , dRight )
 import Problems.Fly.Fly
 
@@ -28,6 +28,7 @@ output_typ = Typ "Output_"
 dir_typ    = Typ "Dir_"
 
 m_pos   = Typ "Maybe Pos"
+l_pos   = Typ "List Pos"
 pos_typ = Typ "Pos"
 
 dou     = Typ "Double"
@@ -36,7 +37,7 @@ boolean = Typ "Bool"
 ctx :: Context
 ctx = [
   ( "output_"          , dir_typ   :-> output_typ                     ) ,
-  ( "nearestApplePos_" , input_typ :-> m_pos                          ) ,
+  ( "myApplePoses_"    , input_typ :-> l_pos                          ) ,
   ( "nearestFlyPos_"   , input_typ :-> m_pos                          ) ,
   ( "myPos_"           , input_typ :-> pos_typ                        ) ,
   ( "posToDir_"        , pos_typ   :-> m_pos   :-> dir_typ            ) ,
@@ -47,20 +48,13 @@ ctx = [
   ( "dLeft"            , dir_typ                                      ) ,
   ( "dRight"           , dir_typ                                      ) ,
   ( "(<=)"             , dou :-> dou :-> boolean                      ) ,
-  ( "if'"              , boolean :-> dir_typ :-> dir_typ :-> dir_typ  )
+  ( "if'"              , boolean :-> dir_typ :-> dir_typ :-> dir_typ  ) ,
+  ( "head_"            , l_pos :-> m_pos                              ) ,
+  ( "avg"              , l_pos :-> m_pos                              ) 
+
  ]
 
---  nearestApplePos :: Maybe Pos ,
---  nearestFlyPos   :: Maybe Pos ,
---  myPos           :: Pos ,
---  inputEnergy     :: Energy 
 
--- nearestAppleDir :: Input -> Dir
--- Output :: Dir -> Output
-
-prog_1 input = output_ $ posToDir_ (myPos_ input) (nearestApplePos_ input)
-prog_2 _     = output_ $ dRight 
-prog_3 input = output_ $ posToDir_ (myPos_ input) (nearestFlyPos_ input)
 
 
 
@@ -107,38 +101,39 @@ ff_world_withEnvirFlies2  =
  foldr (uncurry putFly) ff_world_noFlies2
   [  ]
 
+
 ff_world_noFlies2 :: World
 ff_world_noFlies2 = worldFromStrs [
 --1234567890123456789012345678901234567890
  "........................................",
  ".WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW.",
- ".W....A..A..A.A...A.A..A.A...A...A..AAW.",
+ ".W....A..A..A...A...A..A.....A...A...AW.",
  ".W....WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW.W.",
- ".WWW................................W.W.",
- ".W.W................................W.W.",
- ".W.W................................W.W.",
- ".W.W................................W.W.",
- ".W.W................................W.W.",
- ".W.W................................WAW.",
- ".W.W................................W.W.",
+ ".W..................................W.W.",
+ ".W..................................W.W.",
+ ".WWW.AAAA...........................W.W.",
+ ".W.W..AAAA..........................W.W.",
+ ".W.W...AAAA.........................W.W.",
+ ".W.W....AAAAA.......................WAW.",
+ ".W.W.....AAAAAA.....................W.W.",
+ ".W.W......AAAAAAAA..................W.W.",
+ ".W.W......AAAAAAAA..................W.W.",
+ ".WAW.......AAAAAAAAA................WAW.",
+ ".W.W.......AAAAAAAAAAAA.............W.W.",
+ ".W.W......AAAAAAAAAAAAAA............W.W.",
+ ".W.W.....AAAAAAAAAAAAAAAAA..........W.W.",
+ ".W.W.....AAAAAAAAAAAAAAAAAAA........W.W.",
+ ".W.W....AAAAAAAAAAAAAAAAAAAAAA......WAW.",
+ ".W.W....AAAAAAAAAAAAAAAAAAAAAA......W.W.",
+ ".WAW....AAAAAAAAAAAAAAAAAAAAAA......W.W.",
+ ".W.W....AAAAAAAAAAAAAAAAAAAAAA......W.W.",
+ ".W.W....AAAAAAAAAAAAAAAAAAAAAA......WAW.",
+ ".W.W....AAAAAAAAAAAAAAAAAAAAAA......W.W.",
  ".W.W.....AAAAAAAAAAAAAAAAAAAAA......W.W.",
- ".W.W.....AAAAAAAAAAAAAAAAAAAAA......W.W.",
- ".WAW.....AAAAAAAAAAAAAAAAAAAAA......WAW.",
- ".W.W.....AAAAAAAAAAAAAAAAAAAAA......W.W.",
- ".W.W.....AAAAAAAAAAAAAAAAAAAAA......W.W.",
- ".W.W.....AAAAAAAAAAAAAAAAAAAAA......W.W.",
- ".W.W.....AAAAAAAAAAAAAAAAAAAAA......W.W.",
- ".W.W.....AAAAAAAAAAAAAAAAAAAAA......WAW.",
- ".W.W.....AAAAAAAAAAAAAAAAAAAAA......W.W.",
- ".WAW.....AAAAAAAAAAAAAAAAAAAAA......W.W.",
- ".W.W.....AAAAAAAAAAAAAAAAAAAAA......W.W.",
- ".W.W.....AAAAAAAAAAAAAAAAAAAAA......WAW.",
- ".W.W.....AAAAAAAAAAAAAAAAAAAAA......W.W.",
- ".W.W.....AAAAAAAAAAAAAAAAAAAAA......W.W.",
- ".WAW.....AAAAAAAAAAAAAAAAAAAAA......WAW.",
- ".W.W.....AAAAAAAAAAAAAAAAAAAAA......W.W.",
- ".W.W.....AAAAAAAAAAAAAAAAAAAAA......W.W.",
- ".W.W.....AAAAAAAAAAAAAAAAAAAAA......WAW.",
+ ".WAW.....AAAAAAAAAAAAAAAAAAAA.......WAW.",
+ ".W.W......AAAAAAAAAAAAAAAAA.........W.W.",
+ ".W.W.........AAAAAAAAAAAAA..........W.W.",
+ ".W.W.............AAAAAAAAA..........WAW.",
  ".W.W................................W.W.",
  ".W.W................................W.W.",
  ".WAW................................W.W.",
@@ -147,9 +142,53 @@ ff_world_noFlies2 = worldFromStrs [
  ".W.W................................W.W.",
  ".W.W................................W.W.",
  ".W.WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW.W.",
- ".WA....A....A.....A.....A.....A......AW.",
+ ".WA....A....A.....A.....A.....A.......W.",
  ".WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW.",
  "........................................"]
+
+-- ff_world_noFlies2 :: World
+-- ff_world_noFlies2 = worldFromStrs [
+-- --1234567890123456789012345678901234567890
+--  "........................................",
+--  ".WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW.",
+--  ".W....A..A..A.A...A.A..A.A...A...A..AAW.",
+--  ".W....WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW.W.",
+--  ".W..................................W.W.",
+--  ".W..................................W.W.",
+--  ".WWW................................W.W.",
+--  ".W.W................................W.W.",
+--  ".W.W................................W.W.",
+--  ".W.W................................WAW.",
+--  ".W.W................................W.W.",
+--  ".W.W.....AAAAAAAAAAAAAAAAAAAAA......W.W.",
+--  ".W.W.....AAAAAAAAAAAAAAAAAAAAA......W.W.",
+--  ".WAW.....AAAAAAAAAAAAAAAAAAAAA......WAW.",
+--  ".W.W.....AAAAAAAAAAAAAAAAAAAAA......W.W.",
+--  ".W.W.....AAAAAAAAAAAAAAAAAAAAA......W.W.",
+--  ".W.W.....AAAAAAAAAAAAAAAAAAAAA......W.W.",
+--  ".W.W.....AAAAAAAAAAAAAAAAAAAAA......W.W.",
+--  ".W.W.....AAAAAAAAAAAAAAAAAAAAA......WAW.",
+--  ".W.W.....AAAAAAAAAAAAAAAAAAAAA......W.W.",
+--  ".WAW.....AAAAAAAAAAAAAAAAAAAAA......W.W.",
+--  ".W.W.....AAAAAAAAAAAAAAAAAAAAA......W.W.",
+--  ".W.W.....AAAAAAAAAAAAAAAAAAAAA......WAW.",
+--  ".W.W.....AAAAAAAAAAAAAAAAAAAAA......W.W.",
+--  ".W.W.....AAAAAAAAAAAAAAAAAAAAA......W.W.",
+--  ".WAW.....AAAAAAAAAAAAAAAAAAAAA......WAW.",
+--  ".W.W.....AAAAAAAAAAAAAAAAAAAAA......W.W.",
+--  ".W.W.....AAAAAAAAAAAAAAAAAAAAA......W.W.",
+--  ".W.W.....AAAAAAAAAAAAAAAAAAAAA......WAW.",
+--  ".W.W................................W.W.",
+--  ".W.W................................W.W.",
+--  ".WAW................................W.W.",
+--  ".WAW................................W.W.",
+--  ".W.W................................WAW.",
+--  ".W.W................................W.W.",
+--  ".W.W................................W.W.",
+--  ".W.WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW.W.",
+--  ".WA....A....A.....A.....A.....A......AW.",
+--  ".WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW.",
+--  "........................................"]
 
 
 worldToJSON :: Pos -> World -> JSValue
@@ -209,7 +248,7 @@ dir_2dir dir_
   | dir_ == dStay  = DStay     
 
 input2input_ :: Input -> Input_
-input2input_ input = ( nearestApplePos input ,
+input2input_ input = ( myApplePoses    input ,
                        nearestFlyPos   input ,
                        myPos           input , 
                        inputEnergy     input )

@@ -7,10 +7,11 @@ import Data.List
 import System.Random
 
 
-import Problems.Fly.Funs (Energy,Pos,minus,dist)
+import Problems.Fly.Funs 
+--(Energy,Pos,minus,dist,head')
 
 data Input  = Input {
-  nearestApplePos :: Maybe Pos ,
+  myApplePoses    :: [Pos] ,
   nearestFlyPos   :: Maybe Pos ,
   myPos           :: Pos ,
   inputEnergy     :: Energy 
@@ -29,14 +30,21 @@ data Dir = DUp
   deriving ( Show )
 
 
+prog_1 input = output_ $ posToDir_ (myPos_ input) (head_ $ myApplePoses_ input)
+prog_2 _     = output_ $ dRight 
+prog_3 input = output_ $ posToDir_ (myPos_ input) (nearestFlyPos_ input)
 
-prog1 input = Output $ posToDir (myPos input) (nearestApplePos input)
-prog2 _     = Output DRight
-prog3 input = Output $ posToDir (myPos input) (nearestFlyPos   input)
+prog1 input = Output $ posToDir (myPos input) (head_ $ myApplePoses input)
+prog2 _     = Output $ DRight
+prog3 input = Output $ posToDir (myPos input) (nearestFlyPos input)
+prog4 input = Output $ posToDir (myPos input) (avg $ myApplePoses input)
+
+
 
 prog1' = ( prog1 , "prog1" )
 prog2' = ( prog2 , "prog2" )
 prog3' = ( prog3 , "prog3" )
+prog4' = ( prog4 , "prog4" )
 
 
 
@@ -110,11 +118,16 @@ stepCurrentFly w = case (fliesToDo w) of
  
 prepareInput :: World -> Pos -> FlyData -> Input
 prepareInput w flyPos flyData = 
-  Input { nearestApplePos = getNearestApplePos w flyPos ,
+  Input { myApplePoses    = getSortedPoses w flyPos (applePoses w) ,
           nearestFlyPos   = getNearestFlyPos   w flyPos ,
           inputEnergy     = flyEnergy flyData ,
           myPos           = flyPos } 
 
+
+
+getSortedPoses :: World -> Pos -> [Pos] -> [Pos]
+getSortedPoses w pos poses = 
+  map snd . sort . map (\pos'->(dist pos pos',pos')) $ poses
 
 getNearestPos :: World -> Pos -> [Pos] -> Maybe Pos
 getNearestPos w pos poses = case poses of

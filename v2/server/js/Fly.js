@@ -10,12 +10,32 @@ var lt = function(x,y){
   return (x<=y) ;
 };
 
+var head_ = function( xs ){
+  if( xs.length == 0 ) return null;
+  return xs[0];
+};
+
+var avg = function( poses ){
+
+  if( poses.length == 0 ) return null;
+
+  var sum0 = 0;
+  var sum1 = 0;
+
+  for( var i in poses ){
+    var pos = poses[i];
+    sum0 += pos[0];
+    sum1 += pos[1];
+  }
+
+  return [ Math.round( sum0 / poses.length ) , Math.round( sum1 / poses.length ) ];
+};
 
 var output_ = function( dir_ ){
   return dir_ ;
 };
 
-var nearestApplePos_ = function( input_ ){
+var myApplePoses_ = function( input_ ){
   return input_[0];
 };
 
@@ -52,6 +72,12 @@ var minus = function( pos1 , pos2 ){
   return [ pos1[0]-pos2[0] , pos1[1]-pos2[1] ]; 
 };
 
+var dist = function( pos1 , pos2 ) {
+    var d = minus( pos1 , pos2 );
+    var dx = d[0] , dy = d[1];
+    return Math.sqrt(  dx*dx + dy*dy );
+};
+
 
 $(document).ready(function() {
 
@@ -65,10 +91,15 @@ var Fly;
 Global.Problems.fly = Fly = {
 
   progLib : {
-    prog1 : function (x0){return output_(posToDir_(  myPos_(x0)   , nearestApplePos_(x0) )   );},
+    prog1 : function (x0){return output_(posToDir_(  myPos_(x0)   , head_(myApplePoses_(x0))  )   );},
     prog2 : function (x0){return output_(dRight);},
     prog3 : function (x0){return output_(posToDir_(  myPos_(x0)   , nearestFlyPos_(x0) )  );},
   },
+
+//prog_1 input = output_ $ posToDir_ (myPos_ input) (head_ $ myApplePoses_ input)
+//prog_2 _     = output_ $ dRight 
+//prog_3 input = output_ $ posToDir_ (myPos_ input) (nearestFlyPos_ input)
+
 
 
   onLoadedProblemData : function( data ){
@@ -301,7 +332,7 @@ Global.Problems.fly = Fly = {
 
   prepareInput : function( flyPos, fly ){
 
-    return [ this.getNearestApplePos( flyPos ) ,
+    return [ this.getSortedPoses( flyPos , this.applePoses ) ,
              this.getNearestFlyPos( flyPos ) ,
              flyPos,
              fly.energy ];
@@ -377,7 +408,21 @@ Global.Problems.fly = Fly = {
   },
 
 
+//getSortedPoses :: World -> Pos -> [Pos] -> [Pos]
+//getSortedPoses w pos poses = 
+//  map snd . sort . map (\pos'->(dist pos pos',pos')) $ poses
 
+  getSortedPoses : function( pos , poses ){
+
+
+    return _.chain( poses )
+            .map( function( p ){ return [ dist(pos,p) , p ]; }  )
+            .sortBy( function(x){return x[0];} )
+            .map(  function(x){return x[1];} )
+            .value();
+
+
+  },
 
   getNearestPos : function( pos , poses ){
 
@@ -386,9 +431,9 @@ Global.Problems.fly = Fly = {
 
     for( var i in poses ){
       var actPos = poses[i];
-      var dist = this.dist( pos , actPos );
-      if( dist < bestDist  ){
-        bestDist = dist;
+      var dista = dist( pos , actPos );
+      if( dista < bestDist  ){
+        bestDist = dista;
         bestPos  = actPos;
       }
     }
@@ -414,14 +459,6 @@ Global.Problems.fly = Fly = {
 
 
 
-
-
-
-  dist : function( pos1 , pos2 ) {
-    var d = minus( pos1 , pos2 );
-    var dx = d[0] , dy = d[1];
-    return Math.sqrt(  dx*dx + dy*dy );
-  },
 
 
 
