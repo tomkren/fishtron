@@ -4,8 +4,7 @@ import System.IO
 import System.Directory
 
 import Text.JSON
-
-
+import JSONUtils
 
 writeNextOutput :: Int -> String -> IO ()
 writeNextOutput i output = do
@@ -39,13 +38,14 @@ myReadFile filename = do
  return str
 
 
-problemListToJSON :: [(String,String)] -> JSValue
+problemListToJSON :: [(String,String,JSValue)] -> JSValue
 problemListToJSON problemList =  jsArr . map toProblemObj $ problemList
  where
-  toProblemObj :: (String,String) -> JSValue
-  toProblemObj ( code , name ) = jsObj [
-    ( "code" , jsStr code ) ,
-    ( "name" , jsStr name )
+  toProblemObj :: (String,String,JSValue) -> JSValue
+  toProblemObj ( code , name , datas ) = jsObj [
+    ( "code" , jsStr code  ) ,
+    ( "name" , jsStr name  ) ,
+    ( "data" , datas       )
    ]
 
 
@@ -74,18 +74,6 @@ multiCmd cmds = jsObj [
    ( "cmds" , jsArr cmds )
  ]
 
-
-jsObj :: [(String, JSValue)] -> JSValue
-jsObj = JSObject . toJSObject  
-
-jsArr :: [JSValue] -> JSValue
-jsArr = JSArray
-
-jsStr :: String -> JSValue
-jsStr = JSString . toJSString
-
-jsNum :: Real a => a -> JSValue
-jsNum = JSRational True . toRational
 
 
 

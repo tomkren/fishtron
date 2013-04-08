@@ -20,5 +20,6 @@ if' :: Bool -> a -> a -> a
 if' p q r = if p then q else r 
 
 
-lol :: Int -> [Int] -> Bool
-lol = \ x0 x1 -> foldr (s (s (k if') (s (k ((==) x0)) i)) (k True )) False x1
+--lol :: Int -> [Int] -> Bool
+--lol = \ x0 x1 -> foldr (s (s (k if') (s (k ((==) x0)) i)) (k True )) False x1
+

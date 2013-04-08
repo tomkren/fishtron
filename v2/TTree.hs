@@ -46,8 +46,9 @@ instance JShow CTT where
   jshow ctt = JSObject $ toJSObject [ 
    ("type"     , JSString . toJSString $ "jsonout"     ) ,
    ("haskell"  , JSString . toJSString $ show ctt      ) ,
-   ("js"       , JSString . toJSString $ jsShow ctt    ) ,
-   ("kutil"    , JSString . toJSString $ ctt2kutil ctt ) ]
+   ("js"       , JSString . toJSString $ jsShow ctt    ) 
+   --("kutil"    , JSString . toJSString $ ctt2kutil ctt ) 
+   ]
 
 
 jsShow :: CTT -> String

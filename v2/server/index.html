@@ -30,17 +30,22 @@
 
     <script src="js/main-arbor.js"></script>
 
+    <script src="js/Fly.js"></script>
+    <script src="js/Ant.js"></script>
+
 
     <script>
+
+
 
 
 var curr = function( fun ){
   return curryfy( fun.length , fun , [] );
 };
 
-var curryfy = function( i , fun , args ){
+var curryfy = function( ii , fun , args ){
 
-  if( i == 0 ){
+  if( ii == 0 ){
     return fun.apply( null , args );
   }
 
@@ -51,44 +56,148 @@ var curryfy = function( i , fun , args ){
       args2 = args2.concat( [arguments[j]] );
     }
 
-    return curryfy( i-arguments.length , fun , args2 );
+    return curryfy( ii-arguments.length , fun , args2 );
   };
 
 };
 
 
-var k = curr( function( x , y ){
+var curt = function( fun ){
+  var origNumArgs = fun.length ;
+  return function(){
+    console.log( "num args original: " + origNumArgs );
+    console.log( "num args applied : " + arguments.length );
+    console.log( "arguments:         " + arguments );
+
+    return [fun.apply( null , arguments ),arguments];
+  };
+}
+
+var argsToArr = function( args ){
+    ret = [];
+    for (var j = 0; j < arguments.length; j++) {
+      args2 = args2.concat( [arguments[j]] );
+    }  
+}
+
+var te1 = function( a , b , c ){
+  return a + b + c;
+};
+
+
+var cur2 = function( fun ){
+  return function( x , y ){
+    if( y === undefined ){
+      return function(y){ return fun(x,y) ; }
+    } else {
+      return fun( x , y );
+    }
+  }
+}; 
+
+var cur3 = function( fun ){
+  return function( x , y , z ){
+    if( y === undefined ){
+      return cur2( function(y,z){return fun(x,y,z);} );
+    } else if( z === undefined ){
+      return function(z){return fun(x,y,z);} ;
+    } else {
+      return fun(x,y,z);
+    }
+  }
+};
+
+var plus2 = cur2(function(x,y){
+  return x + y;
+});
+
+var plus3 = cur3(function(x,y,z){
+  return x + y + z;
+});
+
+
+
+//var k = _.partial(curr( function( x , y ){
+//  return x;
+//});
+
+var slice = Array.prototype.slice ;
+
+var ap = function(func) {
+    var args = slice.call(arguments, 1);
+    return function() {
+      return func.apply(this, args.concat(slice.call(arguments)));
+    };
+  };
+
+
+
+
+
+var k = cur2(function( x , y ){
   return x;
 });
 
-var s = curr( function( x , y , z ){
-  return x( z , y(z) );
+var s = cur3( function( x , y , z ){
+  return x(z)(y(z));
 });
 
-var i = curr(function( x ){
+var i = function( x ){
   return x;
-});
+};
 
 
-var cons = curr(function( x , xs ){
+var cons = cur2(function( x , xs ){
   return [x].concat(xs);
 });
 
-var foldr = curr(function( f , z , xs ){
+var foldr = cur3(function( f , z , xs ){
 
   var ret = z;
   for( var i = xs.length-1 ; i >= 0 ; i-- ){
-    ret = f( xs[i] , ret );
+    ret = f(xs[i])(ret);
   } 
   return ret;
 
 });
 
 
-var f00 = function (x0,x1){return foldr( s(k(cons),s(k(x0),i)) , [] , x1  );}
-var foo = function (x0,x1){return foldr( s(k(cons),s(k(x0),i)) , [] , x1  );}
-var foo2= function (x0,x1){return foldr( function(a,b){ return cons(x0(a),b)   } , [] , x1  );}
+//listCase :: [a] -> b -> (a->[a]->b) -> b
 
+var listCase = cur3(function(list,emptyCase,fullCase){
+  if( list.length == 0 ){
+    return emptyCase ;
+  } else {
+    return fullCase (list[0]) (list.splice(1));
+  }
+});
+
+var Just = function(x){
+  return [x];
+};
+
+var Nothing = [];
+var True    = true;
+var False   = false;
+
+var if_ = cur3(function(p,q,r){
+  if(p){
+    return q;
+  } else {
+    return r;
+  }
+});
+
+var equals = cur2(function(x,y){
+  return x == y ;
+});
+
+
+var foo  = function (x0,x1){return foldr(  s ( k(cons) ,  s(k(x0),i)   )   , [] , x1 );}
+
+var foo2 = function (x0,x1){return foldr(  s ( k(cons) )(  s(k(x0))(i)   )   )( [] )( x1 );}
+
+var plus1 = function(x){ return x+1 ; };
 
 var sin  = Math.sin ;
 var cos  = Math.cos ;
@@ -96,257 +205,6 @@ var exp  = Math.exp ;
 var rdiv = function(x,y){if(y==0){return 1;}else{return x/y;}}
 var rlog = function(x){return Math.log(Math.abs(x));}
 
-var antState = {
-  pos : undefined,
-  dir : undefined ,
-  world : [],
-  limit : 600,
-  steps : undefined,
-  eaten : undefined,
-  ctx : undefined,
-  antImg : {},
-  seedImg : undefined,
-  isRunning : false,
-  progQueue : [],
-  actAnt : 0,
-  initWorldStrs :   
-   [ ".FFF............................"
-   , "...F............................"
-   , "...F.....................FFF...." 
-   , "...F....................F....F.." 
-   , "...F....................F....F.." 
-   , "...FFFF.FFFFF........FF........." 
-   , "............F................F.." 
-   , "............F.......F..........." 
-   , "............F.......F..........." 
-   , "............F.......F........F.." 
-   , "....................F..........." 
-   , "............F..................." 
-   , "............F................F.." 
-   , "............F.......F..........." 
-   , "............F.......F.....FFF..." 
-   , ".................F.....F........" 
-   , "................................" 
-   , "............F..................."             
-   , "............F...F.......F......."
-   , "............F...F..........F...." 
-   , "............F...F..............."             
-   , "............F...F..............."
-   , "............F.............F....." 
-   , "............F..........F........" 
-   , "...FF..FFFFF....F..............." 
-   , ".F..............F..............." 
-   , ".F..............F..............." 
-   , ".F......FFFFFFF................." 
-   , ".F.....F........................" 
-   , ".......F........................" 
-   , "..FFFF.........................." 
-   , "................................" ],
-
-  loadResources : function(){
-
-    var dirs = [ 'u' , 'd' , 'l' , 'r' ];
-
-    for( var i in dirs ){
-      antState.antImg[ dirs[i] ] = new Image();  
-      antState.antImg[ dirs[i] ].src = 'img/ant-'+ dirs[i] +'.png';      
-    }
-    antState.seedImg = new Image();
-    antState.seedImg.src = 'img/weed.png' ;
-
-  },
-
-  init : function(){
-
-    antState.steps = 0;
-    antState.eaten = 0;
-    antState.dir   = 'r'; 
-    antState.pos   = [0,0] ;  
-
-    for( var i in antState.initWorldStrs ){
-      var lineStr = antState.initWorldStrs[i] ;
-      antState.world[i] = [];
-      for( var j in lineStr ){
-        antState.world[i][j] = (lineStr[j] == 'F') ;
-      }
-    }
-
-    antState.drawInit();
-
-    antState.draw();
-  },
-
-  drawInit : function(){
-
-    if( ! $('#antCanvas').length ){
-      $('#special').html(
-         '<canvas id="antCanvas" width="517" height="517"></canvas>'+
-         '<div id="antLogs" style="position:relative;top:-520px;left:520px;"></div>'
-       );
-      var canvas = document.getElementById('antCanvas');
-      antState.ctx = canvas.getContext('2d');
-    }
-  },
-
-  draw : function(){
-
-    antState.ctx.clearRect(0, 0, 16*32 +5, 16*32 +5);
-
-    antState.drawAnt();
-
-    for( var i in antState.world ){
-      for( var j in antState.world[i] ){
-        if( antState.world[i][j] ){
-          antState.drawSeed(i,j);
-        }
-      }
-    }
-
-  },
-
-  drawAnt : function(){
-    antState.ctx.drawImage( antState.antImg[ antState.dir ] , antState.pos[1]*16 , antState.pos[0]*16 );
-  },
-
-  drawSeed : function(i,j){
-    antState.ctx.drawImage( antState.seedImg , j*16 - 4 , i*16 );
-  },
-
-  show : function(){
-    var ret = '\n' ;
-    for( var i in antState.world ){
-      for( var j in antState.world[i] ){
-        if( i == antState.pos[0] && j == antState.pos[1] ){
-          ret = ret + antState.dir ;
-        }else{
-          ret = ret + (antState.world[i][j] ? 'F' : '.') ; 
-        }
-      }
-      ret = ret + '\n' ;
-    }
-
-    ret = ret + 'eaten : ' + antState.eaten + '\n' ;
-    ret = ret + 'steps : ' + antState.steps ;
-
-    return ret ;
-  },
-
-  ahead : function(){
-    var p0 = antState.pos[0];
-    var p1 = antState.pos[1];
-    switch( antState.dir ){
-      case 'r' : p1 = (p1+1+32) % 32 ; break;
-      case 'l' : p1 = (p1-1+32) % 32 ; break;
-      case 'u' : p0 = (p0-1+32) % 32 ; break;
-      case 'd' : p0 = (p0+1+32) % 32 ; break;
-    }
-    return [p0,p1] ;
-  },  
-
-  reachedLimit : function(){
-    return antState.steps >= antState.limit ;
-  },
-
-  doMove : function(){
-    if( antState.reachedLimit() ){ return; }
-
-    var ah = antState.ahead();
-    antState.pos[0] = ah[0];
-    antState.pos[1] = ah[1];
-
-    if( antState.world[ah[0]][ah[1]] ){
-      antState.eaten ++ ;
-      antState.world[ah[0]][ah[1]] = false ;
-    }
-
-    antState.steps ++ ;
-    antState.draw();
-  },
-
-  doLeft : function(){
-    if( antState.reachedLimit() ){ return; }
-
-    switch( antState.dir ){
-      case 'r' : antState.dir = 'u' ; break;
-      case 'l' : antState.dir = 'd' ; break;
-      case 'u' : antState.dir = 'l' ; break;
-      case 'd' : antState.dir = 'r' ; break;
-    }
-
-    antState.steps ++ ; 
-    antState.draw();   
-  },
-
-  doRight : function(){
-    if( antState.reachedLimit() ){ return; }
-
-    switch( antState.dir ){
-      case 'r' : antState.dir = 'd' ; break;
-      case 'l' : antState.dir = 'u' ; break;
-      case 'u' : antState.dir = 'r' ; break;
-      case 'd' : antState.dir = 'l' ; break;
-    } 
-
-    antState.steps ++ ;  
-    antState.draw(); 
-  },
-
-  isFoodAhead : function(){
-    var ah = antState.ahead( );
-    return antState.world[ah[0]][ah[1]];
-  },
-
-  run : function( prog ){
-
-    var stepoid = function(){
-      if( ! antState.reachedLimit() ){
-        prog();
-        setTimeout( stepoid , 50 );
-      }else{
-        antState.isRunning = false ;
-        if( antState.progQueue.length ){
-          antState.start( antState.progQueue.shift() );
-        }
-      }
-    };
-
-    stepoid();
-
-  },
-
-  start : function( prog ){
-      antState.isRunning = true;
-      antState.init();
-      var antI = ++ antState.actAnt ;
-      $('#antLogs').append( $('<div style="width:100px;" id="antLog-'+antI+'" >Ant #'+ antI +'</div>') )
-      antState.run( prog );
-  },
-
-  add : function( prog ){
-
-    if( antState.isRunning ){
-      antState.progQueue.push( prog );
-    } else {
-      antState.start( prog );
-    }
-
-  },
-
-
-};
-
-var ant = function( solution ){
-  antState.add( solution() );
-};
-
-
-
-var l   = antState.doLeft  ;
-var r   = antState.doRight ;
-var m   = antState.doMove  ;
-var p2  = function( a1 , a2 ){ return function(){ a1() ; a2() ; } }
-var p3  = function(a1,a2,a3 ){ return function(){ a1() ; a2() ; a3() ;} }
-var ifa = function( a1 , a2 ){ return function(){if( antState.isFoodAhead() ){ a1(); }else{ a2(); } } }
 
 var ssr = function( solution ){
 
@@ -393,6 +251,8 @@ var Global = {
   numgens : undefined ,
   popsize : undefined ,
 
+  Problems : {},
+  
   startTime : undefined ,
   isLoggingOn : true ,
   bests : [],
@@ -534,7 +394,7 @@ $(document).ready(function() {
     url : 'problems' , 
     type: 'GET'  ,
     success: function( problemsJSON ) {  
-        console.log( problemsJSON );
+        //console.log( problemsJSON );
 
         var problems = JSON.parse( problemsJSON );
 
@@ -543,6 +403,15 @@ $(document).ready(function() {
             select.append($("<option />")
                   .val( this.code )
                   .text( '[' + this.code + '] ' + this.name ));
+
+
+            var problemSegment = Global.Problems[ this.code ] ;
+
+            if( problemSegment && problemSegment.onLoadedProblemData ){
+              //console.log('hažu mu to : '+ this.code);
+              problemSegment.onLoadedProblemData( this.data ) ;
+            }
+
         });
 
         $('#opts').change();
@@ -605,18 +474,19 @@ var go = function(){
   Global.numgens = Number( parts[2] );
   Global.popsize = Number( parts[3] );
 
+
   switch( Global.problemName ){
     case 'ssr' : Global.fenotyp = ssr ; break;
     case 'ant' : Global.fenotyp = ant ; break;
     default    : Global.fenotyp = undefined  ;
   }
 
+  if( Global.Problems[ Global.problemName ] ){
+    //console.log('Pojedem novym stylem!');
 
-  //if( Global.problemName == 'ssr' ){
-  //  Global.fenotyp = ssr ;
-  //}else{
-  //  Global.fenotyp = undefined ;
-  //}
+    Global.Problems[ Global.problemName ].onGo();
+  }
+
 
 
   plotData = {} ;
@@ -631,7 +501,9 @@ var go = function(){
 
         if( $('#opts').attr('class').match(/.*(active)/ ) ){
 
-          if( Global.fenotyp !== undefined ){
+          if( Global.fenotyp !== undefined ){ // kvuli zpetny kopat..
+            $('#special-link').tab('show');
+          }else if( Global.Problems[Global.problemName] ){
             $('#special-link').tab('show');
           }else{
             $('#stdout-link').tab('show');
@@ -674,7 +546,17 @@ var runCmd = function(){
   var cmdHandlers = {
 
     multi : function( cmdObj ){
+
+      //prasárna !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+      var bestFFVal = cmdObj.cmds[0].ffvals.best ;
+
       for( var i = 0 ; i < cmdObj.cmds.length ; i++ ){
+
+        //prasárna pokračování !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        if( i==2 ){ //jsonout
+          cmdObj.cmds[i].bestFFVal = bestFFVal;          
+        }
+
         runCmd( cmdObj.cmds[i] );
       }
     },
@@ -733,15 +615,21 @@ var runCmd = function(){
 
       var solution ;
 
-      console.log( cmdObj.kutil );
+      //console.log( cmdObj.kutil );
 
       eval( "solution = " + cmdObj.js );
 
       Global.bests[ Global.actRun ][ Global.actGen ] = solution ;
 
-      if(Global.fenotyp){ 
-        Global.fenotyp( solution );
+      // kvuli zpetny kompatibilite .... 
+      if(Global.fenotyp && ! Global.Problems[Global.problemName] ){ 
+        Global.fenotyp( solution , cmdObj.bestFFVal );
       }
+
+      if( Global.Problems[Global.problemName] ){ 
+        Global.Problems[Global.problemName].fenotyp( solution , cmdObj.bestFFVal );
+      }
+
     },
 
   };
@@ -842,7 +730,7 @@ function onDownload() {
             </ul>
           </li>
           <li><a href="#im" id="im-link">IM</a></li>
-          <li><a href="#special"  id="special-link">Special</a></li>
+          <li><a href="#special"  id="special-link">Fenotyp</a></li>
         </ul>
 
       </div>
@@ -952,7 +840,7 @@ function onDownload() {
 
         </div>
 
-        <div class="tab-pane span7" id="special" >
+        <div class="tab-pane span10" id="special" >
           <div class="alert alert-info" >
             This tab will be filled by <b>special problem output</b> (i.e. fenotype).
           </div> 
@@ -963,7 +851,7 @@ function onDownload() {
 
     </div>
 
-<a href="javascript:onDownload();">Download</a>
+<!--<a href="javascript:onDownload();">Download</a>-->
 
   </body>
 </html>
