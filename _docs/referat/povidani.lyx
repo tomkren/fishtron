@@ -1,0 +1,1656 @@
+#LyX 1.6.9 created this file. For more info see http://www.lyx.org/
+\lyxformat 345
+\begin_document
+\begin_header
+\textclass article
+\begin_preamble
+\usepackage{a4wide}
+\usepackage[left=4cm]{geometry}
+\usepackage{lmodern}
+\usepackage[T1]{fontenc}
+\AtBeginDocument{%
+\addto\captionsczech{%
+\renewcommand{\refname}{Reference}%
+}}
+\end_preamble
+\use_default_options true
+\language czech
+\inputencoding auto
+\font_roman default
+\font_sans default
+\font_typewriter default
+\font_default_family default
+\font_sc false
+\font_osf false
+\font_sf_scale 100
+\font_tt_scale 100
+
+\graphics default
+\paperfontsize default
+\spacing single
+\use_hyperref false
+\papersize default
+\use_geometry false
+\use_amsmath 1
+\use_esint 1
+\cite_engine basic
+\use_bibtopic false
+\paperorientation portrait
+\secnumdepth 3
+\tocdepth 3
+\paragraph_separation indent
+\defskip medskip
+\quotes_language english
+\papercolumns 1
+\papersides 1
+\paperpagestyle default
+\tracking_changes false
+\output_changes false
+\author "" 
+\author "" 
+\end_header
+
+\begin_body
+
+\begin_layout Section*
+Typed Functional Genetic Programming
+\end_layout
+
+\begin_layout Standard
+
+\noun on
+Tomáš Křen
+\end_layout
+
+\begin_layout Standard
+\begin_inset VSpace bigskip
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+V tomto povídání bych chtěl neformálně popsat dosavadní vývoj a současný
+ stav práce 
+\emph on
+Typed Functional Genetic Programming
+\emph default
+.
+\end_layout
+
+\begin_layout Standard
+\begin_inset VSpace defskip
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Cílem mého aktuálního snažení bylo udělat v jazyku Haskell první prototyp
+ systému řešící úlohu genetického programování nad typovaným funkcionálním
+ jazykem.
+ Zatím jsem nekladl příliš důraz na robustnost a také jsem se omezil na
+ minimum víceméně triviálních problémů, na kterých systém testuji.
+ Přijde mi totiž, že cílem prvního prototypu je hlavně ujistit se, že plánovaná
+ architektura systému je realizovatelná; zjistit jaká skrytá úskalí problém
+ skýtá; upřesnit představu o tom, na jaké podproblémy se problém dělí a
+ načerpání nových nápadů.
+\end_layout
+
+\begin_layout Standard
+\begin_inset VSpace defskip
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Podívejme se v rychlosti na to, co to je GP-úloha a jak jí GP-systém řeší.
+ V nejhrubším přiblížení je zadaní GP-úlohy 
+\emph on
+fitness funkce
+\emph default
+ – zobrazení z prostoru programů do nezáporných reálných čísel.
+ Řešení GP-úlohy je program.
+ Fitness funkce má jednoduchou interpretaci: Čím vyšší číslo dává programu,
+ tím je tento program lepším řešením.
+ 
+\end_layout
+
+\begin_layout Standard
+Při o něco jemnějším přiblížení za zadání GP-úlohy můžeme považovat následující
+ čtveřici (pětici): Fitness funkce, (typ řešení), sada stavebních bloků,
+ počet
+\emph on
+ generací
+\emph default
+ a počet 
+\emph on
+jedinců
+\emph default
+.
+ 
+\end_layout
+
+\begin_layout Standard
+Fitness funkce (FF) je funkce typu 
+\emph on
+
+\begin_inset Quotes eld
+\end_inset
+
+typ_řešení
+\emph default
+ 
+\begin_inset Formula $\rightarrow$
+\end_inset
+
+ 
+\begin_inset Formula $\mathbb{R}_{0}^{+}$
+\end_inset
+
+“.
+ 
+\end_layout
+
+\begin_layout Standard
+Sada stavebních bloků neboli 
+\emph on
+enviroment
+\emph default
+: Řešení GP-úlohy je program.
+ Program se typicky skládá z konstruktů jazyka, proměnných a 
+\emph on
+symbolů vestavěných či jinde definovaných funkcí (případně konstant)
+\emph default
+.
+ Sadou stavebních bloků máme na mysli ty symboly funkcí/konstant, které
+ se mohou vyskytovat v řešení (společně s jejich implementacemi a typy).
+ 
+\end_layout
+
+\begin_layout Standard
+GP-systém si nejdříve vygeneruje určitý počet programů (
+\emph on
+kombinátorů
+\emph default
+) – programy představují 
+\begin_inset Quotes eld
+\end_inset
+
+jedince“.
+ Tito na začátku vygenerovaní jedinci představují první 
+\begin_inset Quotes eld
+\end_inset
+
+generaci“.
+ 
+\end_layout
+
+\begin_layout Standard
+GP-systém (inspirován přirozeným výběrem v přírodě) pak na základě n-té
+ generace a FF vytvoří (n+1)-ní generaci jedinců (jak to dělá, zatím ponechme
+ stranou).
+ Za celkové řešení je pak prohlášen nejlepší jedinec ze všech generací.
+ 
+\end_layout
+
+\begin_layout Standard
+
+\end_layout
+
+\begin_layout Standard
+Zaměřme nyní pozornost na první fázi GP-výpočtu – generování první generace
+ jedinců.
+ Zadaní GP-úlohy říká jakého typu je jedinec – tedy zde máme úlohu hledaní
+ termů obydlujících zadaný typ.
+ Vzhledem ke Curry–Howardově korespondenci se můžeme na tento problém dívat
+ jako na úlohu hledaní důkazů zadané formule.
+\end_layout
+
+\begin_layout Standard
+Zde jsem stál před rozhodnutím, zda použít nějaký již hotový intucionistický
+ dokazovač a nebo zda se pokusit tento problém řešit sám.
+ Nakonec jsem se rozhodl udělat si 
+\begin_inset Quotes eld
+\end_inset
+
+dokazovač
+\begin_inset Quotes erd
+\end_inset
+
+ sám a to hlavně z následujícího důvodu: Situace při dokazování logických
+ formulí je taková (tedy přesněji já jí tak laicky odhaduju), že chceme
+ dokázat co možná nejsložitější formuli co možná nejkratším důkazem, přičemž
+ nám nejde až tolik o to, že bychom chtěli co možná nejvíc různých důkazů.
+ Naproti tomu naše situace je taková, že dokazujeme poměrně triviální formule,
+ ale 
+\begin_inset Quotes eld
+\end_inset
+
+důkazů
+\begin_inset Quotes erd
+\end_inset
+
+ chceme co možná nejvíce a pokud možno rozmanitých co do délky.
+ 
+\end_layout
+
+\begin_layout Standard
+Myšlenka metody, kterou jsem zvolil je založená na tom, že budeme pracovat
+ s 
+\begin_inset Quotes eld
+\end_inset
+
+rozpracovanými
+\begin_inset Quotes erd
+\end_inset
+
+ lambda termy.
+ Mimo proměnné/konstanty, aplikace a lambda abstrakce ještě navíc budeme
+ uvažovat term sestávající z 
+\emph on
+typového termu
+\emph default
+ a 
+\emph on
+báze
+\emph default
+ – říkejme mu 
+\emph on
+neterminál
+\emph default
+.
+ Interpretace neterminálu je takováto: Neterminál je 
+\begin_inset Quotes eld
+\end_inset
+
+rozepsaný podterm
+\begin_inset Quotes erd
+\end_inset
+
+, u kterého víme zatím jen jeho typ a jaké symboly (a k těmto symbolům jejich
+ typy) můžeme při jeho pozdějším 
+\begin_inset Quotes eld
+\end_inset
+
+dodělání
+\begin_inset Quotes erd
+\end_inset
+
+ použít.
+ Dovolil jsem si pro netrminál typu 
+\family roman
+\series medium
+\shape up
+\size normal
+\emph off
+\bar no
+\noun off
+\color none
+
+\begin_inset Formula $\sigma$
+\end_inset
+
+
+\family default
+\series default
+\shape default
+\size default
+\emph default
+\bar default
+\noun default
+\color inherit
+ s bází 
+\family roman
+\series medium
+\shape up
+\size normal
+\emph off
+\bar no
+\noun off
+\color none
+
+\begin_inset Formula $\Gamma$
+\end_inset
+
+
+\family default
+\series default
+\shape default
+\size default
+\emph default
+\bar default
+\noun default
+\color inherit
+ vymyslet značku 
+\begin_inset Formula $\sigma_{\Gamma}$
+\end_inset
+
+.
+ Takže například 
+\begin_inset Formula $\left(\lambda\left(x:\sigma\right).\tau_{\{x:\sigma,f:\sigma\rightarrow\tau,g:\sigma\rightarrow\sigma\}}\right)$
+\end_inset
+
+je rozdělaný term pro funkci typu 
+\begin_inset Formula $\sigma\rightarrow\tau$
+\end_inset
+
+ s již 
+\begin_inset Quotes eld
+\end_inset
+
+hotovou hlavou
+\begin_inset Quotes erd
+\end_inset
+
+ (proměnná x) ale ještě 
+\begin_inset Quotes eld
+\end_inset
+
+nehotovým tělem
+\begin_inset Quotes erd
+\end_inset
+
+, o kterém však už víme, že je typu 
+\begin_inset Formula $\tau$
+\end_inset
+
+ a uvnitř něhož smíme používat symboly 
+\begin_inset Formula $x$
+\end_inset
+
+,
+\begin_inset Formula $f$
+\end_inset
+
+ a 
+\begin_inset Formula $g$
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Standard
+Výhoda takto rozšířené definice je, že nám umožňuje pro odvozovací pravidla
+ (která zadávají náš typový systém) celkem přímočarou metodou najít jim
+ ekvivalentní 
+\begin_inset Quotes eld
+\end_inset
+
+redukční pravidla
+\begin_inset Quotes erd
+\end_inset
+
+ nad rozdělanými termy.
+ Každou redukci pak chápeme jako jeden krok důkazu.
+\end_layout
+
+\begin_layout Standard
+Pro tři nejoblíbenější odvozovací pravidla to vypadá následovně:
+\end_layout
+
+\begin_layout Standard
+\begin_inset VSpace defskip
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula $\left[Axiom\right]$
+\end_inset
+
+
+\begin_inset space \hspace{}
+\length 65pt
+\end_inset
+
+
+\begin_inset Formula $\dfrac{x:A\in\Gamma}{\Gamma\vdash x:A}$
+\end_inset
+
+
+\begin_inset space \hspace{}
+\length 60pt
+\end_inset
+
+
+\begin_inset Formula $\approx$
+\end_inset
+
+
+\begin_inset space \hspace{}
+\length 50pt
+\end_inset
+
+
+\family roman
+\series medium
+\shape up
+\size normal
+\emph off
+\bar no
+\noun off
+\color none
+
+\begin_inset Formula $A_{\Gamma}\Longrightarrow x\hspace{25pt}\textrm{kde}\; x:A\in\Gamma$
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset VSpace bigskip
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula $\left[E^{\rightarrow}\right]$
+\end_inset
+
+
+\begin_inset space \hspace{}
+\length 37pt
+\end_inset
+
+
+\begin_inset Formula $\dfrac{\Gamma\vdash M:A\rightarrow B,\Gamma\vdash N:A}{\Gamma\vdash MN:B}$
+\end_inset
+
+
+\begin_inset space \hspace{}
+\length 30pt
+\end_inset
+
+
+\begin_inset Formula $\approx$
+\end_inset
+
+
+\begin_inset space \hspace{}
+\length 50pt
+\end_inset
+
+
+\begin_inset Formula $B_{\Gamma}\Longrightarrow\left(A\rightarrow B\right)_{\Gamma\;}A_{\Gamma}$
+\end_inset
+
+
+\begin_inset VSpace bigskip
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula $\left[I^{\rightarrow}\right]$
+\end_inset
+
+
+\begin_inset space \hspace{}
+\length 55pt
+\end_inset
+
+
+\begin_inset Formula $\dfrac{\Gamma_{x},x:A\vdash M:B}{\Gamma_{x}\vdash\lambda x.M:A\rightarrow B}$
+\end_inset
+
+
+\begin_inset space \hspace{}
+\length 40pt
+\end_inset
+
+
+\begin_inset Formula $\approx$
+\end_inset
+
+
+\begin_inset space \hspace{}
+\length 20pt
+\end_inset
+
+
+\begin_inset Formula $\left(A\rightarrow B\right)_{\Gamma}\Longrightarrow\lambda x.B_{\Gamma_{x},x:A}$
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset VSpace bigskip
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Pro odvozovací pravidla pro součiny a součty lze postupovat obdobně (poznamenejm
+e, že v současném prototypu je zatím jen Simply typed lambda calculus).
+ 
+\end_layout
+
+\begin_layout Standard
+Napsal jsem 
+\begin_inset Quotes eld
+\end_inset
+
+redukční pravidla
+\begin_inset Quotes erd
+\end_inset
+
+ v uvozovkách, protože fáze vyhodnocování (tzn.
+ beta redukce) a generování (tzn.
+ tato 
+\begin_inset Quotes eld
+\end_inset
+
+redukční pravidla
+\begin_inset Quotes erd
+\end_inset
+
+ odpovídající krokům důkazu) jsou od sebe v současném prototypu oddělené,
+ a tak se takovýto pohled může zdát zavádějící.
+ V budoucnu by se to ale mohlo změnit.
+ Navíc mi přijde, že se pak o tom hezky přemýšlí (ale možná je tahle intuice
+ scestná): klasicky se koukáme na redukci jako na něco co posouvá nehotový
+ výpočet k hotovějšímu - náš rozšířený pohled umožňuje nejenom nehotovost
+ co se týče míry 
+\begin_inset Quotes eld
+\end_inset
+
+spočítanosti výpočtu
+\begin_inset Quotes erd
+\end_inset
+
+ ale také co se týče míry 
+\begin_inset Quotes eld
+\end_inset
+
+zadanosti výpočtu
+\begin_inset Quotes erd
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Standard
+Budu preferovat stručnost před přesností a nebudu zde moc popisovat technickou
+ realizaci dokazovače.
+ V zkratce je to realizováno následovně: Takováto 
+\begin_inset Quotes eld
+\end_inset
+
+redukční pravidla
+\begin_inset Quotes erd
+\end_inset
+
+ zanášejí do celé věci mohutný nedeterminizmus - v tom smyslu že neterminály
+ se mohou nakonec redukovat na velké množství různých hotových termů.
+ Tedy se musí prohledávat.
+ Zatím jsem implementoval dva příbuzné dokazovače.
+ První popíšu teď, druhý až o něco dále v textu.
+ 
+\end_layout
+
+\begin_layout Standard
+K prohledávání používáme 
+\emph on
+A* algoritmus
+\emph default
+.
+ Prohledáváme prostor našich termů, přičemž hledáme termy s nulovým počtem
+ neterminálů.
+ Minimalizujeme počet kroků důkazu.
+ Pro A* potřebujeme heuristiku, která by (zespoda) odhadovala potřebný počet
+ kroků k dokončení důkazu.
+ Jako tento odhad používám počet neterminálů (odhaduje zespoda protože minimálně
+ se musíme zbavit každého terminálu což zabere minimálně jeden krok) - a
+ ač je to celkem přímočarý/hloupý odhad, tak mě překvapilo jak rychle to
+ dokazuje (ale přiznávám, že sem to nejspíš nezkoušel na ničem moc komplikovaném
+).
+ Prohledávání zahajujeme z termu 
+\begin_inset Quotes eld
+\end_inset
+
+
+\emph on
+typ_řešení
+\emph default
+
+\begin_inset Formula $_{enviroment}$
+\end_inset
+
+
+\begin_inset Quotes erd
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Standard
+\begin_inset VSpace defskip
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula $\alpha_{\Gamma}\Longrightarrow f\:\left(B_{1}\right)_{\Gamma}\:\left(B_{2}\right)_{\Gamma}\:\ldots\:\left(B_{n}\right)_{\Gamma}\hspace{25pt}$
+\end_inset
+
+kde
+\family roman
+\series medium
+\shape up
+\size normal
+\emph off
+\bar no
+\noun off
+\color none
+
+\begin_inset Formula $\,\alpha$
+\end_inset
+
+je atomický a
+\begin_inset Formula $\; f:B_{1}\rightarrow\ldots\rightarrow B_{n}\rightarrow A\in\Gamma$
+\end_inset
+
+
+\family default
+\series default
+\shape default
+\size default
+\emph default
+\bar default
+\noun default
+\color inherit
+ 
+\begin_inset VSpace bigskip
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula $\left(A\rightarrow B\right)_{\Gamma}\Longrightarrow\lambda x.B_{\Gamma_{x},x:A}$
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset VSpace bigskip
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Ještě než se dostaneme k druhé části GP-algoritmu, bych se chtěl zmínit
+ o myslím praktické datové struktuře Dist, kterou jsem pro účely práce navrhnul.
+ 
+\end_layout
+
+\begin_layout Standard
+Dist představuje implementaci distribuce (pravděpodobnostního rozložení).
+ Distribucí máme na mysli datovou strukturu, obsahující prvky a k nim asociované
+ pravděpodobnosti.
+ 
+\end_layout
+
+\begin_layout Standard
+Typ této datové struktury je parametrizován typem prvků distribuce.
+ 
+\end_layout
+
+\begin_layout Standard
+Nad touto strukturou máme tři základní operace: 
+\end_layout
+
+\begin_layout Itemize
+Vytvoření distribuce ....
+ O(n) 
+\end_layout
+
+\begin_layout Itemize
+Náhodný výběr z distribuce ....
+ O(log n) 
+\end_layout
+
+\begin_layout Itemize
+Náhodný výběr z distribuce s odebráním vybraného prvku ....
+ O(log n) 
+\end_layout
+
+\begin_layout Standard
+Vytvořit distribuci můžeme dvěma způsoby: 
+\end_layout
+
+\begin_layout Standard
+Jednodušší způsob je pomocí seznamu hodnot a k nim přiřazených "pravděpodobností
+".
+ Přesněji řečeno, se nejedená o pravděpodobnosti ve formálním smyslu a to
+ v tom, že jejich součet nemusí být 1, Dist už se sám postará o normalizaci.
+ Navíc se informace o původních hodnotách nezapomíná, což je mnohdy příjemná
+ vlastnost.
+ Např.
+ když chceme populaci jedinců reprezentovat jako distribuci jedinců, kde
+ pravděpodobnosti odpovídá jejich fitness.
+ Tímto přístupem můžeme uchovat obě informace (tzn.
+ fitness i pravděpodobnost) úsporně a na jediném místě.
+ 
+\end_layout
+
+\begin_layout Standard
+Příklad: 
+\family typewriter
+[('a',5),('b',35),('c',10)]
+\family default
+ bude odpovídat pravděpodobnostnímu rozložení písmen, přičemž pravděpodobnost
+ 
+\family typewriter
+'a'
+\family default
+ je 0.1, 
+\family typewriter
+'b'
+\family default
+ je 0.7,
+\family typewriter
+ 'c'
+\family default
+ je 0.2 a všech ostatních písmen 0.
+ 
+\end_layout
+
+\begin_layout Standard
+Složitější způsob zadání distribuce umožňuje mimo seznamu s prvky 
+\family typewriter
+(
+\family default
+\emph on
+hodnota
+\family typewriter
+\emph default
+,
+\family default
+\emph on
+pravděpodobnost
+\family typewriter
+\emph default
+)
+\family default
+ i prvky 
+\family typewriter
+(
+\family default
+\emph on
+
+\begin_inset Quotes erd
+\end_inset
+
+funkce distribuce
+\begin_inset Quotes erd
+\end_inset
+
+
+\family typewriter
+\emph default
+,
+\family default
+\emph on
+pravděpodobnost
+\family typewriter
+)
+\family default
+\emph default
+.
+ Funkcí distribuce zde máme na mysli funkci z intervalu 
+\emph on
+
+\begin_inset Formula $<0,1>$
+\end_inset
+
+
+\emph default
+do 
+\emph on
+"hodnot"
+\emph default
+.
+
+\size tiny
+ [TODO zjistit jak se "funkce distribuce" jmenuje oficiálně]
+\size default
+ Takto zadaná distribuce má přímočarou interpretaci: z rovnoměrného rozdělení
+ na intervalu 
+\emph on
+
+\begin_inset Formula $<0,1>$
+\end_inset
+
+
+\emph default
+vybereme náhodné číslo, na nějž aplikujeme danou funkci, čímž dostaneme
+ vybraný prvek.
+ (Poznamenejme, že první způsob zadaní by šlo úplně vypustit, a simulovat
+ ho konstantní "funkcí distribuce" což ovšem z praktických důvodů nebudeme
+ dělat.) 
+\end_layout
+
+\begin_layout Standard
+Datový typ Dist nám tímto způsobem umožňuje pohodlně skládat jednodušší
+ distribuce do složitějších.
+ 
+\end_layout
+
+\begin_layout Standard
+Příklad: 
+\family typewriter
+[ ( (*2) , 40 ) , ( (+10) , 60 ) ]
+\family default
+ odpovídá rozložení, kde s pravděpodobností 0.4 bude vybráno číslo z intervalu
+ 
+\emph on
+
+\begin_inset Formula $<0,2>$
+\end_inset
+
+
+\emph default
+ (každé z nich se stejnou pravděpodobností) a s pravděpodobností 0.6 bude
+ vybráno číslo z 
+\emph on
+
+\begin_inset Formula $<10,11>$
+\end_inset
+
+
+\emph default
+ (každé z nich se stejnou pravděpodobností).
+ 
+\end_layout
+
+\begin_layout Standard
+Dist je vnitřně reprezentován binárním stromem.
+ Z důvodu efektivnějších operací si dále uchovává informaci o počtu listů
+ a součtu (nenormalizovaných) pravděpodobností.
+ Listy bin.
+ stromu jsou dvou typů, odpovídající dvěma typům konstrukčních dvojic 
+\emph on
+(hodnota,pst)
+\emph default
+ respektive 
+\emph on
+(distr.
+ fce, pst)
+\emph default
+.
+ Nelistové uzly bin.
+ stromu obsahují "dělící" hodnotu z intervalu 
+\emph on
+
+\begin_inset Formula $<0,1>$
+\end_inset
+
+
+\emph default
+.
+ Tato dělící hodnota je rovna součtu normalizovaných pravděpodobností prvků
+ v levém podstromu.
+ 
+\end_layout
+
+\begin_layout Standard
+Neformálně funguje výběr z distribuce následovně: Náhodně vybereme číslo
+ z intervalu <0,1>, kteréžto pošleme koření stromu.
+ Pokud je toto číslo menší než dělící hodnota tohoto uzlu, vybíraný prvek
+ se nachází v levém podstromu; jinak se nachází v pravém podstromu.
+ Toto číslo vhodným způsobem přepočítáme a odešleme zvolenému podstromu,
+ kde se postup rekurzivně opakuje.
+ Pokud narazíme na list prvního typu, vracíme v něm obsazenou hodnotu; pokud
+ na list druhého typu, vracíme hodnotu vzniklou dosazením onoho čísla z
+ 
+\emph on
+
+\begin_inset Formula $<0,1>$
+\end_inset
+
+
+\emph default
+ do "funkce distribuce".
+ 
+\end_layout
+
+\begin_layout Standard
+Při výběru s odebráním vybraného prvku se situace komplikuje o to, že musíme
+ vhodným způsobem přepočítat některé dělící hodnoty.
+ Tyto hodnoty jsou však jen na cestě k danému prvku a tak je časová složitost
+ stále O(log n).
+ 
+\end_layout
+
+\begin_layout Standard
+Nutno poznamenat, že struktura je navržena hlavně pro práci s listy prvního
+ typu a tak některé operace, jako 
+\emph on
+výběr s odebráním
+\emph default
+ nebo 
+\emph on
+nalezení prvku s maximální pravděpodobností
+\emph default
+, se chovají pro distribuce obsahující listy druhého typu jinak, než by
+ bylo formálně korektní.
+ Konkrétně: Odebíráme vždy celý list stromu; a při nalezení prvku s maximální
+ pravděpodobností hledáme ve skutečnosti list s maximální pravděpodobností,
+ přičemž v případě listu typu dva vracíme reprezentanta pro 0.5.
+ 
+\end_layout
+
+\begin_layout Standard
+(Činíme tak z toho důvodu, že zde mícháme dohromady diskrétní a spojité
+ rozdělení, přičemž nám jde ale spíše o ty diskrétní vlastnosti a ty spojité
+ se nám hodí jen specifickým způsobem.)
+\begin_inset VSpace defskip
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Nyní se podívejme na centrální část GP-algoritmu; na šlechtění.
+\end_layout
+
+\begin_layout Standard
+uovat pravděpodobnostní rozložení jedinců populace.
+ Od teď se na populaci budeme spíše než jako na seznam jedinců koukat jako
+ na distribuci jedinců.
+ 
+\end_layout
+
+\begin_layout Standard
+Z tohoto rozložení pak vybíráme dvojice jedinců (rodičů) které křížíme.
+ (Dále bychom mohli provádět mutaci, tu však pro jednoduchost zatím nemáme,
+ i když mutace je částečně použita v křížení, viz níže.) Jejich děti pak
+ jdou do další generace.
+ Jedno místo je také rezervováno pro nejlepšího jedince z generace, aby
+ jsme si v každé generaci drželi nejlepší dosavadní řešení.
+\end_layout
+
+\begin_layout Standard
+Nejzajímavější na šlechtící fázi je určitě křížení.
+ Oproti jednoduchému křížení v klasickém GP zde musíme hlídat dvě věci:
+ Typy a proměnné.
+ 
+\end_layout
+
+\begin_layout Standard
+Mějme dva termy, které chceme zkřížit.
+ Křížení probíhá tak, že najdeme v každém z obou termů nějaký podterm a
+ tyto prohodíme.
+ Podrobněji: Odtržením podtermu od termu dostaneme 
+\emph on
+
+\begin_inset Quotes eld
+\end_inset
+
+zbytek
+\begin_inset Quotes erd
+\end_inset
+
+
+\emph default
+ termu; křížení odpovídá výběru podtermů v obou termech a následnému prohození
+ jejich zbytků.
+ Aby term zůstal dobře otypován, musí být vybrány podtermy stejného typu.
+ To realizujeme tak, že ze všech dvojic typově kompatibilních podtermů jednu
+ náhodně vybereme.
+ 
+\end_layout
+
+\begin_layout Standard
+Druhou věcí, kterou musíme pří křížení ošetřit, jsou volné proměnné v prohazovan
+ých podtermech.
+ Každý jedinec je kombinátor a my tuto vlastnost nechceme křížením pokazit,
+ proto budeme nově vzniklým volným proměnným hledat svázání v jeho nově
+ nabytém 
+\emph on
+
+\begin_inset Quotes eld
+\end_inset
+
+zbytku
+\begin_inset Quotes erd
+\end_inset
+
+
+\emph default
+ - tzn.
+ projdeme tento nový zbytek a budeme v něm hledat lambda abstrakce se stejným
+ typem proměnné, jaký má naše inkriminovaná volná proměnná.
+ Pokud jich najdeme víc, vybereme jednu náhodně.
+ Následně v tomto podtermu nahradíme všechny výskyty této proměnné touto
+ zvolenou proměnnou.
+ Pokud žádná taková proměnná není, pak se musíme této volné proměnné zbavit.
+ V současném prototypu to řeším tak, že vygenerujeme nový kombinátor stejného
+ typu jako má ona nepohodlná volná proměnná a tímto termem nahradíme všechny
+ výskyty nepohodlné proměnné.
+ Tento nový kombinátor vygenerujeme stejnou metodou, kterou generujeme počáteční
+ populaci.
+ Vlastně se jedná o formu 
+\emph on
+mutace
+\emph default
+.
+ Nakonec ještě u nově vzniklých jedinců zunikátníme jména všech proměnných
+ (tzn.
+ přejmenujeme proměnné tak, aby každé jméno proměnné bylo vázáno právě jednou
+ lambda abstrakcí).
+\end_layout
+
+\begin_layout Standard
+\begin_inset VSpace defskip
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Nyní se vrátíme k 
+\emph on
+enviromentu 
+\emph default
+(neboli sadě stavebních bloků) a zamyslíme se nad tím, zda by nebylo vhodné
+ rozšířit ho o nějaké další dodatečné informace.
+ Jednou z mých počátečních motivací pro chuť začlenit typy do GP byla představa
+ univerzální sady stavebních bloků společná pro všechny problémy - o takovéto
+ univerzální sadě pak už můžeme přemýšlet jako o 
+\emph on
+jazyku
+\emph default
+.
+ Čím však enviroment obsahuje víc stavebních bloků, tím je prostor prohledávanýc
+h programů větší a stavební bloky nesouvisející s řešením podstatně zhoršují
+ kvalitu populace.
+ Na druhou stranu otypovanost stavebních bloků mnoho slepých uliček utne.
+ Stavební bloky sebou nesou dodatečnou informaci v podobě typů, která umožňuje
+ tvořit smysluplnější programy (než kdybychom například všechna data kódovali
+ přirozenými čísly a pak uvažovali jen stavební bloky operující nad přirozenými
+ čísly).
+ Otázka, kterou si kladu ve svém dalším průzkumu, zní: Jaké další informace
+ (a jakým způsobem) by šlo k enviromentu přidat, aby to umožnilo tvorbu
+ smysluplnějších/relevantnějších jedinců? 
+\end_layout
+
+\begin_layout Itemize
+Enviroment
+\emph on
+ 
+\emph default
+je seznam stavebních bloků.
+ První možnost přidání informace je vzít místo seznamu 
+\emph on
+distribuci
+\emph default
+, čili chápat enviroment jako pravděpodobnostní rozložení stavebních bloků.
+ 
+\end_layout
+
+\begin_layout Itemize
+Program se skládá z 
+\emph on
+stavebních bloků
+\emph default
+ a 
+\emph on
+konstruktů jazyka
+\emph default
+.
+ Konstruktům jazyka v našem případě odpovídají jednotlivá 
+\begin_inset Quotes eld
+\end_inset
+
+redukční pravidla nad rozdělanými termy
+\begin_inset Quotes erd
+\end_inset
+
+ (po jednom pro 
+\emph on
+[Axiom]
+\emph default
+, 
+\begin_inset Formula $\left[E^{\rightarrow}\right]$
+\end_inset
+
+ a 
+\begin_inset Formula $\left[I^{\rightarrow}\right]$
+\end_inset
+
+).
+ Není toto dělení nějakým způsobem umělé? Vždyť 
+\emph on
+[Axiom] 
+\emph default
+vlastně realizuje samotné dosazování stavebních bloků.
+ Dalším přidáním informace do enviromentu je přesunutí konstruktů jazyka
+ z 
+\begin_inset Quotes eld
+\end_inset
+
+vnitřku
+\begin_inset Quotes erd
+\end_inset
+
+ dokazovací jednotky do enviromentu.
+ Čímž se zároveň podporuje představa enviromentu jakožto 
+\emph on
+jazyka
+\emph default
+.
+ Čili mezi 
+\emph on
+stavební bloky
+\emph default
+, připočítáme i konstrukty jazyka.
+\end_layout
+
+\begin_layout Itemize
+Další otázka zní: Jak šikovně 
+\emph on
+zadávat 
+\emph default
+rozložení stavebních bloků? Prvoplánové řešení je vzít jednoduše seznam
+ typu [(
+\emph on
+Stavební_blok,Pravděpodobnost
+\emph default
+)].
+ Myslím, že o něco šikovnější je do věci zavést hierarchii: Seznam nahradíme
+ stromem, kde listy představují 
+\emph on
+Stavební_bloky
+\emph default
+ a hrany z nelistových vrcholu jsou ohodnoceny nezáporným reálným číslem.
+ Každý nelistový vrchol stromu představuje 
+\begin_inset Quotes eld
+\end_inset
+
+bod rozhodnutí
+\begin_inset Quotes erd
+\end_inset
+
+ a jednotlivé hrany představují 
+\begin_inset Quotes eld
+\end_inset
+
+možnosti
+\begin_inset Quotes erd
+\end_inset
+
+ jak se v tomto vrcholu rozhodnout, ohodnocení hrany pak představuje (nenormaliz
+ovanou) pravděpodobnost výběru daného rozhodnutí.
+ 
+\end_layout
+
+\begin_layout Itemize
+Další krok spočívá v pokusu o zobecnění předchozí stromové struktury, tak
+ aby nám mimo jiné umožnila elegantně vkládat do programů náhodné číselné
+ hodnoty (v dosavadním uchopení jsme s čísli zacházeli přes kostrbaté konstanty).
+ K tomu jsem navrhnul strukturu 
+\emph on
+DecTree 
+\emph default
+inspirovanou 
+\emph on
+Rozhodovacím stromem
+\emph default
+.
+ Popis provedu značně neformálně: Na rozdíl od klasického rozhodovacího
+ stromu, kde je výsledkem jediná 
+\begin_inset Quotes eld
+\end_inset
+
+odpověď
+\begin_inset Quotes erd
+\end_inset
+
+, u DecTree je výsledkem 
+\begin_inset Quotes eld
+\end_inset
+
+distribuce odpovědí
+\begin_inset Quotes erd
+\end_inset
+
+.
+ Listy stromu odpovídají 
+\begin_inset Quotes eld
+\end_inset
+
+odpovědím
+\begin_inset Quotes erd
+\end_inset
+
+.
+ Nelistové vrcholy 
+\begin_inset Quotes eld
+\end_inset
+
+bodům rozhodnutí
+\begin_inset Quotes erd
+\end_inset
+
+.
+ Hrany jsou ohodnocené (typicky číslem).
+ 
+\begin_inset Newline newline
+\end_inset
+
+Nacházíme se v situaci, kdy stromu pokládáme 
+\begin_inset Quotes eld
+\end_inset
+
+otázku
+\begin_inset Quotes erd
+\end_inset
+
+.
+ Touto otázkou je v našem případě 
+\begin_inset Quotes eld
+\end_inset
+
+rozdělaný term
+\begin_inset Quotes erd
+\end_inset
+
+ a odpovědí na tuto otázku nám bude distribuce 
+\begin_inset Quotes eld
+\end_inset
+
+možných vzniklých rozdělaných termů použitím přepisovacích pravidel odpovídající
+ch stavebním blokům/konstruktům jazyka
+\begin_inset Quotes erd
+\end_inset
+
+.
+ Princip spočívá v tom, že do kořene pošleme číslo 1.
+ V každém nelistovém vrcholu dlí rozhodovací mechanizmus (v různých vrcholech
+ mohou být různé mechanizmy), který na základě 
+\begin_inset Quotes eld
+\end_inset
+
+otázky
+\begin_inset Quotes erd
+\end_inset
+
+ a 
+\begin_inset Quotes eld
+\end_inset
+
+ohodnocení hran
+\begin_inset Quotes erd
+\end_inset
+
+, které z něj vedou, rozhodne jak rozdělit to co do něj přišlo mezi jednotlivé
+ hrany.
+ Z těchto hran to přiteče do dceřiných vrcholů, kde se celá situace opakuje.
+ Dokud číslo nedoteče do listu, kde představuje (nenormalizovanou) pravděpodobno
+st této odpovědi.
+\end_layout
+
+\begin_layout Standard
+Čili abych to trochu shrnul: Mluvili jsme o tom, jak rozšířit enviroment
+ o další informaci.
+ Heslovitě:
+\end_layout
+
+\begin_layout Itemize
+spíš než seznam distribuci
+\end_layout
+
+\begin_layout Itemize
+neoddělovat konstrukty jazyka od sady stavebních bloků
+\end_layout
+
+\begin_layout Itemize
+distribuci zadávat hierarchicky
+\end_layout
+
+\begin_layout Itemize
+předchozí tři body realizovat pomocí 
+\begin_inset Quotes eld
+\end_inset
+
+variace na rozhodovací stromy
+\begin_inset Quotes erd
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+V tuto chvíli už možná vyplouvá na povrch další skrytá touha, totiž zkusit
+ tyto 
+\begin_inset Quotes eld
+\end_inset
+
+variace na rozhodovací stromy
+\begin_inset Quotes erd
+\end_inset
+
+ šlechtit pomocí GP algoritmu.
+ Na to si však ještě nějakou dobu nechám zajít chuť - dokud kód a sada testovací
+ch příkladů nebude mnohem vyzrálejší.
+\end_layout
+
+\begin_layout Standard
+\begin_inset VSpace defskip
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Nyní se dostáváme k druhému způsobu generování počáteční populace, skrze
+ nově uchopený enviroment.
+ Nyní je enviroment zadán pomocí DecTree, který nám pro rozdělaný term dá
+ distribuci rozdělaných termů.
+ Z této distribuce máme možnost vybírat buď klasicky nebo s odebráním prvku.
+ Ty prvky, které vybereme odpovídají směrům, kterými se vydáme v prohledávání
+ prostoru A* algoritmem.
+ Položme si následující otázku: Jak pomocí nového enviromentu simulovat
+ chování dokazovače se starým enviromentem? Pokud z 
+\emph on
+Dist 
+\emph default
+budeme postupně vybírat prvky s odebráním, do té doby dokud z ní nevybereme
+ všechno - pak nepřeskočíme žádnou možnost a dokazovač se bude chovat stejně
+ jako ten starý.
+ Nové chování tedy spočívá v tom, že nebudeme prozkoumávat úplně všechny
+ možnosti systematicky.
+ 
+\end_layout
+
+\begin_layout Standard
+Novému dokazovači přibývá nový parametr, dvojice z množiny <0,1>×<0,1>.
+ První číslo odpovídá tomu, kolik 
+\begin_inset Quotes eld
+\end_inset
+
+následníků
+\begin_inset Quotes erd
+\end_inset
+
+ současného rozdělaného termu dál navštívíme (počet je dán relativně v zhledem
+ k max.
+ počtu následníků).
+ Druhé číslo je pravděpodobnost toho, zda výběr z distribuce bude s odebráním
+ nebo bez.
+ Čili pro (1,1) se chová jako starý dokazovač (až na drobné rozdíly, jako
+ je lehce přeházené pořadí v kterém budou jednotlivé programy generovány).
+ Pro (0.75,0.5) máme jen 75% celkového počtu následníků, přičemž se navíc
+ někteří mohou i opakovat víckrát, protože je 50% šance že se bude vybírat
+ bez odebrání.
+ 
+\end_layout
+
+\begin_layout Standard
+V současném prototypu je implementován GP-systém, který si bere jako vstupní
+ parametr 
+\begin_inset Quotes eld
+\end_inset
+
+dokazovač
+\begin_inset Quotes erd
+\end_inset
+
+.
+ Bohužel je v implementaci někde chyba a GP-systém funguje jen pro starší
+ typ dokazovače (novější funguje obstojně sám, ale někde je patrně schovaná
+ muška v interakci GP-algoritmu a dokazovače).
+\end_layout
+
+\begin_layout Standard
+\begin_inset VSpace defskip
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+V rychlosti popišme z jakých modulů se první prototyp v tuto chvíli skládá:
+\end_layout
+
+\begin_layout Itemize
+
+\emph on
+Base 
+\emph default
+- Účelem modulu Base je definice typu TTerm a s ním spolupracujících funkcí.
+ TTerm neboli "oTypovaný TERM" můžeme nazvat "základním typem celého programu",
+ protože reprezentuje termy/programy, které "šlechtíme".
+ Používáme ho jak při generování termů, tak při evaluaci (alespoň zatím).
+ 
+\begin_inset Newline newline
+\end_inset
+
+Přesnější charakterizací než "otypovaný term" je "rozpracovaný otypovaný
+ term", v tom smyslu, jako je pro lidského programátora rozpracovaný zdrojový
+ kód nehotového programu.
+ Ve zkratce se jedná o lambda term rozšířený o "položku typ" a o "možnost
+ být rozdělaný".
+\end_layout
+
+\begin_layout Itemize
+
+\emph on
+(Util 
+\emph default
+- Util obsahuje obecné funkce nad standardními typy.)
+\end_layout
+
+\begin_layout Itemize
+
+\emph on
+Dist 
+\emph default
+- Dist představuje implementaci distribuce (pravděpodobnostního rozložení).
+ Popsáno dost podorbně výše.
+\end_layout
+
+\begin_layout Itemize
+
+\emph on
+Evaluation - 
+\emph default
+Modul starající se o vyhodnocování termů.
+ 
+\begin_inset Newline newline
+\end_inset
+
+Jakým způsobem se nyní TTermy evaluují a jakým způsobem to chci změnit v
+ budoucnu: Oproti klasickému lambda kalkulu rozlišujeme mezi "proměnnou"
+ a "hodnotou".
+ Hodnoty odpovídají vestavěným kombinátorům - tyto kombinátory jsou (když
+ to trochu zjednodušíme) Hasskellovské hodnoty "zabalené" pomocí knihovny
+ Data.Dynamic umožňující obejít typový systém Haskellu (o zjednodušení zde
+ mluvíme protože existují i jiné typy hodnot/kombinátorů, které ale pro
+ nás teď nemá smysl uvažovat).
+ TTermy vyhodnocujeme líně.
+ Kýžené líné vyhodnocování je však podstatně komplikováno právě zmíněnými
+ vestavěnými kombinátory: do Haskellovské funkce musíme dosadit haskellovskou
+ hodnotu, čili ne TTerm.
+ Tento problém řešíme tak, že slevíme z úplné lenosti a tím vzniká ne úplně
+ pěkný hybrid.
+ U tohoto hybridu jsem ale prozatím zůstal, protože jsem považoval za lepší
+ nejdříve udělat "jakž-takž" fungující prototyp celého systému a až po této
+ fázi začít novou iteraci vývoje a celou věc přepsat "bytelně".
+ (To má za následek nepěkné vedlejší efekty, jako např.
+ neohrabané podchycení kombinátoru "if" atd.) 
+\begin_inset Newline newline
+\end_inset
+
+Čím tedy nahradit toho současného hybrida? V zásadě mám dva kandidáty přičemž
+ první z nich je můj jasný oblíbenec, ale je pracnější:
+\end_layout
+
+\begin_deeper
+\begin_layout Itemize
+(A) Opustit snahu "exploitovat" haskellovské hodnoty a místo toho sáhnout
+ k napsaní si pořádného interpretu podle [Jones, S.
+ P.
+ (1991).
+ Implementing Functional Languages] 
+\end_layout
+
+\begin_layout Itemize
+(B) Použít knihovnu Hint (což je Runtime Haskell interpreter (GHC API wrapper)).
+\end_layout
+
+\begin_layout Standard
+Pro favorizaci možnosti (A) mám několik důvodů: Při evaluaci považuji za
+ velice užitečné mít k dispozici možnost omezit maximální počet beta redukcí
+ případně jiné podobné možnosti.
+ To by mělo jít (snad) dobře, díky tomu že zmíněná kniha je podrobný tutoriál,
+ čili budu mít v ruce kód, kterému budu rozumět a tím pádem ho budu moci
+ hezky rozšiřovat.
+ Další důvod je chuť proniknout do tajů funkcionálních překladačů.
+\end_layout
+
+\begin_layout Standard
+Na obhajobu (B) lze říct, že by kýžené funkcionality šlo dosáhnout nějakými
+ časovými omezeními na maximální dobu běhu.
+ Ale přijde mi, že z toho jde takový ten pocit "na komára s kanónem".
+ Nejobjektivnějším rozhřešením by nejspíš bylo otestovat, co je rychlejší
+ (což neumím odhadnout).
+ 
+\end_layout
+
+\begin_layout Standard
+Ještě se nabízí možnost (C) slevit z lenosti a pak by to možná šlo udělat
+ pomocí současné metody dostatečně konzistentní, tuhle metodu ale zatím
+ moc nezvažuji jako finální řešení, spíš jako mezifázi.
+\end_layout
+
+\end_deeper
+\begin_layout Itemize
+
+\emph on
+Parser 
+\emph default
+- OSTUDA !! :) TODO : předělat do Parsecu
+\end_layout
+
+\begin_layout Itemize
+
+\emph on
+DecTree
+\emph default
+ - Variace na rozhodovací strom, použitá k uchopení nového enviromentu -
+ rozšířeného o další informace krom typu.
+\end_layout
+
+\begin_layout Itemize
+
+\emph on
+Enviroments
+\emph default
+ - Obsahuje definice enviromentů, v nich obsažených programů a jejich typů.
+\end_layout
+
+\begin_layout Itemize
+
+\emph on
+Prover
+\emph default
+ - Zajišťuje generování počátečních populací.
+\end_layout
+
+\begin_layout Itemize
+
+\emph on
+GP
+\emph default
+ - Jádro genetického algoritmu.
+ Výpočet probíhá ve 
+\emph on
+State 
+\emph default
+monádě.
+ 
+\end_layout
+
+\begin_layout Itemize
+
+\emph on
+Ant 
+\emph default
+- Jediný netriviální testCase, problém převzatý z 
+\noun on
+Kozy
+\noun default
+: šlechtíme program jednoduchého mravence tak, aby sežral co nejvíc jídla.
+ Pohybuje se po čtvercové síti a pozná, když je přímo před ním jídlo, umí
+ se otáčet doleva, doprava a pohnout dopředu.
+ Dále pak je k dispozici příkaz pro zřetězení víc příkazů.
+ Zajímavé je to tím, že v zájmu zachování problému přesně tak jak byl originálně
+ bylo nutné simulovat stavový výpočet.
+\end_layout
+
+\begin_layout Itemize
+
+\emph on
+Main 
+\emph default
+- Obsahuje testCases.
+\end_layout
+
+\begin_layout Standard
+\begin_inset VSpace 50pt
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+
+\emph on
+Co budu dělat dál?
+\end_layout
+
+\begin_layout Itemize
+Rád bych si 
+\begin_inset Quotes eld
+\end_inset
+
+přistřihnul křidýlka
+\begin_inset Quotes erd
+\end_inset
+
+ a pečlivě implementovat Kozův klasický GP-algoritmus (společně se zásobou
+ jeho testCasů), ale v řeči těch mých konceptů - tzn.
+ snažit se udělat klasický přístup jako speciální případ toho mého.
+ (Abych dokázal, že ty moje koncepty nejsou samoúčelné a abych měl s čím
+ porovnávat).
+\end_layout
+
+\begin_layout Itemize
+Udělat pořádnou evaluaci termů.
+\end_layout
+
+\begin_layout Itemize
+Zrobustnit kód.
+\end_layout
+
+\begin_layout Itemize
+Přečíst si články vyšlé o genetickém programování v kombinací s typovánými
+ funkcionálními jazyky.
+ 
+\end_layout
+
+\end_body
+\end_document

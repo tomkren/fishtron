@@ -17,7 +17,7 @@ import Problems.Fly.Fly
 problem1 = cttProblem5 "Fly" ff prog_typ ctx prog_type
 
 
-jsData = worldToJSON ff_solutionFlyPos2 ff_world_withEnvirFlies2 
+jsData = worldToJSON ff_solutionFlyPos ff_world_withEnvirFlies 
 
 
 prog_type = asType :: Input_ -> Output_
@@ -63,7 +63,7 @@ numSteps = 100
 
 ff :: (Input_->Output_) -> (Double,Bool)
 ff prog_ = 
-  let w  = ff_world_complet2 prog_
+  let w  = ff_world_complet prog_
       w' = steps numSteps w
       finalEnergy = fromIntegral $ head $ energies w'
    in ( finalEnergy , False )
