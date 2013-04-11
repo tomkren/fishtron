@@ -9,15 +9,21 @@ import Problems.Utils ( cttProblem5 , asType )
 import Text.JSON
 import JSONUtils
 
+import DrawIM( imGraphInJSON )
+
 import Problems.Fly.Funs ( Input_ , Output_ , Dir_  , Energy , Pos , avg , 
                            output_ , myApplePoses_ ,nearestFlyPos_, myPos_ , posToDir_  ,
                            dStay , dUp , dDown , dLeft , dRight )
 import Problems.Fly.Fly
 
+
+
 problem1 = cttProblem5 "Fly" ff prog_typ ctx prog_type
 
 
-jsData = worldToJSON ff_solutionFlyPos ff_world_withEnvirFlies 
+jsData = jsObj [ 
+ ( "world" , worldToJSON ff_solutionFlyPos ff_world_withEnvirFlies ),
+ ( "im"    , imGraphInJSON prog_typ ctx )]
 
 
 prog_type = asType :: Input_ -> Output_
@@ -28,7 +34,7 @@ output_typ = Typ "Output_"
 dir_typ    = Typ "Dir_"
 
 m_pos   = Typ "Maybe Pos"
-l_pos   = Typ "List Pos"
+l_pos   = Typ "[Pos]"
 pos_typ = Typ "Pos"
 
 dou     = Typ "Double"

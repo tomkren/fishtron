@@ -54,6 +54,9 @@ app req =
 
     ["js","libs",filename] -> do
       return $ myJSFile $ "libs/" ++ (init . tail . show $ filename)
+    
+    ["js","Problems",filename] -> do
+      return $ myJSFile $ "Problems/" ++ (init . tail . show $ filename)  
 
     ["files",filename] -> do
       return $ myFile (init . tail . show $ filename)

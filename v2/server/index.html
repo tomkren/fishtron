@@ -30,14 +30,28 @@
 
     <script src="js/main-arbor.js"></script>
 
-    <script src="js/Fly.js"></script>
-    <script src="js/Ant.js"></script>
+    <script src="js/Problems/Fly.js"></script>
+    <script src="js/Problems/Ant.js"></script>
+    <script src="js/Problems/SSR.js"></script>
+
 
 
     <script>
 
 
-
+  var dummyGraph = [
+    { node : 'a' , opts : {name:'foobar'}               } , 
+    { node : 'b' , opts : {color:'red',name:'Int',sq:1} } ,  
+    { node : 'c' , opts : {sq:1}                        } ,
+    { node : 'd' , opts : {sq:1}                        } ,
+    { node : 'e' , opts : {sq:1}                        } ,   
+    
+    { edge : ['a','b'] , opts : {dir:1,n:2}             } ,
+    { edge : ['c','c'] , opts : {}                      } ,
+    { edge : ['a','c'] , opts : {}                      } ,
+    { edge : ['a','d'] , opts : {}                      } ,
+    { edge : ['a','e'] , opts : {}                      } 
+  ];
 
 var curr = function( fun ){
   return curryfy( fun.length , fun , [] );
@@ -365,10 +379,12 @@ var drawPlot = function( graphI , plotData ){
 
 
 
-
-
-
 $(document).ready(function() {
+
+  var myDrawGraph = arborFUN($);
+
+  //myDrawGraph( '#viewport' , dummyGraph );
+
 
   antState.loadResources();
 
@@ -410,6 +426,13 @@ $(document).ready(function() {
             if( problemSegment && problemSegment.onLoadedProblemData ){
               //console.log('hažu mu to : '+ this.code);
               problemSegment.onLoadedProblemData( this.data ) ;
+            }
+
+            if( this.data && this.data.im ){
+              //console.log( 'im:' );
+              //console.log( this.data.im );
+
+              myDrawGraph( '#viewport' , this.data.im );
             }
 
         });

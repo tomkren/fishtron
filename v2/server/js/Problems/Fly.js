@@ -105,7 +105,7 @@ Global.Problems.fly = Fly = {
   onLoadedProblemData : function( data ){
     //console.log( data );
     this.loadResources();
-    this.dataJSON = JSON.stringify( data );
+    this.dataJSON = JSON.stringify( data.world );
     this.loadFromDataJSON( );
   },
 

@@ -4,7 +4,7 @@
 //  A project template for using arbor.js
 //
 
-(function($){
+var arborFUN = function($){
 
   var Renderer = function(canvas){
     var canvas = $(canvas).get(0)
@@ -43,7 +43,7 @@
         // 
         ctx.fillStyle = "white"
         ctx.fillRect(0,0, canvas.width, canvas.height)
-        
+
         particleSystem.eachEdge(function(edge, pt1, pt2){
           // edge: {source:Node, target:Node, length:#, data:{}}
           // pt1:  {x:#, y:#}  source position in screen coords
@@ -62,7 +62,7 @@
           }
 
           // draw a line from pt1 to pt2
-          ctx.strokeStyle = "rgba(0,0,0, .333)"
+          ctx.strokeStyle = edge.data.color || "rgba(0,0,0, 0.4)" ;
           ctx.lineWidth = 1
           ctx.beginPath()
           ctx.moveTo(pt1.x, pt1.y)
@@ -84,7 +84,7 @@
           }
 
 
-        })
+        });
 
         particleSystem.eachNode(function(node, pt){
           // node: {mass:#, p:{x,y}, name:"", data:{}}
@@ -108,7 +108,16 @@
             ctx.fillRect(pt.x-w/2, pt.y-w/2, w,w) ;         
           }
 
-        })    			
+          if( node.data.circle ){
+                
+            ctx.beginPath();
+            ctx.arc(pt.x, pt.y, node.data.circle , 0, 2 * Math.PI, false);
+            ctx.fill();    
+          }
+
+        });  
+
+  			
       },
       
       initMouseHandling:function(){
@@ -166,24 +175,46 @@
     return that
   }    
 
-  $(document).ready(function(){
+
+
+
+  var myDrawGrpah = function( canvasSelector , graphData ){
+
     var sys = arbor.ParticleSystem(1000, 600, 0.5) // create the system with sensible repulsion/stiffness/friction
     sys.parameters({gravity:true}) // use center-gravity to make the graph settle nicely (ymmv)
-    sys.renderer = Renderer("#viewport") // our newly created renderer will have its .init() method called shortly by sys...
+    sys.renderer = Renderer(canvasSelector) //"#viewport") // our newly created renderer will have its .init() method called shortly by sys...
+
+
+    for( var i in graphData ){
+      var rec = graphData[i];
+      if( rec.node ){
+        sys.addNode( rec.node , rec.opts );
+      } else if( rec.edge ){
+        sys.addEdge( rec.edge[0] , rec.edge[1] , rec.opts );
+      }
+    }
+  };
+
+  $(document).ready(function(){
+
+    //myDrawGrpah( dummyGraph );
+
+    //var sys = arbor.ParticleSystem(1000, 600, 0.5) // create the system with sensible repulsion/stiffness/friction
+    //sys.parameters({gravity:true}) // use center-gravity to make the graph settle nicely (ymmv)
+    //sys.renderer = Renderer("#viewport") // our newly created renderer will have its .init() method called shortly by sys...
 
     // add some nodes to the graph and watch it go...
-    sys.addNode('a',{name:'foobar'});
-    sys.addNode('b',{color:'red',name:'Int',sq:1});
-    sys.addNode('c',{sq:1});
-    sys.addNode('d',{sq:1});
-    sys.addNode('e',{sq:1});
-    
-    sys.addEdge('a','b',{dir:1,n:2});
-    sys.addEdge('c','c');
-    sys.addEdge('a','c');
-    sys.addEdge('a','d');
-    sys.addEdge('a','e');
-
+    //sys.addNode('a',{name:'foobar'});
+    //sys.addNode('b',{color:'red',name:'Int',sq:1});
+    //sys.addNode('c',{sq:1});
+    //sys.addNode('d',{sq:1});
+    //sys.addNode('e',{sq:1});
+    //
+    //sys.addEdge('a','b',{dir:1,n:2});
+    //sys.addEdge('c','c');
+    //sys.addEdge('a','c');
+    //sys.addEdge('a','d');
+    //sys.addEdge('a','e');
 
     //sys.addNode('f', {alone:true, mass:.25})
 
@@ -204,4 +235,9 @@
     
   })
 
-})(this.jQuery)
+  return myDrawGrpah;
+
+};//)(this.jQuery)
+
+
+//arborFUN(this.jQuery);
