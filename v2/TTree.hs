@@ -21,7 +21,9 @@ import Data.Either
 import Data.Maybe
 
 import Text.JSON (JSValue (..) , toJSObject , toJSString )
-import Utils ( JShow , jshow )
+import Utils ( JShow , jshow_js )
+
+import JSONUtils
 
 import TTerm
 
@@ -43,12 +45,13 @@ instance Show CTT where
          in "\\ "++ vars ++ " -> " ++ show ttree 
 
 instance JShow CTT where
-  jshow ctt = JSObject $ toJSObject [ 
-   ("type"     , JSString . toJSString $ "jsonout"     ) ,
-   ("haskell"  , JSString . toJSString $ show ctt      ) ,
-   ("js"       , JSString . toJSString $ jsShow ctt    ) 
-   --("kutil"    , JSString . toJSString $ ctt2kutil ctt ) 
-   ]
+  jshow_js ctt = Just . jsStr . jsShow $ ctt
+--  jshow ctt = JSObject $ toJSObject [ 
+--   ("type"     , JSString . toJSString $ "jsonout"     ) ,
+--   ("haskell"  , JSString . toJSString $ show ctt      ) ,
+--   ("js"       , JSString . toJSString $ jsShow ctt    ) 
+--   --("kutil"    , JSString . toJSString $ ctt2kutil ctt ) 
+--   ]
 
 
 jsShow :: CTT -> String

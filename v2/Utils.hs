@@ -1,8 +1,8 @@
-{-# LANGUAGE FlexibleInstances, UndecidableInstances #-}
+{-# LANGUAGE FlexibleInstances, UndecidableInstances, OverlappingInstances #-}
 
 module Utils where
 
-
+import Data.Maybe
 import Data.List
 import Data.Map (Map)
 import qualified Data.Map as Map
@@ -12,7 +12,9 @@ import Control.Monad.State
 import Data.Random.Normal
 
 
-import Text.JSON (JSValue (..) , toJSObject , toJSString )
+import Text.JSON (JSValue(..))
+
+import JSONUtils
 
 -- general ------------------------------------
 
@@ -209,12 +211,24 @@ align width str =
 -- JSON-show stuff ----
 
 class (Show a) => JShow a where
-  jshow :: a -> JSValue
+  jshow_js :: a -> Maybe JSValue
+  jshow    :: a -> JSValue
+  jshow x = jsObj $ l_js ++ [ 
+    ("type"     , jsStr "jsonout" ) ,
+    ("haskell"  , jsStr $ show x  ) ]
+   where
+    l_js = case jshow_js x of
+     Nothing    -> []
+     Just jsval -> [("js",jsval)] 
+
 
 instance Show a => JShow a where 
-  jshow x = JSObject $ toJSObject [ 
-   ("type"     , JSString . toJSString $ "jsonout" ) ,
-   ("haskell"  , JSString . toJSString $ show x   ) ]
+  jshow_js _ = Nothing
 
+instance JShow Bool where
+  jshow_js x = Just $ JSBool x 
+
+instance JShow a => JShow [a] where
+  jshow_js = Just . jsArr . map (fromJust . jshow_js) 
 
 

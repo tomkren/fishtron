@@ -32,11 +32,10 @@
 
     <script src="js/utils.js"></script>
 
-    <!--<script src="js/Ant_old.js"></script>-->
-
     <script src="js/Problems/Fly.js"></script>
     <script src="js/Problems/Ant.js"></script>
     <script src="js/Problems/SSR.js"></script>
+    <script src="js/Problems/BA.js"></script>
 
 
 
@@ -68,8 +67,7 @@ $(document).ready(function() {
 
   Global.myDrawGraph = arborFUN($);
 
-  // antState.loadResources(); +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
+ 
   $('#progressfutral').hide();
   $('#stdout-on').button('toggle');
   $("[rel=tooltip]").tooltip();
@@ -193,8 +191,12 @@ var go = function(){
 
   if( problemSegment ){
 
-    if( problemSegment.data.im ){
-      Global.myDrawGraph( '#viewport' , problemSegment.data.im );
+    if( problemSegment.data ){
+      
+      if( problemSegment.data.im ){
+        Global.myDrawGraph( '#viewport' , problemSegment.data.im );
+      }
+
     }
 
     problemSegment.onGo();
@@ -329,8 +331,11 @@ var runCmd = function(){
       var solution ;
 
       //console.log( cmdObj.kutil );
+      
+      var evalStr = "solution = " + correctToString( cmdObj.js ) ;
+      //console.log( evalStr );
 
-      eval( "solution = " + cmdObj.js );
+      eval( evalStr );
 
       Global.bests[ Global.actRun ][ Global.actGen ] = solution ;
 
@@ -359,6 +364,17 @@ var runCmd = function(){
 }();
 
 
+var correctToString = function( obj ){
+  if( _.isArray( obj ) ){
+    var ret = '[';
+    for( var i in obj ){
+      ret += correctToString( obj[i] ) + ',' ;
+    }
+    return ret + ']';
+  }
+
+  return obj.toString() ;
+}
 
 
 // -- STDOUT -------------------------------------------------------------------
@@ -502,7 +518,7 @@ var drawPlot = function( graphI , plotData ){
             </ul>
           </li>
           <li><a href="#im" id="im-link">Inhabitation Machine</a></li>
-          <li><a href="#special"  id="special-link">Fenotyp</a></li>
+          <li><a href="#special"  id="special-link">Phenotype</a></li>
         </ul>
 
       </div>
