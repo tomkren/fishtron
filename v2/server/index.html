@@ -62,10 +62,9 @@ var Global = {
 
 $(document).ready(function() {
 
-  var myDrawGraph = arborFUN($);
+  $('#go-input-row').hide(); // chtelo by to ho uplne smazat, ale čte se z něho ..
 
-  //myDrawGraph( '#viewport' , dummyGraph );
-
+  Global.myDrawGraph = arborFUN($);
 
   antState.loadResources();
 
@@ -104,17 +103,14 @@ $(document).ready(function() {
 
             var problemSegment = Global.Problems[ this.code ] ;
 
-            if( problemSegment && problemSegment.onLoadedProblemData ){
-              //console.log('hažu mu to : '+ this.code);
+            if( problemSegment ){ //} && problemSegment.onLoadedProblemData ){
+
               problemSegment.onLoadedProblemData( this.data ) ;
+              problemSegment.data = this.data;
             }
 
-            if( this.data && this.data.im ){
-              //console.log( 'im:' );
-              //console.log( this.data.im );
+            
 
-              myDrawGraph( '#viewport' , this.data.im );
-            }
 
         });
 
@@ -134,27 +130,32 @@ $(document).ready(function() {
 
   var initSlider = function( name , opts ){
 
-    var update = function(){
-      var newVal = $('#'+ name +'-slider').slider('value');
+    var update = function(event, ui){
+      var newVal =  ui.value ;//$('#'+ name +'-slider').slider('value');
+
+      if( newVal <= 0 ){ newVal = 1 ; }
+
       Global[ name ] = newVal ;
       $('#'+ name +'-input').attr('value' , newVal );
       $('#opts').change();
+
+
     };
 
     $('#'+ name +'-slider').slider({
       min    : opts.min ,
       max    : opts.max ,
       value  : opts.value ,
-      change : update,
+      step   : opts.step || 1 ,
       slide  : update,
     });
 
-    update();    
+    update(null,{ value : $('#'+ name +'-slider').slider('value') });    
   };
 
   initSlider( 'numruns' , { min : 1 , max : 10    , value : 4   } );
-  initSlider( 'numgens' , { min : 0 , max : 100   , value : 10  } );
-  initSlider( 'popsize' , { min : 1 , max : 5000  , value : 500 } );
+  initSlider( 'numgens' , { min : 0 , max : 100   , value : 10  , step : 10 } );
+  initSlider( 'popsize' , { min : 0 , max : 5000  , value : 500 , step : 10 } );
 
   drawPlot(1,Global.plotData);
   drawPlot(2,Global.plotData);
@@ -185,10 +186,19 @@ var go = function(){
     default        : Global.fenotyp = undefined  ;
   }
 
-  if( Global.Problems[ Global.problemName ] ){
-    //console.log('Pojedem novym stylem!');
 
-    Global.Problems[ Global.problemName ].onGo();
+//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+
+  var problemSegment = Global.Problems[ Global.problemName ] ;
+
+  if( problemSegment ){
+
+    if( problemSegment.data.im ){
+      Global.myDrawGraph( '#viewport' , problemSegment.data.im );
+    }
+
+    problemSegment.onGo();
   }
 
 
@@ -454,22 +464,6 @@ var drawPlot = function( graphI , plotData ){
   <body>
 
 
-
-
-    <div class="row">&nbsp;</div>
-
-    <div class="row">
-
-      <div class="span0"></div>
-
-      
-      <div class="input-append span10">
-        <input class="span9" id="go-input" type="text">
-        <a onclick="go()" class="btn" style="width:55px">Go!</a>
-      </div>
-
-    </div>
-
     <div class="row">&nbsp;</div>
 
     <div class="row">
@@ -508,7 +502,7 @@ var drawPlot = function( graphI , plotData ){
                      BB-AB-WB</a></li>
             </ul>
           </li>
-          <li><a href="#im" id="im-link">IM</a></li>
+          <li><a href="#im" id="im-link">Inhabitation Machine</a></li>
           <li><a href="#special"  id="special-link">Fenotyp</a></li>
         </ul>
 
@@ -532,7 +526,14 @@ var drawPlot = function( graphI , plotData ){
                 <span class="label label-info">Problem</span>
               </label>
               <div class="controls">
-                <select id="problem-select"></select>
+                  
+                  
+                  <table>
+                    <tr>
+                      <td><select id="problem-select" class="span4" ></select></td>
+                      <td><button onclick="go()" class="btn btn-primary span2">Start</button></td>
+                    </tr>
+                  </table>
               </div>
             </div>
 
@@ -578,6 +579,17 @@ var drawPlot = function( graphI , plotData ){
               </div>
             </div>
 
+            
+            <div class="row" id="go-input-row">
+              <div class="span0"></div>
+              <div class="input-append span10">
+                <input class="span9" id="go-input" type="text">
+                <a onclick="go()" class="btn" style="width:55px">Go!</a>
+              </div>
+            </div>
+
+          
+
           </div>
         </div>
 
@@ -611,11 +623,13 @@ var drawPlot = function( graphI , plotData ){
         </div>
 
         <div class="tab-pane span7" id="im" >
-          
-          <canvas id="viewport" width="786" height="400"></canvas>
-          <div class="alert alert-info" >
-            Inhabitation machine - graph
+
+          <div class="alert alert-info span8" >
+            This tab will be filled by <b>Inhabitation Machine</b> graph (if the problem has one).
           </div> 
+          
+          <canvas id="viewport" width="786" height="600"></canvas>
+
 
         </div>
 

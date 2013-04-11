@@ -24,7 +24,7 @@ problemList = [
   ("map"    , "..."                                                           , JSNull     ) ,
   ("filter" , "..."                                                           , JSNull     ) ,
   ("elem"   , "..."                                                           , JSNull     ) ,
-  ("ssr"    , "Simple Symbolic Regression - new IM !"                         , JSNull     ) ,
+  ("ssr"    , "Simple Symbolic Regression - new IM !"                         , SSR.jsData ) ,
   ("ssr_old", "Simple Symbolic Regression - old IM !"                         , JSNull     ) ,
   -- ("ssr2"   , "Simple Symbolic Regression - new IM"                           , JSNull     ) ,
   -- ("ssr3"   , "Simple Symbolic Regression - new IM & single-filed & inside-FF", JSNull     ) ,
