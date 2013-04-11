@@ -87,8 +87,7 @@ console.log( "Fly.js ready!" );
 
 
 
-var Fly;
-Global.Problems.fly = Fly = {
+Global.Problems.fly = {
 
   progLib : {
     prog1 : function (x0){return output_(posToDir_(  myPos_(x0)   , head_(myApplePoses_(x0))  )   );},

@@ -26,9 +26,11 @@
     <script src="js/libs/jquery.flot.js"></script>
     <script src="js/libs/underscore.js"></script>
     <script src="js/libs/bootstrap.min.js"></script>
-    <script src="js/libs/arbor.js"></script>
 
+    <script src="js/libs/arbor.js"></script>
     <script src="js/main-arbor.js"></script>
+
+    <script src="js/utils.js"></script>
 
     <script src="js/Problems/Fly.js"></script>
     <script src="js/Problems/Ant.js"></script>
@@ -38,232 +40,13 @@
 
     <script>
 
-
-  var dummyGraph = [
-    { node : 'a' , opts : {name:'foobar'}               } , 
-    { node : 'b' , opts : {color:'red',name:'Int',sq:1} } ,  
-    { node : 'c' , opts : {sq:1}                        } ,
-    { node : 'd' , opts : {sq:1}                        } ,
-    { node : 'e' , opts : {sq:1}                        } ,   
-    
-    { edge : ['a','b'] , opts : {dir:1,n:2}             } ,
-    { edge : ['c','c'] , opts : {}                      } ,
-    { edge : ['a','c'] , opts : {}                      } ,
-    { edge : ['a','d'] , opts : {}                      } ,
-    { edge : ['a','e'] , opts : {}                      } 
-  ];
-
-var curr = function( fun ){
-  return curryfy( fun.length , fun , [] );
-};
-
-var curryfy = function( ii , fun , args ){
-
-  if( ii == 0 ){
-    return fun.apply( null , args );
-  }
-
-  return function(){
-
-    var args2 = args;
-    for (var j = 0; j < arguments.length; j++) {
-      args2 = args2.concat( [arguments[j]] );
-    }
-
-    return curryfy( ii-arguments.length , fun , args2 );
-  };
-
-};
-
-
-var curt = function( fun ){
-  var origNumArgs = fun.length ;
-  return function(){
-    console.log( "num args original: " + origNumArgs );
-    console.log( "num args applied : " + arguments.length );
-    console.log( "arguments:         " + arguments );
-
-    return [fun.apply( null , arguments ),arguments];
-  };
-}
-
-var argsToArr = function( args ){
-    ret = [];
-    for (var j = 0; j < arguments.length; j++) {
-      args2 = args2.concat( [arguments[j]] );
-    }  
-}
-
-var te1 = function( a , b , c ){
-  return a + b + c;
-};
-
-
-var cur2 = function( fun ){
-  return function( x , y ){
-    if( y === undefined ){
-      return function(y){ return fun(x,y) ; }
-    } else {
-      return fun( x , y );
-    }
-  }
-}; 
-
-var cur3 = function( fun ){
-  return function( x , y , z ){
-    if( y === undefined ){
-      return cur2( function(y,z){return fun(x,y,z);} );
-    } else if( z === undefined ){
-      return function(z){return fun(x,y,z);} ;
-    } else {
-      return fun(x,y,z);
-    }
-  }
-};
-
-var plus2 = cur2(function(x,y){
-  return x + y;
-});
-
-var plus3 = cur3(function(x,y,z){
-  return x + y + z;
-});
-
-
-
-//var k = _.partial(curr( function( x , y ){
-//  return x;
-//});
-
-var slice = Array.prototype.slice ;
-
-var ap = function(func) {
-    var args = slice.call(arguments, 1);
-    return function() {
-      return func.apply(this, args.concat(slice.call(arguments)));
-    };
-  };
-
-
-
-
-
-var k = cur2(function( x , y ){
-  return x;
-});
-
-var s = cur3( function( x , y , z ){
-  return x(z)(y(z));
-});
-
-var i = function( x ){
-  return x;
-};
-
-
-var cons = cur2(function( x , xs ){
-  return [x].concat(xs);
-});
-
-var foldr = cur3(function( f , z , xs ){
-
-  var ret = z;
-  for( var i = xs.length-1 ; i >= 0 ; i-- ){
-    ret = f(xs[i])(ret);
-  } 
-  return ret;
-
-});
-
-
-//listCase :: [a] -> b -> (a->[a]->b) -> b
-
-var listCase = cur3(function(list,emptyCase,fullCase){
-  if( list.length == 0 ){
-    return emptyCase ;
-  } else {
-    return fullCase (list[0]) (list.splice(1));
-  }
-});
-
-var Just = function(x){
-  return [x];
-};
-
-var Nothing = [];
-var True    = true;
-var False   = false;
-
-var if_ = cur3(function(p,q,r){
-  if(p){
-    return q;
-  } else {
-    return r;
-  }
-});
-
-var equals = cur2(function(x,y){
-  return x == y ;
-});
-
-
-var foo  = function (x0,x1){return foldr(  s ( k(cons) ,  s(k(x0),i)   )   , [] , x1 );}
-
-var foo2 = function (x0,x1){return foldr(  s ( k(cons) )(  s(k(x0))(i)   )   )( [] )( x1 );}
-
-var plus1 = function(x){ return x+1 ; };
-
-var sin  = Math.sin ;
-var cos  = Math.cos ;
-var exp  = Math.exp ;
-var rdiv = function(x,y){if(y==0){return 1;}else{return x/y;}}
-var rlog = function(x){return Math.log(Math.abs(x));}
-
-
-var ssr = function( solution ){
-
-  var trueSolution = function(x){return x*x*x*x+x*x*x+x*x+x ;}
-
-  var xs = [ ] ; 
-  for (var i = -1 ; i <= 1 ; i+= 0.01 ) {
-    xs.push(i);
-  }
-
-  ysSol     = _.map( xs , function(x){return [x,    solution(x)];} );
-  ysTrueSol = _.map( xs , function(x){return [x,trueSolution(x)];} );
-
-  
-  var ssrPlotData = {
-    trueSolution : ysTrueSol,
-    solution     : ysSol
-  };
-
-  $('#special').html(
-    'Best individual : ' +
-    '<div id="graphssr-div" class="graph"></div>');
-
-  drawPlot( 'ssr' , ssrPlotData );
-
-
-  return ssrPlotData;
-
-};
-
-
-
-var plotData = { };
-  
-var plotData_ = {
-  g1 : function(d){for(var i=0;i<14;i+=0.5){d.push([i,Math.sin(i)]);}return d;}([]) ,
-  g2 : [[0, 3], [4, 8], [8, 5], [9, 13]],
-  g3 : [[0, 12], [7, 12], null, [7, 2.5], [12, 2.5]]
-};
-
 var Global = {
   problemName : undefined,
   numruns : undefined ,
   numgens : undefined ,
   popsize : undefined ,
+
+  plotData : {} ,
 
   Problems : {},
   
@@ -275,108 +58,6 @@ var Global = {
   fenotyp : undefined,
   defaultTab : 'opts' //'im'
 };
-
-
-
-
-var clrscr = function(){
-    $('textarea').html('');
-};
-
-var scrollDown = function(){
-  var texta = $('#texta');
-  texta[0].scrollTop = texta[0].scrollHeight - texta[0].clientHeight;
-};
-
-//------------------------
-
-
-
-
-
-var isBestName = function( graphName ){
-  return graphName.match(/^best.*/) != null ;
-};
-
-var transposePlotData = function( plotData , isWantedGraph ){
-  var ret = []
-  for( var graphName in plotData ){
-    if( isWantedGraph( graphName ) ){
-      var graphData = plotData[graphName];
-      for( var i in graphData ){
-        if( !ret[i] ){ ret[i] = []; }
-        ret[i].push( graphData[i][1] );
-      }
-    }
-  }
-  return ret;
-};
-
-var findBest = function( arr ){
-  var best = -Number.MAX_VALUE;
-  _.each( arr , function(x){if( x > best ){ best = x; }});  
-  return best;
-};
-
-var findWorst = function( arr ){
-  var worst = Number.MAX_VALUE;
-  _.each( arr , function(x){if( x < worst ){ worst = x; }});  
-  return worst;
-};
-
-var findAvg = function( arr ){
-  var sum = 0;
-  var num = 0;
-  _.each( arr , function(x){ sum += x ; num++ ; } );
-  return sum/num ;
-};
-
-var mkPilatPlotData = function( plotData ){
-
-  var transBest = transposePlotData( plotData , isBestName );
-
-  var ret = {
-    bestBest  : [],
-    avgBest   : [],
-    worstBest : []
-  }
-
-  for( var genI in transBest ){
-
-    var genBests = transBest[genI];
-
-    ret.bestBest .push( [ genI , findBest ( genBests ) ] );
-    ret.avgBest  .push( [ genI , findAvg  ( genBests ) ] );
-    ret.worstBest.push( [ genI , findWorst( genBests ) ] );
-
-  }
-
-  return ret ;
-
-};
-
-
-
-var flattenPlotData = function( plotData ){
-  var ret = [];
-  for( var prop in plotData ){
-    ret.push( plotData[prop] );
-  }
-  return ret;
-};
-
-var drawPlot = function( graphI , plotData ){
-  $.plot('#graph'+ graphI +'-div',  flattenPlotData( plotData ) );
-};
-
-
-
-
-//--------------------------------------------------------------------------
-
-
-
-
 
 
 $(document).ready(function() {
@@ -475,8 +156,8 @@ $(document).ready(function() {
   initSlider( 'numgens' , { min : 0 , max : 100   , value : 10  } );
   initSlider( 'popsize' , { min : 1 , max : 5000  , value : 500 } );
 
-  drawPlot(1,plotData);
-  drawPlot(2,plotData);
+  drawPlot(1,Global.plotData);
+  drawPlot(2,Global.plotData);
 
 
 });
@@ -512,7 +193,7 @@ var go = function(){
 
 
 
-  plotData = {} ;
+  Global.plotData = {} ;
 
   console.log(input);
 
@@ -610,10 +291,10 @@ var runCmd = function(){
 
     graph : function( cmdObj ){
       var newPoints = !_.isArray( cmdObj.data[0] )  ? [cmdObj.data] : cmdObj.data ;
-      var oldPoints = plotData[cmdObj.graph] ? plotData[cmdObj.graph] : [] ;
-      plotData[cmdObj.graph] = oldPoints.concat(newPoints);
-      drawPlot(1,plotData);
-      drawPlot(2,mkPilatPlotData(plotData));
+      var oldPoints = Global.plotData[cmdObj.graph] ? Global.plotData[cmdObj.graph] : [] ;
+      Global.plotData[cmdObj.graph] = oldPoints.concat(newPoints);
+      drawPlot(1,Global.plotData);
+      drawPlot(2,mkPilatPlotData(Global.plotData));
     },
 
     stdout : function( cmdObj ){
@@ -669,23 +350,98 @@ var runCmd = function(){
 }();
 
 
-function onDownload() {
-    document.location = 'data:text/plain,' +
-                         encodeURIComponent(
-'<?xml version="1.0" encoding="UTF-8"?>\n'+
-'<kutil>\n'+
-'  <object type="comment" val="abc" />\n'+
-'  <object type="function" id="1" val="plus3" target="" pos="100 300" />\n'+
-'  <object type="function" id="1_1" val="+" target="1:0" pos="100 200" />\n'+
-'  <object type="function" id="1_1_1" val="id" target="1_1:0" pos="100 100" />\n'+
-'  <object type="function" id="1_1_2" val="const 3" target="1_1:1" pos="200 100" />\n'+
-'  <object type="function" id="1_2" val="inc" target="1:1" pos="200 200" />\n'+
-'  <object type="function" id="1_2_1" val="id" target="1_2:0" pos="300 100" />\n'+
-'  <object type="function" id="1_3" val="const 4" target="1:2" pos="300 200" />\n'+
-'</kutil>'
 
-                          );
-}
+
+// -- STDOUT -------------------------------------------------------------------
+
+var clrscr = function(){
+    $('textarea').html('');
+};
+
+var scrollDown = function(){
+  var texta = $('#texta');
+  texta[0].scrollTop = texta[0].scrollHeight - texta[0].clientHeight;
+};
+
+
+
+// -- GRAPHS ---------------------------------------------------------------------------------------
+
+var isBestName = function( graphName ){
+  return graphName.match(/^best.*/) != null ;
+};
+
+var transposePlotData = function( plotData , isWantedGraph ){
+  var ret = []
+  for( var graphName in plotData ){
+    if( isWantedGraph( graphName ) ){
+      var graphData = plotData[graphName];
+      for( var i in graphData ){
+        if( !ret[i] ){ ret[i] = []; }
+        ret[i].push( graphData[i][1] );
+      }
+    }
+  }
+  return ret;
+};
+
+var findBest = function( arr ){
+  var best = -Number.MAX_VALUE;
+  _.each( arr , function(x){if( x > best ){ best = x; }});  
+  return best;
+};
+
+var findWorst = function( arr ){
+  var worst = Number.MAX_VALUE;
+  _.each( arr , function(x){if( x < worst ){ worst = x; }});  
+  return worst;
+};
+
+var findAvg = function( arr ){
+  var sum = 0;
+  var num = 0;
+  _.each( arr , function(x){ sum += x ; num++ ; } );
+  return sum/num ;
+};
+
+var mkPilatPlotData = function( plotData ){
+
+  var transBest = transposePlotData( plotData , isBestName );
+
+  var ret = {
+    bestBest  : [],
+    avgBest   : [],
+    worstBest : []
+  }
+
+  for( var genI in transBest ){
+
+    var genBests = transBest[genI];
+
+    ret.bestBest .push( [ genI , findBest ( genBests ) ] );
+    ret.avgBest  .push( [ genI , findAvg  ( genBests ) ] );
+    ret.worstBest.push( [ genI , findWorst( genBests ) ] );
+
+  }
+
+  return ret ;
+
+};
+
+
+
+var flattenPlotData = function( plotData ){
+  var ret = [];
+  for( var prop in plotData ){
+    ret.push( plotData[prop] );
+  }
+  return ret;
+};
+
+var drawPlot = function( graphI , plotData ){
+  $.plot('#graph'+ graphI +'-div',  flattenPlotData( plotData ) );
+};
+
 
 
 //---------------------------------------------------------------------------
