@@ -32,6 +32,8 @@
 
     <script src="js/utils.js"></script>
 
+    <!--<script src="js/Ant_old.js"></script>-->
+
     <script src="js/Problems/Fly.js"></script>
     <script src="js/Problems/Ant.js"></script>
     <script src="js/Problems/SSR.js"></script>
@@ -66,7 +68,7 @@ $(document).ready(function() {
 
   Global.myDrawGraph = arborFUN($);
 
-  antState.loadResources();
+  // antState.loadResources(); +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
   $('#progressfutral').hide();
   $('#stdout-on').button('toggle');
@@ -182,12 +184,9 @@ var go = function(){
 
   switch( Global.problemName ){
     case 'ssr_old' : Global.fenotyp = ssr ; break;
-    case 'ant'     : Global.fenotyp = ant ; break;
+    //case 'ant_old' : Global.fenotyp = ant ; break;
     default        : Global.fenotyp = undefined  ;
   }
-
-
-//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 
   var problemSegment = Global.Problems[ Global.problemName ] ;
@@ -622,9 +621,9 @@ var drawPlot = function( graphI , plotData ){
           </div> 
         </div>
 
-        <div class="tab-pane span7" id="im" >
+        <div class="tab-pane span10" id="im" >
 
-          <div class="alert alert-info span8" >
+          <div class="alert alert-info" >
             This tab will be filled by <b>Inhabitation Machine</b> graph (if the problem has one).
           </div> 
           

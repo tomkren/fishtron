@@ -74,20 +74,27 @@ imForkEdge2jss :: Typ -> ForkEdge -> [JSValue]
 imForkEdge2jss startTyp ( edgeLabel , finTyps ) =
   let nodeID   = edgeLabel2nodeID   edgeLabel
       nodeName = edgeLabel2nodeName edgeLabel
-      f finTyp = jsObj [ ("edge" , jsArr [ nodeID , typ2nodeID finTyp ] ), 
-                         ("opts" , jsObj [ ("color", jsStr "red" ) ] ) ]
-   in [ jsObj [ ("node" , nodeID ) , ( "opts" , jsObj [ ("name", nodeName ), 
+      f (finTyp,i) = let finNodeID  = typ2nodeID finTyp
+                         meziNodeID = jsStr $ "__" ++ nodeID ++ "__" ++ show i 
+                      in [ jsObj [ ("node" , meziNodeID ) ] ,
+                           jsObj [ ("edge" , jsArr [ jsStr nodeID , meziNodeID ] ), 
+                                   ("opts" , jsObj [ ("color", jsStr "red" ) ] ) ] ,
+                           jsObj [ ("edge" , jsArr [ meziNodeID , finNodeID ] ), 
+                                   ("opts" , jsObj [ ("color", jsStr "red" ) ] ) ]
+                         ]
+   in [ jsObj [ ("node" , jsStr nodeID ) , ( "opts" , jsObj [ ("name", nodeName ), 
                                                         ("circle",jsNum 3),
                                                         ("color",jsStr "red") ] ) ] ,
-        jsObj [ ("edge" , jsArr [ typ2nodeID startTyp , nodeID ]) ]
-      ] ++ map f finTyps
+        jsObj [ ("edge" , jsArr [ typ2nodeID startTyp , jsStr nodeID ]) ,("opts",jsObj[("color",jsStr "black")])]
+      ] ++ concatMap f (zip finTyps [0..])
 
 
 typ2nodeID :: Typ -> JSValue
 typ2nodeID typ = jsStr $ show typ
 
-edgeLabel2nodeID :: EdgeLabel -> JSValue
-edgeLabel2nodeID el = jsStr $ case el of
+
+edgeLabel2nodeID :: EdgeLabel -> String
+edgeLabel2nodeID el = case el of
   LVar sym typ -> sym ++ ":" ++ show typ
   LLams ctx    -> show ctx 
 
