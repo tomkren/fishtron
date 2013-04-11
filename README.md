@@ -1,8 +1,5 @@
-This README is OUT OF DATE !!!!
--------------------------------
-
-fishtron
-========
+fishtron - !!! This README is OUT OF DATE !!!!
+==============================================
 
 What is it?
 -----------
