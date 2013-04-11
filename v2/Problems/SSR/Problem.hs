@@ -2,7 +2,7 @@ module Problems.SSR.Problem where
 
 import TTerm (Typ(..),Context)
 
-import Problems.Utils ( cttProblem3 , cttProblem' , cttProblem2' , cttProblem4 , asType )
+import Problems.Utils ( cttProblem5 , cttProblem3 , cttProblem' , cttProblem2' , cttProblem4 , asType )
 
 import Problems.SSR.Funs (ff)
 
@@ -10,6 +10,8 @@ problem1 = cttProblem'  "ssr"  ff (asType::Double->Double) dou1 ctx
 problem2 = cttProblem2' "ssr2" ff (asType::Double->Double) dou1 ctx
 problem3 = cttProblem3  "ssr3" "Problems.SSR.Funs" dou1 ctx
 problem4 = cttProblem4  "ssr4" "Problems.SSR.Funs" ff dou1 ctx (asType::Double->Double)
+
+mainProblem = cttProblem5 "SSR" ff dou1 ctx (asType::Double->Double)
 
 
 dou, dou1, dou2 :: Typ

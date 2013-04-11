@@ -1,84 +1,4 @@
 
-
-var dStay   = 0; 
-var dUp     = 1;
-var dDown   = 2;
-var dLeft   = 3; 
-var dRight  = 4; 
-
-var lt = function(x,y){
-  return (x<=y) ;
-};
-
-var head_ = function( xs ){
-  if( xs.length == 0 ) return null;
-  return xs[0];
-};
-
-var avg = function( poses ){
-
-  if( poses.length == 0 ) return null;
-
-  var sum0 = 0;
-  var sum1 = 0;
-
-  for( var i in poses ){
-    var pos = poses[i];
-    sum0 += pos[0];
-    sum1 += pos[1];
-  }
-
-  return [ Math.round( sum0 / poses.length ) , Math.round( sum1 / poses.length ) ];
-};
-
-var output_ = function( dir_ ){
-  return dir_ ;
-};
-
-var myApplePoses_ = function( input_ ){
-  return input_[0];
-};
-
-var nearestFlyPos_ = function( input_ ){
-  return input_[1];
-};
-
-var myPos_ = function( input_ ){
-  return input_[2];
-};
-
-var inputEnergy_ = function( input_ ){
-  return input_[3];
-};
-
-
-var posToDir_ = function( posMy , posHer ){ 
-      
-  if( posHer === null ){
-    return dStay ;
-  }
-       
-  var d = minus( posHer , posMy );
-  var dx = d[0] , dy = d[1];
-       
-  if(   dx  > dy && (-dx) > dy ) { return dUp   ; }
-  if(   dx  > dy               ) { return dRight; }
-  if( (-dx) > dy               ) { return dLeft ; }
-  if( true                     ) { return dDown ; }
-      
-};
-
-var minus = function( pos1 , pos2 ){ 
-  return [ pos1[0]-pos2[0] , pos1[1]-pos2[1] ]; 
-};
-
-var dist = function( pos1 , pos2 ) {
-    var d = minus( pos1 , pos2 );
-    var dx = d[0] , dy = d[1];
-    return Math.sqrt(  dx*dx + dy*dy );
-};
-
-
 $(document).ready(function() {
 
 console.log( "Fly.js ready!" );  
@@ -246,7 +166,6 @@ Global.Problems.fly = {
       'onclick="Global.Problems.fly.flyLink('+this.i+')">' +ffVal + '</a> ' );
 
     if( this.i == 0 ){
-      //console.log('roflik');
       this.defaultSolution = solution ;
       this.mapaAt( this.solutionFlyPos ).prog = this.defaultSolution ;
     }
@@ -536,10 +455,82 @@ Global.Problems.fly = {
 
 
 };
-
-
-
-
-
-
 });
+
+var dStay   = 0; 
+var dUp     = 1;
+var dDown   = 2;
+var dLeft   = 3; 
+var dRight  = 4; 
+
+var lt = function(x,y){
+  return (x<=y) ;
+};
+
+var head_ = function( xs ){
+  if( xs.length == 0 ) return null;
+  return xs[0];
+};
+
+var avg = function( poses ){
+
+  if( poses.length == 0 ) return null;
+
+  var sum0 = 0;
+  var sum1 = 0;
+
+  for( var i in poses ){
+    var pos = poses[i];
+    sum0 += pos[0];
+    sum1 += pos[1];
+  }
+
+  return [ Math.round( sum0 / poses.length ) , Math.round( sum1 / poses.length ) ];
+};
+
+var output_ = function( dir_ ){
+  return dir_ ;
+};
+
+var myApplePoses_ = function( input_ ){
+  return input_[0];
+};
+
+var nearestFlyPos_ = function( input_ ){
+  return input_[1];
+};
+
+var myPos_ = function( input_ ){
+  return input_[2];
+};
+
+var inputEnergy_ = function( input_ ){
+  return input_[3];
+};
+
+
+var posToDir_ = function( posMy , posHer ){ 
+      
+  if( posHer === null ){
+    return dStay ;
+  }
+       
+  var d = minus( posHer , posMy );
+  var dx = d[0] , dy = d[1];
+       
+  if(   dx  > dy && (-dx) > dy ) { return dUp   ; }
+  if(   dx  > dy               ) { return dRight; }
+  if( (-dx) > dy               ) { return dLeft ; }
+  if( true                     ) { return dDown ; }
+      
+};
+
+var minus = function( pos1 , pos2 ){ 
+  return [ pos1[0]-pos2[0] , pos1[1]-pos2[1] ]; 
+};
+
+var dist = function( pos1 , pos2 ) {
+    var d = minus( pos1 , pos2 );
+    var dx = d[0] , dy = d[1];
+    return Math.sqrt(  dx*dx + dy*dy );
+};

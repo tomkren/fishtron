@@ -24,10 +24,11 @@ problemList = [
   ("map"    , "..."                                                           , JSNull     ) ,
   ("filter" , "..."                                                           , JSNull     ) ,
   ("elem"   , "..."                                                           , JSNull     ) ,
-  ("ssr"    , "Simple Symbolic Regression - old IM"                           , JSNull     ) ,
-  ("ssr2"   , "Simple Symbolic Regression - new IM"                           , JSNull     ) ,
-  ("ssr3"   , "Simple Symbolic Regression - new IM & single-filed & inside-FF", JSNull     ) ,
-  ("ssr4"   , "Simple Symbolic Regression - new IM & single-filed"            , JSNull     ) ,
+  ("ssr"    , "Simple Symbolic Regression - new IM !"                         , JSNull     ) ,
+  ("ssr_old", "Simple Symbolic Regression - old IM !"                         , JSNull     ) ,
+  -- ("ssr2"   , "Simple Symbolic Regression - new IM"                           , JSNull     ) ,
+  -- ("ssr3"   , "Simple Symbolic Regression - new IM & single-filed & inside-FF", JSNull     ) ,
+  -- ("ssr4"   , "Simple Symbolic Regression - new IM & single-filed"            , JSNull     ) ,
   ("ba"     , "Bool Alternate"                                                , JSNull     ) ,
   ("ant"    , "Artifical Ant"                                                 , JSNull     ) ,
   ("head_"  , "Trivial Head problem"                                          , JSNull     )   
@@ -50,10 +51,11 @@ job jobID cmd =
       "fly"    -> go Fly.problem1
       "ant"    -> go problem_ant 
       "ba"     -> go problem_ba  
-      "ssr"    -> go SSR.problem1 -- problem_ssr
-      "ssr2"   -> go SSR.problem2 -- problem_ssr2
-      "ssr3"   -> go SSR.problem3
-      "ssr4"   -> go SSR.problem4
+      "ssr"    -> go SSR.mainProblem
+      "ssr_old"-> go SSR.problem1 -- problem_ssr
+      -- "ssr2"   -> go SSR.problem2 -- problem_ssr2
+      -- "ssr3"   -> go SSR.problem3
+      -- "ssr4"   -> go SSR.problem4
       "head_"  -> go problem_head 
       "head"   -> go BigCtx.pr_head  
       "tail"   -> go BigCtx.pr_tail  

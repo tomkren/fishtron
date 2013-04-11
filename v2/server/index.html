@@ -82,7 +82,7 @@ $(document).ready(function() {
 
     var problemCode = $('#problem-select').val() ;
 
-    if( problemCode === null ) { problemCode = 'ssr'; } 
+    if( problemCode === null ) { problemCode = 'ssr_old'; } 
 
     $('#go-input').attr('value', problemCode + ' ' + numruns + ' ' + numgens + ' ' + popsize );
   }) ;
@@ -180,9 +180,9 @@ var go = function(){
 
 
   switch( Global.problemName ){
-    case 'ssr' : Global.fenotyp = ssr ; break;
-    case 'ant' : Global.fenotyp = ant ; break;
-    default    : Global.fenotyp = undefined  ;
+    case 'ssr_old' : Global.fenotyp = ssr ; break;
+    case 'ant'     : Global.fenotyp = ant ; break;
+    default        : Global.fenotyp = undefined  ;
   }
 
   if( Global.Problems[ Global.problemName ] ){
