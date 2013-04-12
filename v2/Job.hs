@@ -46,14 +46,14 @@ job jobID cmd =
       numRuns = (read $ parts !! 1)::Int
       numGene = read $ parts !! 2  
       popSize = read $ parts !! 3
-      go p    = nRunsByServer jobID numRuns ( p numGene popSize )  
+      go p    = go' p jobID numRuns numGene popSize  --nRunsByServer jobID numRuns ( p numGene popSize )  
    in do
     putStrLn cmd
     case problem of
       "fly"    -> go Fly.problem1
       "ssr"    -> go SSR.mainProblem
       "ant"    -> go Ant.mainProblem
-      "ba"     -> go  BA.mainProblem
+      "ba"     -> go  BA.mainProblem -- BA.mainProblem jobID -- 
       
 
       -- "ssr2"   -> go SSR.problem2 -- problem_ssr2
@@ -67,7 +67,7 @@ job jobID cmd =
 
       "ssr_old"-> go SSR.problem1 -- problem_ssr
       
-
+go' p jobID numRuns numGene popSize = nRunsByServer jobID numRuns ( p numGene popSize )  
 
 
 wordsWhen     :: (Char -> Bool) -> String -> [String]

@@ -8,16 +8,62 @@ module Problems.Utils (
   cttProblem',
   boolListProblem2,
   asType,
-  casesFF
+  casesFF,
+  ProblemOpts(..),OBoolListProblem(..),OIntSlider(..),JobID,mkProblem
 ) where
 
 import GP_Core (FitFun(..),Problem(..),NumGene,PopSize,mkGenOps)
 import GP_Core (GenOpProbs,FitVal,mkFF1)
+import GP_Core ( nRunsByServer )
 import GP_Data (CTTGen(..),CTTCro(..))
 import GP_Data (ListGen(..),ListCro(..),ListMut(..), BoolGen(..), BoolMut(..), Len)
 
+
 import TTree (CTT)
 import TTerm (Typ,Context)
+
+-- ---------------------------------------------------------------
+
+data ProblemOpts = PO_BLP OBoolListProblem 
+
+data OBoolListProblem = OBoolListProblem {
+  
+  blp_numRuns     :: OIntSlider       , 
+  blp_numGene     :: OIntSlider       , 
+  blp_popSize     :: OIntSlider       , 
+  blp_length      :: OIntSlider       ,
+
+  blp_problemName :: String           ,
+  blp_ff          :: [Bool] -> Double }
+
+data OIntSlider = OIntSlider { 
+  slider_min     :: Int ,
+  slider_max     :: Int ,
+  slider_value   :: Int ,
+  slider_step    :: Int }
+
+type JobID = String
+ 
+
+
+mkProblem :: ProblemOpts -> JobID -> IO ()
+mkProblem pOpts jobID = case pOpts of
+  PO_BLP blp ->
+   let numRuns     = ( slider_value . blp_numRuns $ blp )
+       numGene     = ( slider_value . blp_numGene $ blp )
+       popSize     = ( slider_value . blp_popSize $ blp )
+       len         = ( slider_value . blp_length  $ blp )
+       gOpt        = LG_ BG_ len
+       mOpt        = LM_OnePoint BM_Not len 
+       cOpt        = LC_OnePoint () len
+       genOps      = mkGenOps (mOpt,cOpt) (33,33,33)
+       fitFun      = mkFF1 $ return . (blp_ff blp)
+       problemName = blp_problemName blp
+    in nRunsByServer jobID numRuns $ Problem problemName popSize numGene genOps gOpt mOpt cOpt fitFun
+
+
+
+-- ---------------------------------------------------------------
 
 casesFF :: [Bool] -> (Double,Bool)
 casesFF conds = 
