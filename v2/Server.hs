@@ -19,7 +19,7 @@ import System.Directory
 import System.Environment
 
 
-import Job (job,problemList)
+import Job (job,problemList,problemList_,job_)
 
 import ServerInterface
 
@@ -47,7 +47,15 @@ app req =
       liftIO . forkIO $ runCmd workerId cmdStr
       return . myTextPlain . show $ workerId
 
+    ["run_",cmd] -> do 
+      workerId <- liftIO newWorker
+      let cmdStr = init . tail . show $ cmd 
+      liftIO . forkIO $ runCmd_ workerId cmdStr
+      return . myTextPlain . show $ workerId
+
     ["problems"] -> return . myTextPlain . encode . problemListToJSON $ problemList
+
+    ["problems_"]-> return . myTextPlain . encode $ problemList_    
 
     ["js",filename] -> do
       return $ myJSFile (init . tail . show $ filename)
@@ -68,7 +76,9 @@ app req =
 
     ["img",filename] -> return $ myPng (init . tail . show $ filename)
 
-    _ -> return $ my404
+    x -> do 
+      liftIO . putStrLn . show $ x
+      return $ my404
 
 
 
@@ -87,6 +97,23 @@ runCmd workerId cmd = do
     job (show workerId) cmd
     logg $ "Done!"
     closeWorker workerId
+
+runCmd_ :: Int -> String -> IO ()
+runCmd_ workerId cmd = do
+  let logg = writeNextOutput workerId . encode . stdoutCmd 
+  isWorkingSomeone <- isAnyoneWorking
+  if isWorkingSomeone then do
+    logg $ "Někdo již pracuje, zařazuji se do fronty........"
+    setWaiting   workerId cmd
+   else do
+    setIsWorking workerId True
+    logg $ replicate 80 '─'
+    logg $ "run/" ++ cmd
+    logg $ replicate 80 '─'
+    job_ (show workerId) cmd
+    logg $ "Done!"
+    closeWorker workerId
+
 
 serveOutput :: Int -> Int -> IO String
 serveOutput wid oid = do

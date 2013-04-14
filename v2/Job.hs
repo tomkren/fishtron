@@ -1,4 +1,4 @@
-module Job ( job , problemList ) where
+module Job ( job , problemList , problemList_ , job_ ) where
 
 
 import GP_Core ( nRunsByServer )
@@ -6,11 +6,41 @@ import GP_Core ( nRunsByServer )
 import Text.JSON
 import JSONUtils
 
+import Problems.Utils ( ProblemOpts , po2json, poCode, json2po , runProblemOpts )
+
 import qualified Problems.SSR.Problem    as SSR
 import qualified Problems.BigCtx.Problem as BigCtx
 import qualified Problems.Fly.Problem    as Fly
 import qualified Problems.Ant.Problem    as Ant
 import qualified Problems.BA.Problem     as BA
+
+
+( problemMap , problemList_ ) = registerThem
+ [ BA.problemOpts ]
+
+
+registerThem :: [ProblemOpts] -> ( [(String,ProblemOpts)] , JSValue )
+registerThem xs = ( map (\po->(poCode po,po)) xs , jsArr $ map po2json xs )
+
+
+job_ :: String -> String -> IO ()
+job_ jobID cmd = case ( decode (unescape cmd) :: Result JSValue ) of
+  Error str  -> putStrLn $ "ERROR in job_ : " ++ str
+  Ok jsvalue -> do
+    let code    = fromJsStr $ jsProp jsvalue "code" 
+        Just po = lookup code problemMap 
+        poNew   = json2po po jsvalue
+    putStrLn code
+    putStrLn . show $ po2json poNew
+    runProblemOpts poNew jobID
+
+
+unescape :: String -> String
+unescape []     = []
+unescape (x:[]) = [x]
+unescape (x:y:rest)
+    | x == '\\' = y : unescape rest
+    | otherwise = x : unescape (y : rest)
 
 
 
@@ -53,7 +83,7 @@ job jobID cmd =
       "fly"    -> go Fly.problem1
       "ssr"    -> go SSR.mainProblem
       "ant"    -> go Ant.mainProblem
-      "ba"     -> go  BA.mainProblem -- BA.mainProblem jobID -- 
+      "ba"     -> go  BA.mainProblem_ -- BA.mainProblem jobID -- 
       
 
       -- "ssr2"   -> go SSR.problem2 -- problem_ssr2

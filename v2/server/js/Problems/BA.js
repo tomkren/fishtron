@@ -11,7 +11,8 @@ Global.Problems.ba = {
   onGo : function(){
     
     $('#special').html( 
-      '<canvas id="ba-canvas" width="100" height="'+ (Global.numgens * Global.numruns) +'"></canvas>' );
+      '<canvas id="ba-canvas" width="'+ Global.problemsOpts.ba.length.value +'" height="'+ 
+      (Global.numgens * Global.numruns) +'"></canvas>' );
 
     this.solutions     = [] ;
     this.i             = 0  ;

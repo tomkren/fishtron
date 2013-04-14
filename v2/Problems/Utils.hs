@@ -9,7 +9,7 @@ module Problems.Utils (
   boolListProblem2,
   asType,
   casesFF,
-  ProblemOpts(..),OBoolListProblem(..),OIntSlider(..),JobID,mkProblem
+  ProblemOpts(..),PO_BLP(..),IntSlider(..),JobID,runProblemOpts,po2json,poCode,json2po
 ) where
 
 import GP_Core (FitFun(..),Problem(..),NumGene,PopSize,mkGenOps)
@@ -22,33 +22,94 @@ import GP_Data (ListGen(..),ListCro(..),ListMut(..), BoolGen(..), BoolMut(..), L
 import TTree (CTT)
 import TTerm (Typ,Context)
 
+import Text.JSON
+import JSONUtils
+
 -- ---------------------------------------------------------------
 
-data ProblemOpts = PO_BLP OBoolListProblem 
 
-data OBoolListProblem = OBoolListProblem {
+
+data ProblemOpts = PO_BLP_ PO_BLP 
+
+poCode :: ProblemOpts -> String
+poCode po = case po of
+  PO_BLP_ blp -> blp_code blp
+
+po2json :: ProblemOpts -> JSValue
+po2json po = case po of
+  PO_BLP_ blp -> blp2json blp
+
+json2po :: ProblemOpts -> JSValue -> ProblemOpts
+json2po po json = case po of
+  PO_BLP_ blp -> PO_BLP_ $ json2blp blp json
+
+
+data PO_BLP = PO_BLP {
   
-  blp_numRuns     :: OIntSlider       , 
-  blp_numGene     :: OIntSlider       , 
-  blp_popSize     :: OIntSlider       , 
-  blp_length      :: OIntSlider       ,
+  blp_numRuns     :: IntSlider        , 
+  blp_numGene     :: IntSlider        , 
+  blp_popSize     :: IntSlider        , 
+  blp_length      :: IntSlider        ,
 
-  blp_problemName :: String           ,
+  blp_code        :: String           ,
+  blp_info        :: String           ,
+  blp_data        :: JSValue          ,
   blp_ff          :: [Bool] -> Double }
 
-data OIntSlider = OIntSlider { 
+
+blp2json :: PO_BLP -> JSValue
+blp2json blp = jsObj [
+  ( "code"    , jsStr          $ blp_code    blp                      ),
+  ( "info"    , jsStr          $ blp_info    blp                      ),
+  ( "data"    ,                  blp_data    blp                      ),
+  ( "numRuns" , intSlider2json $ blp_numRuns blp                      ),
+  ( "numGene" , intSlider2json $ blp_numGene blp                      ),
+  ( "popSize" , intSlider2json $ blp_popSize blp                      ),
+  ( "length"  , intSlider2json $ blp_length  blp                      ),
+  ( "sliders" , jsArr $ map jsStr [ "numRuns", "numGene" , "popSize" , "length" ] )]
+
+json2blp :: PO_BLP -> JSValue -> PO_BLP
+json2blp blp json = blp {
+  blp_numRuns = json2intSlider $ jsProp json "numRuns"  , 
+  blp_numGene = json2intSlider $ jsProp json "numGene"  , 
+  blp_popSize = json2intSlider $ jsProp json "popSize"  , 
+  blp_length  = json2intSlider $ jsProp json "length"      
+ }
+
+
+data IntSlider = IntSlider { 
+  slider_name    :: String ,
   slider_min     :: Int ,
   slider_max     :: Int ,
   slider_value   :: Int ,
-  slider_step    :: Int }
+  slider_step    :: Int } 
+ deriving (Show)
+
+
+intSlider2json :: IntSlider -> JSValue
+intSlider2json is = jsObj [
+  ( "name"  , jsStr $ slider_name  is ),
+  ( "min"   , jsNum $ slider_min   is ),
+  ( "max"   , jsNum $ slider_max   is ),
+  ( "value" , jsNum $ slider_value is ),
+  ( "step"  , jsNum $ slider_step  is )]
+
+json2intSlider :: JSValue -> IntSlider
+json2intSlider json = IntSlider {
+  slider_name  = fromJsStr $ jsProp json "name"  ,
+  slider_min   = fromJsInt $ jsProp json "min"   ,
+  slider_max   = fromJsInt $ jsProp json "max"   ,
+  slider_value = fromJsInt $ jsProp json "value" ,
+  slider_step  = fromJsInt $ jsProp json "step" 
+ }
+
+
 
 type JobID = String
- 
 
-
-mkProblem :: ProblemOpts -> JobID -> IO ()
-mkProblem pOpts jobID = case pOpts of
-  PO_BLP blp ->
+runProblemOpts :: ProblemOpts -> JobID -> IO ()
+runProblemOpts pOpts jobID = case pOpts of
+  PO_BLP_ blp ->
    let numRuns     = ( slider_value . blp_numRuns $ blp )
        numGene     = ( slider_value . blp_numGene $ blp )
        popSize     = ( slider_value . blp_popSize $ blp )
@@ -58,7 +119,7 @@ mkProblem pOpts jobID = case pOpts of
        cOpt        = LC_OnePoint () len
        genOps      = mkGenOps (mOpt,cOpt) (33,33,33)
        fitFun      = mkFF1 $ return . (blp_ff blp)
-       problemName = blp_problemName blp
+       problemName = blp_code blp
     in nRunsByServer jobID numRuns $ Problem problemName popSize numGene genOps gOpt mOpt cOpt fitFun
 
 

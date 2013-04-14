@@ -108,16 +108,24 @@ $(document).ready(function() {
               problemSegment.onLoadedProblemData( this.data ) ;
               problemSegment.data = this.data;
             }
-
-            
-
-
         });
 
         $('#opts').change();
 
     }
   });
+
+  $.ajax({
+    url : 'problems_' , 
+    type: 'GET'  ,
+    success: function( problemsJSON ) {  
+        
+      onLoadedProblemsOpts( JSON.parse( problemsJSON ) );
+
+    }
+  });
+
+
 
   $('#myTab a').click(function (e) {
     e.preventDefault();
@@ -163,6 +171,171 @@ $(document).ready(function() {
 
 });
 
+
+var onLoadedProblemsOpts = function( problemsOpts ){
+
+  Global.problemsOpts = {} ;
+
+  var dropDown = $("#problem-select_");
+
+  for( var i in problemsOpts ){
+
+    var po = problemsOpts[i];
+
+    Global.problemsOpts[ po.code ] = po; 
+
+    var dropDownOption = $('<option>').val( po.code ).text( '[' + po.code + '] ' + po.info );
+    dropDown.append( dropDownOption );
+
+    var problemSegment = Global.Problems[ po.code ] ;
+    if( problemSegment ){ 
+
+      problemSegment.data = po.data;
+      problemSegment.onLoadedProblemData( problemSegment.data ) ;
+      
+    }
+
+  }  
+
+  drawProblemOpts( problemsOpts[0] );
+
+};
+
+
+var drawProblemOpts = function( po ){
+
+  $('#po-container').html('');
+
+  for( var j in po.sliders ){
+
+    var sliderPropName = po.sliders[j]
+    var sliderName     = po.code + '-' + sliderPropName;
+    var slider         = po[sliderPropName];
+    var sliderLabel    = slider.name;
+
+    //console.log( sliderName + ' ' + slider.value );
+
+    $('#po-container').append(
+         '<div class="control-group">                                                             '+  
+         '  <label class="control-label" for="'+sliderName+'-input">                              '+   
+         '    <span class="label label-info">'+sliderLabel+'</span>                               '+   
+         '  </label>                                                                              '+     
+         '  <div class="controls">                                                                '+  
+         '    <table>                                                                             '+
+         '      <tr>                                                                              '+  
+         '        <td><input id="'+sliderName+'-input" type="text" class="input-for-slider"></td> '+
+         '        <td><div id="'+sliderName+'-slider" class="slider"></div></td>                  '+
+         '      </tr>                                                                             '+
+         '    </table>                                                                            '+ 
+         '  </div>                                                                                '+  
+         '</div>                                                                                  '
+         );
+
+    var slideFun = function(sliderName){
+      return function(event, ui){
+        var newVal =  ui.value ;
+
+        if( newVal <= 0 ){ newVal = 1 ; }
+        
+        $('#'+ sliderName +'-input').attr('value' , newVal ).change();
+
+      };      
+    };
+
+    var inputFun = function(sliderName,sliderPropName,po){
+      return function(){
+        var newVal = $( '#' + sliderName + '-input' ).attr('value');
+        //console.log( sliderName + ' ' + newVal );
+        po[sliderPropName].value = Number(newVal);
+      };      
+    };    
+
+    $('#'+ sliderName +'-slider').slider({
+      min    : slider.min   ,
+      max    : slider.max   ,
+      value  : slider.value ,
+      step   : slider.step  ,
+      slide  : slideFun(sliderName)
+    });
+
+    $('#'+ sliderName +'-input')
+     .attr('value' , slider.value )
+     .change( inputFun(sliderName,sliderPropName,po) );
+  }
+
+};
+
+
+var go_ = function(){
+
+  Global.startTime = new Date().getTime();
+
+  $('#progressbar').css('width','0%');
+  $('#progressfutral').show('slow');
+
+  var problemCode = $('#problem-select_').val() ;
+
+
+  var po = Global.problemsOpts[problemCode] ;
+
+  Global.problemName = problemCode;
+  Global.numruns     = po.numRuns.value;
+  Global.numgens     = po.numGene.value;
+  Global.popsize     = po.popSize.value;
+
+
+  switch( Global.problemName ){
+    case 'ssr_old' : Global.fenotyp = ssr ; break;
+    default        : Global.fenotyp = undefined  ;
+  }
+
+
+  var problemSegment = Global.Problems[ problemCode ] ;
+
+  if( problemSegment ){
+
+    if( problemSegment.data ){
+      
+      if( problemSegment.data.im ){
+        Global.myDrawGraph( '#viewport' , problemSegment.data.im );
+      }
+
+    }
+
+    problemSegment.onGo();
+  }
+
+
+
+  Global.plotData = {} ;
+
+  var input = JSON.stringify( Global.problemsOpts[problemCode] )
+  console.log(input);
+
+  $.ajax({
+    url : 'run_/' + encodeURIComponent( input  ) , 
+    type: 'GET'  ,
+    success: function(wid) {  
+        console.log( wid + ' [VYTVOREN]' );
+
+        if( $('#opts_').attr('class').match(/.*(active)/ ) ){
+
+          if( Global.fenotyp !== undefined ){ // kvuli zpetny kopat..
+            $('#special-link').tab('show');
+          }else if( Global.Problems[problemCode] ){
+            $('#special-link').tab('show');
+          }else{
+            $('#stdout-link').tab('show');
+          }
+        }
+
+        setTimeout( function(){out( wid , 1 )} , 100 );
+    }
+  });
+
+
+
+};
 
 var go = function(){
 
@@ -502,7 +675,8 @@ var drawPlot = function( graphI , plotData ){
       <div class="span10">
 
         <ul class="nav nav-tabs" id="myTab">
-          <li class="active"><a href="#opts" id="opts-link">Params</a></li>
+          <li class="active"><a href="#opts_" id="opts-link">Params_</a></li>
+          <li><a href="#opts" id="opts-link">Params</a></li>
           <li><a href="#stdout" id="stdout-link">stdout</a></li>
           <li class="dropdown">
             <a href="#" class="dropdown-toggle" data-toggle="dropdown">Graphs<b class="caret"></b></a>
@@ -533,7 +707,34 @@ var drawPlot = function( graphI , plotData ){
 
       <div class="tab-content">
 
-        <div class="active tab-pane span7" id="opts">
+
+
+        <div class="tab-pane span7 active" id="opts_">
+          <div class="form-horizontal">
+
+            <div class="control-group">
+              <label class="control-label" for="problem-select_">
+                <span class="label label-info">Problem</span>
+              </label>
+              <div class="controls">
+                  <table>
+                    <tr>
+                      <td><select id="problem-select_" class="span4" ></select></td>
+                      <td><button onclick="go_()" class="btn btn-primary span2">Start</button></td>
+                    </tr>
+                  </table>
+              </div>
+            </div>
+
+            <div id="po-container"></div>
+
+          </div>
+        </div>
+
+
+
+
+        <div class="tab-pane span7" id="opts">
           <div class="form-horizontal">
 
             <div class="control-group">
