@@ -1,1 +1,4 @@
 udělat Prelude' kerej bude obsahovat s,k,i případně ještě něco pro implicitní zahrnutí do hevalsWith ...
+
+
+BUG (?) : když to pustim znova (se stejnejma parametrama) bez restartu serveru tak to dělá přesně to samí !!!
