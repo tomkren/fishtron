@@ -15,15 +15,29 @@ import qualified Problems.Ant.Problem    as Ant
 import qualified Problems.BA.Problem     as BA
 
 
-( problemMap , problemList_ ) = registerThem
- [ BA.problemOpts ]
+( problemMap , problemList_ ) = registerThem 
+ [  SSR.problemOpts 
+ -- ,  Fly.problemOpts 
+ ,   BA.problemOpts ]
 
 
-registerThem :: [ProblemOpts] -> ( [(String,ProblemOpts)] , JSValue )
+type JobID = String
+
+
+jobs :: ( [ JSValue -> JobID -> IO() ] , [JSValue] )
+jobs = unzip [ f SSR.problemOpts , f Fly.problemOpts , f BA.problemOpts ]
+ where
+  f :: ProblemOpts a -> ( JSValue -> JobID -> IO()  , JSValue )
+  f po = undefined
+
+
+
+
+registerThem :: [ProblemOpts a] -> ( [(String,ProblemOpts a)] , JSValue )
 registerThem xs = ( map (\po->(poCode po,po)) xs , jsArr $ map po2json xs )
 
 
-job_ :: String -> String -> IO ()
+job_ :: JobID -> String -> IO ()
 job_ jobID cmd = case ( decode (unescape cmd) :: Result JSValue ) of
   Error str  -> putStrLn $ "ERROR in job_ : " ++ str
   Ok jsvalue -> do

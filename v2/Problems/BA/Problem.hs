@@ -21,7 +21,7 @@ ff bits =
   in 100*(tNum * tNum)/(len*len)
 
 
-problemOpts :: ProblemOpts
+problemOpts :: ProblemOpts a
 problemOpts = PO_BLP_ PO_BLP {
   blp_code        = "ba"                                         ,
   blp_info        = "Bool Alternate"                             ,

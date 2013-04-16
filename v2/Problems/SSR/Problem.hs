@@ -8,6 +8,27 @@ import TTerm (Typ(..),Context)
 import Problems.Utils ( cttProblem5 , cttProblem3 , cttProblem' , cttProblem2' , cttProblem4 , asType )
 import Problems.SSR.Funs (ff)
 
+import Problems.Utils 
+import GP_Core (FitFun(FF6))
+
+
+--problemOpts :: ProblemOpts a
+problemOpts = PO_CTTP_ PO_CTTP {
+  cttp_code        = "ssr"                                        ,
+  cttp_info        = "Simple Symbolic Regression - new IM !"      ,
+  cttp_data        = jsData                                       ,
+  cttp_numRuns     = IntSlider "Runs"            1 10    1    1   ,
+  cttp_numGene     = IntSlider "Generations"     0 100   10   10  ,
+  cttp_popSize     = IntSlider "Population size" 0 5000  500  100 ,
+  
+  cttp_typ         = dou1                                         ,
+  cttp_ctx         = ctx                                          ,
+  
+  cttp_ff          = FF6 (asType::Double->Double) ff "Problems.SSR.Funs" 
+  
+}
+
+
 mainProblem = cttProblem5 "SSR" ff dou1 ctx (asType::Double->Double)
 
 jsData = jsObj [ ( "im" , imGraphInJSON dou1 ctx ) ]

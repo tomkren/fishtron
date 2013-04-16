@@ -3,8 +3,11 @@ module Problems.Fly.Problem where
 
 import Data.List
 
+import GP_Core (FitFun(FF6))
+
 import TTerm          (Typ(..),Context)
-import Problems.Utils ( cttProblem5 , asType )
+import Problems.Utils 
+ --( cttProblem5 , asType )
 
 import Text.JSON
 import JSONUtils
@@ -16,9 +19,25 @@ import Problems.Fly.Funs ( Input_ , Output_ , Dir_  , Energy , Pos , avg ,
                            dStay , dUp , dDown , dLeft , dRight )
 import Problems.Fly.Fly
 
-
+--problemOpts :: ProblemOpts a
+problemOpts = PO_CTTP_ PO_CTTP {
+  cttp_code        = "fly"                                        ,
+  cttp_info        = "Fly eating apples and stuff... "            ,
+  cttp_data        = jsData                                       ,
+  cttp_numRuns     = IntSlider "Runs"            1 10    1    1   ,
+  cttp_numGene     = IntSlider "Generations"     0 100   10   10  ,
+  cttp_popSize     = IntSlider "Population size" 0 5000  500  100 ,
+  
+  cttp_typ         = prog_typ                                     ,
+  cttp_ctx         = ctx                                          ,
+  
+  cttp_ff          = FF6 prog_type ff "Problems.Fly.Funs" 
+  
+}
 
 problem1 = cttProblem5 "Fly" ff prog_typ ctx prog_type
+
+
 
 
 jsData = jsObj [ 
