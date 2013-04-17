@@ -27,6 +27,13 @@ putList (x:xs) = do
 asType :: a
 asType = undefined
 
+unescape :: String -> String
+unescape []     = []
+unescape (x:[]) = [x]
+unescape (x:y:rest)
+    | x == '\\' = y : unescape rest
+    | otherwise = x : unescape (y : rest)
+
 -- Pro již použitá slova vrací první takové, které je od všech rozdílné
 newSymbol :: [String] -> String
 newSymbol = newSymbol' ['a'..'z'] 
@@ -36,7 +43,6 @@ newSymbol' abeceda vns = snd . head $ dropWhile (\(x,y)->x==y)
    (zip ((sortBy (nameOrderingBy abeceda) vns') ++ repeat "") (map (nthWord abeceda) [1..]))
  where
   vns' = filter (all (`elem` abeceda )) vns 
-
 
 -- Uspořádání primárne podle délky, sekundárne podle abecedy.
 nameOrderingBy :: (Eq a) => [a] -> [a] -> [a] -> Ordering

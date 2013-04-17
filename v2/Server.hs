@@ -18,7 +18,7 @@ import System.IO
 import System.Directory
 import System.Environment
 
-
+import Utils ( unescape )
 import Job (job,problemList,problemList_,job_)
 
 import ServerInterface
@@ -50,7 +50,7 @@ app req =
     ["run_",cmd] -> do 
       workerId <- liftIO newWorker
       let cmdStr = init . tail . show $ cmd 
-      liftIO . forkIO $ runCmd_ workerId cmdStr
+      liftIO . forkIO $ runCmd_ workerId (unescape cmdStr)
       return . myTextPlain . show $ workerId
 
     ["problems"] -> return . myTextPlain . encode . problemListToJSON $ problemList

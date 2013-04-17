@@ -19,8 +19,7 @@ import Problems.Fly.Funs ( Input_ , Output_ , Dir_  , Energy , Pos , avg ,
                            dStay , dUp , dDown , dLeft , dRight )
 import Problems.Fly.Fly
 
---problemOpts :: ProblemOpts a
-problemOpts = PO_CTTP_ PO_CTTP {
+reg = PO_CTTP_ PO_CTTP {
   cttp_code        = "fly"                                        ,
   cttp_info        = "Fly eating apples and stuff... "            ,
   cttp_data        = jsData                                       ,

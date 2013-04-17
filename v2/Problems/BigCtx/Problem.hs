@@ -1,8 +1,30 @@
 module Problems.BigCtx.Problem where
 
 import TTerm (Typ(..),Context)
+import Problems.Utils 
+import JSONUtils
+import GP_Core (FitFun(FF6))
+import DrawIM( imGraphInJSON )
 
-import Problems.Utils ( cttProblem5 , asType , casesFF )
+reg = PO_CTTP_ PO_CTTP {
+  cttp_code        = "bigctx"                                     ,
+  cttp_info        = "Problem with basic funs for types generating elementary funs." ,
+  cttp_data        = jsObj [ ( "im" , imGraphInJSON prog_typ prog_ctx ) ]                                       ,
+  cttp_numRuns     = IntSlider "Runs"            1 10    1    1   ,
+  cttp_numGene     = IntSlider "Generations"     0 100   10   10  ,
+  cttp_popSize     = IntSlider "Population size" 0 5000  500  100 ,
+  
+  cttp_typ         = prog_typ                                     ,
+  cttp_ctx         = prog_ctx                                     ,
+  
+  cttp_ff          = FF6 (asType:: [Int] -> Maybe Int ) ff_head "Problems.BigCtx.Funs" 
+  
+}
+
+
+
+prog_typ = l_int :-> m_int  
+prog_ctx = ctx_combo
 
 --problem1 = go pr_head
 

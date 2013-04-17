@@ -12,8 +12,7 @@ import Problems.Utils
 import GP_Core (FitFun(FF6))
 
 
---problemOpts :: ProblemOpts a
-problemOpts = PO_CTTP_ PO_CTTP {
+reg = PO_CTTP_ PO_CTTP {
   cttp_code        = "ssr"                                        ,
   cttp_info        = "Simple Symbolic Regression - new IM !"      ,
   cttp_data        = jsData                                       ,

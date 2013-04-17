@@ -253,8 +253,8 @@ Global.Problems.ant = {
 
     run : function( prog ){
 
-      console.log(prog);
-      haxx = prog;
+      //console.log(prog);
+      //haxx = prog;
 
       var stepoid = function(){
         if( ! antState.reachedLimit() ){
