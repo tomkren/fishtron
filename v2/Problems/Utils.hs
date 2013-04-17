@@ -107,7 +107,7 @@ cttp2json cttp = jsObj [
   ( "sliders" , jsArr $ map jsStr [ "numRuns", "numGene" , "popSize"  ] )]
 
 json2cttp :: PO_CTTP a -> JSValue -> PO_CTTP a
-json2cttp blp json = blp {
+json2cttp cttp json = cttp {
   cttp_numRuns = json2intSlider $ jsProp json "numRuns"  , 
   cttp_numGene = json2intSlider $ jsProp json "numGene"  , 
   cttp_popSize = json2intSlider $ jsProp json "popSize"        

@@ -176,7 +176,7 @@ var onLoadedProblemsOpts = function( problemsOpts ){
 
   Global.problemsOpts = {} ;
 
-  var dropDown = $("#problem-select_");
+  var dropDown = $("#problem-select_");  
 
   for( var i in problemsOpts ){
 
@@ -196,6 +196,14 @@ var onLoadedProblemsOpts = function( problemsOpts ){
     }
 
   }  
+
+  $('#problem-select_').on('change', function (e) {
+      var optionSelected = $("option:selected", this);
+      var valueSelected = this.value;
+      console.log(valueSelected);
+      drawProblemOpts( Global.problemsOpts[ valueSelected ] );
+  });
+
 
   drawProblemOpts( problemsOpts[0] );
 
@@ -309,8 +317,29 @@ var go_ = function(){
 
   Global.plotData = {} ;
 
-  var input = JSON.stringify( Global.problemsOpts[problemCode] )
-  console.log(input);
+
+  var sendBack = {};
+
+  var po = Global.problemsOpts[problemCode];
+
+  for( var prop in po ){
+    
+    for( var j in po.sliders ){
+      var name = po.sliders[j];
+      if( name == prop ){
+        sendBack[prop] = po[prop];
+      }
+    }
+
+    if( prop == 'code' ){
+      sendBack[prop] = po[prop];
+    }
+
+  }
+
+
+  var input = JSON.stringify( sendBack );
+  console.log( input );
 
   $.ajax({
     url : 'run_/' + encodeURIComponent( input  ) , 
