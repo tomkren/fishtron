@@ -6,6 +6,8 @@ import JSONUtils
 import GP_Core (FitFun(FF6))
 import DrawIM( imGraphInJSON )
 
+import Problems.BigCtx.Funs( All_Type )
+ 
 reg = PO_CTTP_ PO_CTTP {
   cttp_code        = "bigctx"                                     ,
   cttp_info        = "Problem with basic funs for types generating elementary funs." ,
@@ -53,6 +55,12 @@ ctx_combo = ctx_head ++ ctx_tail ++ ctx_map ++ ctx_filter' ++ ctx_elem
 
 ctx_filter = ctx_filter' ++ ctx_map
 
+ctx_mkAll =   [  ( "mkAll"  , ( l_int :-> m_int                  ) :->
+                              ( l_int :-> ml_int                 ) :->
+                              ( (int:->int) :-> l_int :-> l_int  ) :->
+                              ( (int:->bool):-> l_int :-> l_int  ) :->
+                              ( int :-> l_int :-> bool           ) :-> all_typ ) ]
+
 ctx_head =    [  ( "listCase" , l_int :-> m_int  :-> (int:->l_int:->m_int ) :-> m_int  ),
                  ( "Nothing"  , m_int                                                  ),
                  ( "Just"     , int :-> m_int                                          )]
@@ -73,6 +81,18 @@ ctx_elem    = [  ( "foldr"    , (int:->bool:->bool) :-> bool :-> l_int :-> bool 
                  ( "True"     , bool                                                   ),
                  ( "False"    , bool                                                   )]
 
+
+
+
+
+all_typ = Typ "All"
+  
+
+
+ff :: All_Type -> (Double,Bool)
+ff (h,t,m,f,e) = 
+  let res = [ ff_head h , ff_tail t , ff_map m , ff_filter f , ff_elem e ]
+   in ( sum $ map fst res , and $ map snd res )
 
 ff_head :: ( [Int] -> Maybe Int ) -> (Double,Bool)
 ff_head prog = casesFF      
@@ -116,6 +136,9 @@ ff_elem prog = casesFF
  , prog 5  [3,1,4,7,5,6] == True   
  , prog 2  [3,1,4,7,5,6] == False 
  ]
+
+
+
 
 
 
