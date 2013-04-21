@@ -88,10 +88,17 @@ allBools n =
    in (map (False:) xs) ++ (map (True:) xs)
 
 
+
+
+------------------------------------------------------------------------------------
+-- solution GALLERY ----------------------------------------------------------------
+------------------------------------------------------------------------------------
+
+
 solution1 = \ x0 -> foldr (s (s (k s) (s (k (s (k (&&)))) (s (s (k s) (s (k k) 
   (s (k nand) i))) (s (s (k s) (s (k k) (s (k (&&)) i))) (k i))))) (||)) 
-  (nand (foldr (s (k k) (s (s (k (&&)) (s (s (k (&&)) i) (s (s (k (&&)) i) i))) (k (head_ x0)))) 
-  (head_ x0) x0) (head_ x0)) (tail_ x0)
+  (nand (foldr (s (k k) (s (s (k (&&)) (s (s (k (&&)) i) (s (s (k (&&)) i) i))) 
+  (k (head_ x0)))) (head_ x0) x0) (head_ x0)) (tail_ x0)
 
 solution2 =
  \ x0 -> foldr (s (s (k s) (s (k (s (k nor))) (s (s (k s) (s (k (s (k (&&))
