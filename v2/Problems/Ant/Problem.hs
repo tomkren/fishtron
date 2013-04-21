@@ -7,6 +7,8 @@ import DrawIM( imGraphInJSON )
 import TTerm (Typ(..),Context)
 import Problems.Utils 
 import GP_Core (FitFun(FF5))
+import GP_Data (CTTGen(..))
+
 
 reg = PO_CTTP_ PO_CTTP {
   cttp_code        = "ant"                                        ,
@@ -16,9 +18,11 @@ reg = PO_CTTP_ PO_CTTP {
   cttp_numGene     = IntSlider "Generations"     0 100   10   10  ,
   cttp_popSize     = IntSlider "Population size" 0 5000  500  100 ,
   
-  cttp_typ         = ant                                         ,
+  cttp_typ         = ant                                          ,
   cttp_ctx         = ctx                                          ,
   
+  cttp_gOpt        = CTTG_Koza2 ant ctx                           , 
+
   cttp_ff          = FF5 "ff" "Problems.Ant.Funs" ()
   
 }

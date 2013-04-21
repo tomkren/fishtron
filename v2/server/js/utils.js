@@ -92,6 +92,26 @@ var ap = function(func) {
 
 
 
+var not = function( x ){
+  return (!x) ;
+};
+
+var and = cur2(function( x , y ){
+  return (x && y) ;
+});
+
+var or = cur2(function( x , y ){
+  return (x || y) ;
+});
+
+var nand = cur2(function( x , y ){
+  return ! (x && y) ;
+});
+
+var nor = cur2(function( x , y ){
+  return ! (x || y) ;
+});
+
 
 var k = cur2(function( x , y ){
   return x;
@@ -119,7 +139,6 @@ var foldr = cur3(function( f , z , xs ){
   return ret;
 
 });
-
 
 //listCase :: [a] -> b -> (a->[a]->b) -> b
 
@@ -149,6 +168,10 @@ var if_ = cur3(function(p,q,r){
 
 var equals = cur2(function(x,y){
   return x == y ;
+});
+
+var notEquals = cur2(function(x,y){
+  return x != y ;
 });
 
 

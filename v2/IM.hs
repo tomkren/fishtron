@@ -6,7 +6,14 @@
 
 
 
-module IM ( SearchOptions(..) , defaultSearchOptions , kozaSearchOptions , prove ) where
+module IM 
+ ( SearchOptions(..) 
+ , defaultSearchOptions 
+ , kozaSearchOptions
+ , allEdgesSearchOptions
+ , geomSearchOptions 
+ , prove 
+ ) where
 
 import TTerm (Symbol,Typ(..),TTerm(..),Context,typeArgs,ttermTyp,toSki,toSki',checkTyp)
 
@@ -29,7 +36,7 @@ import qualified Data.PSQueue as Q
 prove :: SearchOptions -> [CTT]
 prove so = 
   let ( so' , problemHead ) = problemHeadPreproccess so
-      trees = proveWith so'
+      trees = proveWith2 so'
    in map ( mkCTT2 problemHead . toSki' . tree2tterm ) trees   -- <============== toSki s ' je s typeCheckem ...........
 
 problemHeadPreproccess :: SearchOptions -> ( SearchOptions , Context )
@@ -152,7 +159,7 @@ defaultSearchOptions n typ ctx = SearchOptions {
  }
 
 kozaSearchOptions :: Int -> Typ -> Context -> StdGen -> SearchOptions
-kozaSearchOptions n typ ctx stdGen =  SearchOptions {
+kozaSearchOptions n typ ctx stdGen = SearchOptions {
     so_n                  = n      ,
     so_typ                = typ    ,
     so_ctx                = ctx    ,
@@ -162,6 +169,27 @@ kozaSearchOptions n typ ctx stdGen =  SearchOptions {
     so_edgeSelectionModel = KozaESM
   } 
 
+allEdgesSearchOptions :: Int -> Typ -> Context -> StdGen -> SearchOptions
+allEdgesSearchOptions n typ ctx stdGen = SearchOptions {
+    so_n                  = n      ,
+    so_typ                = typ    ,
+    so_ctx                = ctx    ,
+    so_stdGen             = stdGen ,
+    so_runLen             = Nothing   ,
+    so_randomRunState     = NoRandomRunState , 
+    so_edgeSelectionModel = AllEdges  
+  } 
+
+geomSearchOptions :: Double -> Int -> Typ -> Context -> StdGen -> SearchOptions
+geomSearchOptions p n typ ctx stdGen = SearchOptions {
+    so_n                  = n      ,
+    so_typ                = typ    ,
+    so_ctx                = ctx    ,
+    so_stdGen             = stdGen ,
+    so_runLen             = Nothing   ,
+    so_randomRunState     = NoRandomRunState , 
+    so_edgeSelectionModel = ContinueProbGeomWithDepth p  
+  } 
 
 
 
@@ -237,6 +265,27 @@ oneRandomEdgeWithPedicat edges p gen0 =
 
 
 
+proveWith2 :: SearchOptions -> [Tree]
+proveWith2 so = proveWith' so (so_n so)
+ where
+  m_runLen = so_runLen so
+  
+  min' :: Maybe Int -> Int -> Int
+  min' (Just x) y = min x y
+  min' Nothing  y = y
+
+  proveWith' :: SearchOptions -> Int -> [Tree]
+  proveWith' so0 toMake 
+   | toMake <= 0 = []
+   | otherwise   = 
+     let (so1,so2)= splitSearchOptions so0  --         <=============================
+         trees    = proveN_ (min' m_runLen toMake) (spinRandomRunState_ so1)
+         numTrees = length trees
+      in if numTrees < toMake then
+          trees ++ ( proveWith' so2 (toMake - numTrees) )  
+         else
+          trees 
+
 
 proveWith :: SearchOptions -> [Tree]
 proveWith so = case m_runLen of
@@ -269,6 +318,7 @@ spinRandomRunState_ so0 =
       ( rrs1 , gen1 ) = spinRandomRunState rrs0 gen0
    in so0{ so_randomRunState = rrs1 , 
            so_stdGen         = gen1 }
+
 
 
 proveN_ :: Int -> SearchOptions -> [Tree]
@@ -551,6 +601,22 @@ ctx_head = [  ( "listCase" , l_int :-> m_int :-> (int:->l_int:->m_int) :-> m_int
               ( "Nothing"  , m_int ),
               ( "Just"     , int :-> m_int ) ]
 
+
+bool   = Typ "Bool"
+l_bool = Typ "[Bool]"
+
+ctx_yu = [
+ ( "(&&)"  , bool :-> bool :-> bool                            ),
+ ( "(||)"  , bool :-> bool :-> bool                            ),
+ ( "nand"  , bool :-> bool :-> bool                            ),
+ ( "nor"   , bool :-> bool :-> bool                            ),
+ ( "foldr" , (bool:->bool:->bool) :-> bool :-> l_bool :-> bool ),
+ ( "head_" , l_bool :-> bool                                   ),
+ ( "tail_" , l_bool :-> l_bool                                 )]
+
+
+
+
 ctx_map :: Context
 ctx_map = [
   ( "foldr" , (int:->l_int:->l_int) :-> l_int :-> l_int :-> l_int ),
@@ -581,7 +647,7 @@ ctx_ttSSR = [("(+)",dou2),("(-)",dou2),("(*)",dou2),("rdiv",dou2),("sin",dou1),(
 testSO :: (StdGen->SearchOptions) -> IO ()
 testSO soFun = do
   stdGen <- newStdGen
-  let trees = proveWith (soFun stdGen)
+  let trees = proveWith2 (soFun stdGen)
   mapM_ (putStrLn . show) trees
   putStrLn $ "num terms : " ++ (show $ length trees)
 
@@ -592,6 +658,16 @@ testSO2 soFun = do
   mapM_ (putStrLn . show) ctts
   putStrLn $ "num terms : " ++ (show $ length ctts)
 
+test_ep = testSO2 $ \ stdGen -> SearchOptions {
+    so_n                  = 500             ,
+    so_typ                = l_bool :-> bool ,
+    so_ctx                = ctx_yu          ,
+    so_stdGen             = stdGen          ,
+    so_runLen             = Nothing         ,
+    so_randomRunState     = NoRandomRunState , 
+    so_edgeSelectionModel = ContinueProbGeomWithDepth 0.75  --0.9  --AllEdges  
+  }
+
 test_head = testSO2 $ \ stdGen -> SearchOptions {
     so_n                  = 500       ,
     so_typ                = type_head ,
@@ -599,7 +675,7 @@ test_head = testSO2 $ \ stdGen -> SearchOptions {
     so_stdGen             = stdGen    ,
     so_runLen             = Nothing   ,
     so_randomRunState     = NoRandomRunState , 
-    so_edgeSelectionModel = ContinueProbGeomWithDepth 0.99  --0.9  --AllEdges  
+    so_edgeSelectionModel = ContinueProbGeomWithDepth 0.75  --0.9  --AllEdges  
   }
 
 -- \ x0 -> listCase x0 (listCase x0 Nothing (s (s (k s) (s (k (s (s (k listCase) i))) (s (k k) (s (k Ju
@@ -622,7 +698,7 @@ test_ssr = testSO2 $ \ stdGen -> SearchOptions {
     so_stdGen             = stdGen    ,
     so_runLen             = Nothing   ,
     so_randomRunState     = NoRandomRunState ,
-    so_edgeSelectionModel = ContinueProbGeomWithDepth 1--0.64
+    so_edgeSelectionModel = ContinueProbGeomWithDepth 0.6
   } 
 
 test_big = testSO $ \ stdGen -> SearchOptions {
@@ -632,7 +708,7 @@ test_big = testSO $ \ stdGen -> SearchOptions {
     so_stdGen             = stdGen    ,
     so_runLen             = Nothing   ,
     so_randomRunState     = NoRandomRunState , 
-    so_edgeSelectionModel = AllEdges  
+    so_edgeSelectionModel = ContinueProbGeomWithDepth 0.7  --AllEdges  
   }
 
 test_head_2 = testSO2 $ \ stdGen -> SearchOptions {

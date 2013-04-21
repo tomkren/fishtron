@@ -4,14 +4,15 @@ import TTerm (Typ(..),Context)
 import Problems.Utils 
 import JSONUtils
 import GP_Core (FitFun(FF6))
+import GP_Data (CTTGen(..))
+
 import DrawIM( imGraphInJSON )
 
-import Problems.BigCtx.Funs( All_Type )
  
 reg = PO_CTTP_ PO_CTTP {
   cttp_code        = "bigctx"                                     ,
   cttp_info        = "Problem with basic funs for types generating elementary funs." ,
-  cttp_data        = jsObj [ ( "im" , imGraphInJSON prog_typ prog_ctx ) ]                                       ,
+  cttp_data        = jsObj [ ( "im" , imGraphInJSON prog_typ prog_ctx ) ]      ,
   cttp_numRuns     = IntSlider "Runs"            1 10    1    1   ,
   cttp_numGene     = IntSlider "Generations"     0 100   10   10  ,
   cttp_popSize     = IntSlider "Population size" 0 5000  500  100 ,
@@ -19,14 +20,16 @@ reg = PO_CTTP_ PO_CTTP {
   cttp_typ         = prog_typ                                     ,
   cttp_ctx         = prog_ctx                                     ,
   
-  cttp_ff          = FF6 (asType:: [Int] -> Maybe Int ) ff_head "Problems.BigCtx.Funs" 
+  cttp_gOpt        = CTTG_Koza2 prog_typ prog_ctx                 , 
+
+  cttp_ff          = FF6 prog_type ff_fst3 "Problems.BigCtx.Funs" 
   
 }
 
 
-
-prog_typ = l_int :-> m_int  
-prog_ctx = ctx_combo
+prog_type = asType :: Fst3_Type  -- asType :: [Int] -> Maybe Int
+prog_typ  = fst3_typ             -- l_int :-> m_int  
+prog_ctx  = ctx_fst3             -- ctx_combo
 
 --problem1 = go pr_head
 
@@ -55,6 +58,11 @@ ctx_combo = ctx_head ++ ctx_tail ++ ctx_map ++ ctx_filter' ++ ctx_elem
 
 ctx_filter = ctx_filter' ++ ctx_map
 
+ctx_fst3 =    [  ( "mkFst3", ( l_int :-> m_int                  ) :->
+                             ( l_int :-> ml_int                 ) :->
+                             ( (int:->int) :-> l_int :-> l_int  ) :-> fst3_typ ) ] ++ ctx_head ++ ctx_tail ++ ctx_map
+
+
 ctx_mkAll =   [  ( "mkAll"  , ( l_int :-> m_int                  ) :->
                               ( l_int :-> ml_int                 ) :->
                               ( (int:->int) :-> l_int :-> l_int  ) :->
@@ -82,17 +90,35 @@ ctx_elem    = [  ( "foldr"    , (int:->bool:->bool) :-> bool :-> l_int :-> bool 
                  ( "False"    , bool                                                   )]
 
 
-
-
-
 all_typ = Typ "All"
-  
+
+type All_Type = 
+ ( [Int] -> Maybe Int    ,
+   [Int] -> Maybe [Int]  ,
+   (Int->Int ) -> [Int] -> [Int] ,
+   (Int->Bool) -> [Int] -> [Int] ,
+   Int -> [Int] -> Bool )
+
+fst3_typ = Typ "Fst3"
+
+type Fst3_Type = 
+ ( [Int] -> Maybe Int    ,
+   [Int] -> Maybe [Int]  ,
+   (Int->Int ) -> [Int] -> [Int]  )
+
 
 
 ff :: All_Type -> (Double,Bool)
 ff (h,t,m,f,e) = 
   let res = [ ff_head h , ff_tail t , ff_map m , ff_filter f , ff_elem e ]
    in ( sum $ map fst res , and $ map snd res )
+
+ff_fst3 :: Fst3_Type -> (Double,Bool)
+ff_fst3 (h,t,m) = 
+  let res = [ ff_head h , ff_tail t , ff_map m ]
+   in ( sum $ map fst res , and $ map snd res )
+
+
 
 ff_head :: ( [Int] -> Maybe Int ) -> (Double,Bool)
 ff_head prog = casesFF      

@@ -3,7 +3,6 @@ module Problems.Fly.Problem where
 
 import Data.List
 
-import GP_Core (FitFun(FF6))
 
 import TTerm          (Typ(..),Context)
 import Problems.Utils 
@@ -19,6 +18,10 @@ import Problems.Fly.Funs ( Input_ , Output_ , Dir_  , Energy , Pos , avg ,
                            dStay , dUp , dDown , dLeft , dRight )
 import Problems.Fly.Fly
 
+import GP_Core (FitFun(FF6))
+import GP_Data (CTTGen(..))
+
+
 reg = PO_CTTP_ PO_CTTP {
   cttp_code        = "fly"                                        ,
   cttp_info        = "Fly eating apples and stuff... "            ,
@@ -29,6 +32,8 @@ reg = PO_CTTP_ PO_CTTP {
   
   cttp_typ         = prog_typ                                     ,
   cttp_ctx         = ctx                                          ,
+
+  cttp_gOpt        = CTTG_Koza2 prog_typ ctx                      , 
   
   cttp_ff          = FF6 prog_type ff "Problems.Fly.Funs" 
   

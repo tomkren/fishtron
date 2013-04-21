@@ -92,9 +92,12 @@ data PO_CTTP a = PO_CTTP {
   cttp_code        :: String             ,
   cttp_info        :: String             ,
   cttp_data        :: JSValue            ,
+  
   cttp_ff          :: FitFun CTT a       ,
   cttp_typ         :: Typ                ,
-  cttp_ctx         :: Context            }
+  cttp_ctx         :: Context            ,
+  cttp_gOpt        :: CTTGen         
+ }
 
 cttp2json :: PO_CTTP a -> JSValue
 cttp2json cttp = jsObj [
@@ -164,15 +167,14 @@ runProblemOpts pOpts jobID = case pOpts of
        numGene     = ( slider_value . cttp_numGene $ cttp )
        popSize     = ( slider_value . cttp_popSize $ cttp )
 
-       typ         = cttp_typ cttp
-       ctx         = cttp_ctx cttp
-       fitFun      = cttp_ff  cttp
-
-       genOpProbs  = (10,0,90)
-       gOpt        = CTTG_Koza2 typ ctx 
+       typ         = cttp_typ  cttp
+       ctx         = cttp_ctx  cttp
+       fitFun      = cttp_ff   cttp
+       gOpt        = cttp_gOpt cttp -- CTTG_Koza2 typ ctx 
        mOpt        = ()
        cOpt        = CTTC_Koza
 
+       genOpProbs  = (10,0,90)
        genOps      = mkGenOps (mOpt,cOpt) genOpProbs
        problemName = cttp_code cttp
     in nRunsByServer jobID numRuns $ Problem problemName popSize numGene genOps gOpt mOpt cOpt fitFun

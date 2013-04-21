@@ -81,7 +81,12 @@ transformExceptions :: Symbol -> Symbol
 transformExceptions "(:)"  = "cons"
 transformExceptions "if'"  = "if_"
 transformExceptions "(==)" = "equals"
+transformExceptions "(/=)" = "notEquals"
 transformExceptions "(<=)" = "lt"
+transformExceptions "(&&)" = "and"
+transformExceptions "(||)" = "or"
+transformExceptions "True" = "true"
+transformExceptions "False"= "false"
 transformExceptions x      = x
 
 

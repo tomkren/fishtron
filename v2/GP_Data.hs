@@ -11,7 +11,9 @@ import Utils   ( getRandom, getRandomR, getRandomL, getNormal, randIf, randCase,
 import TTerm
 import TTree
 --
-import IM ( prove , kozaSearchOptions )
+import IM ( SearchOptions , prove , kozaSearchOptions , allEdgesSearchOptions , geomSearchOptions )
+import System.Random (StdGen)
+
 import InhabitationMachines ( proveN , randProveN, randProveUnique, proveOneWithLimit, Limit, kozaProveN )
 --
 import KozaTree ( KTree(KNode), KPos, kSubtree, kChangeSubtree, kPoses, kPoses2, kDepth ) 
@@ -31,17 +33,27 @@ type StdDev = Double
 instance Gene CTT CTTGen where generateIt = cttGen
 instance Cros CTT CTTCro where crossIt    = cttCro2
 
-data CTTGen = 
-  CTTG_Koza  Typ Context Limit |
-  CTTG_Koza2 Typ Context -- pomocí novýho IM
+data CTTGen  
+ = CTTG_Koza     Typ Context Limit  -- pomocí starýho IM 
+ | CTTG_Koza2    Typ Context        -- a zbytek pomocí novýho IM ..
+ | CTTG_AllEdges Typ Context 
+ | CTTG_Geom     Typ Context Prob 
 
 data CTTCro = CTTC_Koza
 
 cttGen :: Int -> CTTGen -> Eva [CTT]
-cttGen n (CTTG_Koza2 typ ctx) = do
-  gen <- evaSplitStdGen
-  return . prove $ kozaSearchOptions n typ ctx gen 
-cttGen n (CTTG_Koza  typ ctx limit) = map mkCTT `liftM` kozaProveN n limit typ ctx
+cttGen n opt = case opt of
+  CTTG_AllEdges typ ctx   -> proveIt  allEdgesSearchOptions n typ ctx 
+  CTTG_Koza2    typ ctx   -> proveIt  kozaSearchOptions     n typ ctx 
+  CTTG_Geom     typ ctx p -> proveIt (geomSearchOptions p)  n typ ctx
+  CTTG_Koza typ ctx limit ->  map mkCTT `liftM` kozaProveN n limit typ ctx
+ where
+  proveIt :: (Int -> Typ -> Context -> StdGen -> SearchOptions) -> Int -> Typ -> Context -> Eva [CTT]
+  proveIt f n typ ctx = do
+    gen <- evaSplitStdGen
+    return . prove $ f n typ ctx gen
+
+
 
 cttCro :: CTTCro -> CTT -> CTT -> Eva (CTT,CTT)
 cttCro CTTC_Koza (CTT v1 tree1) (CTT v2 tree2) = do

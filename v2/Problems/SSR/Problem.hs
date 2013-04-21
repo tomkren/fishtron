@@ -10,6 +10,7 @@ import Problems.SSR.Funs (ff)
 
 import Problems.Utils 
 import GP_Core (FitFun(FF6))
+import GP_Data (CTTGen(..))
 
 
 reg = PO_CTTP_ PO_CTTP {
@@ -22,6 +23,8 @@ reg = PO_CTTP_ PO_CTTP {
   
   cttp_typ         = dou1                                         ,
   cttp_ctx         = ctx                                          ,
+
+  cttp_gOpt        = CTTG_Koza2 dou1 ctx                          , 
   
   cttp_ff          = FF6 (asType::Double->Double) ff "Problems.SSR.Funs" 
   

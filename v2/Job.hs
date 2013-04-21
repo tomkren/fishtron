@@ -11,17 +11,20 @@ import qualified Data.Map as Map
 
 
 
-import qualified Problems.SSR.Problem    as SSR
-import qualified Problems.BigCtx.Problem as BigCtx
-import qualified Problems.Fly.Problem    as Fly
-import qualified Problems.Ant.Problem    as Ant
-import qualified Problems.BA.Problem     as BA
+import qualified Problems.SSR.Problem        as SSR
+import qualified Problems.BigCtx.Problem     as BigCtx
+import qualified Problems.Fly.Problem        as Fly
+import qualified Problems.Ant.Problem        as Ant
+import qualified Problems.BA.Problem         as BA
+import qualified Problems.EvenParity.Problem as EvenParity
+
 
 regs = 
- [ reg Fly.reg 
+ [ reg EvenParity.reg
+ , reg BigCtx.reg
+ , reg Fly.reg 
  , reg SSR.reg 
  , reg Ant.reg
- , reg BigCtx.reg
  , reg (BA.reg :: POU) 
  ]
 
