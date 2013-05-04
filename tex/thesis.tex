@@ -1,6 +1,9 @@
-\documentclass[12pt]{article}
+\documentclass[12pt]{report}
+
 \usepackage{amsmath}
+\usepackage{amsfonts}
 \usepackage[utf8]{inputenc}
+
 \title{Typed Functional Genetic Programming}
 \author{Tomáš Křen}
 \date{April 2013}
@@ -9,46 +12,110 @@
 	\maketitle
 	
 	
+\chapter{Introduction}
 
-
-	\section{Introduction}
 	
-	\section{Definitions}
-		\subsection{Lambda term}
-		\subsection{Type}
-		\subsection{Context}
-		\subsection{Inference rules}
-		\subsection{Term generating grammars}
-		\subsection{Inhabitation tree}
-			\subsubsection{Inhabitation Machine}
-		\subsection{Roadmap}
-		\subsection{Conversion to SKI combinators}
-
-	\section{Top level view}
+\chapter{Definitions}
 	
-	\section{Term generating}
-	\section{Crossover}
-	\section{Mutation}
+	Let us first say some basic definitions.
+		
+	\section{Lambda term}
+		
+		Let $V$ be set of {\it variable names}.  \\* 
+		Let $C$ be set of {\it constant names}.	 \\*		
+		Then $\Lambda$ is set of {\it $\lambda$-terms} inductively defined as follows:
+		
+		\begin{align*}
+			 x   \in V                 &\Rightarrow     x   \in \Lambda \\
+			 c   \in C                 &\Rightarrow     c   \in \Lambda \\
+			 M,N \in \Lambda           &\Rightarrow ( M N ) \in \Lambda \\
+			 x   \in V , M \in \Lambda &\Rightarrow ( \lambda x . M ) \in \Lambda 
+		\end{align*} 
 	
-	\section{Problems}
-	In this section we will present usage of the system on solving specific problems.
+	\section{Type}
+	
+		Let $A$ be set of {\it atomic types}. \\*
+		Then $\mathbb{T}$ is set of {\it types} inductively defined as follows:
+		
+		\begin{align*}
+		\alpha      \in A          &\Rightarrow     \alpha   \in \mathbb{T} \\
+		\sigma,\tau \in \mathbb{T} &\Rightarrow ( \sigma \rightarrow  \tau ) \in \mathbb{T} 
+		\end{align*} 
+	
+	
+	\section{Statement with :}
+	Let $\Lambda$ be set of {\it $\lambda$-terms}. \\*
+	Let $\mathbb{T}$ be set of {\it types}.       \\*
+	A {\it statement} is a pair $(M,\sigma) \in \Lambda \times \mathbb{T}$. \\*
+	Notation $M : \sigma$. \\* 
+	The type $\sigma$ is the {\it predicate} and the term $M$ is the
+	{\it subject} of the statement.  
+	
+	\section{Context}
+	Let $\Gamma$ be a set of {\it statements}.	\\*
+	Then $\Gamma$ is {\it context} if it obeys following conditions:
+	\begin{align*}
+		 \forall (x,\sigma) \in \Gamma &: x \in V \cup C \\
+		 \forall s_1,s_2 \in \Gamma &: s_1 \neq s_2 \Rightarrow fst(s_1) \neq fst(s_2)
+    \end{align*}
+    
+	In other words context is a set of statements with distinct variables as subjects.
+	
+	
+	\section{Statement with $\vdash$}
+	By writing $ \Gamma \vdash M : \sigma$ we say 
+	{\it statement $M : \sigma$ is derivable from context $\Gamma$ }.
+	
+		
+	\section{Inference rule}	
+	We construct valid {\it statements with $\vdash$} by using inference rules.
+	
+	
 		
 	
-		\subsection{Even Parity Problem}
-		\subsection{Big Context}
-		\subsection{Fly}
-		\subsection{Simple Symbolic Regression}
-		\subsection{Artificial Ant}
-		\subsection{Boolean Alternate}
+	\section{Term generating grammar}
+
+	\section{Inhabitation tree}
+		\subsection{Inhabitation Machine}
+	\section{Roadmap}
+	\section{Conversion to SKI combinators}
+
+	\section{Genetic Programming}
+		\subsection{Term generating}
+		\subsection{Crossover}
+		\subsection{Mutation}
+
+\chapter{ Designed system }	
+	\section{Top level view}
+	\section{Term generating}
+		\subsection{A* algorithm}
+	\section{Crossover}
+		\subsection{Finding same types}
+		\subsection{Two basic options}
+		Resolve problems with free variables or avoid variables completely. 
+		
+	\section{Mutation}
+		\subsection{Using term generation}
+
+
+\chapter{Problems}
+	In this section will be presented usage of the system in order to solve specific problems.
+		
 	
-	\section{Conclusion}
-	
+		\section{Even Parity Problem}
+		\section{Big Context}
+		\section{Fly}
+		\section{Simple Symbolic Regression}
+		\section{Artificial Ant}
+		\section{Boolean Alternate}
 	
 
+\chapter{Conclusion}
 	
-	\section{Sandbox, YAY!}
 	
-	Blah!	
+\chapter{Sandbox ..}
+	
+	...	
 	
 	% Example formula
   	
