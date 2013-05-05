@@ -1,16 +1,137 @@
-\documentclass[12pt]{report}
+\documentclass[12pt,a4paper]{report}
+
+\setlength\textwidth{145mm}
+\setlength\textheight{247mm}
+\setlength\oddsidemargin{15mm}
+\setlength\evensidemargin{15mm}
+\setlength\topmargin{0mm}
+\setlength\headsep{0mm}
+\setlength\headheight{0mm}
+
 
 \usepackage{amsmath}
 \usepackage{amsfonts}
 \usepackage[utf8]{inputenc}
 
+\usepackage{graphicx}
+\usepackage{amsthm}
+
+%% Balíček hyperref, kterým jdou vyrábět klikací odkazy v PDF,
+%% ale hlavně ho používáme k uložení metadat do PDF (včetně obsahu).
+%% POZOR, nezapomeňte vyplnit jméno práce a autora.
+%\usepackage[ps2pdf,unicode]{hyperref}   % Musí být za všemi ostatními balíčky
+%\hypersetup{pdftitle=Typed Functional Genetic Programming}
+%\hypersetup{pdfauthor=Tomáš Křen}
+
+% Tato makra přesvědčují mírně ošklivým trikem LaTeX, aby hlavičky kapitol
+% sázel příčetněji a nevynechával nad nimi spoustu místa. Směle ignorujte.
+\makeatletter
+\def\@makechapterhead#1{
+  {\parindent \z@ \raggedright \normalfont
+   \Huge\bfseries \thechapter. #1
+   \par\nobreak
+   \vskip 20\p@
+}}
+\def\@makeschapterhead#1{
+  {\parindent \z@ \raggedright \normalfont
+   \Huge\bfseries #1
+   \par\nobreak
+   \vskip 20\p@
+}}
+\makeatother
+
+
+\newcommand\Vtextvisiblespace[1][.3em]{%
+  \mbox{\kern.06em\vrule height.3ex}%
+  \vbox{\hrule width#1}%
+  \hbox{\vrule height.3ex}}
+
 \title{Typed Functional Genetic Programming}
 \author{Tomáš Křen}
-\date{April 2013}
+\date{Prague 2013}
 
 \begin{document}
-	\maketitle
-	
+
+% Trochu volnější nastavení dělení slov, než je default.
+\lefthyphenmin=2
+\righthyphenmin=2
+
+%%% Titulní strana práce
+
+\pagestyle{empty}
+\begin{center}
+
+\large
+
+Charles University in Prague
+
+\medskip
+
+Faculty of Mathematics and Physics
+
+\vfill
+
+{\bf\Large MASTER THESIS}
+
+\vfill
+
+%%% \centerline{\mbox{\includegraphics[width=60mm]{../img/logo.eps}}}
+
+%\begin{figure}[!ht]
+%  \centering
+%  \includegraphics{logo.eps}
+%  \caption{Default}\label{fig:default}
+%\end{figure}
+
+
+% Stačí todle odkomentovat a dát nahoře LaTeX , pak DVI->PDF  a pak View PDF
+%\includegraphics[scale=0.5]{logo.eps}
+
+\vfill
+\vspace{5mm}
+
+{\LARGE Tomáš Křen}
+
+\vspace{15mm}
+
+% Název práce přesně podle zadání
+{\LARGE\bfseries Typed Functional Genetic Programming}
+
+\vfill
+
+% Název katedry nebo ústavu, kde byla práce oficiálně zadána
+% (dle Organizační struktury MFF UK)
+%%%%Name of the department or institute
+%Department of Theoretical Computer Science and Mathematical Logic\\
+%{\small Department of Theoretical Computer Science and Mathematical Logic} \\
+{\fontsize{0.46cm}{1em}\selectfont 
+Department of Theoretical Computer Science and Mathematical Logic}
+
+\vfill
+
+\begin{tabular}{rl}
+
+Supervisor of the master thesis: & RNDr. Petr Pudlák, Ph.D. \\
+\noalign{\vspace{2mm}}
+Study programme: & Theoretical Computer Science \\ %Teoretická informatika \\
+\noalign{\vspace{2mm}}
+Specialization: & 
+%Neprocedurální programování a umělá inteligence \\
+{\fontsize{0.3cm}{1em}\selectfont 
+%Neprocedurální programování a umělá inteligence} \\
+Non-Procedural Programming and Artificial Intelligence} \\
+\end{tabular}
+
+\vfill
+
+% Zde doplňte rok
+Prague 2013
+
+\end{center}
+
+\newpage
+
+\tableofcontents	
 	
 \chapter{Introduction}
 
@@ -32,48 +153,284 @@
 			 x   \in V , M \in \Lambda &\Rightarrow ( \lambda x . M ) \in \Lambda 
 		\end{align*} 
 	
-	\section{Type}
+\section{Type}
+
+	Let $A$ be set of {\it atomic type names}. \\*
+	Then $\mathbb{T}$ is set of {\it types} inductively defined as follows:
 	
-		Let $A$ be set of {\it atomic types}. \\*
-		Then $\mathbb{T}$ is set of {\it types} inductively defined as follows:
-		
-		\begin{align*}
-		\alpha      \in A          &\Rightarrow     \alpha   \in \mathbb{T} \\
-		\sigma,\tau \in \mathbb{T} &\Rightarrow ( \sigma \rightarrow  \tau ) \in \mathbb{T} 
-		\end{align*} 
+	\begin{align*}
+	\alpha      \in A          &\Rightarrow     \alpha   \in \mathbb{T} \\
+	\sigma,\tau \in \mathbb{T} &\Rightarrow ( \sigma \rightarrow  \tau ) \in \mathbb{T} 
+	\end{align*} 
 	
 	
-	\section{Statement with :}
+\section{Statement of a form $M : \sigma$}
+
 	Let $\Lambda$ be set of {\it $\lambda$-terms}. \\*
 	Let $\mathbb{T}$ be set of {\it types}.       \\*
-	A {\it statement} is a pair $(M,\sigma) \in \Lambda \times \mathbb{T}$. \\*
-	Notation $M : \sigma$. \\* 
+	A {\it statement} $M : \sigma$ is a pair $(M,\sigma) \in \Lambda \times \mathbb{T}$. \\*
+	$M : \sigma$ is vocalized as {\it "$M$ has type $\sigma$"}.\footnote{ 
+	$M : \sigma$ can be also imagined as $M \in \sigma$ } \\*
 	The type $\sigma$ is the {\it predicate} and the term $M$ is the
 	{\it subject} of the statement.  
 	
-	\section{Context}
-	Let $\Gamma$ be a set of {\it statements}.	\\*
-	Then $\Gamma$ is {\it context} if it obeys following conditions:
+\section{Context}
+
+	Let $\Gamma \in \mathfrak P \left({\Lambda \times  \mathbb{T}}\right)$. 
+	($\Gamma$ is a set of {\it statements} of a form $M : \sigma$.)	\\*
+	Then $\Gamma$ is {\it context} if it obeys following 
+	conditions\footnote{
+	The $\pi_1$ corresponds to the projection of the first component of the Cartesian product.
+	}:
 	\begin{align*}
 		 \forall (x,\sigma) \in \Gamma &: x \in V \cup C \\
-		 \forall s_1,s_2 \in \Gamma &: s_1 \neq s_2 \Rightarrow fst(s_1) \neq fst(s_2)
+		 \forall s_1,s_2 \in \Gamma &: s_1 \neq s_2 \Rightarrow \pi_1(s_1) \neq \pi_1(s_2)
     \end{align*}
     
-	In other words context is a set of statements with distinct variables as subjects.
+	In other words context is a set of statements with distinct variables or constants as subjects.
 	
 	
-	\section{Statement with $\vdash$}
-	By writing $ \Gamma \vdash M : \sigma$ we say 
+\section{Statement of a form $\Gamma \vdash M : \sigma$}
+
+	By writing $\Gamma \vdash M : \sigma$ we say 
 	{\it statement $M : \sigma$ is derivable from context $\Gamma$ }.
+
+	We construct valid statements of form $\Gamma \vdash M : \sigma$ by using inference rules.
 	
 		
-	\section{Inference rule}	
-	We construct valid {\it statements with $\vdash$} by using inference rules.
+\section{Inference rule}		
 	
+	Basically speaking, inference rules are used for deriving statements of a form 
+	$\Gamma \vdash M : \sigma$ from yet derived statements of such a form.
+	Those inference rules are written in the following form:
 	
+	\begin{equation*}
+		\frac{\Gamma_1 \vdash M_1 : \sigma_1 \qquad
+			  \Gamma_2 \vdash M_2 : \sigma_2 \quad
+			  \dotsm \quad
+		      \Gamma_n \vdash M_n : \sigma_n}
+		     {\Gamma_{n+1} \vdash M_{n+1} : \sigma_{n+1}}
+	\end{equation*}	
+	
+	Suppose we have yet derived statements 
+	$\Gamma_1 \vdash M_1 : \sigma_1 ,
+	 \Gamma_2 \vdash M_2 : \sigma_2 ,
+	 \dots ,
+	 \Gamma_n \vdash M_n : \sigma_n$. 
+	It allows as to use the inference rule to derive statement
+	\mbox{ $\Gamma_{n+1} \vdash M_{n+1} : \sigma_{n+1}$ }.
+	 
+	For deriving statements including types of a form $(\sigma \rightarrow \tau)$ are essential those two 
+	inference rules:
+	
+	\begin{equation*}
+		\frac{\Gamma \vdash M : \sigma \rightarrow \tau \qquad
+			  \Gamma \vdash N : \sigma }
+		     {\Gamma \vdash (M N) : \tau }
+	\end{equation*}	
+	
+	\begin{equation*}
+		\frac{\Gamma \cup \{ ( x,\sigma ) \} \vdash M : \tau }
+		     {\Gamma \vdash (\lambda x . M) : \sigma \rightarrow \tau }
+	\end{equation*}		 
+	 
+	This kind of inference rules allows us to derive new statements from yet derived statements, but 
+	what if we do not have any statement yet? 
+	For this purpose we have other kinds of inference rules such as {\it axiom} inference rule:   
+	
+	\begin{equation*}
+		\frac{( x , \sigma )  \in \Gamma}
+		     {\Gamma \vdash x : \sigma}
+	\end{equation*}	
+	
+	Let us consider an example statement of a form $\Gamma \vdash M : \sigma$ :
+	
+	\[
+		\{\} \vdash (\lambda f . (\lambda x . (f x) )) : 
+		(\sigma \rightarrow \tau) \rightarrow ( \sigma \rightarrow \tau ) 
+	\]
 		
+	This statement is derived as follows: 
+	
+	\begin{equation*}
+	\dfrac{
+		\dfrac{ (f,\sigma \rightarrow \tau) \in \{ (f,\sigma \rightarrow \tau) , (x,\sigma)  \}  }
+		     { \{ (f,\sigma \rightarrow \tau) , (x,\sigma)  \} \vdash f : \sigma \rightarrow \tau }
+		\qquad
+		\dfrac{ (x,\sigma) \in \{ (f,\sigma \rightarrow \tau) , (x,\sigma)  \}  }
+		     { \{ (f,\sigma \rightarrow \tau) , (x,\sigma)  \} \vdash x : \sigma }
+		 }
+		 {
+			\dfrac{		 	
+		 		\{ (f,\sigma \rightarrow \tau) , (x,\sigma)  \} \vdash (f x) : \tau
+		 	}{
+				\dfrac{\{ (f,\sigma \rightarrow \tau) \} \vdash (\lambda x . (f x) ) : 
+				\sigma \rightarrow \tau}
+				{ \{ \} \vdash (\lambda f . (\lambda x . (f x) ) ) 
+				  : (\sigma \rightarrow \tau) \rightarrow (\sigma \rightarrow \tau) }
+		 	}
+		 }
+	\end{equation*}		
 	
 	\section{Term generating grammar}
+	Inference rules are good for deriving statements of a form $\Gamma \vdash M : \sigma$, but our
+	goal is slightly different; we would like to generate many $\lambda$-terms M for a given type 
+	$\sigma$ and context $\Gamma$.
+	
+	Our approach will be to take each inference rule and transform it to a rule of term generating
+	grammar. With this term generating grammar it will be much easier to reason about generating 
+	$\lambda$-terms.
+	
+It won't be a grammar in classical sense because we will be operating with infinite sets of
+nonterminal symbols and rules. \footnote{TODO : mention terminal symbols - situation around 
+variables and their construction with ' symbol.}
+
+Let $Non = Type \times Context $ be our {\it nonterminal} set. 
+So for every $i \in Non$ is $i = (\sigma_i , \Gamma_i )$.
+
+Let's consider each relevant inference rule and its corresponding grammar rule.
+
+First inference rule is {\it implication elimination} also known as 
+{\it modus ponens}: 
+\[
+	\frac{\Gamma \vdash M : \sigma \rightarrow \tau \qquad
+		  \Gamma \vdash N : \sigma }
+	     {\Gamma \vdash (M N) : \tau }
+\]
+\\
+For every $\sigma, \tau \in \mathbb{T}$ and for every {\it context} 
+$\Gamma \in \mathfrak P \left({\Lambda \times  \mathbb{T}}\right)$ there is a grammar rule of a form\footnote{ 
+Terminal symbols for parenthesis and normally {\it space} now \textvisiblespace \quad (for {\it function application} operator) are visually highlighted. }: 
+\[	
+	( \tau , \Gamma )  \longmapsto
+	\bigg( ( \sigma \rightarrow \tau , \Gamma ) 
+	  \mbox{ \Vtextvisiblespace[1em] } ( \sigma , \Gamma ) \bigg)
+\]
+\\
+
+Second inference rule is {\it implication introduction}: 
+\[
+	\frac{\Gamma \cup \{ ( x,\sigma ) \} \vdash M : \tau }
+	     {\Gamma \vdash (\lambda x . M) : \sigma \rightarrow \tau }
+\]
+\\
+$\forall \sigma, \tau \in \mathbb{T}$ 
+$\forall${\it context} $\Gamma \in \mathfrak P \left({\Lambda \times  \mathbb{T}}\right) $ 
+$\forall x \in V $ such that there is no $(x,\rho) \in \Gamma$ 
+there is a grammar rule:
+\[ 
+	( \sigma \rightarrow \tau , \Gamma )  \longmapsto
+	\bigg( \mbox{ {\Large $\lambda$ x . }}( \tau , \Gamma \cup \{ (x,\sigma) \} ) \quad \bigg)
+\]
+\\	
+
+Third inference rule is {\it axiom}: 
+\[
+		\frac{( x , \sigma )  \in \Gamma}
+		     {\Gamma \vdash x : \sigma}
+\]
+\\
+$\forall \sigma \in \mathbb{T}$ 
+$\forall${\it context} $\Gamma \in \mathfrak P \left({\Lambda \times  \mathbb{T}}\right) $ 
+$\forall x \in V \cup C $ such that $(x,\sigma) \in \Gamma$ 
+there is a grammar rule:
+\[ 
+	( \sigma , \Gamma )  \longmapsto \mbox{ {\Large x}}
+\]
+\\
+
+We will demonstrate $\lambda$-term generation on example. 
+Again on $(\lambda f . (\lambda x . (f x) ))$. 
+We would like to generate $\lambda$-term of a type 
+$(\sigma \rightarrow \tau) \rightarrow (\sigma \rightarrow \tau)$
+with $\Gamma = \{\}$.
+\begin{align*}
+	& ((\sigma \rightarrow \tau) \rightarrow (\sigma \rightarrow \tau),\{\}) \\ 
+	\longmapsto & \bigg( \mbox{ {\Large $\lambda$ f . }}
+	  ( \sigma \rightarrow \tau , \{ (f,\sigma \rightarrow \tau) \} ) 
+	\quad \bigg)
+	\\
+	\longmapsto & 
+	\bigg( \mbox{ {\Large $\lambda$ f . }}
+		\bigg( \mbox{ {\Large $\lambda$ x . }}
+	  	 	( \tau , \{ (f,\sigma \rightarrow \tau) , (x,\sigma) \} ) 
+		\quad \bigg)  	 
+	\quad \bigg)
+	\\
+	\longmapsto & 
+	\bigg( \mbox{ {\Large $\lambda$ f . }}
+		\bigg( \mbox{ {\Large $\lambda$ x . }}	  	 	
+	  	 	\bigg( 
+	  	 	  ( \sigma \rightarrow \tau , \{ (f,\sigma \rightarrow \tau) , (x,\sigma) \} ) 
+			  \mbox{ \Vtextvisiblespace[1em] } 
+			  ( \sigma , \{ (f,\sigma \rightarrow \tau) , (x,\sigma) \} ) \bigg) 
+		\quad \bigg)  	 
+	\quad \bigg)
+	\\
+	\longmapsto & 
+	\bigg( \mbox{ {\Large $\lambda$ f . }}
+		\bigg( \mbox{ {\Large $\lambda$ x . }}	  	 	
+	  	 	\bigg( 
+	  	 	  \mbox{ {\Large f}} 
+			  \mbox{ \Vtextvisiblespace[1em] } 
+			  ( \sigma , \{ (f,\sigma \rightarrow \tau) , (x,\sigma) \} ) \bigg) 
+		\quad \bigg)  	 
+	\quad \bigg)		
+	\\
+	\longmapsto & 
+	\bigg( \mbox{ {\Large $\lambda$ f . }}
+		\bigg( \mbox{ {\Large $\lambda$ x . }}	  	 	
+	  	 	\bigg( 
+	  	 	  \mbox{ {\Large f}} 
+			  \mbox{ \Vtextvisiblespace[1em] } 
+			  \mbox{{\Large x}} \bigg) 
+		\quad \bigg)  	 
+	\quad \bigg)
+\end{align*}
+
+\subsection{"Barendregt-like" inference and grammar rules}
+
+Inference rule 1: 
+\[
+	\frac{\Gamma \cup \{ (x_1,\tau_1),\dots,(x_n,\tau_n) \} \vdash M : \alpha }
+	     {\Gamma \vdash (\lambda x_1 \dots x_n . M) : 
+	     \tau_1 \rightarrow \dots \rightarrow \tau_n \rightarrow \alpha }
+\]
+\\
+... there is a grammar rule:
+\[ 
+	( \tau_1 \rightarrow \dots \rightarrow \tau_n \rightarrow \alpha , \Gamma )  \longmapsto
+	\bigg( \mbox{ {\Large 
+	$\lambda x_1 \dots x_n .$ 
+	}}( \alpha , \Gamma \cup \{ (x_1,\tau_1),\dots,(x_n,\tau_n) \} ) \quad \bigg)
+\]
+\\
+
+Inference rule 2: 
+\[
+	\frac{ (f , \tau_1 \rightarrow \dots \rightarrow \tau_n \rightarrow \alpha ) \in \Gamma \qquad
+	       \Gamma \vdash M_1 : \tau_1 \quad
+	       \dotsm \quad
+	       \Gamma \vdash M_n : \tau_n        
+	      }
+	     {\Gamma \vdash (f M_1 \dots M_n) : \alpha}
+\]
+\\
+... there is a grammar rule:
+\[ 
+	( \alpha , \Gamma )  \longmapsto
+	\bigg( \mbox{ {\Large f }}
+	  \mbox{ \Vtextvisiblespace[1em] } 
+	  ( \tau_1 , \Gamma )
+	  \mbox{ \Vtextvisiblespace[1em] } 
+	  \dots
+	  \mbox{ \Vtextvisiblespace[1em] } 
+	  ( \tau_n , \Gamma )
+	  \quad \bigg)
+\]
+\\	
+
+
 
 	\section{Inhabitation tree}
 		\subsection{Inhabitation Machine}
@@ -113,16 +470,9 @@
 \chapter{Conclusion}
 	
 	
-\chapter{Sandbox ..}
-	
-	...	
-	
-	% Example formula
-  	
-  	\begin{align}
-    	E &= mc^2                              \\
-    	m &= \frac{m_0}{\sqrt{1-\frac{v^2}{c^2}}}
-  	\end{align}
+
+
+
 	
 	
 \end{document}
