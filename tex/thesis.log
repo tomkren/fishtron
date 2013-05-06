@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.1415926-2.4-1.40.13 (MiKTeX 2.9) (preloaded format=latex 2013.4.26)  6 MAY 2013 01:47
+This is pdfTeX, Version 3.1415926-2.4-1.40.13 (MiKTeX 2.9) (preloaded format=pdflatex 2013.4.26)  6 MAY 2013 15:42
 entering extended mode
 **thesis.tex
 (C:\Users\sekol\Documents\GitHub\fishtron\tex\thesis.tex
@@ -329,10 +329,18 @@ Package: trig 1999/03/16 v1.09 sin cos tan (DPC)
 ("C:\Program Files (x86)\MiKTeX 2.9\tex\latex\00miktex\graphics.cfg"
 File: graphics.cfg 2007/01/18 v1.5 graphics configuration of teTeX/TeXLive
 )
-Package graphics Info: Driver file: dvips.def on input line 91.
+Package graphics Info: Driver file: pdftex.def on input line 91.
 
-("C:\Program Files (x86)\MiKTeX 2.9\tex\latex\graphics\dvips.def"
-File: dvips.def 1999/02/16 v3.0i Driver-dependant file (DPC,SPQR)
+("C:\Program Files (x86)\MiKTeX 2.9\tex\latex\pdftex-def\pdftex.def"
+File: pdftex.def 2011/05/27 v0.06d Graphics/color for pdfTeX
+
+("C:\Program Files (x86)\MiKTeX 2.9\tex\generic\oberdiek\infwarerr.sty"
+Package: infwarerr 2010/04/08 v1.3 Providing info/warning/error messages (HO)
+)
+("C:\Program Files (x86)\MiKTeX 2.9\tex\generic\oberdiek\ltxcmds.sty"
+Package: ltxcmds 2011/11/09 v1.22 LaTeX kernel commands for general use (HO)
+)
+\Gread@gobject=\count100
 ))
 \Gin@req@height=\dimen112
 \Gin@req@width=\dimen113
@@ -362,33 +370,53 @@ LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 53.
 LaTeX Font Info:    ... okay on input line 53.
 LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 53.
 LaTeX Font Info:    ... okay on input line 53.
-File: logo.eps Graphic file (type eps)
- <logo.eps>
+
+(C:\Users\sekol\AppData\Roaming\MiKTeX\2.9\tex\context\base\supp-pdf.mkii
+[Loading MPS to PDF converter (version 2006.09.02).]
+\scratchcounter=\count101
+\scratchdimen=\dimen114
+\scratchbox=\box28
+\nofMPsegments=\count102
+\nofMParguments=\count103
+\everyMPshowfont=\toks28
+\MPscratchCnt=\count104
+\MPscratchDim=\dimen115
+\MPnumerator=\count105
+\makeMPintoPDFobject=\count106
+\everyMPtoPDFconversion=\toks29
+) <logomff.png, id=1, 1367.1075pt x 1304.62407pt>
+File: logomff.png Graphic file (type png)
+ <use logomff.png>
+Package pdftex.def Info: logomff.png used on input line 89.
+(pdftex.def)             Requested size: 205.05728pt x 195.68517pt.
+
 
 LaTeX Font Warning: Font shape `OT1/cmr/m/n' in size <13.08846> not available
-(Font)              size <12> substituted on input line 107.
+(Font)              size <12> substituted on input line 108.
 
-LaTeX Font Info:    Try loading font information for U+msa on input line 112.
+LaTeX Font Info:    Try loading font information for U+msa on input line 113.
 ("C:\Program Files (x86)\MiKTeX 2.9\tex\latex\amsfonts\umsa.fd"
 File: umsa.fd 2013/01/14 v3.01 AMS symbols A
 )
-LaTeX Font Info:    Try loading font information for U+msb on input line 112.
+LaTeX Font Info:    Try loading font information for U+msb on input line 113.
 
 ("C:\Program Files (x86)\MiKTeX 2.9\tex\latex\amsfonts\umsb.fd"
 File: umsb.fd 2013/01/14 v3.01 AMS symbols B
 )
 
 LaTeX Font Warning: Font shape `OT1/cmr/m/n' in size <8.5359> not available
-(Font)              size <9> substituted on input line 120.
+(Font)              size <9> substituted on input line 121.
 
 
-Overfull \hbox (34.16788pt too wide) in paragraph at lines 112--124
+Overfull \hbox (34.16788pt too wide) in paragraph at lines 113--125
  [][] 
  []
 
 [1
 
-] (C:\Users\sekol\Documents\GitHub\fishtron\tex\thesis.toc)
+{C:/Users/sekol/AppData/Local/MiKTeX/2.9/pdftex/config/pdftex.map} <C:/Users/se
+kol/Documents/GitHub/fishtron/tex/logomff.png>]
+(C:\Users\sekol\Documents\GitHub\fishtron\tex\thesis.toc)
 \tf@toc=\write3
  [2
 
@@ -398,44 +426,44 @@ Chapter 1.
 
 ]
 Chapter 2.
-LaTeX Font Info:    Try loading font information for U+euf on input line 179.
+LaTeX Font Info:    Try loading font information for U+euf on input line 180.
 ("C:\Program Files (x86)\MiKTeX 2.9\tex\latex\amsfonts\ueuf.fd"
 File: ueuf.fd 2013/01/14 v3.01 Euler Fraktur
 ) [4
 
 ]
-Overfull \hbox (23.73802pt too wide) in paragraph at lines 215--222
-\OML/cmm/m/it/12 M[] \OT1/cmr/m/n/12 : \OML/cmm/m/it/12 []$\OT1/cmr/m/n/12 . I
-t al-lows as to use the in-fer-ence rule to de-rive state-ment []. 
+Overfull \hbox (23.73802pt too wide) in paragraph at lines 216--223
+$\OML/cmm/m/it/12 M[] \OT1/cmr/m/n/12 : \OML/cmm/m/it/12 []$\OT1/cmr/m/n/12 . 
+It al-lows as to use the in-fer-ence rule to de-rive state-ment []. 
  []
 
 [5]
-Underfull \hbox (badness 10000) in paragraph at lines 308--310
+Underfull \hbox (badness 10000) in paragraph at lines 309--311
 
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 324--326
+Underfull \hbox (badness 10000) in paragraph at lines 325--327
 
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 339--341
+Underfull \hbox (badness 10000) in paragraph at lines 340--342
 
  []
 
 
-Overfull \hbox (52.42421pt too wide) in paragraph at lines 389--389
+Overfull \hbox (52.42421pt too wide) in paragraph at lines 390--390
 [] 
  []
 
 [6]
-Underfull \hbox (badness 10000) in paragraph at lines 406--408
+Underfull \hbox (badness 10000) in paragraph at lines 407--409
 
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 430--432
+Underfull \hbox (badness 10000) in paragraph at lines 431--433
 
  []
 
@@ -458,12 +486,32 @@ LaTeX Font Warning: Size substitutions with differences
 
  ) 
 Here is how much of TeX's memory you used:
- 1568 strings out of 493922
- 18565 string characters out of 3144899
- 76643 words of memory out of 3000000
- 4852 multiletter control sequences out of 15000+200000
+ 2158 strings out of 493921
+ 26886 string characters out of 3144876
+ 86946 words of memory out of 3000000
+ 5428 multiletter control sequences out of 15000+200000
  17852 words of font info for 69 fonts, out of 3000000 for 9000
  841 hyphenation exceptions out of 8191
- 27i,12n,24p,223b,231s stack positions out of 5000i,500n,10000p,200000b,50000s
+ 27i,12n,24p,237b,230s stack positions out of 5000i,500n,10000p,200000b,50000s
+<C:/Program Files (x86)/MiKTeX 2.9/fonts/type1/public/amsfonts/cm/cmbx12.pfb>
+<C:/Program Files (x86)/MiKTeX 2.9/fonts/type1/public/amsfonts/cm/cmex10.pfb><C
+:/Program Files (x86)/MiKTeX 2.9/fonts/type1/public/amsfonts/cm/cmmi10.pfb><C:/
+Program Files (x86)/MiKTeX 2.9/fonts/type1/public/amsfonts/cm/cmmi12.pfb><C:/Pr
+ogram Files (x86)/MiKTeX 2.9/fonts/type1/public/amsfonts/cm/cmmi8.pfb><C:/Progr
+am Files (x86)/MiKTeX 2.9/fonts/type1/public/amsfonts/cm/cmr10.pfb><C:/Program 
+Files (x86)/MiKTeX 2.9/fonts/type1/public/amsfonts/cm/cmr12.pfb><C:/Program Fil
+es (x86)/MiKTeX 2.9/fonts/type1/public/amsfonts/cm/cmr17.pfb><C:/Program Files 
+(x86)/MiKTeX 2.9/fonts/type1/public/amsfonts/cm/cmr7.pfb><C:/Program Files (x86
+)/MiKTeX 2.9/fonts/type1/public/amsfonts/cm/cmr8.pfb><C:/Program Files (x86)/Mi
+KTeX 2.9/fonts/type1/public/amsfonts/cm/cmr9.pfb><C:/Program Files (x86)/MiKTeX
+ 2.9/fonts/type1/public/amsfonts/cm/cmsy10.pfb><C:/Program Files (x86)/MiKTeX 2
+.9/fonts/type1/public/amsfonts/cm/cmti10.pfb><C:/Program Files (x86)/MiKTeX 2.9
+/fonts/type1/public/amsfonts/cm/cmti12.pfb><C:/Program Files (x86)/MiKTeX 2.9/f
+onts/type1/public/amsfonts/euler/eufm10.pfb><C:/Program Files (x86)/MiKTeX 2.9/
+fonts/type1/public/amsfonts/symbols/msbm10.pfb>
+Output written on thesis.pdf (11 pages, 493599 bytes).
+PDF statistics:
+ 103 PDF objects out of 1000 (max. 8388607)
+ 0 named destinations out of 1000 (max. 500000)
+ 6 words of extra memory for PDF output out of 10000 (max. 10000000)
 
-Output written on thesis.dvi (11 pages, 24428 bytes).
