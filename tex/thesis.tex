@@ -9,12 +9,18 @@
 \setlength\headheight{0mm}
 
 
-\usepackage{amsmath}
-\usepackage{amsfonts}
 \usepackage[utf8]{inputenc}
 
-\usepackage{graphicx}
+\usepackage{qtree}
+
+\usepackage{amsmath}
+\usepackage{amsfonts}
 \usepackage{amsthm}
+
+
+\usepackage{graphicx}
+
+\usepackage{hyperref}
 
 %% Balíček hyperref, kterým jdou vyrábět klikací odkazy v PDF,
 %% ale hlavně ho používáme k uložení metadat do PDF (včetně obsahu).
@@ -132,27 +138,125 @@ Prague 2013
 
 \newpage
 
+%%% Následuje vevázaný list -- kopie podepsaného "Zadání diplomové práce".
+%%% Toto zadání NENÍ součástí elektronické verze práce, nescanovat.
+
+%%% Na tomto místě mohou být napsána případná poděkování (vedoucímu práce,
+%%% konzultantovi, tomu, kdo zapůjčil software, literaturu apod.)
+
+%% on tam měl %% \openright
+
+\noindent
+Dedication.
+
+\newpage
+
+%%% Strana s čestným prohlášením k diplomové práci
+
+\vglue 0pt plus 1fill
+
+\noindent
+I declare that I carried out this master thesis independently, and only with the cited
+sources, literature and other professional sources.
+
+\medskip\noindent
+I understand that my work relates to the rights and obligations under the Act No.
+121/2000 Coll., the Copyright Act, as amended, in particular the fact that the Charles
+University in Prague has the right to conclude a license agreement on the use of this
+work as a school work pursuant to Section 60 paragraph 1 of the Copyright Act.
+
+\vspace{10mm}
+
+\hbox{\hbox to 0.5\hsize{%
+In ........ date ............
+\hss}\hbox to 0.5\hsize{%
+signature of the author
+\hss}}
+
+\vspace{20mm}
+\newpage
+
+
+%%% Povinná informační strana diplomové práce
+
+\vbox to 0.5\vsize{
+\setlength\parindent{0mm}
+\setlength\parskip{5mm}
+
+Název práce:
+Název práce
+% přesně dle zadání
+
+Autor:
+Jméno a příjmení autora
+
+Katedra:  % Případně Ústav:
+Název katedry či ústavu, kde byla práce oficiálně zadána
+% dle Organizační struktury MFF UK
+
+Vedoucí diplomové práce:
+Jméno a příjmení s tituly, pracoviště
+% dle Organizační struktury MFF UK, případně plný název pracoviště mimo MFF UK
+
+Abstrakt:
+% abstrakt v rozsahu 80-200 slov; nejedná se však o opis zadání diplomové práce
+
+Klíčová slova:
+% 3 až 5 klíčových slov
+
+\vss}\nobreak\vbox to 0.49\vsize{
+\setlength\parindent{0mm}
+\setlength\parskip{5mm}
+
+Title:
+% přesný překlad názvu práce v angličtině
+
+Author:
+Jméno a příjmení autora
+
+Department:
+Název katedry či ústavu, kde byla práce oficiálně zadána
+% dle Organizační struktury MFF UK v angličtině
+
+Supervisor:
+Jméno a příjmení s tituly, pracoviště
+% dle Organizační struktury MFF UK, případně plný název pracoviště
+% mimo MFF UK v angličtině
+
+Abstract:
+% abstrakt v rozsahu 80-200 slov v angličtině; nejedná se však o překlad
+% zadání diplomové práce
+
+Keywords:
+% 3 až 5 klíčových slov v angličtině
+
+\vss}
+
+\newpage
+
+
 \tableofcontents	
 	
-\chapter{Introduction}
-
+%\chapter{Introduction}
+\chapter*{Introduction}
+\addcontentsline{toc}{chapter}{Introduction}
 	
 \chapter{Definitions}
 	
 	Let us first say some basic definitions.
 		
-	\section{Lambda term}
-		
-		Let $V$ be set of {\it variable names}.  \\* 
-		Let $C$ be set of {\it constant names}.	 \\*		
-		Then $\Lambda$ is set of {\it $\lambda$-terms} inductively defined as follows:
-		
-		\begin{align*}
-			 x   \in V                 &\Rightarrow     x   \in \Lambda \\
-			 c   \in C                 &\Rightarrow     c   \in \Lambda \\
-			 M,N \in \Lambda           &\Rightarrow ( M N ) \in \Lambda \\
-			 x   \in V , M \in \Lambda &\Rightarrow ( \lambda x . M ) \in \Lambda 
-		\end{align*} 
+\section{Lambda term}
+	
+	Let $V$ be set of {\it variable names}.  \\* 
+	Let $C$ be set of {\it constant names}.	 \\*		
+	Then $\Lambda$ is set of {\it $\lambda$-terms} inductively defined as follows:
+	
+	\begin{align*}
+		 x   \in V                 &\Rightarrow     x   \in \Lambda \\
+		 c   \in C                 &\Rightarrow     c   \in \Lambda \\
+		 M,N \in \Lambda           &\Rightarrow ( M N ) \in \Lambda \\
+		 x   \in V , M \in \Lambda &\Rightarrow ( \lambda x . M ) \in \Lambda 
+	\end{align*} 
 	
 \section{Type}
 
@@ -221,7 +325,8 @@ Prague 2013
 	It allows as to use the inference rule to derive statement
 	\mbox{ $\Gamma_{n+1} \vdash M_{n+1} : \sigma_{n+1}$ }.
 	 
-	For deriving statements including types of a form $(\sigma \rightarrow \tau)$ are essential those two 
+	For deriving statements including types of a form 
+	$(\sigma \rightarrow \tau)$ are essential those two 
 	inference rules:
 	
 	\begin{equation*}
@@ -347,49 +452,50 @@ $(\sigma \rightarrow \tau) \rightarrow (\sigma \rightarrow \tau)$
 with $\Gamma = \{\}$.
 \begin{align*}
 	& ((\sigma \rightarrow \tau) \rightarrow (\sigma \rightarrow \tau),\{\}) \\ 
-	\longmapsto & \bigg( \mbox{ {\Large $\lambda$ f . }}
+	\longmapsto & \Big( \mbox{ {\Large $\lambda$f.}}
 	  ( \sigma \rightarrow \tau , \{ (f,\sigma \rightarrow \tau) \} ) 
-	\quad \bigg)
+	~ \Big)
 	\\
 	\longmapsto & 
-	\bigg( \mbox{ {\Large $\lambda$ f . }}
-		\bigg( \mbox{ {\Large $\lambda$ x . }}
+	\Big( \mbox{ {\Large $\lambda$f. }}
+		\Big( \mbox{ {\Large $\lambda$x. }}
 	  	 	( \tau , \{ (f,\sigma \rightarrow \tau) , (x,\sigma) \} ) 
-		\quad \bigg)  	 
-	\quad \bigg)
+		~ \Big)  	 
+	~ \Big)
 	\\
 	\longmapsto & 
-	\bigg( \mbox{ {\Large $\lambda$ f . }}
-		\bigg( \mbox{ {\Large $\lambda$ x . }}	  	 	
-	  	 	\bigg( 
+	\Big( \mbox{ {\Large $\lambda$f. }}
+		\Big( \mbox{ {\Large $\lambda$x. }}	  	 	
+	  	 	\Big( 
 	  	 	  ( \sigma \rightarrow \tau , \{ (f,\sigma \rightarrow \tau) , (x,\sigma) \} ) 
 			  \mbox{ \Vtextvisiblespace[1em] } 
-			  ( \sigma , \{ (f,\sigma \rightarrow \tau) , (x,\sigma) \} ) \bigg) 
-		\quad \bigg)  	 
-	\quad \bigg)
+			  ( \sigma , \{ (f,\sigma \rightarrow \tau) , (x,\sigma) \} )  \Big) 
+		~ \Big)  	 
+	 ~ \Big)
 	\\
 	\longmapsto & 
-	\bigg( \mbox{ {\Large $\lambda$ f . }}
-		\bigg( \mbox{ {\Large $\lambda$ x . }}	  	 	
-	  	 	\bigg( 
+	\Big( \mbox{ {\Large $\lambda$f. }}
+		\Big( \mbox{ {\Large $\lambda$x. }}	  	 	
+	  	 	\Big( 
 	  	 	  \mbox{ {\Large f}} 
 			  \mbox{ \Vtextvisiblespace[1em] } 
-			  ( \sigma , \{ (f,\sigma \rightarrow \tau) , (x,\sigma) \} ) \bigg) 
-		\quad \bigg)  	 
-	\quad \bigg)		
+			  ( \sigma , \{ (f,\sigma \rightarrow \tau) , (x,\sigma) \} ) \Big) 
+		~ \Big)  	 
+	~ \Big)		
 	\\
 	\longmapsto & 
-	\bigg( \mbox{ {\Large $\lambda$ f . }}
-		\bigg( \mbox{ {\Large $\lambda$ x . }}	  	 	
-	  	 	\bigg( 
+	\Big( \mbox{ {\Large $\lambda$f. }}
+		\Big( \mbox{ {\Large $\lambda$x. }}	  	 	
+	  	 	\Big( 
 	  	 	  \mbox{ {\Large f}} 
 			  \mbox{ \Vtextvisiblespace[1em] } 
-			  \mbox{{\Large x}} \bigg) 
-		\quad \bigg)  	 
-	\quad \bigg)
+			  \mbox{{\Large x}} \Big) 
+		~ \Big)  	 
+	~ \Big)
 \end{align*}
 
 \subsection{"Barendregt-like" inference and grammar rules}
+\label{barlike}
 
 Inference rule 1: 
 \[
@@ -433,7 +539,41 @@ Inference rule 2:
 
 
 
-	\section{Inhabitation tree}
+\section{Inhabitation tree}
+
+Now we will introduce \textit{Inhabitation tree}, structure slightly different from
+\textit{Inhabitation machine}, which was introduced in \cite{barendregt10} by Henk Barendregt.
+We can think about Inhabitation tree as about unfolded Inhabitation machine.
+\\\\
+\textbf{TODO}: TALK ABOUT And-Or-graph \\
+\textbf{TODO}: TALK ABOUT "Barendregt-like" subsection \ref{barlike}
+\\\\
+Let's see some example: 
+
+\begin{align*}
+\sigma =& ~ \mathbb{B} \rightarrow  \mathbb{B} \rightarrow  \mathbb{B} \\ 
+\Gamma =& \{ ~ true : \mathbb{B}  \\
+        &  , ~ nand :  \mathbb{B} \rightarrow \mathbb{B} \rightarrow \mathbb{B} ~ \}
+\end{align*}
+
+
+\Tree
+[.\text{ $\mathbb{B} \rightarrow \mathbb{B} \rightarrow \mathbb{B}$ }  
+	[.\textbf{$\lambda$x_1 x_2 } 
+		[.\text{ $\mathbb{B}$ } 
+			\textbf{true}  
+			[.\textbf{nand} 
+				\qroof{ ~~ $\dotsb$ ~~ }.\text{ $\mathbb{B}$ }
+				\qroof{ ~~ $\dotsb$ ~~ }.\text{ $\mathbb{B}$ } 
+			]
+			\textbf{x_1}
+			\textbf{x_2}
+		]
+	]
+]
+
+		
+	
 		\subsection{Inhabitation Machine}
 	\section{Roadmap}
 	\section{Conversion to SKI combinators}
@@ -470,11 +610,21 @@ Inference rule 2:
 		\section{Boolean Alternate}
 	
 
-\chapter{Conclusion}
-	
+%\chapter{Conclusion}
+\chapter*{Conclusion}
+\addcontentsline{toc}{chapter}{Conclusion}	
 	
 
+\begin{thebibliography}{9}
 
+\bibitem{barendregt10}
+  Henk Barendregt, Wil Dekkers, Richard Statman,
+  \emph{Lambda Calculus With Types}.
+  Cambridge University Press,
+  2010. \\
+  \url{http://www.cs.ru.nl/~henk/book.pdf}
+
+\end{thebibliography}
 
 	
 	
