@@ -520,6 +520,24 @@ Inference rule 1:
 	     \tau_1 \rightarrow \dots \rightarrow \tau_n \rightarrow \alpha }
 \]
 \\
+Proof of correctness:
+\[
+	\dfrac{
+		\dfrac
+		 {\Gamma \cup \{ (x_1,\tau_1),\dots,(x_n,\tau_n) \} \vdash M : \alpha}
+		 {\dfrac
+		   {\Gamma \cup \{ (x_1,\tau_1),\dots,(x_{n-1},\tau_{n-1})\} \cup 
+		                \{(x_n,\tau_n) \} \vdash M : \alpha}
+		   {\dfrac{\Gamma \cup \{ (x_1,\tau_1),\dots,(x_{n-1},\tau_{n-1})\}  
+		                \vdash (\lambda x_n . M) : \tau_n \rightarrow \alpha}
+				  { \vdots }		   
+		   }
+		 }		 
+	 }
+	     {\Gamma \vdash (\lambda x_1 \dots x_n . M) : 
+	     \tau_1 \rightarrow \dots \rightarrow \tau_n \rightarrow \alpha }
+\]
+\\
 ... there is a grammar rule:
 \[ 
 	( \tau_1 \rightarrow \dots \rightarrow \tau_n \rightarrow \alpha , \Gamma )  \longmapsto
@@ -537,6 +555,31 @@ Inference rule 2:
 	       \Gamma \vdash M_m : \rho_m        
 	      }
 	     {\Gamma \vdash (f M_1 \dots M_m) : \alpha}
+\]
+\\
+Proof of correctness (\textbf{TODO REPAIR} Conceptually it is ok but there is sazba-bug somewhere): 
+\[
+   \dfrac
+     {\dfrac
+      {\dfrac
+       {\dfrac         
+         {\dfrac  
+          {\dfrac
+           {\boxed{(f , \rho_1 \rightarrow \dots \rightarrow \rho_m \rightarrow \alpha ) \in \Gamma}}
+           {\Gamma \vdash f : \rho_1 \rightarrow \dots \rightarrow \rho_m \rightarrow \alpha}
+           \quad
+           \boxed{\Gamma \vdash M_1 : \rho_1} }
+          {\Gamma \vdash (f M_1) : \rho_2 \rightarrow \dots \rightarrow \rho_m \rightarrow \alpha }
+          }{\vdots} 
+         \quad 
+         \ddots }
+       {\Gamma \vdash (f M_1 \dots M_{m-2}) : \rho_{m-1} \rightarrow \rho_m \rightarrow \alpha}
+       \quad
+       \boxed{\Gamma \vdash M_{m-1} : \rho_{m-1}}  }
+      {\Gamma \vdash (f M_1 \dots M_{m-1}) : \rho_m \rightarrow \alpha}       
+      \quad 
+      \boxed{\Gamma \vdash M_m : \rho_m} }
+	 {\Gamma \vdash (f M_1 \dots M_m) : \alpha}
 \]
 \\
 ... there is a grammar rule:

@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.1415926-2.4-1.40.13 (MiKTeX 2.9) (preloaded format=pdflatex 2013.4.26)  7 MAY 2013 01:19
+This is pdfTeX, Version 3.1415926-2.4-1.40.13 (MiKTeX 2.9) (preloaded format=pdflatex 2013.4.26)  7 MAY 2013 02:32
 entering extended mode
 **thesis.tex
 (C:\Users\sekol\Documents\GitHub\fishtron\tex\thesis.tex
@@ -648,7 +648,7 @@ LaTeX Info: Redefining \nameref on input line 59.
 (C:\Users\sekol\Documents\GitHub\fishtron\tex\thesis.out)
 \@outlinefile=\write3
 
-<logomff.png, id=155, 1367.1075pt x 1304.62407pt>
+<logomff.png, id=159, 1367.1075pt x 1304.62407pt>
 File: logomff.png Graphic file (type png)
  <use logomff.png>
 Package pdftex.def Info: logomff.png used on input line 95.
@@ -765,36 +765,41 @@ Overfull \hbox (5.89113pt too wide) in paragraph at lines 511--511
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 529--531
+Underfull \hbox (badness 10000) in paragraph at lines 547--549
 
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 553--556
+Overfull \hbox (46.49174pt too wide) detected at line 583
+[]
+ []
+
+[10]
+Underfull \hbox (badness 10000) in paragraph at lines 596--599
 
  []
 
-[10] [11]
-Underfull \hbox (badness 10000) in paragraph at lines 666--667
+[11]
+Underfull \hbox (badness 10000) in paragraph at lines 709--710
 
  []
 
-[12]
-Underfull \hbox (badness 10000) in paragraph at lines 745--751
-
- []
-
-
-Underfull \hbox (badness 10000) in paragraph at lines 745--751
+[12] [13]
+Underfull \hbox (badness 10000) in paragraph at lines 788--794
 
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 745--751
+Underfull \hbox (badness 10000) in paragraph at lines 788--794
 
  []
 
-[13] [14]
+
+Underfull \hbox (badness 10000) in paragraph at lines 788--794
+
+ []
+
+[14]
 Chapter 2.
 [15
 
@@ -805,37 +810,31 @@ Chapter 3.
 ] [17
 
 ]
-Package atveryend Info: Empty hook `BeforeClearDocument' on input line 811.
+Package atveryend Info: Empty hook `BeforeClearDocument' on input line 854.
  [18
 
 ]
-Package atveryend Info: Empty hook `AfterLastShipout' on input line 811.
+Package atveryend Info: Empty hook `AfterLastShipout' on input line 854.
  (C:\Users\sekol\Documents\GitHub\fishtron\tex\thesis.aux)
-Package atveryend Info: Executing hook `AtVeryEndDocument' on input line 811.
-Package atveryend Info: Executing hook `AtEndAfterFileList' on input line 811.
+Package atveryend Info: Executing hook `AtVeryEndDocument' on input line 854.
+Package atveryend Info: Executing hook `AtEndAfterFileList' on input line 854.
+Package rerunfilecheck Info: File `thesis.out' has not changed.
+(rerunfilecheck)             Checksum: E033FEF93AAACCB5710420A39104E5BF;2600.
 
-
-Package rerunfilecheck Warning: File `thesis.out' has changed.
-(rerunfilecheck)                Rerun to get outlines right
-(rerunfilecheck)                or use package `bookmark'.
-
-Package rerunfilecheck Info: Checksums for `thesis.out':
-(rerunfilecheck)             Before: B3D5B90121E730DC74251DF937F8ADC8;2501
-(rerunfilecheck)             After:  E033FEF93AAACCB5710420A39104E5BF;2600.
 
 LaTeX Font Warning: Size substitutions with differences
 (Font)              up to 1.08846pt have occurred.
 
-Package atveryend Info: Empty hook `AtVeryVeryEnd' on input line 811.
+Package atveryend Info: Empty hook `AtVeryVeryEnd' on input line 854.
  ) 
 Here is how much of TeX's memory you used:
- 6405 strings out of 493921
- 91367 string characters out of 3144876
- 191020 words of memory out of 3000000
- 9541 multiletter control sequences out of 15000+200000
+ 6406 strings out of 493921
+ 91385 string characters out of 3144876
+ 193020 words of memory out of 3000000
+ 9542 multiletter control sequences out of 15000+200000
  18688 words of font info for 72 fonts, out of 3000000 for 9000
  841 hyphenation exceptions out of 8191
- 29i,23n,31p,237b,386s stack positions out of 5000i,500n,10000p,200000b,50000s
+ 29i,23n,37p,237b,388s stack positions out of 5000i,500n,10000p,200000b,50000s
 <C:/Program Files (x86)/MiKTeX 2.9/fonts/type1/public/amsfonts/cm/cmbx10.pfb>
 <C:/Program Files (x86)/MiKTeX 2.9/fonts/type1/public/amsfonts/cm/cmbx12.pfb><C
 :/Program Files (x86)/MiKTeX 2.9/fonts/type1/public/amsfonts/cm/cmbxti10.pfb><C
@@ -856,9 +855,9 @@ s/type1/public/amsfonts/cm/cmti12.pfb><C:/Program Files (x86)/MiKTeX 2.9/fonts/
 type1/public/amsfonts/cm/cmtt12.pfb><C:/Program Files (x86)/MiKTeX 2.9/fonts/ty
 pe1/public/amsfonts/euler/eufm10.pfb><C:/Program Files (x86)/MiKTeX 2.9/fonts/t
 ype1/public/amsfonts/symbols/msbm10.pfb>
-Output written on thesis.pdf (18 pages, 574833 bytes).
+Output written on thesis.pdf (18 pages, 577086 bytes).
 PDF statistics:
- 392 PDF objects out of 1000 (max. 8388607)
+ 396 PDF objects out of 1000 (max. 8388607)
  69 named destinations out of 1000 (max. 500000)
- 310 words of extra memory for PDF output out of 10000 (max. 10000000)
+ 318 words of extra memory for PDF output out of 10000 (max. 10000000)
 
