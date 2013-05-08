@@ -10,17 +10,22 @@
 
 
 \usepackage[utf8]{inputenc}
-
 \usepackage{qtree}
-
+\usepackage{xspace}
 \usepackage{amsmath}
 \usepackage{amsfonts}
 \usepackage{amsthm}
-
-
 \usepackage{graphicx}
-
 \usepackage{hyperref}
+
+
+\newcommand{\Lets}{Let us }
+\newcommand{\lterm}{$\lambda$-term\xspace}
+\newcommand{\lterms}{$\lambda$-terms\xspace}
+
+\newcommand{\turst}[3]{$#1 \vdash #2 : #3$\xspace}
+\newcommand{\GMS}{\turst{\Gamma}{M}{\sigma}}
+
 
 %% Balíček hyperref, kterým jdou vyrábět klikací odkazy v PDF,
 %% ale hlavně ho používáme k uložení metadat do PDF (včetně obsahu).
@@ -243,7 +248,7 @@ Keywords:
 	
 \chapter{Definitions}
 	
-	Let us first say some basic definitions.
+	\Lets first say some basic definitions.
 
 \section{Genetic Programming}
 	\subsection{Term generating}
@@ -255,7 +260,7 @@ Keywords:
 	
 	Let $V$ be set of {\it variable names}.  \\* 
 	Let $C$ be set of {\it constant names}.	 \\*		
-	Then $\Lambda$ is set of {\it $\lambda$-terms} inductively defined as follows:
+	Then $\Lambda$ is set of {\it \lterms} inductively defined as follows:
 	
 	\begin{align*}
 		 x   \in V \cup C          &\Rightarrow     x   \in \Lambda \\
@@ -288,7 +293,7 @@ Keywords:
 	
 \section{Statement of a form $M : \sigma$}
 
-	Let $\Lambda$ be set of {\it $\lambda$-terms}. \\*
+	Let $\Lambda$ be set of {\it \lterms}. \\*
 	Let $\mathbb{T}$ be set of {\it types}.       \\*
 	A {\it statement} $M : \sigma$ is a pair $(M,\sigma) \in \Lambda \times \mathbb{T}$. \\*
 	$M : \sigma$ is vocalized as {\it "$M$ has type $\sigma$"}.\footnote{ 
@@ -315,18 +320,18 @@ Keywords:
 	
 	
 	
-\section{Statement of a form $\Gamma \vdash M : \sigma$}
+\section{Statement of a form \GMS}
 
-	By writing $\Gamma \vdash M : \sigma$ we say 
+	By writing \GMS we say 
 	{\it statement $M : \sigma$ is derivable from context $\Gamma$ }.
 
-	We construct valid statements of form $\Gamma \vdash M : \sigma$ by using inference rules.
+	We construct valid statements of form \GMS by using inference rules.
 	
 		
 \section{Inference rule}		
 	
 	Basically speaking, inference rules are used for deriving statements of a form 
-	$\Gamma \vdash M : \sigma$ from yet derived statements of such a form.
+	\GMS from yet derived statements of such a form.
 	Those inference rules are written in the following form:
 	
 	\begin{equation*}
@@ -369,7 +374,7 @@ Keywords:
 		     {\Gamma \vdash x : \sigma}
 	\end{equation*}	
 	
-	Let us consider an example statement of a form $\Gamma \vdash M : \sigma$ :
+	\Lets consider an example statement of a form \GMS :
 	
 	\[
 		\{\} \vdash (\lambda f . (\lambda x . (f x) )) : 
@@ -400,13 +405,13 @@ Keywords:
 	
 \section{Term generating grammar}
 
-Inference rules are good for deriving statements of a form $\Gamma \vdash M : \sigma$, but our
-goal is slightly different; we would like to generate many $\lambda$-terms M for a given type 
+Inference rules are good for deriving statements of a form \GMS, but our
+goal is slightly different; we would like to generate many \lterms M for a given type 
 $\sigma$ and context $\Gamma$.
 
 Our approach will be to take each inference rule and transform it to a rule of term generating
 grammar. With this term generating grammar it will be much easier to reason about generating 
-$\lambda$-terms.
+\lterms.
 	
 It won't be a grammar in classical sense because we will be operating with infinite sets of
 nonterminal symbols and rules. \footnote{TODO : mention terminal symbols - situation around 
@@ -415,7 +420,7 @@ variables and their construction with ' symbol.}
 Let $Non = Type \times Context $ be our {\it nonterminal} set. 
 So for every $i \in Non$ is $i = (\sigma_i , \Gamma_i )$.
 
-Let's consider each relevant inference rule and its corresponding grammar rule.
+\Lets consider each relevant inference rule and its corresponding grammar rule.
 
 First inference rule is {\it implication elimination} also known as 
 {\it modus ponens}: 
@@ -466,9 +471,9 @@ there is a grammar rule:
 \]
 \\
 
-We will demonstrate $\lambda$-term generation on example. 
+We will demonstrate \lterm generation on example. 
 Again on $(\lambda f . (\lambda x . (f x) ))$. 
-We would like to generate $\lambda$-term of a type 
+We would like to generate \lterm of a type 
 $(\sigma \rightarrow \tau) \rightarrow (\sigma \rightarrow \tau)$
 with $\Gamma = \{\}$.
 \begin{align*}
@@ -618,7 +623,7 @@ Now we will introduce \textit{Inhabitation tree}, structure slightly different f
 \textit{Inhabitation machine}, which was introduced in \cite{barendregt10} by Henk Barendregt.
 We can think about Inhabitation tree as about unfolded Inhabitation machine.
 The motivation for using Inhabitation trees is belief that it will help us 
-reason about generation of $\lambda$-terms 
+reason about generation of \lterms 
 of a given type $\sigma$ and with a given context $\Gamma$.  
 
 \subsection{Definition of Inhabitation tree}
@@ -703,7 +708,7 @@ Compare this case with corresponding grammar rule:
 	}}( \alpha , \Gamma \cup \{ (x_1,\tau_1),\dots,(x_n,\tau_n) \} ) \quad \bigg)
 \]
 ~\\
-Let's consider following $(\sigma,\Gamma)$ as a simple example:
+\Lets consider following $(\sigma,\Gamma)$ as a simple example:
 
 \begin{align*}
 \sigma =& ~ \mathbb{B} \rightarrow  \mathbb{B} \rightarrow  \mathbb{B} \\ 
@@ -754,7 +759,7 @@ Which results in following tree:
 
 
 \subsection{And-or tree and searching in Inhabitation tree}
-Let us consider following definition of 
+\Lets consider following definition of 
 \textit{And-or tree}\footnote{
 \textbf{TODO}: Mention that on WIKI there is more general definition, but 
 for our purposes is this one sufficient.}:
@@ -772,7 +777,7 @@ subtree of $T$ such that it follows these conditions:
 	      and not at least one ..or CHANGE the def. }   
 \end{itemize}
 ~
-Let us now consider following labeling of Inhabitation tree: 
+\Lets now consider following labeling of Inhabitation tree: 
 
 \begin{itemize}
   \item \textbf{Type nodes}   are labeled as \textbf{or-nodes}.   
@@ -789,14 +794,14 @@ Selection of all the child nodes in \textit{symbol node} corresponds to
 rewriting all the nonterminal symbols in string that is being generated.  
 
 The motivation for defining \textit{solving} of a And-or tree the way we did is that
-a found tree $T'$ corresponds to generated $\lambda$-term. 
+a found tree $T'$ corresponds to generated \lterm. 
 In order to understand this correspondence let's now talk about various tree representations
-of $\lambda$-terms.
+of \lterms.
 
-\subsection{Tree representations of $\lambda$-terms}
+\subsection{Tree representations of \lterms}
 
-From the definition of $\lambda$-term (\ref{deflam}) we can straightforwardly derive 
-the classical tree representation for $\lambda$-terms. Term M is translated into tree $T[M]$ by following rules:
+From the definition of \lterm (\ref{deflam}) we can straightforwardly derive 
+the classical tree representation for \lterms. Term M is translated into tree $T[M]$ by following rules:
 
 \begin{itemize}
 	\item $x \in V \cup C$ translates into \textit{leaf} $x$.
@@ -825,11 +830,11 @@ tree node like this:
 \end{itemize}
 
 As this representation comes directly from definition it is evident 
-that it covers all possible $\lambda$-terms.
+that it covers all possible \lterms.
 
 For representing expressions as trees it is however more common use a little different
 representation. It will also be the representation suitable for showing 
-that \textit{solving} Inhabitation tree generates wanted $\lambda$-term.
+that \textit{solving} Inhabitation tree generates wanted \lterm.
 
 \begin{itemize}
     \item $x \in V \cup C$ translates into \textit{leaf} $x$.
@@ -848,20 +853,20 @@ that \textit{solving} Inhabitation tree generates wanted $\lambda$-term.
 			] 
 \end{itemize}
 
-Notice that this representation does not cover all $\lambda$-terms, 
+Notice that this representation does not cover all \lterms, 
 e.g. $(\lambda x.x) y$ is not expressible in it. But it does not bother us.  
 \\\\
-Let's now consider representation for \textit{typed $\lambda$-terms}.
+\Lets now consider representation for \textit{typed \lterms}.
 Straightforward approach would be to add to each node a type entry which 
-would be the type of the $\lambda$-term corresponding to subtree having this
+would be the type of the \lterm corresponding to subtree having this
 node as the root node. 
 
 Approach more suitable for our purpose is to add a special type node above each node.
 More specifically:
 
-Let us consider tree $t$ corresponding to a $\lambda$-term of a type
+\Lets consider tree $t$ corresponding to a \lterm of a type
 $\sigma$ with root $r$ and subtrees $s_1 , \dots , s_n$. 
-Then corresponding tree $TT[t]$ for typed $\lambda$-term is 
+Then corresponding tree $TT[t]$ for typed \lterm is 
 obtained from the tree $t$ as follows:  
 
 \begin{equation*}
@@ -889,13 +894,13 @@ TT[
 \end{equation*}
 	  	
 Now we can finally put the pieces together. 
-Every solution to a Inhabitation tree has this just described tree form of a typed $\lambda$-term. 
+Every solution to a Inhabitation tree has this just described tree form of a typed \lterm. 
  
 
 ~\\
 \textbf{TODO} 
 \begin{itemize}
-\item EXAMPLES of tree representations of $\lambda$-terms  
+\item EXAMPLES of tree representations of \lterms  
 \item TALK (more?) ABOUT "Barendregt-like" subsection \ref{barlike}\\
 		Things about $\beta\eta$ normal form, etc.    
 \end{itemize}
