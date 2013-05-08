@@ -244,23 +244,28 @@ Keywords:
 \chapter{Definitions}
 	
 	Let us first say some basic definitions.
+
+\section{Genetic Programming}
+	\subsection{Term generating}
+	\subsection{Crossover}
+	\subsection{Mutation}
 		
 \section{Lambda term}
+\label{deflam}
 	
 	Let $V$ be set of {\it variable names}.  \\* 
 	Let $C$ be set of {\it constant names}.	 \\*		
 	Then $\Lambda$ is set of {\it $\lambda$-terms} inductively defined as follows:
 	
 	\begin{align*}
-		 x   \in V                 &\Rightarrow     x   \in \Lambda \\
-		 c   \in C                 &\Rightarrow     c   \in \Lambda \\
+		 x   \in V \cup C          &\Rightarrow     x   \in \Lambda \\
 		 M,N \in \Lambda           &\Rightarrow ( M N ) \in \Lambda \\
 		 x   \in V , M \in \Lambda &\Rightarrow ( \lambda x . M ) \in \Lambda 
 	\end{align*} 
 
 	\textbf{TODO} 
 	\begin{itemize} 
-		\item TALK ABOUT "parenthesis" conventions. 
+		\item TALK ABOUT "parenthesis" conventions (and packing of lambda abstractions). 
 	\end{itemize}
 	
 \section{Type}
@@ -783,28 +788,133 @@ grammar rule in order to rewrite nonterminal symbol.
 Selection of all the child nodes in \textit{symbol node} corresponds to 
 rewriting all the nonterminal symbols in string that is being generated.  
 
+The motivation for defining \textit{solving} of a And-or tree the way we did is that
+a found tree $T'$ corresponds to generated $\lambda$-term. 
+In order to understand this correspondence let's now talk about various tree representations
+of $\lambda$-terms.
 
+\subsection{Tree representations of $\lambda$-terms}
 
-~\\\\
-\textbf{TODO}: TALK ABOUT : By \textit{solving} And-or tree for Inhabitation tree
-               we obtain that typed tree notation for typed $\lambda$-term,
-               which must be firstly INTRODUCED.   \\
-\textbf{TODO}: TALK (more?) ABOUT "Barendregt-like" subsection \ref{barlike}
-\\\\ 
+From the definition of $\lambda$-term (\ref{deflam}) we can straightforwardly derive 
+the classical tree representation for $\lambda$-terms. Term M is translated into tree $T[M]$ by following rules:
+
+\begin{itemize}
+	\item $x \in V \cup C$ translates into \textit{leaf} $x$.
+	\item $(M N)$ translates into tree\\
+		\Tree
+			[.@	
+		 		\text{$T[M]$}
+		 		\text{$T[N]$}		 			
+			] 
+	\item $\lambda x . M$ translates into tree\\
+	 	\Tree
+			[.\text{$\lambda x$}	
+		 	 	\text{$T[M]$}	
+			] 
+\end{itemize}
+
+We can enhance this representation by compressing consecutive lambda abstractions into one
+tree node like this: 
+
+\begin{itemize}
+	\item $\lambda x_1 \dots x_n . M$ translates into tree\\
+	 	\Tree
+			[.\text{$\lambda x_1 \dots x_n$ }	
+		 	 	\text{$T[M]$}	
+			] 
+\end{itemize}
+
+As this representation comes directly from definition it is evident 
+that it covers all possible $\lambda$-terms.
+
+For representing expressions as trees it is however more common use a little different
+representation. It will also be the representation suitable for showing 
+that \textit{solving} Inhabitation tree generates wanted $\lambda$-term.
+
+\begin{itemize}
+    \item $x \in V \cup C$ translates into \textit{leaf} $x$.
+	\item $(f M_1 M_2 \dots M_n)$ where $f \in V \cup C, n \geq 1$ translates into tree\\
+		\Tree
+			[.f	
+		 		\text{$T[M_1]$}
+		 		\text{$T[M_2]$}
+		 		\text{$\dots$}
+		 		\text{$T[M_n]$}		 				 			
+			] 
+	\item $\lambda x_1 \dots x_n . M$ translates into tree\\
+	 	\Tree
+			[.\text{$\lambda x_1 \dots x_n$ }	
+		 	 	\text{$T[M]$}	
+			] 
+\end{itemize}
+
+Notice that this representation does not cover all $\lambda$-terms, 
+e.g. $(\lambda x.x) y$ is not expressible in it. But it does not bother us.  
+\\\\
+Let's now consider representation for \textit{typed $\lambda$-terms}.
+Straightforward approach would be to add to each node a type entry which 
+would be the type of the $\lambda$-term corresponding to subtree having this
+node as the root node. 
+
+Approach more suitable for our purpose is to add a special type node above each node.
+More specifically:
+
+Let us consider tree $t$ corresponding to a $\lambda$-term of a type
+$\sigma$ with root $r$ and subtrees $s_1 , \dots , s_n$. 
+Then corresponding tree $TT[t]$ for typed $\lambda$-term is 
+obtained from the tree $t$ as follows:  
+
+\begin{equation*}
+\mbox{ 
+TT[
+\Tree
+	[.r 	
+	  	  \text{$s_1$}
+		  \text{$s_2$}
+		  \text{$\dots$}
+		  \text{$s_n$}
+	] 
+}]=
+\mbox{
+\Tree
+	[.\text{$\sigma$ }
+	    [.r 	
+	  	  \text{$TT[s_1]$}
+		  \text{$TT[s_2]$}
+		  \text{$\dots$}
+		  \text{$TT[s_n]$}
+		]	  	
+	] 
+}
+\end{equation*}
+	  	
+Now we can finally put the pieces together. 
+Every solution to a Inhabitation tree has this just described tree form of a typed $\lambda$-term. 
+ 
+
+~\\
+\textbf{TODO} 
+\begin{itemize}
+\item EXAMPLES of tree representations of $\lambda$-terms  
+\item TALK (more?) ABOUT "Barendregt-like" subsection \ref{barlike}\\
+		Things about $\beta\eta$ normal form, etc.    
+\end{itemize}
 		
 
 \subsection{Our approach to \textit{solving} Inhabitation machine}
 
+\subsubsection{A* algorithm}
+
+
 \subsection{Inhabitation Machine}
+\textbf{TODO} 
+\begin{itemize}
+\item DESCRIBE Inhabitation Machine...
+\end{itemize}
 
 
 \section{Roadmap}
 	\section{Conversion to SKI combinators}
-
-	\section{Genetic Programming}
-		\subsection{Term generating}
-		\subsection{Crossover}
-		\subsection{Mutation}
 
 \chapter{ Designed system }	
 	\section{Top level view}
