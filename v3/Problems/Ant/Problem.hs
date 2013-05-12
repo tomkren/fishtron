@@ -5,7 +5,7 @@ import JSONUtils
 import DrawIM( imGraphInJSON )
 
 import TTerm (Typ(..),Context)
-import Problems.Utils 
+import ProblemUtils 
 import GP_Core (FitFun(FF5))
 import GP_Data (CTTGen(..))
 

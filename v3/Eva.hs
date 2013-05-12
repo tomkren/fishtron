@@ -6,26 +6,25 @@ import Data.List
 import Data.Map.Strict (Map)
 import qualified Data.Map.Strict as Map
 
-import System.Random
-import Control.Monad.State
-import Data.Typeable
-import Data.Time.Clock
+import System.Random       ( StdGen, getStdGen, split )
+import Control.Monad.State ( StateT, runStateT, put, get, liftIO )
+import Data.Typeable       ( Typeable )
+import Data.Time.Clock     ( getCurrentTime, diffUTCTime )
 
 import Text.JSON ( encode , JSValue )
 
 import ServerInterface (jsEmptyObj, stdoutCmd, writeNextOutput)
-
-
-
 import Heval (hevalsWith, hevals)
 import Utils (Randable(..),Logable(..))
 
 
 type Eva = StateT EvaState IO
 
+type JobID = Int
+
 data EvaState = EvaState {
      evaGen    :: StdGen ,
-     evaJobID  :: Maybe Int ,
+     evaJobID  :: Maybe JobID ,
      evaStdout :: String
   }
 
@@ -34,16 +33,10 @@ runEva eva = do
  gen <- getStdGen
  runEvaWith gen eva 
 
-setJobID :: Int -> Eva ()
-setJobID jobID = do
-  evaState <- get
-  put $ evaState{ evaJobID = Just jobID }
-
 runEvaWith :: StdGen -> Eva a -> IO a
 runEvaWith gen eva = do
  startTime <- getCurrentTime
  putStrLn $ "\nstdGen: " ++ show gen
- --((ret,gen'),stats) <- runStateT (runStateT eva gen) (Map.empty , Map.empty)  
  ( ret , evaState' ) <- runStateT eva (initEvaState gen)
  finishTime <- getCurrentTime
  putStrLn $ "Total time: " ++ show (diffUTCTime finishTime startTime) ++ "\n"
@@ -57,6 +50,10 @@ initEvaState gen = EvaState {
  }
 
 
+setJobID :: Int -> Eva ()
+setJobID jobID = do
+  evaState <- get
+  put $ evaState{ evaJobID = Just jobID }
 
 evalsWith :: (Typeable a) => String -> [String] -> a -> Eva [a]
 evalsWith file strs as = liftIO $ hevalsWith file strs as
@@ -81,7 +78,7 @@ sendJSON json = do
   case evaJobID evaState of
     Nothing    -> return ()
     Just jobID -> liftIO $ writeNextOutput jobID jsonStr
-      
+     
 
 evaSplitStdGen :: Eva StdGen
 evaSplitStdGen = do

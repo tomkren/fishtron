@@ -1,7 +1,7 @@
 module Problems.BigCtx.Problem where
 
 import TTerm (Typ(..),Context)
-import Problems.Utils 
+import ProblemUtils 
 import JSONUtils
 import GP_Core (FitFun(FF6))
 import GP_Data (CTTGen(..))

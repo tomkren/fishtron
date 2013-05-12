@@ -1,7 +1,7 @@
 module Problems.EvenParity.Problem where
 
 import TTerm (Typ(..),Context)
-import Problems.Utils 
+import ProblemUtils 
 import JSONUtils
 import GP_Core (FitFun(FF6))
 import GP_Data (CTTGen(..))
@@ -165,3 +165,9 @@ solution8 =
   nand) i) (head_ (tail_ x0)) (tail_ x0)) (head_ x0)))) x0
 
 -- end 'pokus'
+
+solution9 =
+  \ x0 -> foldr (s (s (k s) (s (k (s (k (&&)))) (s (s (k s) (s (k k) (s (k 
+   nand) i))) (s (k (s (s (k (&&)) i))) (s (k k) i))))) (s (k (s (s (k (||)) i
+   ))) (s (k k) i))) (foldr (k (s (s (k (||)) (s (s (k nor) i) i)) i)) (head_
+    (tail_ x0)) (tail_ x0)) x0

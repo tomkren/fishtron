@@ -5,7 +5,7 @@ import Data.List
 
 
 import TTerm          (Typ(..),Context)
-import Problems.Utils 
+import ProblemUtils 
  --( cttProblem5 , asType )
 
 import Text.JSON

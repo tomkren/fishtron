@@ -8,7 +8,7 @@ import TTerm (Typ(..),Context)
 --import Problems.Utils ( cttProblem5 , cttProblem3 , cttProblem' , cttProblem2' , cttProblem4 , asType )
 import Problems.SSR.Funs (ff)
 
-import Problems.Utils 
+import ProblemUtils 
 import GP_Core (FitFun(FF6))
 import GP_Data (CTTGen(..))
 

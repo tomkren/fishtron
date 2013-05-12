@@ -1,7 +1,7 @@
 module Problems.BA.Problem where
 
 --import Problems.Utils ( boolListProblem2 )
-import Problems.Utils 
+import ProblemUtils 
 import Text.JSON
 
 

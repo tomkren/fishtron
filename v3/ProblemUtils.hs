@@ -1,4 +1,4 @@
-module Problems.Utils (
+module ProblemUtils (
   cttProblem5,
   cttProblem4,
   cttProblem3,

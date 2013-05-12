@@ -14,7 +14,7 @@ module TTerm
 , toSki, toSki'
 ) where
 
-import Data.List ( nub, (\\) )
+import Data.List ( nub, (\\) , intercalate )
 import Data.Typeable ( Typeable )
 import Text.ParserCombinators.Parsec ( Parser, ParseError, parse, (<|>), eof, char, many1, noneOf, skipMany1, space )
 
@@ -28,8 +28,10 @@ import Utils ( newSymbol )
 type Symbol = String
 
 data Typ  = 
- Typ Symbol | 
- Typ :-> Typ
+ Typ Symbol    |
+ TypVar Symbol | 
+ TypFun Symbol [Typ] |
+ Typ :-> Typ 
  deriving (Eq,Ord)
 infixr 7 :->
 
@@ -229,7 +231,7 @@ instance Show Term where
   Lam x m -> "(\\ "++ x   ++ " -> " ++ show m ++")"
   App m n -> "("++ show m ++ " "    ++ show n ++")" 
 
-instance Show Typ where show = showTyp
+instance Show Typ where show = showTyp'
 
 
 showTyp :: Typ -> String
@@ -239,6 +241,8 @@ showTyp t | isTypNum t = show $ typeRank t
 showTyp' :: Typ -> String
 showTyp' (Typ t) = t
 showTyp' (a :-> b) = "(" ++ showTyp a ++ "->" ++ showTyp b ++ ")"
+showTyp' (TypVar a) = a
+showTyp' (TypFun f ts) = "(" ++ f ++ " " ++ (intercalate " " (map show ts) ) ++ ")" 
 
 -- eval -----------------------------------------------
 

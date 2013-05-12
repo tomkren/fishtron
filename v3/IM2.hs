@@ -4,9 +4,9 @@
 -- to nejdřív už dodělat když je to takle rozdělaný a až pak dyštak překopat.
 
 
+-- IM2 = přidání polymorfizmu
 
-
-module IM 
+module IM2 
  ( SearchOptions(..) 
  , defaultSearchOptions 
  , kozaSearchOptions
@@ -15,7 +15,7 @@ module IM
  , prove 
  ) where
 
-import TTerm (Symbol,Typ(..),TTerm(..),Context,typeArgs,ttermTyp,toSki,toSki',checkTyp)
+import TTerm (Symbol,Typ(..),TTerm(..),Context,ttermTyp,toSki,toSki',checkTyp)
 
 import TTree (CTT,mkCTT2)
 
@@ -29,6 +29,14 @@ import Data.Map (Map)
 import System.Random
 
 import qualified Data.PSQueue as Q
+
+
+typeArgz :: Typ -> ([Typ],Typ)
+typeArgz typ = case typ of
+ (a :-> b) -> let (  as, alpha) = typeArgz b
+               in (a:as, alpha)
+ typHead   -> ([],typHead)
+ 
 
 
 --proveAll :: Int -> Typ -> Context -> [CTT]
@@ -46,10 +54,10 @@ problemHeadPreproccess so =
 
 problemHeadPreproccess' :: Typ -> Context -> (Typ,Context,Context)
 problemHeadPreproccess' typ ctx = 
-  let (ts,alpha)  = typeArgs typ
-      ss          = map (\i->'x':show i) [0..]
-      problemHead = zip ss ts
-   in (Typ alpha , problemHead ++ ctx , problemHead )
+  let (ts,typHead) = typeArgz typ
+      ss           = map (\i->'x':show i) [0..]
+      problemHead  = zip ss ts
+   in ( typHead , problemHead ++ ctx , problemHead )
 
 
 
@@ -91,7 +99,7 @@ mkZTree so    = ZTree                  {
  } 
 
 
-data Tree = TreeApp  Symbol  SymbolOfAtomicType [Tree] 
+data Tree = TreeApp  Symbol  TypHead [Tree] 
           | TreeLam [Symbol] Typ  Tree
           | TreeTyp Typ
 
@@ -101,13 +109,13 @@ tree2tterm tree = case tree of
   TreeTyp _      -> t2tError "Tree must be without type-nodes."
   TreeLam [] _ _ -> t2tError "Lambda with no vars."
   TreeLam ss typ t -> 
-   let (typs,alpha) = typeArgs typ
+   let (typs,typHead) = typeArgz typ
        tt0 = tree2tterm t
-    in fst $ foldr (\(s,ty1) (tt,ty2)->let ty = ty1:->ty2 in(TLam s tt ty,ty) ) (tt0,Typ alpha) (zip ss typs)
-  TreeApp s alpha ts -> 
+    in fst $ foldr (\(s,ty1) (tt,ty2)->let ty = ty1:->ty2 in(TLam s tt ty,ty) ) (tt0,typHead) (zip ss typs)
+  TreeApp s typHead ts -> 
    let tts  = map tree2tterm ts
        tys  = map ttermTyp tts
-       sTyp = foldr (:->) (Typ alpha) tys
+       sTyp = foldr (:->) typHead tys
     in fst $ foldl (\(f,_:->ty) tt-> (TApp f tt ty,ty) ) (varOrVal s sTyp,sTyp) tts
 
  where
@@ -119,17 +127,22 @@ t2tError str = error $ "ERROR in tree2tterm : " ++ str
 
 
 
-data DTree = DTreeApp [Tree] Symbol SymbolOfAtomicType [Tree]
+data DTree = DTreeApp [Tree] Symbol TypHead [Tree]
            | DTreeLam [Symbol] Typ
 
 
-type Table = Map SymbolOfAtomicType (Set Entry)
+-- type Table = Map SymbolOfAtomicType (Set Entry)
+-- data Entry = Entry [Typ] Symbol deriving (Eq,Ord)
+
+type Table = Map TypHead (Set Entry)
 data Entry = Entry [Typ] Symbol deriving (Eq,Ord)
+
+type TypHead = Typ -- asser: nemelo by bejt (a:->b)
 
 type SymbolOfAtomicType = Symbol
 type PriorityQueue = Q.PSQ ZTree Int
 
-type Edge = (Symbol,[Typ],SymbolOfAtomicType)
+type Edge = (Symbol,[Typ],TypHead)
 type Depth = Int
 
 -- snad neni nebezpečné, je tu kvuli zatřiďování do prioritní fronty
@@ -378,10 +391,10 @@ randomL xs g = let (i,g') = randomR (0,length xs - 1) g in ( Just $ xs !! i , g'
 
 
 
-getEdges :: ZTree -> ( [ (Symbol,[Typ],SymbolOfAtomicType) ] , ZTree )
+getEdges :: ZTree -> ( [ (Symbol,[Typ],TypHead) ] , ZTree )
 getEdges zt = case current zt of
-  TreeTyp (Typ alpha) -> 
-    let edges               = (getEdges' (locals zt) alpha ) ++ (getEdges' (globals zt) alpha )
+  TreeTyp typ@(Typ _) -> 
+    let edges               = (getEdges' (locals zt) typ ) ++ (getEdges' (globals zt) typ )
         esm                 = so_edgeSelectionModel (searchOpts zt)
         ( edges' , gen' )   = selectEdges esm zt edges (rand zt)
      in ( edges' , zt{ rand = gen' }) 
@@ -389,29 +402,29 @@ getEdges zt = case current zt of
   _ -> error "getEdges : Only applicable in atomic-type-node !"
 
 
-getEdges' :: Table -> SymbolOfAtomicType -> [ (Symbol,[Typ],SymbolOfAtomicType) ]
-getEdges' table alpha = case Map.lookup alpha table of
+getEdges' :: Table -> TypHead -> [ (Symbol,[Typ],TypHead) ]
+getEdges' table typHead = case Map.lookup typHead table of
   Nothing -> []
-  Just entrySet -> map (\(Entry ts sym)->(sym,ts,alpha)) (Set.toAscList entrySet)
+  Just entrySet -> map (\(Entry ts sym)->(sym,ts,typHead)) (Set.toAscList entrySet)
 
-expandApp :: ZTree -> (Symbol,[Typ],SymbolOfAtomicType) -> ZTree
+expandApp :: ZTree -> (Symbol,[Typ],TypHead) -> ZTree
 expandApp zt edge = 
   let (tree,deltaUnsolved) = expandApp' edge
    in zt{ current = tree , numUnsolved = (numUnsolved zt) + deltaUnsolved }
 
-expandApp' :: (Symbol,[Typ],SymbolOfAtomicType) -> (Tree,Int)
-expandApp' (s,ts,alpha) = ( TreeApp s alpha (map TreeTyp ts) , (length ts) - 1 )  
+expandApp' :: (Symbol,[Typ],TypHead) -> (Tree,Int)
+expandApp' (s,ts,typHead) = ( TreeApp s typHead (map TreeTyp ts) , (length ts) - 1 )  
 
 expandLam :: Typ -> ZTree -> ZTree
 expandLam typ zt = 
-  let (tree,i) = expandLam' (nextVar zt) (typeArgs typ)
+  let (tree,i) = expandLam' (nextVar zt) (typeArgz typ)
    in zt{ current = tree , nextVar = i }
 
-expandLam' :: Int -> ([Typ],SymbolOfAtomicType) -> (Tree,Int)
-expandLam' i (ts,alpha) = 
+expandLam' :: Int -> ([Typ],TypHead) -> (Tree,Int)
+expandLam' i (ts,typHead) = 
    let n = length ts
-       ( ss , typ , _ ) = foldr f ([],Typ alpha,i+n-1) ts
-    in ( TreeLam ss typ (TreeTyp (Typ alpha)) , i+n )
+       ( ss , typ , _ ) = foldr f ([],typHead,i+n-1) ts
+    in ( TreeLam ss typ (TreeTyp typHead) , i+n )
  where
   f :: Typ -> ([Symbol],Typ,Int) -> ([Symbol],Typ,Int)
   f typ1 (ss,typ2,i) = ( ('_' : show i) : ss , typ1 :-> typ2 , i-1 )
@@ -436,20 +449,20 @@ addToTableWith op table ctx = foldr (f op) table ctx
 -- where
 f :: (Set Entry->Set Entry->Set Entry)->        (Symbol,Typ) -> Table -> Table
 f op      (sym,typ) acc = 
-  let (ts,alpha) = typeArgs typ
-   in Map.insertWith op alpha (Set.singleton $ Entry ts sym) acc 
+  let (ts,typHead) = typeArgz typ
+   in Map.insertWith op typHead (Set.singleton $ Entry ts sym) acc 
 
 ctxToTable :: Context -> Table
 ctxToTable ctx = addToTableWith Set.union emptyTable ctx
 
 addToTable   :: Table -> [Symbol] -> Typ -> Table
-addToTable   table ss typ = addToTableWith Set.union table (zip ss (fst $ typeArgs typ))
+addToTable   table ss typ = addToTableWith Set.union table (zip ss (fst $ typeArgz typ))
 
 subFromTable_bug :: Table -> [Symbol] -> Typ -> Table
-subFromTable_bug table ss typ = addToTableWith (Set.\\)  table (zip ss (fst $ typeArgs typ))
+subFromTable_bug table ss typ = addToTableWith (Set.\\)  table (zip ss (fst $ typeArgz typ))
 
 subFromTable :: Table -> [Symbol] -> Typ -> Table
-subFromTable table ss typ = addToTableWith (flip (Set.\\))  table (zip ss (fst $ typeArgs typ))
+subFromTable table ss typ = addToTableWith (flip (Set.\\))  table (zip ss (fst $ typeArgz typ))
 
 
 
@@ -527,7 +540,7 @@ instance Show Tree where
    where
     showLamHead :: [Symbol] -> Typ -> String
     showLamHead ss typ = 
-      let (ts,_) = typeArgs typ
+      let (ts,_) = typeArgz typ
        in intercalate " " . map (\(s,t)-> s ++ ":" ++ (show t) ) $ zip ss ts
 
 instance Show ZTree where
@@ -549,8 +562,8 @@ instance Show ZTree where
 showTable :: Table -> String
 showTable table = concatMap f (Map.toAscList table)
  where
-  f :: (SymbolOfAtomicType,Set Entry) -> String
-  f (alpha,entrySet) ="-> "++ alpha ++ "\n   " ++ (intercalate "\n   " . map show $ (Set.toAscList entrySet))  ++ "\n" 
+  f :: (TypHead,Set Entry) -> String
+  f (typHead,entrySet) ="-> "++ (show typHead) ++ "\n   " ++ (intercalate "\n   " . map show $ (Set.toAscList entrySet))  ++ "\n" 
   
 
 fillSpaces :: Show a => [a] -> String  
@@ -574,19 +587,19 @@ h8  = h7 >>= step
 hs = map fromJust [h0,h1,h2,h3,h4,h5,h6,h7] 
 
 t0'  = TreeTyp (Typ "A")
-t1'  = expandApp' ("f", [Typ "A",Typ "B"], "C")  -- ==> (f A B)
-t2'  = expandLam' 0   ([Typ "A",Typ "B"],"C")  -- ==> (\ x0 x1 . C )
+t1'  = expandApp' ("f", [Typ "A",Typ "B"], Typ "C")  -- ==> (f A B)
+t2'  = expandLam' 0   ([Typ "A",Typ "B"],Typ "C")  -- ==> (\ x0 x1 . C )
 
 
 t_1 = TreeLam ["x","y"] (Typ "A" :-> Typ "B" :-> Typ "C") 
-      ( TreeApp "f" "C" [ 
-        ( TreeApp "x" "A" [] ) , 
-        ( TreeApp "y" "B" [] ) ] )
+      ( TreeApp "f" (Typ "C") [ 
+        ( TreeApp "x" (Typ "A") [] ) , 
+        ( TreeApp "y" (Typ "B") [] ) ] )
 
 t_2 = TreeLam ["x","y"] (Typ "A" :-> Typ "B" :-> Typ "C") 
-      ( TreeApp "f" "C" [ 
+      ( TreeApp "f" (Typ "C") [ 
         ( TreeTyp (Typ "A") ) , 
-        ( TreeApp "y" "B" [] ) ] )
+        ( TreeApp "y" (Typ "B") [] ) ] )
 
 --t1 = mkZTree ctx_head t_2
 
