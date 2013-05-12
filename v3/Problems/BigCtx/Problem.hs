@@ -26,23 +26,52 @@ reg = PO_CTTP_ PO_CTTP {
   
 }
 
-
 prog_type = asType :: Fst3_Type  -- asType :: [Int] -> Maybe Int
 prog_typ  = fst3_typ             -- l_int :-> m_int  
 prog_ctx  = ctx_fst3             -- ctx_combo
+
+
+reg_head =
+ let head_type = asType :: [Int] -> Maybe Int
+     head_typ  = l_Int :-> m_Int
+     head_ctx  = ctx_poly_head
+  in PO_CTTP_ PO_CTTP {
+      cttp_code        = "head"                                     ,
+      cttp_info        = "Evolving safe polymorphic head function ", --from big context." ,
+      cttp_data        = jsObj [] ,  --jsObj [ ( "im" , imGraphInJSON head_typ head_ctx ) ]      ,
+      cttp_numRuns     = IntSlider "Runs"            1 10    1    1   ,
+      cttp_numGene     = IntSlider "Generations"     0 100   10   10  ,
+      cttp_popSize     = IntSlider "Population size" 0 5000  500  100 ,
+      
+      cttp_typ         = head_typ                                     ,
+      cttp_ctx         = head_ctx                                     ,
+      
+      cttp_gOpt        = CTTG_Koza2 head_typ head_ctx                 , 
+    
+      cttp_ff          = FF6 head_type ff_head "Problems.BigCtx.Funs"  
+    }
+
 
 --problem1 = go pr_head
 
 go (ff,ctx,typ,as) = cttProblem5 "BigCtx" ff typ ctx as
 
+a = TypVar "a"
+b = TypVar "b"
+
 
 bool   = Typ "Bool"
 int    = Typ "Int"
+
 m_int  = Typ "Maybe Int"
 l_int  = Typ "[Int]"
 ml_int = Typ "Maybe [Int]"
 
 
+m_a   = TypFun "Maybe" [a]
+l_a   = TypFun "List"  [a]
+m_Int = TypFun "Maybe" [int]
+l_Int = TypFun "List"  [int]
 
 
 --(ff,ctx,typ,as) = pr_head
@@ -72,6 +101,13 @@ ctx_mkAll =   [  ( "mkAll"  , ( l_int :-> m_int                  ) :->
 ctx_head =    [  ( "listCase" , l_int :-> m_int  :-> (int:->l_int:->m_int ) :-> m_int  ),
                  ( "Nothing"  , m_int                                                  ),
                  ( "Just"     , int :-> m_int                                          )]
+
+ctx_poly_head =    
+  --[  ( "listCase" , l_a :-> b :-> (a:->l_a:->b ) :-> b  )
+  [  ( "listCase" , l_a :-> m_a :-> (a:->l_a:->m_a ) :-> m_a  )
+  ,  ( "Nothing"  , m_a                                                    )
+  ,  ( "Just"     , a :-> m_a                                              )]
+
 
 ctx_tail =    [  ( "listCase" , l_int :-> ml_int :-> (int:->l_int:->ml_int) :-> ml_int ),
                  ( "Nothing"  , ml_int                                                 ),

@@ -18,7 +18,8 @@ import qualified Problems.BA.Problem         as BA
 import qualified Problems.EvenParity.Problem as EvenParity
 
 regs = 
- [ reg EvenParity.reg
+ [ reg BigCtx.reg_head
+ , reg EvenParity.reg
  , reg BigCtx.reg
  , reg Fly.reg 
  , reg SSR.reg 

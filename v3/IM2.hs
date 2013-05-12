@@ -15,6 +15,8 @@ module IM2
  , prove 
  ) where
 
+import Debug.Trace
+
 import TTerm (Symbol,Typ(..),TTerm(..),Context,ttermTyp,toSki,toSki',checkTyp)
 
 import TTree (CTT,mkCTT2)
@@ -29,6 +31,8 @@ import Data.Map (Map)
 import System.Random
 
 import qualified Data.PSQueue as Q
+
+import PolyUtils ( Substi , match , applySubsti )
 
 
 typeArgz :: Typ -> ([Typ],Typ)
@@ -45,7 +49,7 @@ prove :: SearchOptions -> [CTT]
 prove so = 
   let ( so' , problemHead ) = problemHeadPreproccess so
       trees = proveWith2 so'
-   in map ( mkCTT2 problemHead . toSki' . tree2tterm ) trees   -- <============== toSki s ' je s typeCheckem ...........
+   in map ( mkCTT2 problemHead . toSki . tree2tterm ) trees   -- <============== toSki s ' je s typeCheckem ...........
 
 problemHeadPreproccess :: SearchOptions -> ( SearchOptions , Context )
 problemHeadPreproccess so = 
@@ -373,10 +377,11 @@ incrementNumSteps zt = zt{ numSteps = (numSteps zt) + 1 }
 expand :: ZTree -> [ZTree]
 expand zt = case current zt of
   TreeTyp typ -> case typ of
-    Typ alpha -> let (edges,zt') = getEdges zt -- <=========== důležitý místo
-                     zts = map (expandApp zt') edges 
-                  in map (\(z,i,gen)-> z{ zTreeID = i:(zTreeID z) , rand = gen } ) (zip3 zts [1..] (splitInf $ rand zt') )
-    _         -> [let z = expandLam typ zt in z{ zTreeID = 1:(zTreeID z)  }] 
+    _ :-> _ -> [let z = expandLam typ zt in z{ zTreeID = 1:(zTreeID z)  }]
+    _       -> let (edges,zt') = getEdges zt -- <=========== důležitý místo
+                   zts = map (expandApp zt') edges 
+                in map (\(z,i,gen)-> z{ zTreeID = i:(zTreeID z) , rand = gen } ) (zip3 zts [1..] (splitInf $ rand zt') )
+     
   _ -> error "expand : Only type-node can be expanded !"
 
 
@@ -393,19 +398,45 @@ randomL xs g = let (i,g') = randomR (0,length xs - 1) g in ( Just $ xs !! i , g'
 
 getEdges :: ZTree -> ( [ (Symbol,[Typ],TypHead) ] , ZTree )
 getEdges zt = case current zt of
-  TreeTyp typ@(Typ _) -> 
-    let edges               = (getEdges' (locals zt) typ ) ++ (getEdges' (globals zt) typ )
+  TreeTyp currentTyp -> 
+    let getEdges1Fun        = poly_getEdges1 -- poly_getEdges1
+        edges               = (getEdges1Fun (locals zt) currentTyp ) ++ (getEdges1Fun (globals zt) currentTyp )
         esm                 = so_edgeSelectionModel (searchOpts zt)
         ( edges' , gen' )   = selectEdges esm zt edges (rand zt)
      in ( edges' , zt{ rand = gen' }) 
 
   _ -> error "getEdges : Only applicable in atomic-type-node !"
 
-
-getEdges' :: Table -> TypHead -> [ (Symbol,[Typ],TypHead) ]
-getEdges' table typHead = case Map.lookup typHead table of
+nonpoly_getEdges1 :: Table -> TypHead -> [ (Symbol,[Typ],TypHead) ]
+nonpoly_getEdges1 table typHead = case Map.lookup typHead table of
   Nothing -> []
   Just entrySet -> map (\(Entry ts sym)->(sym,ts,typHead)) (Set.toAscList entrySet)
+
+
+-------------------------------------------------------------------------------
+--tydle 4 sou nový ------------------------------------------------------------
+-------------------------------------------------------------------------------
+
+poly_getEdges1 :: Table -> TypHead -> [ (Symbol,[Typ],TypHead) ]
+poly_getEdges1 table currentTyp = -- trace ("! : "++(show currentTyp)) $
+  concatMap poly_getEdges2 $ filterTable table currentTyp
+
+poly_getEdges2 :: ( TypHead , Set Entry , Substi ) -> [(Symbol,[Typ],TypHead)]
+poly_getEdges2 ( headTyp , entrySet , substi ) = 
+  map ( \ entry -> poly_getEdges3 (headTyp,entry,substi) ) (Set.toList entrySet)
+
+poly_getEdges3 :: ( TypHead , Entry , Substi ) -> (Symbol,[Typ],TypHead)
+poly_getEdges3 ( headTyp , Entry typs sym , substi ) = 
+ ( sym , map (applySubsti substi) typs , headTyp  ) 
+
+filterTable :: Table -> TypHead -> [( TypHead , Set Entry , Substi )] -- NEFEKTIVNI !!!
+filterTable table currentTyp = 
+  map (\(headTyp,entrySet,Just substi)->(headTyp,entrySet,substi)) 
+  $ filter (\(_,_,m_substi)-> isJust m_substi) 
+  $ map ( \(headTyp ,entrySet) -> ( headTyp , entrySet , match currentTyp headTyp ) ) (Map.toList table)
+
+-------------------------------------------------------------------------------
+-------------------------------------------------------------------------------
 
 expandApp :: ZTree -> (Symbol,[Typ],TypHead) -> ZTree
 expandApp zt edge = 
@@ -611,6 +642,25 @@ l_int = Typ "[Int]"
 int1 = int :-> int
 int2 = int :-> int :-> int
 
+
+m_a   = TypFun "Maybe" [TypVar "a"]
+l_a   = TypFun "List"  [TypVar "a"]
+m_Int = TypFun "Maybe" [Typ "Int"]
+l_Int = TypFun "List"  [Typ "Int"]
+
+
+
+type_poly_head :: Typ
+type_poly_head = l_Int :-> m_Int
+
+ctx_poly_head :: Context
+ctx_poly_head = 
+  [ ( "listCase" , l_Int :-> m_Int :-> (int:->l_Int:->m_Int) :-> m_Int )
+  , ( "Nothing"  , m_a )--m_a )
+  , ( "Just"     , int :-> m_Int ) ]
+
+
+
 type_head :: Typ
 type_head = l_int :-> m_int
 
@@ -677,7 +727,7 @@ testSO2 soFun = do
   putStrLn $ "num terms : " ++ (show $ length ctts)
 
 test_ep = testSO2 $ \ stdGen -> SearchOptions {
-    so_n                  = 500             ,
+    so_n                  = 500            ,
     so_typ                = l_bool :-> bool ,
     so_ctx                = ctx_yu          ,
     so_stdGen             = stdGen          ,
@@ -687,15 +737,26 @@ test_ep = testSO2 $ \ stdGen -> SearchOptions {
     so_edgeSelectionModel = ContinueProbGeomWithDepth 0.75  --0.9  --AllEdges  
   }
 
+test_poly_head = testSO2 $ \ stdGen -> SearchOptions {
+    so_n                  = 20       ,
+    so_typ                = type_poly_head ,
+    so_ctx                = ctx_poly_head  ,
+    so_stdGen             = stdGen    ,
+    so_runLen             = Nothing   ,
+    so_isPolymorphic      = False,
+    so_randomRunState     = NoRandomRunState , 
+    so_edgeSelectionModel = AllEdges -- ContinueProbGeomWithDepth 0.75  --0.9  --AllEdges  
+  }
+
 test_head = testSO2 $ \ stdGen -> SearchOptions {
-    so_n                  = 500       ,
+    so_n                  = 20       ,
     so_typ                = type_head ,
     so_ctx                = ctx_head  ,
     so_stdGen             = stdGen    ,
     so_runLen             = Nothing   ,
     so_isPolymorphic      = False,
     so_randomRunState     = NoRandomRunState , 
-    so_edgeSelectionModel = ContinueProbGeomWithDepth 0.75  --0.9  --AllEdges  
+    so_edgeSelectionModel = AllEdges -- ContinueProbGeomWithDepth 0.75  --0.9  --AllEdges  
   }
 
 -- \ x0 -> listCase x0 (listCase x0 Nothing (s (s (k s) (s (k (s (s (k listCase) i))) (s (k k) (s (k Ju
@@ -709,18 +770,18 @@ test_map = testSO2 $ \ stdGen -> SearchOptions {
     so_runLen             = Nothing   ,
     so_isPolymorphic      = False,
     so_randomRunState     = NoRandomRunState , 
-    so_edgeSelectionModel = ContinueProbGeomWithDepth 0.85
+    so_edgeSelectionModel = AllEdges --ContinueProbGeomWithDepth 0.85
   }
 
 test_ssr = testSO2 $ \ stdGen -> SearchOptions {
-    so_n                  = 500       ,
+    so_n                  = 50       ,
     so_typ                = dou1 ,
     so_ctx                = ctx_ttSSR  ,
     so_stdGen             = stdGen    ,
     so_runLen             = Nothing   ,
     so_isPolymorphic      = False,
     so_randomRunState     = NoRandomRunState ,
-    so_edgeSelectionModel = ContinueProbGeomWithDepth 0.6
+    so_edgeSelectionModel = AllEdges --ContinueProbGeomWithDepth 0.6
   } 
 
 test_big = testSO $ \ stdGen -> SearchOptions {
@@ -731,7 +792,7 @@ test_big = testSO $ \ stdGen -> SearchOptions {
     so_runLen             = Nothing   ,
     so_isPolymorphic      = False,
     so_randomRunState     = NoRandomRunState , 
-    so_edgeSelectionModel = ContinueProbGeomWithDepth 0.7  --AllEdges  
+    so_edgeSelectionModel = AllEdges   -- ContinueProbGeomWithDepth 0.7  --AllEdges  
   }
 
 test_head_2 = testSO2 $ \ stdGen -> SearchOptions {
