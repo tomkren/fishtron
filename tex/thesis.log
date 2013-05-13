@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.1415926-2.4-1.40.13 (MiKTeX 2.9) (preloaded format=pdflatex 2013.4.26)  9 MAY 2013 13:52
+This is pdfTeX, Version 3.1415926-2.4-1.40.13 (MiKTeX 2.9) (preloaded format=pdflatex 2013.4.26)  13 MAY 2013 17:54
 entering extended mode
 **thesis.tex
 (C:\Users\sekol\Documents\GitHub\fishtron\tex\thesis.tex
@@ -701,130 +701,130 @@ LaTeX Font Info:    Font shape `OMS/cmr/m/n' in size <12> not available
 
 
 Package hyperref Warning: Token not allowed in a PDF string (PDFDocEncoding):
-(hyperref)                removing `math shift' on input line 294.
+(hyperref)                removing `math shift' on input line 295.
 
 
 Package hyperref Warning: Token not allowed in a PDF string (PDFDocEncoding):
-(hyperref)                removing `\sigma' on input line 294.
+(hyperref)                removing `\sigma' on input line 295.
 
 
 Package hyperref Warning: Token not allowed in a PDF string (PDFDocEncoding):
-(hyperref)                removing `math shift' on input line 294.
+(hyperref)                removing `math shift' on input line 295.
 
 [7
 
 ]
-LaTeX Font Info:    Try loading font information for U+euf on input line 306.
+LaTeX Font Info:    Try loading font information for U+euf on input line 307.
  ("C:\Program Files (x86)\MiKTeX 2.9\tex\latex\amsfonts\ueuf.fd"
 File: ueuf.fd 2013/01/14 v3.01 Euler Fraktur
 )
-Underfull \hbox (badness 10000) in paragraph at lines 317--320
+Underfull \hbox (badness 10000) in paragraph at lines 318--321
 
  []
 
 
 Package hyperref Warning: Token not allowed in a PDF string (PDFDocEncoding):
-(hyperref)                removing `math shift' on input line 323.
+(hyperref)                removing `math shift' on input line 324.
 
 
 Package hyperref Warning: Token not allowed in a PDF string (PDFDocEncoding):
-(hyperref)                removing `\Gamma' on input line 323.
+(hyperref)                removing `\Gamma' on input line 324.
 
 
 Package hyperref Warning: Token not allowed in a PDF string (PDFDocEncoding):
-(hyperref)                removing `\vdash' on input line 323.
+(hyperref)                removing `\vdash' on input line 324.
 
 
 Package hyperref Warning: Token not allowed in a PDF string (PDFDocEncoding):
-(hyperref)                removing `\sigma' on input line 323.
+(hyperref)                removing `\sigma' on input line 324.
 
 
 Package hyperref Warning: Token not allowed in a PDF string (PDFDocEncoding):
-(hyperref)                removing `math shift' on input line 323.
+(hyperref)                removing `math shift' on input line 324.
 
 
-Overfull \hbox (23.73802pt too wide) in paragraph at lines 345--352
+Overfull \hbox (23.73802pt too wide) in paragraph at lines 346--353
 $\OML/cmm/m/it/12 M[] \OT1/cmr/m/n/12 : \OML/cmm/m/it/12 []$\OT1/cmr/m/n/12 . 
 It al-lows as to use the in-fer-ence rule to de-rive state-ment []. 
  []
 
 [8]
-Underfull \hbox (badness 10000) in paragraph at lines 440--442
-
- []
-
-
-Underfull \hbox (badness 10000) in paragraph at lines 456--458
+Underfull \hbox (badness 10000) in paragraph at lines 441--443
 
  []
 
 [9]
-Underfull \hbox (badness 10000) in paragraph at lines 471--473
+Underfull \hbox (badness 10000) in paragraph at lines 457--459
 
  []
 
 
-Overfull \hbox (5.89113pt too wide) in paragraph at lines 521--521
+Underfull \hbox (badness 10000) in paragraph at lines 472--474
+
+ []
+
+
+Overfull \hbox (5.89113pt too wide) in paragraph at lines 522--522
 [] 
  []
 
-
-Underfull \hbox (badness 10000) in paragraph at lines 557--559
+[10]
+Underfull \hbox (badness 10000) in paragraph at lines 558--560
 
  []
 
 
-Overfull \hbox (46.49174pt too wide) detected at line 593
+Overfull \hbox (46.49174pt too wide) detected at line 594
 []
  []
 
-[10]
-Underfull \hbox (badness 10000) in paragraph at lines 606--609
+
+Underfull \hbox (badness 10000) in paragraph at lines 607--610
 
  []
 
 [11]
-Underfull \hbox (badness 10000) in paragraph at lines 719--720
+Underfull \hbox (badness 10000) in paragraph at lines 720--721
 
  []
 
 [12] [13]
 
 Package hyperref Warning: Token not allowed in a PDF string (PDFDocEncoding):
-(hyperref)                removing `math shift' on input line 801.
+(hyperref)                removing `math shift' on input line 802.
 
 
 Package hyperref Warning: Token not allowed in a PDF string (PDFDocEncoding):
-(hyperref)                removing `\lambda' on input line 801.
+(hyperref)                removing `\lambda' on input line 802.
 
 
 Package hyperref Warning: Token not allowed in a PDF string (PDFDocEncoding):
-(hyperref)                removing `math shift' on input line 801.
+(hyperref)                removing `math shift' on input line 802.
 
 [14]
-Underfull \hbox (badness 10000) in paragraph at lines 856--863
+Underfull \hbox (badness 10000) in paragraph at lines 857--864
 
  []
 
-[15]
+[15] [16]
 Chapter 2.
-[16
+[17
 
 ]
 Chapter 3.
-[17
+[18
 
-] [18
-
-]
-Package atveryend Info: Empty hook `BeforeClearDocument' on input line 970.
- [19
+] [19
 
 ]
-Package atveryend Info: Empty hook `AfterLastShipout' on input line 970.
+Package atveryend Info: Empty hook `BeforeClearDocument' on input line 971.
+ [20
+
+]
+Package atveryend Info: Empty hook `AfterLastShipout' on input line 971.
  (C:\Users\sekol\Documents\GitHub\fishtron\tex\thesis.aux)
-Package atveryend Info: Executing hook `AtVeryEndDocument' on input line 970.
-Package atveryend Info: Executing hook `AtEndAfterFileList' on input line 970.
+Package atveryend Info: Executing hook `AtVeryEndDocument' on input line 971.
+Package atveryend Info: Executing hook `AtEndAfterFileList' on input line 971.
 Package rerunfilecheck Info: File `thesis.out' has not changed.
 (rerunfilecheck)             Checksum: 41B965D894E3DD0D69AA3A9C8BD8DCE5;2683.
 
@@ -832,12 +832,12 @@ Package rerunfilecheck Info: File `thesis.out' has not changed.
 LaTeX Font Warning: Size substitutions with differences
 (Font)              up to 1.08846pt have occurred.
 
-Package atveryend Info: Empty hook `AtVeryVeryEnd' on input line 970.
+Package atveryend Info: Empty hook `AtVeryVeryEnd' on input line 971.
  ) 
 Here is how much of TeX's memory you used:
- 6445 strings out of 493921
- 92064 string characters out of 3144876
- 193428 words of memory out of 3000000
+ 6446 strings out of 493921
+ 92071 string characters out of 3144876
+ 188428 words of memory out of 3000000
  9573 multiletter control sequences out of 15000+200000
  18924 words of font info for 73 fonts, out of 3000000 for 9000
  841 hyphenation exceptions out of 8191
@@ -862,9 +862,9 @@ s/type1/public/amsfonts/cm/cmti12.pfb><C:/Program Files (x86)/MiKTeX 2.9/fonts/
 type1/public/amsfonts/cm/cmtt12.pfb><C:/Program Files (x86)/MiKTeX 2.9/fonts/ty
 pe1/public/amsfonts/euler/eufm10.pfb><C:/Program Files (x86)/MiKTeX 2.9/fonts/t
 ype1/public/amsfonts/symbols/msbm10.pfb>
-Output written on thesis.pdf (19 pages, 582628 bytes).
+Output written on thesis.pdf (20 pages, 583218 bytes).
 PDF statistics:
- 411 PDF objects out of 1000 (max. 8388607)
- 73 named destinations out of 1000 (max. 500000)
+ 415 PDF objects out of 1000 (max. 8388607)
+ 74 named destinations out of 1000 (max. 500000)
  326 words of extra memory for PDF output out of 10000 (max. 10000000)
 

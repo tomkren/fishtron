@@ -604,6 +604,11 @@ fillSpaces = intercalate " " . map show
 
 -- examples/tests : -----------
 
+t0 = Just$  mkZTree $ defaultSearchOptions 2 type_poly_head ctx_poly_head
+t1 = t0 >>= step >>= return . head
+t2 = t1 >>= step >>= return . head
+t3 = t2 >>= step >>= return
+
 h0' = mkZTree $ defaultSearchOptions 100 type_head ctx_head 
 h0  = Just h0'
 h1  = h0 >>= step >>= return . head 
@@ -635,29 +640,40 @@ t_2 = TreeLam ["x","y"] (Typ "A" :-> Typ "B" :-> Typ "C")
 --t1 = mkZTree ctx_head t_2
 
 
-int :: Typ
 int   = Typ "Int"
+
 m_int = Typ "MaybeInt"
 l_int = Typ "[Int]"
+
 int1 = int :-> int
 int2 = int :-> int :-> int
 
+a_ = TypVar "a"
+b_ = TypVar "b"
 
-m_a   = TypFun "Maybe" [TypVar "a"]
-l_a   = TypFun "List"  [TypVar "a"]
-m_Int = TypFun "Maybe" [Typ "Int"]
-l_Int = TypFun "List"  [Typ "Int"]
+m_a   = TypFun "Maybe" [a_]
+l_a   = TypFun "List"  [a_]
+m_Int = TypFun "Maybe" [int]
+l_Int = TypFun "List"  [int]
+
 
 
 
 type_poly_head :: Typ
 type_poly_head = l_Int :-> m_Int
 
+-- ctx_poly_head =    
+--   --[  ( "listCase" , l_a :-> b :-> (a:->l_a:->b ) :-> b  )
+--   [  ( "listCase" , l_a :-> m_a :-> (a:->l_a:->m_a ) :-> m_a  )
+--   ,  ( "Nothing"  , m_a                                                    )
+--   ,  ( "Just"     , a :-> m_a                                              )]
+
+
 ctx_poly_head :: Context
 ctx_poly_head = 
-  [ ( "listCase" , l_Int :-> m_Int :-> (int:->l_Int:->m_Int) :-> m_Int )
+  [ ( "listCase" , l_a :-> b_ :-> (a_:->l_a:->b_) :-> b_ )
   , ( "Nothing"  , m_a )--m_a )
-  , ( "Just"     , int :-> m_Int ) ]
+  , ( "Just"     , a_ :-> m_a ) ]
 
 
 
@@ -738,7 +754,7 @@ test_ep = testSO2 $ \ stdGen -> SearchOptions {
   }
 
 test_poly_head = testSO2 $ \ stdGen -> SearchOptions {
-    so_n                  = 20       ,
+    so_n                  = 2      ,
     so_typ                = type_poly_head ,
     so_ctx                = ctx_poly_head  ,
     so_stdGen             = stdGen    ,

@@ -6,38 +6,38 @@
 \contentsline {subsection}{\numberline {1.1.3}Mutation}{7}{subsection.1.1.3}
 \contentsline {section}{\numberline {1.2}Lambda term}{7}{section.1.2}
 \contentsline {section}{\numberline {1.3}Type}{7}{section.1.3}
-\contentsline {section}{\numberline {1.4}Statement of a form $M : \sigma $}{7}{section.1.4}
+\contentsline {section}{\numberline {1.4}Statement of a form $M : \sigma $}{8}{section.1.4}
 \contentsline {section}{\numberline {1.5}Context}{8}{section.1.5}
 \contentsline {section}{\numberline {1.6}Statement of a form $\Gamma \vdash M : \sigma $\xspace }{8}{section.1.6}
 \contentsline {section}{\numberline {1.7}Inference rule}{8}{section.1.7}
 \contentsline {section}{\numberline {1.8}Term generating grammar}{9}{section.1.8}
 \contentsline {subsection}{\numberline {1.8.1}"Barendregt-like" inference and grammar rules}{10}{subsection.1.8.1}
 \contentsline {section}{\numberline {1.9}Inhabitation tree}{11}{section.1.9}
-\contentsline {subsection}{\numberline {1.9.1}Definition of Inhabitation tree}{11}{subsection.1.9.1}
+\contentsline {subsection}{\numberline {1.9.1}Definition of Inhabitation tree}{12}{subsection.1.9.1}
 \contentsline {subsection}{\numberline {1.9.2}And-or tree and searching in Inhabitation tree}{13}{subsection.1.9.2}
 \contentsline {subsection}{\numberline {1.9.3}Tree representations of $\lambda $-terms\xspace }{14}{subsection.1.9.3}
 \contentsline {subsection}{\numberline {1.9.4}Our approach to \textit {solving} Inhabitation machine}{15}{subsection.1.9.4}
 \contentsline {subsubsection}{A* algorithm}{15}{section*.3}
 \contentsline {subsection}{\numberline {1.9.5}Inhabitation Machine}{15}{subsection.1.9.5}
-\contentsline {section}{\numberline {1.10}Roadmap}{15}{section.1.10}
-\contentsline {section}{\numberline {1.11}Conversion to SKI combinators}{15}{section.1.11}
-\contentsline {chapter}{\numberline {2} Designed system }{16}{chapter.2}
-\contentsline {section}{\numberline {2.1}Top level view}{16}{section.2.1}
-\contentsline {subsection}{\numberline {2.1.1}Comments about main source files}{16}{subsection.2.1.1}
-\contentsline {subsubsection}{ Eva.hs }{16}{section*.4}
-\contentsline {subsubsection}{ GP\_{}Core.hs }{16}{section*.5}
-\contentsline {section}{\numberline {2.2}Term generating}{16}{section.2.2}
-\contentsline {subsection}{\numberline {2.2.1}A* algorithm}{16}{subsection.2.2.1}
-\contentsline {section}{\numberline {2.3}Crossover}{16}{section.2.3}
-\contentsline {subsection}{\numberline {2.3.1}Finding same types}{16}{subsection.2.3.1}
-\contentsline {subsection}{\numberline {2.3.2}Two basic options}{16}{subsection.2.3.2}
-\contentsline {section}{\numberline {2.4}Mutation}{16}{section.2.4}
-\contentsline {subsection}{\numberline {2.4.1}Using term generation}{16}{subsection.2.4.1}
-\contentsline {chapter}{\numberline {3}Problems}{17}{chapter.3}
-\contentsline {section}{\numberline {3.1}Even Parity Problem}{17}{section.3.1}
-\contentsline {section}{\numberline {3.2}Big Context}{17}{section.3.2}
-\contentsline {section}{\numberline {3.3}Fly}{17}{section.3.3}
-\contentsline {section}{\numberline {3.4}Simple Symbolic Regression}{17}{section.3.4}
-\contentsline {section}{\numberline {3.5}Artificial Ant}{17}{section.3.5}
-\contentsline {section}{\numberline {3.6}Boolean Alternate}{17}{section.3.6}
-\contentsline {chapter}{Conclusion}{18}{chapter*.6}
+\contentsline {section}{\numberline {1.10}Roadmap}{16}{section.1.10}
+\contentsline {section}{\numberline {1.11}Conversion to SKI combinators}{16}{section.1.11}
+\contentsline {chapter}{\numberline {2} Designed system }{17}{chapter.2}
+\contentsline {section}{\numberline {2.1}Top level view}{17}{section.2.1}
+\contentsline {subsection}{\numberline {2.1.1}Comments about main source files}{17}{subsection.2.1.1}
+\contentsline {subsubsection}{ Eva.hs }{17}{section*.4}
+\contentsline {subsubsection}{ GP\_{}Core.hs }{17}{section*.5}
+\contentsline {section}{\numberline {2.2}Term generating}{17}{section.2.2}
+\contentsline {subsection}{\numberline {2.2.1}A* algorithm}{17}{subsection.2.2.1}
+\contentsline {section}{\numberline {2.3}Crossover}{17}{section.2.3}
+\contentsline {subsection}{\numberline {2.3.1}Finding same types}{17}{subsection.2.3.1}
+\contentsline {subsection}{\numberline {2.3.2}Two basic options}{17}{subsection.2.3.2}
+\contentsline {section}{\numberline {2.4}Mutation}{17}{section.2.4}
+\contentsline {subsection}{\numberline {2.4.1}Using term generation}{17}{subsection.2.4.1}
+\contentsline {chapter}{\numberline {3}Problems}{18}{chapter.3}
+\contentsline {section}{\numberline {3.1}Even Parity Problem}{18}{section.3.1}
+\contentsline {section}{\numberline {3.2}Big Context}{18}{section.3.2}
+\contentsline {section}{\numberline {3.3}Fly}{18}{section.3.3}
+\contentsline {section}{\numberline {3.4}Simple Symbolic Regression}{18}{section.3.4}
+\contentsline {section}{\numberline {3.5}Artificial Ant}{18}{section.3.5}
+\contentsline {section}{\numberline {3.6}Boolean Alternate}{18}{section.3.6}
+\contentsline {chapter}{Conclusion}{19}{chapter*.6}

@@ -144,8 +144,7 @@ data SearchOptions = SearchOptions{
   so_runLen             :: Maybe Int          , -- Nothing means unlimited runLen 
   so_stdGen             :: StdGen             ,
   so_edgeSelectionModel :: EdgeSelectionModel ,
-  so_randomRunState     :: RandomRunState     ,
-  so_isPolymorphic      :: Bool
+  so_randomRunState     :: RandomRunState     
  }
 
 defaultSearchOptions :: Int -> Typ -> Context -> SearchOptions
@@ -156,8 +155,7 @@ defaultSearchOptions n typ ctx = SearchOptions {
   so_runLen             = Nothing ,
   so_stdGen             = mkStdGen 42424242 ,
   so_edgeSelectionModel = AllEdges ,
-  so_randomRunState     = NoRandomRunState ,
-  so_isPolymorphic      = False
+  so_randomRunState     = NoRandomRunState 
  }
 
 kozaSearchOptions :: Int -> Typ -> Context -> StdGen -> SearchOptions
@@ -168,8 +166,7 @@ kozaSearchOptions n typ ctx stdGen = SearchOptions {
     so_stdGen             = stdGen ,
     so_runLen             = Just 1 , 
     so_randomRunState     = KozaRandomRunState Nothing Nothing ,
-    so_edgeSelectionModel = KozaESM ,
-    so_isPolymorphic      = False
+    so_edgeSelectionModel = KozaESM 
   } 
 
 allEdgesSearchOptions :: Int -> Typ -> Context -> StdGen -> SearchOptions
@@ -180,8 +177,7 @@ allEdgesSearchOptions n typ ctx stdGen = SearchOptions {
     so_stdGen             = stdGen ,
     so_runLen             = Nothing   ,
     so_randomRunState     = NoRandomRunState , 
-    so_edgeSelectionModel = AllEdges ,
-    so_isPolymorphic      = False  
+    so_edgeSelectionModel = AllEdges   
   } 
 
 geomSearchOptions :: Double -> Int -> Typ -> Context -> StdGen -> SearchOptions
@@ -192,8 +188,7 @@ geomSearchOptions p n typ ctx stdGen = SearchOptions {
     so_stdGen             = stdGen ,
     so_runLen             = Nothing   ,
     so_randomRunState     = NoRandomRunState , 
-    so_edgeSelectionModel = ContinueProbGeomWithDepth p  ,
-    so_isPolymorphic      = False 
+    so_edgeSelectionModel = ContinueProbGeomWithDepth p   
   } 
 
 
@@ -669,7 +664,6 @@ test_ep = testSO2 $ \ stdGen -> SearchOptions {
     so_ctx                = ctx_yu          ,
     so_stdGen             = stdGen          ,
     so_runLen             = Nothing         ,
-    so_isPolymorphic      = False,
     so_randomRunState     = NoRandomRunState , 
     so_edgeSelectionModel = ContinueProbGeomWithDepth 0.75  --0.9  --AllEdges  
   }
@@ -680,7 +674,6 @@ test_head = testSO2 $ \ stdGen -> SearchOptions {
     so_ctx                = ctx_head  ,
     so_stdGen             = stdGen    ,
     so_runLen             = Nothing   ,
-    so_isPolymorphic      = False,
     so_randomRunState     = NoRandomRunState , 
     so_edgeSelectionModel = ContinueProbGeomWithDepth 0.75  --0.9  --AllEdges  
   }
@@ -694,7 +687,6 @@ test_map = testSO2 $ \ stdGen -> SearchOptions {
     so_ctx                = ctx_map  ,
     so_stdGen             = stdGen    ,
     so_runLen             = Nothing   ,
-    so_isPolymorphic      = False,
     so_randomRunState     = NoRandomRunState , 
     so_edgeSelectionModel = ContinueProbGeomWithDepth 0.85
   }
@@ -705,7 +697,6 @@ test_ssr = testSO2 $ \ stdGen -> SearchOptions {
     so_ctx                = ctx_ttSSR  ,
     so_stdGen             = stdGen    ,
     so_runLen             = Nothing   ,
-    so_isPolymorphic      = False,
     so_randomRunState     = NoRandomRunState ,
     so_edgeSelectionModel = ContinueProbGeomWithDepth 0.6
   } 
@@ -716,7 +707,6 @@ test_big = testSO $ \ stdGen -> SearchOptions {
     so_ctx                = ctx_big  ,
     so_stdGen             = stdGen    ,
     so_runLen             = Nothing   ,
-    so_isPolymorphic      = False,
     so_randomRunState     = NoRandomRunState , 
     so_edgeSelectionModel = ContinueProbGeomWithDepth 0.7  --AllEdges  
   }
@@ -727,7 +717,6 @@ test_head_2 = testSO2 $ \ stdGen -> SearchOptions {
     so_ctx                = ctx_head  ,
     so_stdGen             = stdGen    ,
     so_runLen             = Just 1    ,  --Nothing   ,
-    so_isPolymorphic      = False,
     so_randomRunState     = NoRandomRunState,
     so_edgeSelectionModel = OneRandomEdgeWithPedicat (const True)  --AllEdges  , 
   } 
@@ -738,7 +727,6 @@ test_head_koza = testSO2 $ \ stdGen -> SearchOptions {
     so_ctx                = ctx_head  ,
     so_stdGen             = stdGen    ,
     so_runLen             = Just 1    ,  --Nothing   ,
-    so_isPolymorphic      = False,
     so_randomRunState     = KozaRandomRunState Nothing Nothing ,
     so_edgeSelectionModel = KozaESM
   } 
@@ -749,7 +737,6 @@ test_map_koza = testSO $ \ stdGen -> SearchOptions {
     so_ctx                = ctx_map  ,
     so_stdGen             = stdGen    ,
     so_runLen             = Just 1    ,  --Nothing   ,
-    so_isPolymorphic      = False,
     so_randomRunState     = KozaRandomRunState Nothing Nothing ,
     so_edgeSelectionModel = KozaESM
   }
@@ -761,7 +748,6 @@ test_ssr_koza = testSO2 $ \ stdGen -> SearchOptions {
     so_ctx                = ctx_ttSSR  ,
     so_stdGen             = stdGen    ,
     so_runLen             = Just 1    ,  --Nothing   ,
-    so_isPolymorphic      = False,
     so_randomRunState     = KozaRandomRunState Nothing Nothing ,
     so_edgeSelectionModel = KozaESM
   } 
