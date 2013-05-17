@@ -6,7 +6,7 @@
 
 -- IM2 = přidání polymorfizmu
 
-module IM2 
+module IM3 
  ( SearchOptions(..) 
  , defaultSearchOptions 
  , kozaSearchOptions
@@ -32,14 +32,13 @@ import System.Random
 
 import qualified Data.PSQueue as Q
 
-import PolyUtils ( Substi , match , applySubsti , composeSubsti, emptySubsti , mgu )
+import PolyUtils ( Substi , Table, Entry(..), TypHead , Edge
+                 , emptyTable, ctxToTable , addToTable , subFromTable, showTable
+                 , typeArgz  
+                 , match , applySubsti , composeSubsti, emptySubsti , mgu )
 
 
-typeArgz :: Typ -> ([Typ],Typ)
-typeArgz typ = case typ of
- (a :-> b) -> let (  as, alpha) = typeArgz b
-               in (a:as, alpha)
- typHead   -> ([],typHead)
+
  
 
 
@@ -145,18 +144,9 @@ data DTree = DTreeApp [Tree] Symbol TypHead [Tree]
            | DTreeLam [Symbol] Typ
 
 
--- type Table = Map SymbolOfAtomicType (Set Entry)
--- data Entry = Entry [Typ] Symbol deriving (Eq,Ord)
-
-type Table = Map TypHead (Set Entry)
-data Entry = Entry [Typ] Symbol deriving (Eq,Ord)
-
-type TypHead = Typ -- asser: nemelo by bejt (a:->b)
-
-type SymbolOfAtomicType = Symbol
 type PriorityQueue = Q.PSQ ZTree Int
 
-type Edge = (Symbol,[Typ],TypHead)
+
 type Depth = Int
 
 -- snad neni nebezpečné, je tu kvuli zatřiďování do prioritní fronty
@@ -482,30 +472,6 @@ zTreeToTree zt = current $ goTop zt
 optimistNumStepPrediction :: ZTree -> Int
 optimistNumStepPrediction zt = (numSteps zt) + (numUnsolved zt) 
 
-emptyTable :: Table
-emptyTable = Map.empty
-
-addToTableWith :: (Set Entry->Set Entry->Set Entry) -> Table -> Context -> Table
-addToTableWith op table ctx = foldr (f op) table ctx
--- where
-f :: (Set Entry->Set Entry->Set Entry)->        (Symbol,Typ) -> Table -> Table
-f op      (sym,typ) acc = 
-  let (ts,typHead) = typeArgz typ
-   in Map.insertWith op typHead (Set.singleton $ Entry ts sym) acc 
-
-ctxToTable :: Context -> Table
-ctxToTable ctx = addToTableWith Set.union emptyTable ctx
-
-addToTable   :: Table -> [Symbol] -> Typ -> Table
-addToTable   table ss typ = addToTableWith Set.union table (zip ss (fst $ typeArgz typ))
-
-subFromTable_bug :: Table -> [Symbol] -> Typ -> Table
-subFromTable_bug table ss typ = addToTableWith (Set.\\)  table (zip ss (fst $ typeArgz typ))
-
-subFromTable :: Table -> [Symbol] -> Typ -> Table
-subFromTable table ss typ = addToTableWith (flip (Set.\\))  table (zip ss (fst $ typeArgz typ))
-
-
 
 
 nextTreeTypNode :: ZTree -> Maybe ZTree 
@@ -570,7 +536,6 @@ goTop zt = case goUp zt of
 
 
 
-instance Show Entry where show (Entry ts sym) = sym ++ " ... " ++ show ts
 
 instance Show Tree where
   show (TreeTyp t)       = show t
@@ -600,12 +565,7 @@ instance Show ZTree where
       DTreeApp ts1 s _ ts2 -> "(" ++ s ++ " " ++ (fillSpaces (reverse ts1)) ++ str ++ (fillSpaces ts2) ++ ")"
       DTreeLam ss _        -> "(\\ " ++ (intercalate " " ss) ++ " . " ++ str ++ ")" 
 
-showTable :: Table -> String
-showTable table = concatMap f (Map.toAscList table)
- where
-  f :: (TypHead,Set Entry) -> String
-  f (typHead,entrySet) ="-> "++ (show typHead) ++ "\n   " ++ (intercalate "\n   " . map show $ (Set.toAscList entrySet))  ++ "\n" 
-  
+ 
 
 fillSpaces :: Show a => [a] -> String  
 fillSpaces = intercalate " " . map show 
