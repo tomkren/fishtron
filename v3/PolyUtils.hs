@@ -224,23 +224,40 @@ type NextVar = Int
 type GlobalsTable = Table
 type LocalsTable  = Table
 
-getEdges_globals :: NextVar -> CurrentTyp -> GlobalsTable -> ( [( Edge , Substi )]  , NextVar )
+type TrampSubsti = Substi
+type MGU         = Substi
+
+
+updateByMGU :: MGU -> (TrampSubsti , LocalsTable) -> (TrampSubsti , LocalsTable)
+updateByMGU lastMgu (trampSubsti,locals) =
+  let trampSubsti' = composeSubsti lastMgu trampSubsti
+      locals'      = applySubstiOnTable lastMgu locals
+   in ( trampSubsti' , locals' )
+
+
+getEdges_all :: NextVar -> CurrentTyp -> GlobalsTable -> LocalsTable -> ( [( Edge , MGU )]  , NextVar )
+getEdges_all nextVar currentTyp globals locals =
+  let (esAndMgus1,nextVar') = getEdges_globals nextVar currentTyp globals
+      esAndMgus2            = getEdges_locals          currentTyp locals
+   in ( esAndMgus1 ++ esAndMgus2 , nextVar' )    
+
+getEdges_globals :: NextVar -> CurrentTyp -> GlobalsTable -> ( [( Edge , MGU )]  , NextVar )
 getEdges_globals nextVar currentTyp table = 
-  let (table',nextVar') = freshenTable nextVar table
+  let (table',nextVar') = freshenTable( table ,nextVar )
    in ( getEdges_locals currentTyp table' , nextVar' )
 
 
-getEdges_locals :: CurrentTyp -> LocalsTable -> [( Edge , Substi )] 
+getEdges_locals :: CurrentTyp -> LocalsTable -> [( Edge , MGU )] 
 getEdges_locals currentTyp table = 
   concatMap transformIt $ filterTable table currentTyp
 
 
-transformIt :: ( HeadTyp , Set Entry , Substi ) -> [( Edge , Substi )]
+transformIt :: ( HeadTyp , Set Entry , MGU ) -> [( Edge , MGU )]
 transformIt ( headTyp , entrySet , substi ) = 
   map ( \ (Entry ts sym) -> ( (sym , map (applySubsti substi) ts , headTyp ),substi) ) (Set.toList entrySet)
 
 
-filterTable :: Table -> CurrentTyp -> [( HeadTyp , Set Entry , Substi )] -- NEFEKTIVNI !!!
+filterTable :: Table -> CurrentTyp -> [( HeadTyp , Set Entry , MGU )] -- NEFEKTIVNI !!!
 filterTable table currentTyp = 
   map (\(headTyp,entrySet,Just substi)->(headTyp,entrySet,substi)) 
   $ filter (\(_,_,m_substi)-> isJust m_substi) 
@@ -253,8 +270,8 @@ filterTable table currentTyp =
 -- freshenTypVars   :: Int         -> Typ -> (Typ,(Int,Substi))
 -- freshenTypVars' :: (Int,Substi) -> Typ -> (Typ,(Int,Substi))
 
-freshenTable :: NextVar -> GlobalsTable -> (GlobalsTable,NextVar)   -- NEEFEKTIVNI už tuplem
-freshenTable nextVar table = Map.foldrWithKey f (emptyTable,nextVar) table
+freshenTable :: (GlobalsTable,NextVar) -> (GlobalsTable,NextVar)   -- NEEFEKTIVNI už tuplem
+freshenTable (table,nextVar) = Map.foldrWithKey f (emptyTable,nextVar) table
  where
   f :: Typ -> Set Entry -> (Table,NextVar) -> (Table,NextVar)
   f key set (accTab,nextVar') = 
