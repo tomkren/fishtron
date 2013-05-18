@@ -32,10 +32,12 @@ import System.Random
 
 import qualified Data.PSQueue as Q
 
-import PolyUtils ( Substi , Table, Entry(..), TypHead , Edge
-                 , emptyTable, ctxToTable , addToTable , subFromTable, showTable
+import PolyUtils ( Substi , Table, Entry(..), TypHead , Edge, MGU 
+                 , NextVar, CurrentTyp , GlobalsTable , LocalsTable
+                 , emptyTable, ctxToTable , addToTable , subFromTable, showTable, showSubsti
                  , typeArgz  
-                 , match , applySubsti , composeSubsti, emptySubsti , mgu )
+                 , match , applySubsti , composeSubsti, emptySubsti , mgu
+                 , getEdges_all , updateByMGU )
 
 
 
@@ -214,6 +216,14 @@ geomSearchOptions p n typ ctx stdGen = SearchOptions {
   } 
 
 
+splitInf :: StdGen -> [StdGen]
+splitInf g0 = let (g1,g2) = split g0 in g1 : splitInf g2
+
+randomL :: RandomGen g => [a] -> g -> ( Maybe a , g)
+randomL [] g = (Nothing , g)
+randomL xs g = let (i,g') = randomR (0,length xs - 1) g in ( Just $ xs !! i , g' ) 
+
+
 
 data RandomRunState =
   NoRandomRunState |
@@ -239,8 +249,8 @@ data EdgeSelectionModel =
   ContinueProbESM Double                 |
   ContinueProbGeomWithDepth Double
 
-selectEdges :: EdgeSelectionModel -> ZTree -> [Edge] -> StdGen -> ( [Edge] , StdGen ) 
-selectEdges esm zt edges gen0 = case esm of
+selectEdges :: ZTree -> [(Edge,MGU)] -> StdGen -> ( [(Edge,MGU)] , StdGen ) 
+selectEdges zt edges gen0 = case so_edgeSelectionModel (searchOpts zt) of
   AllEdges                    -> ( edges, gen0 )
   OneRandomEdgeWithPedicat p  -> oneRandomEdgeWithPedicat edges p gen0
   ContinueProbESM prob        -> continueProbESM edges prob gen0
@@ -261,9 +271,9 @@ continueProbGeomWithDepth :: [a] -> Double -> Int -> StdGen -> ( [a] , StdGen )
 continueProbGeomWithDepth edges q currDepth gen0 = 
   continueProbESM edges (q**(fromIntegral currDepth)) gen0
 
-kozaESM :: IsFullMethod -> MaximalDepth -> Depth -> [Edge] -> StdGen -> ( [Edge] , StdGen )
+kozaESM :: IsFullMethod -> MaximalDepth -> Depth -> [(Edge,MGU)] -> StdGen -> ( [(Edge,MGU)] , StdGen )
 kozaESM isFull maxDepth depth edges gen0 =
- let (ts,ns) = partition isTerminal edges
+ let (ts,ns) = partition (isTerminal . fst) edges
      candids | depth == 0        = ns -- 0
              | depth == maxDepth = ts
              | depth >  maxDepth = []
@@ -277,9 +287,9 @@ isTerminal (_,[],_) = True
 isTerminal _        = False
 
 
-oneRandomEdgeWithPedicat :: [Edge] -> (Edge->Bool) -> StdGen -> ( [Edge] , StdGen )
+oneRandomEdgeWithPedicat :: [(Edge,MGU)] -> (Edge->Bool) -> StdGen -> ( [(Edge,MGU)] , StdGen )
 oneRandomEdgeWithPedicat edges p gen0 = 
-  let okEdges = filter p edges
+  let okEdges = filter (p . fst) edges
       ( m_edge , gen1 ) = randomL okEdges gen0
    in ( maybeToList m_edge , gen1 )
 
@@ -368,11 +378,20 @@ proveStep q = case Q.minView q of
   insertZTree :: PriorityQueue -> ZTree -> PriorityQueue
   insertZTree q zt = Q.insert zt (optimistNumStepPrediction zt) q
 
+
 step :: ZTree -> Maybe [ZTree]
-step zt = nextTreeTypNode zt >>= return . map incrementNumSteps . expand
+step zt = nextTreeTypNode zt >>= Just . expand . applyTramp . incrementNumSteps
+
 
 incrementNumSteps :: ZTree -> ZTree
 incrementNumSteps zt = zt{ numSteps = (numSteps zt) + 1 }
+
+
+applyTramp :: ZTree -> ZTree
+applyTramp zt = case current zt of
+ TreeTyp currentTyp -> zt{ current = TreeTyp $ applySubsti (trampSubsti zt) currentTyp }
+ _ -> error "applyTramp : Tramp substitution can be applied only to type-node !" 
+
 
 expand :: ZTree -> [ZTree]
 expand zt = case current zt of
@@ -386,62 +405,27 @@ expand zt = case current zt of
 
 
 
-
-splitInf :: StdGen -> [StdGen]
-splitInf g0 = let (g1,g2) = split g0 in g1 : splitInf g2
-
-randomL :: RandomGen g => [a] -> g -> ( Maybe a , g)
-randomL [] g = (Nothing , g)
-randomL xs g = let (i,g') = randomR (0,length xs - 1) g in ( Just $ xs !! i , g' ) 
-
-
-
-getEdges :: ZTree -> ( [ (Symbol,[Typ],TypHead) ] , ZTree )
+getEdges :: ZTree -> ( [( Edge , MGU )] , ZTree )
 getEdges zt = case current zt of
   TreeTyp currentTyp -> 
-    let getEdges1Fun        = poly_getEdges1 -- nonpoly_getEdges1
-        edges               = (getEdges1Fun (locals zt) currentTyp ) ++ (getEdges1Fun (globals zt) currentTyp )
-        esm                 = so_edgeSelectionModel (searchOpts zt)
-        ( edges' , gen' )   = selectEdges esm zt edges (rand zt)
-     in ( edges' , zt{ rand = gen' }) 
+    let 
+        (esAndMgus   , nextTypVar') = getEdges_all (nextTypVar zt) currentTyp (globals zt) (locals zt)
+        ( esAndMgus' , gen'       ) = selectEdges zt esAndMgus (rand zt)
+
+     in ( esAndMgus' , zt{ rand = gen' , nextTypVar = nextTypVar' }) 
 
   _ -> error "getEdges : Only applicable in atomic-type-node !"
 
-nonpoly_getEdges1 :: Table -> TypHead -> [ (Symbol,[Typ],TypHead) ]
-nonpoly_getEdges1 table typHead = case Map.lookup typHead table of
-  Nothing -> []
-  Just entrySet -> map (\(Entry ts sym)->(sym,ts,typHead)) (Set.toAscList entrySet)
 
 
--------------------------------------------------------------------------------
---tydle sou nový --------------------------------------------------------------
--------------------------------------------------------------------------------
-
-poly_getEdges1 :: Table -> TypHead -> [ (Symbol,[Typ],TypHead) ]
-poly_getEdges1 table currentTyp = -- trace ("! : "++(show currentTyp)) $
-  concatMap poly_getEdges2 $ filterTable table currentTyp
-
-poly_getEdges2 :: ( TypHead , Set Entry , Substi ) -> [(Symbol,[Typ],TypHead)]
-poly_getEdges2 ( headTyp , entrySet , substi ) = 
-  map ( \ entry -> poly_getEdges3 (headTyp,entry,substi) ) (Set.toList entrySet)
-
-poly_getEdges3 :: ( TypHead , Entry , Substi ) -> (Symbol,[Typ],TypHead)
-poly_getEdges3 ( headTyp , Entry typs sym , substi ) = 
- ( sym , map (applySubsti substi) typs , headTyp  ) 
-
-filterTable :: Table -> TypHead -> [( TypHead , Set Entry , Substi )] -- NEFEKTIVNI !!!
-filterTable table currentTyp = 
-  map (\(headTyp,entrySet,Just substi)->(headTyp,entrySet,substi)) 
-  $ filter (\(_,_,m_substi)-> isJust m_substi) 
-  $ map ( \(headTyp ,entrySet) -> ( headTyp , entrySet , match currentTyp headTyp ) ) (Map.toList table)
-
--------------------------------------------------------------------------------
--------------------------------------------------------------------------------
-
-expandApp :: ZTree -> (Symbol,[Typ],TypHead) -> ZTree
-expandApp zt edge = 
-  let (tree,deltaUnsolved) = expandApp' edge
-   in zt{ current = tree , numUnsolved = (numUnsolved zt) + deltaUnsolved }
+expandApp :: ZTree -> (Edge,MGU) -> ZTree
+expandApp zt (edge,mguSub) = 
+  let (tree, deltaUnsolved)      = expandApp' edge
+      (trampSubsti', localsTab') = updateByMGU mguSub ( trampSubsti zt , locals zt ) 
+   in zt{ current     = tree 
+        , numUnsolved = (numUnsolved zt) + deltaUnsolved
+        , trampSubsti = trampSubsti'
+        , locals      = localsTab' }
 
 expandApp' :: (Symbol,[Typ],TypHead) -> (Tree,Int)
 expandApp' (s,ts,typHead) = ( TreeApp s typHead (map TreeTyp ts) , (length ts) - 1 )  
@@ -459,6 +443,46 @@ expandLam' i (ts,typHead) =
  where
   f :: Typ -> ([Symbol],Typ,Int) -> ([Symbol],Typ,Int)
   f typ1 (ss,typ2,i) = ( ('_' : show i) : ss , typ1 :-> typ2 , i-1 )
+
+
+
+
+-------------------------------------------------------------------------------
+-- bug aproach and old --------------------------------------------------------
+-------------------------------------------------------------------------------
+
+getEdges_all_old :: NextVar -> CurrentTyp -> GlobalsTable -> LocalsTable -> ( [( Edge , MGU )]  , NextVar )
+getEdges_all_old nextVar currentTyp globalsTab localsTab =
+ let getEdges1Fun        = poly_getEdges1 -- nonpoly_getEdges1
+     edges               = (getEdges1Fun localsTab currentTyp ) ++ (getEdges1Fun globalsTab currentTyp )
+  in ( zip edges (repeat emptySubsti) , nextVar ) 
+
+nonpoly_getEdges1 :: Table -> TypHead -> [ Edge ]
+nonpoly_getEdges1 table typHead = case Map.lookup typHead table of
+  Nothing -> []
+  Just entrySet -> map (\(Entry ts sym)->(sym,ts,typHead)) (Set.toAscList entrySet)
+
+poly_getEdges1 :: Table -> TypHead -> [ Edge ]
+poly_getEdges1 table currentTyp = -- trace ("! : "++(show currentTyp)) $
+  concatMap poly_getEdges2 $ filterTable table currentTyp
+
+poly_getEdges2 :: ( TypHead , Set Entry , Substi ) -> [Edge]
+poly_getEdges2 ( headTyp , entrySet , substi ) = 
+  map ( \ entry -> poly_getEdges3 (headTyp,entry,substi) ) (Set.toList entrySet)
+
+poly_getEdges3 :: ( TypHead , Entry , Substi ) -> Edge
+poly_getEdges3 ( headTyp , Entry typs sym , substi ) = 
+ ( sym , map (applySubsti substi) typs , headTyp  ) 
+
+filterTable :: Table -> TypHead -> [( TypHead , Set Entry , Substi )] -- NEFEKTIVNI !!!
+filterTable table currentTyp = 
+  map (\(headTyp,entrySet,Just substi)->(headTyp,entrySet,substi)) 
+  $ filter (\(_,_,m_substi)-> isJust m_substi) 
+  $ map ( \(headTyp ,entrySet) -> ( headTyp , entrySet , match currentTyp headTyp ) ) (Map.toList table)
+
+-------------------------------------------------------------------------------
+-------------------------------------------------------------------------------
+
 
 
 
@@ -547,7 +571,8 @@ instance Show Tree where
     showLamHead :: [Symbol] -> Typ -> String
     showLamHead ss typ = 
       let (ts,_) = typeArgz typ
-       in intercalate " " . map (\(s,t)-> s ++ ":" ++ (show t) ) $ zip ss ts
+       --in intercalate " " . map (\(s,t)-> s ++ ":" ++ (show t) ) $ zip ss ts
+       in intercalate " " . map (\(s,_)-> s ++ " " ) $ zip ss ts
 
 instance Show ZTree where
   show zt = "\n----------------------------\n\n"++
@@ -557,6 +582,7 @@ instance Show ZTree where
             "\n numUnsolved : " ++ show (numUnsolved zt)++
             "\n nextVar     : " ++ show (nextVar zt) ++
             "\n depth       : " ++ show (depth zt) ++
+            "\n trampSubsti : " ++ showSubsti (trampSubsti zt) ++
             "\nlocals:\n" ++ showTable (locals  zt) ++
             "globals:\n"  ++ showTable (globals zt) 
    where 
@@ -574,10 +600,19 @@ fillSpaces = intercalate " " . map show
 
 -- examples/tests : -----------
 
-t0 = Just$  mkZTree $ defaultSearchOptions 2 type_poly_head ctx_poly_head
-t1 = t0 >>= step >>= return . head
-t2 = t1 >>= step >>= return . head
-t3 = t2 >>= step >>= return
+stepTo :: ZTree -> Int -> ZTree
+stepTo zt i = case step zt of
+ Just zts -> zts !! (i-1)   
+
+stepsTo :: ZTree -> [Int] -> ZTree
+stepsTo = foldl stepTo 
+
+
+t0a = mkZTree $ defaultSearchOptions 2 type_poly_head ctx_poly_head
+t0b = stepsTo t0a [1,1,2,2,1,3,2]
+
+
+
 
 h0' = mkZTree $ defaultSearchOptions 100 type_head ctx_head 
 h0  = Just h0'
@@ -620,6 +655,11 @@ int2 = int :-> int :-> int
 
 a_ = TypVar "a"
 b_ = TypVar "b"
+c_ = TypVar "c"
+d_ = TypVar "d"
+
+
+_A = Typ "A"
 
 m_a   = TypFun "Maybe" [a_]
 l_a   = TypFun "List"  [a_]
@@ -628,6 +668,57 @@ l_Int = TypFun "List"  [int]
 
 
 
+nPair :: Typ -> Int -> Typ
+nPair t 1 = t
+nPair t n = TypFun "P" [t, nPair t (n-1)] 
+
+p_ :: Typ -> Typ -> Typ
+p_ a b = TypFun "P" [a,b] 
+
+typ_perms = nPair _A 3 :-> nPair _A 3
+ctx_perms = 
+  [ ( "pair" , a_ :-> b_ :-> p_ a_ b_                                         )
+  , ( "fst"  , p_ a_ b_ :-> a_                                                )
+  , ( "snd"  , p_ a_ b_ :-> b_                                                )
+  , ( "flp"  , p_ a_ b_ :-> p_ b_ a_                                          )
+  , ( "rotL" , p_ a_ (p_ b_ c_) :-> p_ (p_ a_ b_) c_                          )
+  , ( "rotR" , p_ (p_ a_ b_) c_ :-> p_ a_ (p_ b_ c_)                          )
+  , ( "seri" , ( a_ :-> b_ ) :-> ( b_ :-> c_ ) :-> ( a_ :-> c_ )              )
+  , ( "para" , ( a_ :-> b_ ) :-> ( c_ :-> d_ ) :-> p_ a_ c_ :-> p_ b_ d_      )]
+
+
+peInit = mkZTree $ defaultSearchOptions 0 typ_perms ctx_perms
+pe xs  = stepsTo peInit xs
+
+test_perms = testSO $ \ stdGen -> SearchOptions {
+    so_n                  = 500       ,
+    so_typ                = typ_perms ,
+    so_ctx                = ctx_perms ,
+    so_stdGen             = stdGen    ,
+    so_runLen             = Nothing   ,
+    so_isPolymorphic      = False,
+    so_randomRunState     = NoRandomRunState , 
+    so_edgeSelectionModel = AllEdges -- ContinueProbGeomWithDepth 0.75  --0.9  --AllEdges  
+  }
+
+pair :: a -> b -> (a,b)
+pair    a    b =  (a,b)
+
+flp :: (a,b) -> (b,a)
+flp    (a,b) =  (b,a)
+
+rotL :: (a,(b,c)) -> ((a,b),c)
+rotL    (a,(b,c)) =  ((a,b),c)
+
+rotR :: ((a,b),c) -> (a,(b,c))
+rotR    ((a,b),c) =  (a,(b,c))
+
+
+seri :: (a->b) -> (b->c) -> (a->c)
+seri f g = g . f
+
+para :: (a->b) -> (c->d) -> ( (a,c) -> (b,d) )
+para f g = \ (x,y) -> (f x,g y)   
 
 type_poly_head :: Typ
 type_poly_head = l_Int :-> m_Int
@@ -697,7 +788,6 @@ ctx_ttSSR = [("(+)",dou2),("(-)",dou2),("(*)",dou2),("rdiv",dou2),("sin",dou1),(
 
 
 
-
 testSO :: (StdGen->SearchOptions) -> IO ()
 testSO soFun = do
   stdGen <- newStdGen
@@ -723,8 +813,8 @@ test_ep = testSO2 $ \ stdGen -> SearchOptions {
     so_edgeSelectionModel = ContinueProbGeomWithDepth 0.75  --0.9  --AllEdges  
   }
 
-test_poly_head = testSO2 $ \ stdGen -> SearchOptions {
-    so_n                  = 2      ,
+test_poly_head = testSO $ \ stdGen -> SearchOptions {
+    so_n                  = 20      ,
     so_typ                = type_poly_head ,
     so_ctx                = ctx_poly_head  ,
     so_stdGen             = stdGen    ,
@@ -734,7 +824,7 @@ test_poly_head = testSO2 $ \ stdGen -> SearchOptions {
     so_edgeSelectionModel = AllEdges -- ContinueProbGeomWithDepth 0.75  --0.9  --AllEdges  
   }
 
-test_head = testSO2 $ \ stdGen -> SearchOptions {
+test_head = testSO $ \ stdGen -> SearchOptions {
     so_n                  = 20       ,
     so_typ                = type_head ,
     so_ctx                = ctx_head  ,
@@ -760,7 +850,7 @@ test_map = testSO2 $ \ stdGen -> SearchOptions {
   }
 
 test_ssr = testSO2 $ \ stdGen -> SearchOptions {
-    so_n                  = 50       ,
+    so_n                  = 500       ,
     so_typ                = dou1 ,
     so_ctx                = ctx_ttSSR  ,
     so_stdGen             = stdGen    ,

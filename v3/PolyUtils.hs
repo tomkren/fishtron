@@ -8,9 +8,12 @@ module PolyUtils
 , composeSubsti 
 , emptySubsti 
 , match 
-, Table, Entry(..), TypHead, Edge
+, showSubsti
+, Table, Entry(..), TypHead, Edge, MGU, NextVar , CurrentTyp , GlobalsTable , LocalsTable
 , emptyTable, ctxToTable , addToTable , subFromTable, showTable
 , typeArgz
+
+, getEdges_all , updateByMGU
 ) where
 
 import Data.List 
@@ -173,6 +176,10 @@ mgu t1 t2 = mgu' (Map.empty) [(t1,t2)]
    TypFun _ ts -> concatMap vars ts
 
 
+showSubsti :: Substi -> String
+showSubsti s = 
+  "{ " ++ ( concatMap (\(x,t)-> x ++ " := " ++ show t ++ " ") (Map.toAscList s) ) ++ "}" 
+
 {- 
 
 data Typ  = 
@@ -253,14 +260,17 @@ getEdges_locals currentTyp table =
 
 
 transformIt :: ( HeadTyp , Set Entry , MGU ) -> [( Edge , MGU )]
-transformIt ( headTyp , entrySet , substi ) = 
-  map ( \ (Entry ts sym) -> ( (sym , map (applySubsti substi) ts , headTyp ),substi) ) (Set.toList entrySet)
+transformIt ( headTyp , entrySet , mguSub ) = 
+  map f (Set.toList entrySet)
+ where
+  f :: Entry -> (Edge,MGU)
+  f (Entry ts sym) = ( (sym , map (applySubsti mguSub) ts , applySubsti mguSub headTyp ) , mguSub)
 
 
 filterTable :: Table -> CurrentTyp -> [( HeadTyp , Set Entry , MGU )] -- NEFEKTIVNI !!!
 filterTable table currentTyp = 
-  map (\(headTyp,entrySet,Just substi)->(headTyp,entrySet,substi)) 
-  $ filter (\(_,_,m_substi)-> isJust m_substi) 
+  map (\(headTyp,entrySet,Just mguSub)->(headTyp,entrySet,mguSub)) 
+  $ filter (\(_,_,m_mguSub)-> isJust m_mguSub) 
   $ map ( \(headTyp ,entrySet) -> ( headTyp , entrySet , mgu currentTyp headTyp ) ) (Map.toList table)
 
 

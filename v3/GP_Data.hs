@@ -11,7 +11,7 @@ import Utils   ( getRandom, getRandomR, getRandomL, getNormal, randIf, randCase,
 import TTerm
 import TTree
 
-import IM2 ( SearchOptions , prove , kozaSearchOptions , allEdgesSearchOptions , geomSearchOptions )
+import IM3 ( SearchOptions , prove , kozaSearchOptions , allEdgesSearchOptions , geomSearchOptions )
 --import IM2 ( SearchOptions , prove , kozaSearchOptions , allEdgesSearchOptions , geomSearchOptions )
 import System.Random (StdGen)
 
