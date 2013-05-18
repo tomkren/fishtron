@@ -677,14 +677,20 @@ p_ a b = TypFun "P" [a,b]
 
 typ_perms = nPair _A 3 :-> nPair _A 3
 ctx_perms = 
-  [ ( "pair" , a_ :-> b_ :-> p_ a_ b_                                         )
-  , ( "fst"  , p_ a_ b_ :-> a_                                                )
-  , ( "snd"  , p_ a_ b_ :-> b_                                                )
-  , ( "flp"  , p_ a_ b_ :-> p_ b_ a_                                          )
+  [ ( "flp"  , p_ a_ b_ :-> p_ b_ a_                                          )
   , ( "rotL" , p_ a_ (p_ b_ c_) :-> p_ (p_ a_ b_) c_                          )
   , ( "rotR" , p_ (p_ a_ b_) c_ :-> p_ a_ (p_ b_ c_)                          )
+  --, ( "pair" , a_ :-> b_ :-> p_ a_ b_                                       )
+  --, ( "fst"  , p_ a_ b_ :-> a_                                              )
+  --, ( "snd"  , p_ a_ b_ :-> b_                                              )
   , ( "seri" , ( a_ :-> b_ ) :-> ( b_ :-> c_ ) :-> ( a_ :-> c_ )              )
   , ( "para" , ( a_ :-> b_ ) :-> ( c_ :-> d_ ) :-> p_ a_ c_ :-> p_ b_ d_      )]
+
+
+--------------------------------------------------------------------------------------------------------
+-- BUG !!!
+-- řekl bych že v goUp bude něco špatně
+-- (\ _0  . (para (\ _1  . _1) (\ _2  . _1) _1))
 
 
 peInit = mkZTree $ defaultSearchOptions 0 typ_perms ctx_perms
