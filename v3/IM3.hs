@@ -34,7 +34,7 @@ import qualified Data.PSQueue as Q
 
 import PolyUtils ( Substi , Table, Entry(..), TypHead , Edge, MGU 
                  , NextVar, CurrentTyp , GlobalsTable , LocalsTable
-                 , emptyTable, ctxToTable , addToTable , subFromTable, showTable, showSubsti
+                 , emptyTable, ctxToTable , addToTable , subFromTable_, showTable, showSubsti
                  , typeArgz  
                  , match , applySubsti , composeSubsti, emptySubsti , mgu
                  , getEdges_all , updateByMGU )
@@ -536,7 +536,7 @@ goUp zt = case dads zt of
    let (t ,localVars ) = (current zt,locals zt)
        (t',localVars') = case dad of
                           DTreeApp ts1 s alpha ts2 -> ( TreeApp s alpha ( reverseConcat ts1 (t:ts2) ) , localVars )  
-                          DTreeLam ss typ          -> ( TreeLam ss typ t , subFromTable localVars ss typ )
+                          DTreeLam ss typ          -> ( TreeLam ss typ t , subFromTable_ localVars ss )
     in Just $ zt{ current = t' , 
                   locals  = localVars' ,
                   dads    = ancestors  ,
@@ -687,10 +687,6 @@ ctx_perms =
   , ( "para" , ( a_ :-> b_ ) :-> ( c_ :-> d_ ) :-> p_ a_ c_ :-> p_ b_ d_      )]
 
 
---------------------------------------------------------------------------------------------------------
--- BUG !!!
--- řekl bych že v goUp bude něco špatně
--- (\ _0  . (para (\ _1  . _1) (\ _2  . _1) _1))
 
 
 peInit = mkZTree $ defaultSearchOptions 0 typ_perms ctx_perms

@@ -10,7 +10,7 @@ module PolyUtils
 , match 
 , showSubsti
 , Table, Entry(..), TypHead, Edge, MGU, NextVar , CurrentTyp , GlobalsTable , LocalsTable
-, emptyTable, ctxToTable , addToTable , subFromTable, showTable
+, emptyTable, ctxToTable , addToTable , subFromTable, subFromTable_ , showTable
 , typeArgz
 
 , getEdges_all , updateByMGU
@@ -337,6 +337,12 @@ subFromTable_bug table ss typ = addToTableWith (Set.\\)  table (zip ss (fst $ ty
 subFromTable :: Table -> [Symbol] -> Typ -> Table
 subFromTable table ss typ = addToTableWith (flip (Set.\\))  table (zip ss (fst $ typeArgz typ))
 
+
+subFromTable_ :: Table -> [Symbol] -> Table
+subFromTable_ table ss = foldr delFromTable table ss
+
+delFromTable :: Symbol -> Table -> Table
+delFromTable sym tab = Map.map (Set.filter (\(Entry _ sym') -> sym /= sym') ) tab
 
 ----
 
