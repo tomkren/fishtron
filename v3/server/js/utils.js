@@ -186,11 +186,6 @@ var plus1 = function(x){ return x+1 ; };
 
 
 
-var sin  = Math.sin ;
-var cos  = Math.cos ;
-var exp  = Math.exp ;
-var rdiv = function(x,y){if(y==0){return 1;}else{return x/y;}}
-var rlog = function(x){return Math.log(Math.abs(x));}
 
 
 var ssr = function( solution ){

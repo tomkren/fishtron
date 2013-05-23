@@ -1,7 +1,7 @@
 
 $(document).ready(function() {
 
-console.log( "Fly.js ready!" );  
+console.log( "Fly02.js ready!" );  
 
 
 var dStay   = 0; 
@@ -83,8 +83,7 @@ var dist = function( pos1 , pos2 ) {
 };
 
 
-
-Global.Problems.fly = {
+Global.Problems.fly02 = {
 
   Funs : {
     dStay           : dStay          ,   
@@ -104,7 +103,6 @@ Global.Problems.fly = {
     minus           : minus          ,
     dist            : dist           
   },
-
 
   progLib : {
     prog1 : function (x0){return output_(posToDir_(  myPos_(x0)   , head_(myApplePoses_(x0))  )   );},
@@ -260,7 +258,7 @@ Global.Problems.fly = {
   fenotyp : function( solution , ffVal ){
     this.solutions[this.i] = solution ;
     $('#fly-links').append( '<a href="#" title="'+ solution +'" '+
-      'onclick="Global.Problems.fly.flyLink('+this.i+')">' +ffVal + '</a> ' );
+      'onclick="Global.Problems.fly02.flyLink('+this.i+')">' +ffVal + '</a> ' );
 
     if( this.i == 0 ){
       this.defaultSolution = solution ;
@@ -552,7 +550,5 @@ Global.Problems.fly = {
 
 
 };
-
-
 });
 

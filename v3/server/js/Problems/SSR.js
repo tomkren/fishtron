@@ -3,7 +3,13 @@ $(document).ready(function() {
 console.log( "SSR.js ready!" );  
 Global.Problems.ssr = {
 
-
+  Funs : {
+   sin  : Math.sin ,
+   cos  : Math.cos ,
+   exp  : Math.exp ,
+   rdiv : function(x,y){if(y==0){return 1;}else{return x/y;}} ,
+   rlog : function(x){return Math.log(Math.abs(x));}
+  },
 
   onLoadedProblemData : function( data ){ },
 
@@ -67,3 +73,9 @@ Global.Problems.ssr = {
 
 
 };});
+
+//var sin  = Math.sin ;
+//var cos  = Math.cos ;
+//var exp  = Math.exp ;
+//var rdiv = function(x,y){if(y==0){return 1;}else{return x/y;}}
+//var rlog = function(x){return Math.log(Math.abs(x));}

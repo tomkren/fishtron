@@ -32,7 +32,8 @@
 
     <script src="js/utils.js"></script>
 
-    <script src="js/Problems/Fly.js"></script>
+    <script src="js/Problems/Fly.js"></script>    
+    <script src="js/Problems/Fly02.js"></script>
     <script src="js/Problems/Ant.js"></script>
     <script src="js/Problems/SSR.js"></script>
     <script src="js/Problems/BA.js"></script>
@@ -42,7 +43,7 @@
 
 
 
-    <script>
+<script>
 
 var Global = {
   problemName : undefined,
@@ -65,6 +66,18 @@ var Global = {
 
 
 $(document).ready(function() {
+
+  var haf = 'Haf!';
+
+  var testObj = { 
+    haf: 'Vrrr!' }
+
+  with( testObj ){
+    var y;
+    eval(' y = haf ;' );
+    console.log('!! with test : ' + y );
+  }
+
 
   $('#go-input-row').hide(); // chtelo by to ho uplne smazat, ale čte se z něho ..
 
@@ -540,7 +553,12 @@ var runCmd = function(){
       var evalStr = "solution = " + correctToString( cmdObj.js ) ;
       //console.log( evalStr );
 
-      eval( evalStr );
+
+      var withObject = Global.Problems[Global.problemName].Funs || {} ;
+
+      with( withObject ){
+        eval( evalStr );
+      }
 
       Global.bests[ Global.actRun ][ Global.actGen ] = solution ;
 
@@ -677,10 +695,7 @@ var drawPlot = function( graphI , plotData ){
 
 
 //---------------------------------------------------------------------------
-
-
-
-    </script>
+</script>
 
   </head>
   <body>
