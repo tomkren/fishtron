@@ -4,6 +4,7 @@ module Problems.Fly.Fly2 where
 import qualified Data.Map as Map
 import Data.Map (Map)
 import Data.List
+import Data.Ord (comparing)
 import System.Random
 
 
@@ -35,6 +36,7 @@ type ObjInfo  = (RelPos,Energy)
 type Prog     = Input -> Output
 type IntState = Int -- Nebo rači Double ????
 type Success   = Bool
+type Dist = Double
 
 
 data World = World { 
@@ -64,60 +66,222 @@ data Input  = Input {
   myWasSuccess :: Success     ,
 
   --myPos        :: Pos         , -- asi nadbytečná, když pracuju v relativních pozicích.. ? (vždy je 0,0..) 
-  
-  myApples     :: [ ObjInfo ] ,
-  myFlies      :: [ ObjInfo ] 
+
+  --myApples     :: [ ObjInfo ] ,
+  --myFlies      :: [ ObjInfo ] ,
+
+  nAppleDir    :: Dir  ,
+  nAppleDist   :: Dist ,
+  nAppleEnergy :: Energy ,
+  nFlyDir      :: Dir  ,
+  nFlyDist     :: Dist ,
+  nFlyEnergy   :: Energy
   
  } 
 
 data Output = Output {
-  myMove       :: Dir      ,
+  myMove       :: Move     ,
   myNextState  :: IntState
 } 
 
+
+steps :: Int -> World -> World
+steps numSteps w = case numSteps of
+ 0 -> w
+ n -> let w' = step w in steps (n-1) w' 
+
+stepsList :: Int -> World -> [World]
+stepsList numSteps w = case numSteps of
+  0 -> [w]
+  n -> let w' = step w in w : stepsList (n-1) w'
+
+step :: World -> World
+step w = case fliesToDo w of
+  [] -> w{ fliesToDo = reverse (doneFlies w) ,
+           doneFlies = [] }
+  _  -> step $ stepCurrentFly w
+
+
+
+stepCurrentFly :: World -> World
+stepCurrentFly w = case (fliesToDo w) of
+ flyPos:restFlies -> 
+  case objOnPos w flyPos of
+   Fly flyData -> 
+     let input  = prepareInput w flyPos flyData
+         output = (flyProg flyData) input
+      in reactToOutput output flyPos w   
+   _ -> error "stepCurrentFly : There should be a fly!"
+ [] ->  error "stepCurrentFly : No current fly!"
 
 
 
 
 prepareInput :: World -> Pos -> FlyData -> Input
-prepareInput w flyPos flyData = 
-  Input { myState      = flyState     flyData ,
-          myEnergy     = flyEnergy    flyData ,
-          myLastMove   = flyLastMove  flyData ,
-          myWasSuccess = flyWasSuccess flyData ,
+prepareInput w flyPos flyData =
 
-          myApples     = getObjInfos w flyPos (applePoses w) ,
-          myFlies      = getObjInfos w flyPos (( fliesToDo w ++ doneFlies w ) \\  [flyPos] )  
-          
-        } 
+ let (nADist,nADir,nAEn)  = nearestInfo w flyPos (applePoses w) 
+     (nFDist,nFDir,nFEn)  = nearestInfo w flyPos (( fliesToDo w ++ doneFlies w ) \\  [flyPos] )  
+
+  in Input { myState      = flyState      flyData ,
+             myEnergy     = flyEnergy     flyData ,
+             myLastMove   = flyLastMove   flyData ,
+             myWasSuccess = flyWasSuccess flyData ,
+   
+             --myApples     = getObjInfos w flyPos (applePoses w) ,
+             --myFlies      = getObjInfos w flyPos (( fliesToDo w ++ doneFlies w ) \\  [flyPos] ) 
+   
+             nAppleDir    = nADir  ,
+             nAppleDist   = nADist ,
+             nAppleEnergy = nAEn   ,
+             nFlyDir      = nFDir  ,
+             nFlyDist     = nFDist , 
+             nFlyEnergy   = nFEn  
+           } 
+
+nearestInfo :: World -> Pos -> [Pos] -> (Dist,Dir,Energy)
+nearestInfo _ _      []    = (999999, DStay , 0)
+nearestInfo w flyPos poses = 
+  let nearestPos = minimumBy (comparing (dist flyPos)) poses
+   in ( dist flyPos nearestPos , posToDir flyPos nearestPos , objEnergy $ objOnPos w nearestPos )
 
 
-
-
-reactToOutput :: World -> Pos -> FlyData -> Output -> World
-reactToOutput w flyPos flyData output = undefined
-
-
-
-
-
-performMove = undefined
-
-
--- tryToTravelFly :: Dir -> Pos -> World -> (World,Pos,Success)
--- tryToTravelFly dir pos w = 
---  let pos' = posPlusDir pos dir 
---   in case objOnPos w pos' of
---       Free -> ( moveFromTo pos pos' w , pos' , True )
---       Apple-> ( eatApple   pos pos' w , pos' , True )
---       _    -> ( w                     , pos  , False ) -- TODO tady se řeší žraní much respektive zdí
-
+posToDir :: Pos -> Pos -> Dir
+posToDir posMy posHer = relPosToDir $ posHer `minus` posMy
 
 
 
+   
+
+
+reactToOutput :: Output -> Pos -> World -> World
+reactToOutput herOutput herPos w0 = 
+  let herMove      =  myMove      herOutput     
+      herNextState =  myNextState herOutput
+
+      ( w1 , posChangeInfo , success ) = performMove herPos herMove w0  
+      
+      f flyData = flyData{
+        flyState      = herNextState ,
+        flyLastMove   = herMove      ,
+        flyWasSuccess = success      } 
+
+      w2 = case hasCurrFlySurvived posChangeInfo of
+            Nothing      -> w1
+            Just herPos' -> updateFlyData f herPos' w1
+
+   in stepFliesQueue posChangeInfo w2
+
+data PosChangeInfo
+ = CurrNewPos Pos
+ | CurrDead 
+ | OtherDead Pos
+
+stepFliesQueue :: PosChangeInfo -> World -> World
+stepFliesQueue posChangeInfo w =
+ case fliesToDo w of
+  []     -> error "stepFliesQueue : there shoud be a fly in fliesToDo!"
+  _:rest -> case posChangeInfo of      
+             CurrNewPos newPos -> w{ fliesToDo = rest ,
+                                     doneFlies = newPos : (doneFlies w) }
+             CurrDead          -> w{ fliesToDo = rest }
+             OtherDead deadPos -> w{ fliesToDo = delete deadPos rest ,
+                                     doneFlies = deadPos : ( delete deadPos (doneFlies w) ) }
+
+hasCurrFlySurvived :: PosChangeInfo -> Maybe Pos
+hasCurrFlySurvived posChangeInfo = case posChangeInfo of
+ CurrDead       -> Nothing
+ OtherDead  pos -> Just pos
+ CurrNewPos pos -> Just pos 
 
 
 
+performMove :: Pos -> Move -> World -> (World,PosChangeInfo,Success)
+performMove flyPos move w = case move of
+ Travel dir    -> doTravel dir flyPos w
+ Split  dir en -> undefined
+ Build  dir en -> undefined
+
+
+doTravel :: Dir -> Pos -> World -> (World,PosChangeInfo,Success)
+doTravel DStay pos w = ( w , CurrNewPos pos , True )
+doTravel dir pos w = 
+ let pos' = posPlusDir pos dir 
+  in case objOnPos w pos' of
+      Free         -> ( moveFromTo      pos pos' w , CurrNewPos pos' , True )
+      Apple energy -> ( eatApple energy pos pos' w , CurrNewPos pos' , True )
+      Fly   _      ->   flyCollision    pos pos' w 
+      _            -> ( w                          , CurrNewPos pos  , False ) -- TODO tady se řeší i žraní zdí
+
+
+-- = Fly   FlyData
+-- | Apple Energy
+-- | Wall  Energy
+-- | Free
+
+
+moveFromTo :: Pos -> Pos -> World -> World
+moveFromTo pos1 pos2 w = 
+  let obj = objOnPos w pos1
+   in putObjOnPos obj pos2 (deleteOnPos pos1 w)
+
+eatApple :: Energy -> Pos -> Pos -> World -> World
+eatApple energy flyPos applePos w0 = 
+  let w1 = moveFromTo flyPos applePos w0
+      w2 = updateEnergy (+energy) applePos w1
+   in w2 { applePoses = delete applePos (applePoses w2) }
+
+
+flyCollision :: Pos -> Pos -> World -> ( World , PosChangeInfo , Success )
+flyCollision herPos oponentPos w = 
+ let herFlyData = getFlyData w herPos
+     opoFlyData = getFlyData w oponentPos
+     herEnergy  = flyEnergy herFlyData
+     opoEnergy  = flyEnergy opoFlyData
+
+     sheWon = herEnergy >= opoEnergy 
+
+     flyData' = (if sheWon then herFlyData else opoFlyData){ flyEnergy = herEnergy + opoEnergy }
+
+     w' = putObjOnPos (Fly flyData') oponentPos (deleteOnPos herPos w)
+     
+  in ( w' , if sheWon then OtherDead oponentPos else CurrDead , sheWon )
+       
+
+
+posPlusDir :: Pos -> Dir -> Pos
+posPlusDir (x,y) dir = case dir of
+  DUp    -> (x  ,y-1)
+  DDown  -> (x  ,y+1)
+  DLeft  -> (x-1,y  )
+  DRight -> (x+1,y  )
+  DStay  -> (x  ,y  )
+
+
+getFlyData :: World -> Pos -> FlyData
+getFlyData w pos = case objOnPos w pos of
+  Fly flyData -> flyData
+  _ -> error "getFlyData : ther emust be a fly on the pos.."
+
+updateFlyData :: (FlyData->FlyData) -> Pos -> World -> World
+updateFlyData updateFun flyPos w = updateObj f flyPos w
+ where f (Fly flyData) = Fly (updateFun flyData) 
+       f _             = error "Only fly has FlyData to update!"  
+
+updateEnergy :: (Energy->Energy) -> Pos -> World -> World
+updateEnergy updateFun flyPos w = updateObj f flyPos w
+ where f (Fly flyData) = Fly flyData{ flyEnergy = updateFun (flyEnergy flyData) } 
+       f _             = error "Only fly has energy to update!"  
+
+updateObj :: (Object->Object) -> Pos -> World -> World
+updateObj updateFun pos w = 
+  w { mapa = Map.update (Just . updateFun) pos (mapa w) }
+
+putObjOnPos :: Object -> Pos -> World -> World
+putObjOnPos o pos w = w{ mapa = Map.insert pos o (mapa w) }
+
+deleteOnPos :: Pos -> World -> World
+deleteOnPos pos w = w{ mapa = Map.delete pos (mapa w) }
 
 
 
@@ -153,9 +317,173 @@ getObjInfos w flyPos poses =
 
 
 
+-------------------------------------------------------------------------------------
+
+
+instance Show World where
+  show = showWorld defaultView
+
+instance Show FlyData where
+  show fd = (flyProgName fd) ++ 
+            " energy="  ++ show (flyEnergy     fd) ++ 
+            " state="   ++ show (flyState      fd) ++
+            " success=" ++ show (flyWasSuccess fd) 
+            
+
+showWorld :: (Pos,Pos) -> World -> String
+showWorld view@((x1,y1),(x2,y2)) w = 
+   "\n" ++ 
+   fliesInfo w ++ "\n" ++
+   mapka ++ "\n\n" ++ 
+   "fliesToDo  : " ++ show (fliesToDo  w) ++ "\n" ++ 
+   "doneFlies  : " ++ show (doneFlies  w) ++ "\n" ++
+   "applePoses : " ++ show (applePoses w) ++ "\n" 
+  where
+    mapka = intercalate "\n" $ map (concatMap (\o-> objChar o : " ")) $ worldToLists view w 
+
+defaultView :: (Pos,Pos)
+defaultView = ((0,0),(39,39))
+
+fliesInfo :: World -> String
+fliesInfo w = concatMap f (allFlyPoses w)
+  where f pos = case objOnPos w pos of 
+                 Fly flyData -> show pos ++ " : \t" ++ show flyData ++ "\n"
+                 _ -> error $ "There shoud be a fly on " ++ show pos ++ "."
+
+objChar :: Object -> Char
+objChar o = case o of
+ Fly _   -> 'F'
+ Apple _ -> 'A'
+ Wall  _ -> 'W'
+ Free    -> '.'  
+
+worldToLists :: (Pos,Pos) -> World -> [[Object]]
+worldToLists ((x1,y1),(x2,y2)) w = 
+  [ [ objOnPos w (x,y) | x <- [x1..x2] ] | y <- [y1..y2] ]
+
+allFlyPoses :: World -> [Pos]
+allFlyPoses w = reverse (doneFlies w) ++ (fliesToDo w)
 
 
 
 
 
 
+
+----------------------------------------------------------------
+
+-- type ObjInfo  = (RelPos,Energy)  
+
+
+
+--asi chytřejší takle:   
+nearest :: [ObjInfo] -> x -> ( Dist -> Dir -> x ) -> x
+nearest infos defaultForEmptyInfos f =
+  case infos of
+   [] -> defaultForEmptyInfos
+   _  -> let (rp,_) = minimumBy ( comparing (abso . fst) ) infos
+          in f (sqrt . fromIntegral . abso $ rp) (relPosToDir rp)
+
+nearestDir :: [ObjInfo] -> Dir
+nearestDir [] = DStay
+nearestDir xs = relPosToDir . fst $ minimumBy (comparing (abso . fst)) xs
+
+relPosToDir :: RelPos -> Dir
+relPosToDir (dx,dy) 
+  |   dx  > dy && (-dx) > dy = DUp
+  |   dx  > dy               = DRight
+  | (-dx) > dy               = DLeft
+  | otherwise                = DDown
+
+
+abso :: RelPos -> Int
+abso (x,y) = x*x + y*y
+
+
+
+rot180 :: Dir -> Dir
+rot180 DUp     = DDown
+rot180 DRight  = DLeft
+rot180 DDown   = DUp
+rot180 DLeft   = DRight
+rot180 DStay   = DStay
+
+
+
+-- furt doprava
+prog1 = ( "prog1" , \ x -> Output (Travel DRight) 0 )
+
+-- za nejbližším jablkem
+-- prog2 = ( "prog2" , \ x -> Output (Travel (nearestDir (myApples x)) ) 0 )
+prog2 = ( "prog2" , \ x -> Output (Travel (nAppleDir x) ) 0 )
+
+
+prog3 = ( "prog3" , prog )
+ where
+  prog x = Output ( if (nAppleDist x) < (nFlyDist x) 
+                    then Travel (nAppleDir x)
+                    else ( if (nFlyEnergy x) < (myEnergy x) 
+                           then Travel (nFlyDir x) 
+                           else Travel (rot180 (nFlyDir x) )  )  ) 0
+
+
+w1 = foldr (uncurry putFly) wNoFlies 
+ [ ( (10,10) , prog3 ) ,
+   ( (30,30) , prog3 ) ]
+
+
+wNoFlies :: World  
+wNoFlies = foldr putApple boxedWorld applePoses
+ where
+  numApples = 20
+  (xs,ys) = splitAt numApples $ take (2*numApples) $ randomRs (2,35) (mkStdGen 424242)
+  applePoses = zip xs ys
+
+boxedWorld :: World
+boxedWorld = foldr ($) emptyWorld 
+ [ h (x,y) , 
+   h (x,y+len-1) ,
+   v (x,y+1) ,
+   v (x+len-1,y+1)  ]
+  where 
+    (x,y) = (1,1)
+    len = 38
+    wallEnergy = 9999
+    h = putHLine (Wall wallEnergy) len
+    v = putVLine (Wall wallEnergy) (len-2)
+
+emptyWorld :: World
+emptyWorld = World{
+  mapa      = Map.empty ,
+  fliesToDo = [] ,
+  doneFlies = [] ,
+  applePoses= [] 
+ }
+
+
+ 
+
+putFly :: Pos -> (String,Prog) -> World -> World
+putFly pos (progName,prog) w = 
+  let flyData = FlyData { 
+                  flyProg       = prog , 
+                  flyProgName   = progName ,
+                  flyEnergy     = 1    , 
+                  flyState      = 0    ,
+                  flyLastMove   = Travel DRight ,
+                  flyWasSuccess = True }
+      w' = putObjOnPos (Fly flyData) pos w
+   in w'{ fliesToDo = pos:(fliesToDo w') }
+
+putApple :: Pos -> World -> World
+putApple pos w = (putObjOnPos (Apple 1) pos w){
+   applePoses = pos:(applePoses w)
+ }
+
+putHLine :: Object -> Int -> Pos -> World -> World
+putHLine o len (x,y) w = foldr (putObjOnPos o) w points
+  where points = [ (x',y) | x' <- [x..x+len-1] ]
+
+putVLine :: Object -> Int -> Pos -> World -> World
+putVLine o len (x,y) w = foldr (putObjOnPos o) w points
+  where points = [ (x,y') | y' <- [y..y+len-1] ]
