@@ -1,4 +1,5 @@
-{-# LANGUAGE FlexibleInstances, UndecidableInstances, OverlappingInstances #-}
+{-# LANGUAGE FlexibleInstances, UndecidableInstances #-}
+-- , OverlappingInstances 
 
 module Utils where
 
@@ -218,6 +219,7 @@ align width str =
 
 class (Show a) => JShow a where
   jshow_js :: a -> Maybe JSValue
+  jshow_js _ = Nothing
   jshow    :: a -> JSValue
   jshow x = jsObj $ l_js ++ [ 
     ("type"     , jsStr "jsonout" ) ,
@@ -227,9 +229,6 @@ class (Show a) => JShow a where
      Nothing    -> []
      Just jsval -> [("js",jsval)] 
 
-
-instance Show a => JShow a where 
-  jshow_js _ = Nothing
 
 instance JShow Bool where
   jshow_js x = Just $ JSBool x 

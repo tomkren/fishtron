@@ -1,4 +1,4 @@
-{-# LANGUAGE OverlappingInstances #-}
+-- {-# LANGUAGE OverlappingInstances #-}
 
 module TTree 
 ( CTT (..),
