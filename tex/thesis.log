@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.1415926-2.4-1.40.13 (MiKTeX 2.9) (preloaded format=pdflatex 2013.4.26)  13 MAY 2013 17:54
+This is pdfTeX, Version 3.1415926-2.4-1.40.13 (MiKTeX 2.9) (preloaded format=pdflatex 2013.5.31)  31 MAY 2013 18:29
 entering extended mode
 **thesis.tex
 (C:\Users\sekol\Documents\GitHub\fishtron\tex\thesis.tex
@@ -248,10 +248,10 @@ Now handling font encoding U ...
    defining Unicode char U+2122 (decimal 8482)
    defining Unicode char U+2423 (decimal 9251)
 ))
-(C:\Users\sekol\AppData\Roaming\MiKTeX\2.9\tex\latex\qtree\qtree.sty
+("C:\Program Files (x86)\MiKTeX 2.9\tex\latex\qtree\qtree.sty"
 Package: 2008/12/12 v.3.1bQtree: tree-drawing for linguistics
 Package: qtree 2008/12/12 v.3.1bQtree: tree-drawing for linguistics
-(C:\Users\sekol\AppData\Roaming\MiKTeX\2.9\tex\latex\pict2e\pict2e.sty
+("C:\Program Files (x86)\MiKTeX 2.9\tex\latex\pict2e\pict2e.sty"
 Package: pict2e 2011/04/05 v0.2y Improved picture commands (HjG,RN,JT)
 
 ("C:\Program Files (x86)\MiKTeX 2.9\tex\latex\00miktex\pict2e.cfg"
@@ -272,7 +272,7 @@ Package: ltxcmds 2011/11/09 v1.22 LaTeX kernel commands for general use (HO)
 )
 Package pict2e Info: Driver file for pict2e: p2e-pdftex.def on input line 121.
 
-(C:\Users\sekol\AppData\Roaming\MiKTeX\2.9\tex\latex\pict2e\p2e-pdftex.def
+("C:\Program Files (x86)\MiKTeX 2.9\tex\latex\pict2e\p2e-pdftex.def"
 File: p2e-pdftex.def 2011/04/05 v0.1t Driver-dependant file (RN,HjG,JT)
 )
 ("C:\Program Files (x86)\MiKTeX 2.9\tex\latex\graphics\trig.sty"
@@ -619,7 +619,7 @@ LaTeX Font Info:    ... okay on input line 64.
 LaTeX Font Info:    Checking defaults for PD1/pdf/m/n on input line 64.
 LaTeX Font Info:    ... okay on input line 64.
 
-(C:\Users\sekol\AppData\Roaming\MiKTeX\2.9\tex\context\base\supp-pdf.mkii
+("C:\Program Files (x86)\MiKTeX 2.9\tex\context\base\supp-pdf.mkii"
 [Loading MPS to PDF converter (version 2006.09.02).]
 \scratchcounter=\count116
 \scratchdimen=\dimen121
@@ -681,8 +681,8 @@ Overfull \hbox (34.16788pt too wide) in paragraph at lines 124--136
 
 [1
 
-{C:/Users/sekol/AppData/Local/MiKTeX/2.9/pdftex/config/pdftex.map} <C:/Users/se
-kol/Documents/GitHub/fishtron/tex/logomff.png>] [2] [3] [4]
+{C:/ProgramData/MiKTeX/2.9/pdftex/config/pdftex.map} <C:/Users/sekol/Documents/
+GitHub/fishtron/tex/logomff.png>] [2] [3] [4]
 (C:\Users\sekol\Documents\GitHub\fishtron\tex\thesis.toc)
 \tf@toc=\write4
  [5
@@ -836,7 +836,7 @@ Package atveryend Info: Empty hook `AtVeryVeryEnd' on input line 971.
  ) 
 Here is how much of TeX's memory you used:
  6446 strings out of 493921
- 92071 string characters out of 3144876
+ 91983 string characters out of 3144876
  188428 words of memory out of 3000000
  9573 multiletter control sequences out of 15000+200000
  18924 words of font info for 73 fonts, out of 3000000 for 9000
