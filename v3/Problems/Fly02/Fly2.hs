@@ -27,16 +27,15 @@ data Dir
 
 data Move 
  = Travel Dir 
- | Split  Dir Energy IntState Registers
+ | Split  Dir Energy Registers
 -- | Build  Dir Energy
 
 
 type RelPos   = Pos -- relative pos
 type ObjInfo  = (RelPos,Energy)  
 type Prog     = Input -> Output
-type IntState = Int -- Nebo rači Double ????
-type Success   = Bool
-type Dist = Double
+type Success  = Bool
+type Dist     = Double
 
 
 data World = World { 
@@ -52,7 +51,6 @@ data FlyData = FlyData {
   flyProgName   :: String   ,
 
   flyEnergy     :: Energy   ,
-  flyState      :: IntState ,
   flyLastTravel :: Dir      ,
   flyWasSuccess :: Success  ,
 
@@ -63,15 +61,9 @@ data FlyData = FlyData {
 
 
 data Input  = Input {
-  myEnergy     :: Energy      ,
-  myState      :: IntState    ,
-  myLastTravel :: Dir         ,   -- nebo radši lastMove ???
-  myWasSuccess :: Success     ,
-
-  --myPos        :: Pos         , -- asi nadbytečná, když pracuju v relativních pozicích.. ? (vždy je 0,0..) 
-
-  --myApples     :: [ ObjInfo ] ,
-  --myFlies      :: [ ObjInfo ] ,
+  myEnergy     :: Energy   ,
+  myLastTravel :: Dir      ,
+  myWasSuccess :: Success  ,
 
   nAppleDir    :: Dir  ,
   nAppleDist   :: Dist ,
@@ -88,9 +80,7 @@ data Input  = Input {
  } 
 
 data Output = Output {
-  myMove       :: Move     ,
-  myNextState  :: IntState ,
-  
+  myMove       :: Move ,
   myNextRegs :: Registers
 } 
 
@@ -136,26 +126,22 @@ prepareInput w flyPos flyData =
      
      (cADist , cADir )    = centerInfo w flyPos aPoses 
 
-  in Input { myState      = flyState      flyData 
-           , myEnergy     = flyEnergy     flyData 
+  in Input { myEnergy     = flyEnergy     flyData 
            , myLastTravel = flyLastTravel flyData 
            , myWasSuccess = flyWasSuccess flyData 
-   
-             --myApples     = getObjInfos w flyPos (applePoses w) ,
-             --myFlies      = getObjInfos w flyPos (( fliesToDo w ++ doneFlies w ) \\  [flyPos] ) 
-   
-            , nAppleDir    = nADir  
-            , nAppleDist   = nADist 
-            , nAppleEnergy = nAEn   
-            , nFlyDir      = nFDir  
-            , nFlyDist     = nFDist 
-            , nFlyEnergy   = nFEn   
 
-            , cAppleDir    = cADir  
-            , cAppleDist   = cADist 
+           , nAppleDir    = nADir  
+           , nAppleDist   = nADist 
+           , nAppleEnergy = nAEn   
+           , nFlyDir      = nFDir  
+           , nFlyDist     = nFDist 
+           , nFlyEnergy   = nFEn   
 
-            , myRegs = flyRegs flyData
-            } 
+           , cAppleDir    = cADir  
+           , cAppleDist   = cADist 
+
+           , myRegs = flyRegs flyData
+           } 
 
 nearestInfo :: World -> Pos -> [Pos] -> (Dist,Dir,Energy)
 nearestInfo _ _      []    = (999999, DRight , 0)
@@ -183,25 +169,19 @@ weightedAvg xs ens =
      in (fromIntegral $ weightedSum) / (fromIntegral $ sum ws)
 
 
-
 posToDir :: Pos -> Pos -> Dir
 posToDir posMy posHer = relPosToDir $ posHer `minus` posMy
 
 
 
-   
-
-
 reactToOutput :: Output -> Pos -> World -> World
 reactToOutput herOutput herPos w0 = 
   let herMove      =  myMove      herOutput     
-      herNextState =  myNextState herOutput
       herNextRegs  =  myNextRegs  herOutput
 
       ( w1 , posChangeInfo , success ) = performMove herPos herMove w0  
       
       f flyData = flyData{
-        flyState      = herNextState ,
         flyLastTravel = case herMove of Travel d -> d 
                                         _        -> flyLastTravel flyData ,
         flyWasSuccess = success  ,
@@ -246,8 +226,8 @@ hasCurrFlySurvived posChangeInfo = case posChangeInfo of
 
 performMove :: Pos -> Move -> World -> (World,PosChangeInfo,Success)
 performMove flyPos move w = case move of
- Travel dir                         -> doTravel dir                         flyPos w
- Split  dir en childState childRegs -> doSplit  dir en childState childRegs flyPos w
+ Travel dir              -> doTravel dir              flyPos w
+ Split  dir en childRegs -> doSplit  dir en childRegs flyPos w
 -- Build  dir en -> undefined
 
 
@@ -262,14 +242,14 @@ doTravel dir pos w =
       _            -> ( w                          , CurrNewPos pos  , False ) -- TODO tady se řeší i žraní zdí
 
 
-doSplit :: Dir -> Energy -> IntState -> Registers -> Pos -> World -> (World,PosChangeInfo,Success)
+doSplit :: Dir -> Energy -> Registers -> Pos -> World -> (World,PosChangeInfo,Success)
 --doSplit DStay _ _ _ flyPos w = ( w , CurrNewPos flyPos , False )
-doSplit dir childEnergy childState childRegs flyPos w =
+doSplit dir childEnergy childRegs flyPos w =
   let childPos = posPlusDir flyPos dir
    in case objOnPos w childPos of
        Free -> let correctChildEnergy = min childEnergy ((energyOnPos w flyPos) -1)
                 in if correctChildEnergy > 0 
-                    then let childFly = mkChild (getFlyData w flyPos) correctChildEnergy childState childRegs dir
+                    then let childFly = mkChild (getFlyData w flyPos) correctChildEnergy childRegs dir
                              w' = putObjOnPos childFly childPos (updateEnergy (\e->e-correctChildEnergy) flyPos w) 
                           in ( w' , SplitChange flyPos childPos , True )
                     else ( w , CurrNewPos flyPos , False )
@@ -318,17 +298,15 @@ zInc rs = rs{ zReg = 1 + zReg rs }
 
 
 
-mkChild :: FlyData -> Energy -> IntState -> Registers -> Dir -> Object
-mkChild motherData childEnergy childState childRegs bornDir = 
+mkChild :: FlyData -> Energy -> Registers -> Dir -> Object
+mkChild motherData childEnergy childRegs bornDir = 
   Fly $ FlyData  
    { flyProg       = flyProg     motherData 
    , flyProgName   = flyProgName motherData 
-   , flyEnergy     = childEnergy            
-   , flyState      = childState             
+   , flyEnergy     = childEnergy                        
    , flyLastTravel = bornDir                
    , flyWasSuccess = True  
-
-   , flyRegs = childRegs
+   , flyRegs       = childRegs
    }
 
 
@@ -407,9 +385,6 @@ deleteOnPos pos w = w{ mapa = Map.delete pos (mapa w) }
 
 
 
-
-
-
 objOnPos :: World -> Pos -> Object
 objOnPos w pos = case Map.lookup pos (mapa w) of
   Nothing -> Free
@@ -436,11 +411,6 @@ getObjInfos w flyPos poses =
 
 
 
-
-
-
-
-
 -------------------------------------------------------------------------------------
 
 
@@ -449,10 +419,9 @@ instance Show World where
 
 instance Show FlyData where
   show fd = (flyProgName fd) ++ 
-            " energy="  ++ show (flyEnergy     fd) ++ 
-            " state="   ++ show (flyState      fd) ++
-            " success=" ++ show (flyWasSuccess fd) ++
-            " "         ++ show (flyRegs       fd)
+            " en=" ++ show (flyEnergy     fd) ++ 
+            " su=" ++ show (flyWasSuccess fd) ++
+            " "    ++ show (flyRegs       fd)
 
 showWorld :: (Pos,Pos) -> World -> String
 showWorld view@((x1,y1),(x2,y2)) w = 
@@ -463,7 +432,9 @@ showWorld view@((x1,y1),(x2,y2)) w =
    "doneFlies  : " ++ show (doneFlies  w) ++ "\n" ++
    "applePoses : " ++ show (applePoses w) ++ "\n" 
   where
-    mapka = intercalate "\n" $ map (intercalate " " . map (\o-> [objChar o])) $ worldToLists view w 
+    mapka = intercalate "\n" . 
+            map (intercalate " " . map (\o-> [objChar o])) $ 
+            worldToLists view w 
 
 defaultView :: (Pos,Pos)
 defaultView = ((0,0),(39,39))
@@ -534,34 +505,34 @@ rot180 DLeft   = DRight
 
 
 
-oldOutput :: Move -> IntState -> Output
-oldOutput move state = Output move state defaultRegs
+--oldOutput :: Move -> IntState -> Output
+--oldOutput move state = Output move state defaultRegs
 
 
 
 -- furt doprava
-prog1 = ( "prog1" , \ x -> oldOutput (Travel DRight) 0 )
+prog1 = ( "prog1" , \ x -> Output (Travel DRight) (myRegs x) )
 
 -- za nejbližším jablkem
 -- prog2 = ( "prog2" , \ x -> Output (Travel (nearestDir (myApples x)) ) 0 )
-prog2 = ( "prog2" , \ x -> oldOutput (Travel (nAppleDir x) ) 0 )
+prog2 = ( "prog2" , \ x -> Output (Travel (nAppleDir x) ) (myRegs x) )
 
 
 prog3 = ( "prog3" , prog )
  where
-  prog x = oldOutput ( if (nAppleDist x) < (nFlyDist x) 
-                       then Travel (nAppleDir x)
-                       else ( if (nFlyEnergy x) < (myEnergy x) 
-                              then Travel (nFlyDir x) 
-                              else Travel (rot180 (nFlyDir x) )  )  ) 0
+  prog x = Output ( if (nAppleDist x) < (nFlyDist x) 
+                    then Travel (nAppleDir x)
+                    else ( if (nFlyEnergy x) < (myEnergy x) 
+                           then Travel (nFlyDir x) 
+                           else Travel (rot180 (nFlyDir x) )  )  ) (myRegs x)
 
 prog4 = ( "prog4" , prog )
  where
   prog i = if (xGet i) > 5 
-           then Output ( Split DDown (myEnergy i `div` 2) 0 defaultRegs ) 0 ( xSet 0 $ myRegs i) 
+           then Output ( Split DDown (myEnergy i `div` 2) defaultRegs ) ( xSet 0 $ myRegs i) 
            else if (yGet i) > 5
-                then Output ( Travel (nAppleDir i) ) 0 ( xInc        $ myRegs i)
-                else Output ( Travel DRight        ) 0 ( xInc . yInc $ myRegs i) 
+                then Output ( Travel (nAppleDir i) ) ( xInc        $ myRegs i)
+                else Output ( Travel DRight        ) ( xInc . yInc $ myRegs i) 
 
 w1 = foldr (uncurry putFly) wNoFlies 
  [ ( (10,10) , prog4 ) 
@@ -574,10 +545,6 @@ w1 = foldr (uncurry putFly) wNoFlies
 --              isFly     : ----||---- 
 --              isApple   : ----||----
 --              isFree    : ----||----
-
-
-
-
 
 
 
@@ -623,7 +590,6 @@ putFly pos (progName,prog) w =
                   flyProg       = prog , 
                   flyProgName   = progName ,
                   flyEnergy     = 1      , 
-                  flyState      = 0      ,
                   flyLastTravel = DRight ,
                   flyWasSuccess = True ,
                   

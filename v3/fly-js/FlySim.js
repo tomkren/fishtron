@@ -3,7 +3,95 @@ var FlySim = function(){
 
   var log = function(x){ console.log(x) };
 
+  var minus = function( pos1 , pos2 ){ 
+    return [ pos1[0]-pos2[0] , pos1[1]-pos2[1] ]; 
+  };
+  
+  var dist = function( pos1 , pos2 ) {
+      var d = minus( pos1 , pos2 );
+      var dx = d[0] , dy = d[1];
+      return Math.sqrt(  dx*dx + dy*dy );
+  };
 
+  var getNearestPos = function( pos , poses ){
+ 
+    var bestPos  = undefined ;
+    var bestDist = 999999999 ;
+ 
+    for( var i in poses ){
+      var actPos = poses[i];
+      var dista = dist( pos , actPos );
+      if( dista < bestDist  ){
+        bestDist = dista;
+        bestPos  = actPos;
+      }
+    }
+  
+    //log(pos +' - ' + bestPos+' - '+bestDist);
+
+    if( bestPos === undefined ){ return null ;}
+    return [bestPos,bestDist] ;
+  };
+
+  var posToDir = function( posMy , posHer ){ 
+         
+    var d = minus( posHer , posMy );
+    var dx = d[0] , dy = d[1];
+         
+    if(   dx  > dy && (-dx) > dy ) { return dUp   ; }
+    if(   dx  > dy               ) { return dRight; }
+    if( (-dx) > dy               ) { return dLeft ; }
+    if( true                     ) { return dDown ; }
+        
+  };
+
+
+  var loadImages = function( myImages , afterFun ) {
+  
+    var imgs = [];
+  
+    var imageCount = myImages.length;
+    var loadedCount = 0, errorCount = 0;
+  
+    var checkAllLoaded = function() {
+      if (loadedCount + errorCount == imageCount ) {
+         afterFun();
+      }
+    };
+  
+    var onload = function() {
+      loadedCount++;
+      checkAllLoaded();
+    }, onerror = function() {
+      errorCount++;
+      checkAllLoaded();
+    };   
+  
+    for (var i = 0; i < imageCount; i++) {
+      var img = new Image();
+      img.onload = onload; 
+      img.onerror = onerror;
+      img.src = myImages[i];
+  
+      imgs[i] = img;
+    }
+  
+    return imgs;
+  };
+
+  var dUp     = 0;
+  var dDown   = 1;
+  var dLeft   = 2; 
+  var dRight  = 3; 
+
+  var mkDefaultRegs = function(){
+    return {
+      x : 0,
+      y : 0,
+      z : 0,
+      d : dRight
+    };
+  };
 
   // FlySim object
   return {
@@ -55,7 +143,10 @@ var FlySim = function(){
         mapa[level.solutionFlyPos[0]][level.solutionFlyPos[1]] = {  
           type       : 'fly' ,
           progName   : '_'   ,
-          energy     : 1  
+          energy     : 1     ,
+          wasSuccess : true  ,
+          lastTravel : dRight,
+          regs       : mkDefaultRegs()
         };
         fliesToDo  = level.fliesToDo;
         doneFlies  = level.doneFlies;
@@ -70,11 +161,16 @@ var FlySim = function(){
             var obj = mapa[x][y] ;
             if( obj.type === 'fly' ){
               //obj.prog = progLib[ obj.progName ] ;  <----------------- TODO
+              obj.wasSuccess = true  ;
+              obj.lastTravel = dRight;
+              obj.regs       = mkDefaultRegs();
             }
           }
         }
         drawMapa();
       }; 
+
+      // Drawing :
 
       var drawMapa = function(){
         
@@ -140,30 +236,127 @@ var FlySim = function(){
         return ret + ' ]' ;
       };
 
+      // Simulation :
 
+      var stepCurrentFly = function(){
+    
+        if( fliesToDo.length == 0 ){ throw "There should be a fly!" ; }
+    
+        var currentFlyPos = fliesToDo.shift();
+        var fly           = mapaAt( currentFlyPos );
+        var input         = prepareInput( currentFlyPos , fly );
 
+        log( input );
 
+        drawMapa();
 
-      wallImg  = new Image();
-      flyImg   = new Image();
-      appleImg = new Image();
-      
-      wallImg .src = 'img/wall.png' ;
-      flyImg  .src = 'img/fly.png' ;
-      appleImg.src = 'img/apple.png'; 
-
-      wallImg.onload = function(){
-        flyImg.onload = function(){
-          appleImg.onload = function(){
-            initHTML();
-            afterFun();
-          };
-        };
+        //var output        = fly.prog( input ); 
+        
+        //var newFlyPos     = this.tryToMoveFly( output , currentFlyPos ) ;
+        
+        //this.doneFlies.unshift( newFlyPos );
+    
       };
-      
+
+      var prepareInput = function( flyPos , fly ){
+
+        var nAppleInfo = nearestInfo( flyPos , applePoses );
+        //předpoklad: ve fliesToDo ++ doneFlies neni ta flyPos
+        var nFlyInfo   = nearestInfo( flyPos , fliesToDo.concat(doneFlies) );
+        
+        var cAppleInfo =  centerInfo( flyPos , applePoses );
+
+        return {
+          myEnergy     : fly.energy        ,
+          myLastTravel : fly.lastTravel    ,
+          myWasSuccess : fly.wasSuccess    ,
+
+          nAppleDir    : nAppleInfo.dir    ,  
+          nAppleDist   : nAppleInfo.dist   ,
+          nAppleEnergy : nAppleInfo.energy ,
+
+          nFlyDir      : nFlyInfo.dir      ,
+          nFlyDist     : nFlyInfo.dist     ,
+          nFlyEnergy   : nFlyInfo.energy   ,
+
+          cAppleDir    : cAppleInfo.dir    , 
+          cAppleDist   : cAppleInfo.dist   ,
+
+          myRegs       : fly.regs
+        };
+
+        // return [ this.getSortedPoses( flyPos , this.applePoses ) ,
+        //          this.getNearestFlyPos( flyPos ) ,
+        //          flyPos,
+        //          fly.energy ];
+      };
+
+      var nearestInfo = function( pos , poses ){
+        if( poses.length == 0 ){
+          return [ 999999, dRight , 0 ] ;
+        }
+
+        var res = getNearestPos(pos,poses);
+        var nPos = res[0], nDist = res[1];
+
+        return { dir    : posToDir( pos , nPos ) , 
+                 dist   : nDist , 
+                 energy : mapaAt(nPos).energy || 1 } ;
+      };
+
+      // returns [ Dist , Dir ] of weighted center
+      var centerInfo = function( pos , poses ){
+        if( poses.length == 0 ){
+          return [ 999999, dRight , 0 ] ;
+        }
+
+        var weightedXSum = 0;
+        var weightedYSum = 0;
+        var energySum = 0;
+
+        for( var i = 0 ; i < poses.length ; i++ ){
+          
+          var xPos = poses[i][0];
+          var yPos = poses[i][1];
+          var en   = mapaAt(poses[i]).energy || 1;
+
+          weightedXSum += xPos * en;
+          weightedYSum += yPos * en; 
+          energySum    += en;
+
+        }   
+
+        var centerPos = [ weightedXSum / energySum , 
+                          weightedYSum / energySum ];
+
+        return {
+          dist :     dist( pos , centerPos ),
+          dir  : posToDir( pos , centerPos )
+        };
+
+      };
+
+      var mapaAt = function( pos ){
+        return mapa[pos[0]][pos[1]] ;
+      };
+
+      // INIT CODE :
+
+      var imgs = loadImages( 
+        ["img/wall.png", "img/fly.png", "img/apple.png" ], 
+        function(){
+          initHTML();
+          afterFun();
+        });
+
+      wallImg  = imgs[0];
+      flyImg   = imgs[1];
+      appleImg = imgs[2];
+
       //new sim instance 
       return {
-        loadLevel : loadLevel 
+        loadLevel      : loadLevel ,
+        stepCurrentFly : stepCurrentFly
       };
     }
 
