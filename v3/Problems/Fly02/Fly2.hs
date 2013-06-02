@@ -463,7 +463,7 @@ showWorld view@((x1,y1),(x2,y2)) w =
    "doneFlies  : " ++ show (doneFlies  w) ++ "\n" ++
    "applePoses : " ++ show (applePoses w) ++ "\n" 
   where
-    mapka = intercalate "\n" $ map (concatMap (\o-> objChar o : " ")) $ worldToLists view w 
+    mapka = intercalate "\n" $ map (intercalate " " . map (\o-> [objChar o])) $ worldToLists view w 
 
 defaultView :: (Pos,Pos)
 defaultView = ((0,0),(39,39))
