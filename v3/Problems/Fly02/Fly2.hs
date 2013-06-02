@@ -22,7 +22,7 @@ data Dir
   | DDown 
   | DLeft 
   | DRight
-  | DStay
+--  | DStay
  deriving ( Show )
 
 data Move 
@@ -95,15 +95,15 @@ data Output = Output {
 } 
 
 
-steps :: Int -> World -> World
-steps numSteps w = case numSteps of
+steps :: World -> Int -> World
+steps w numSteps = case numSteps of
  0 -> w
- n -> let w' = step w in steps (n-1) w' 
+ n -> let w' = step w in steps w' (n-1) 
 
-stepsList :: Int -> World -> [World]
-stepsList numSteps w = case numSteps of
+stepsList :: World -> Int -> [World]
+stepsList w numSteps = case numSteps of
   0 -> [w]
-  n -> let w' = step w in w : stepsList (n-1) w'
+  n -> let w' = step w in w : stepsList w' (n-1) 
 
 step :: World -> World
 step w = case fliesToDo w of
@@ -158,14 +158,14 @@ prepareInput w flyPos flyData =
             } 
 
 nearestInfo :: World -> Pos -> [Pos] -> (Dist,Dir,Energy)
-nearestInfo _ _      []    = (999999, DStay , 0)
+nearestInfo _ _      []    = (999999, DRight , 0)
 nearestInfo w flyPos poses = 
   let nearestPos = minimumBy (comparing (dist flyPos)) poses
    in ( dist flyPos nearestPos , posToDir flyPos nearestPos , objEnergy $ objOnPos w nearestPos )
 
 
 centerInfo :: World -> Pos -> [Pos] -> (Dist,Dir)
-centerInfo _ _ [] = ( 999999 , DStay )
+centerInfo _ _ [] = ( 999999 , DRight )
 centerInfo w flyPos poses = 
   let energies         = map (energyOnPos w) poses
       posOfWeightedAvg = weightedAvg poses energies
@@ -252,7 +252,7 @@ performMove flyPos move w = case move of
 
 
 doTravel :: Dir -> Pos -> World -> (World,PosChangeInfo,Success)
-doTravel DStay pos w = ( w , CurrNewPos pos , False )
+--doTravel DStay pos w = ( w , CurrNewPos pos , False )
 doTravel dir pos w = 
  let pos' = posPlusDir pos dir 
   in case objOnPos w pos' of
@@ -263,7 +263,7 @@ doTravel dir pos w =
 
 
 doSplit :: Dir -> Energy -> IntState -> Registers -> Pos -> World -> (World,PosChangeInfo,Success)
-doSplit DStay _ _ _ flyPos w = ( w , CurrNewPos flyPos , False )
+--doSplit DStay _ _ _ flyPos w = ( w , CurrNewPos flyPos , False )
 doSplit dir childEnergy childState childRegs flyPos w =
   let childPos = posPlusDir flyPos dir
    in case objOnPos w childPos of
@@ -375,7 +375,7 @@ posPlusDir (x,y) dir = case dir of
   DDown  -> (x  ,y+1)
   DLeft  -> (x-1,y  )
   DRight -> (x+1,y  )
-  DStay  -> (x  ,y  )
+--  DStay  -> (x  ,y  )
 
 
 
@@ -509,7 +509,7 @@ nearest infos defaultForEmptyInfos f =
           in f (sqrt . fromIntegral . abso $ rp) (relPosToDir rp)
 
 nearestDir :: [ObjInfo] -> Dir
-nearestDir [] = DStay
+--nearestDir [] = DStay
 nearestDir xs = relPosToDir . fst $ minimumBy (comparing (abso . fst)) xs
 
 relPosToDir :: RelPos -> Dir
@@ -530,7 +530,7 @@ rot180 DUp     = DDown
 rot180 DRight  = DLeft
 rot180 DDown   = DUp
 rot180 DLeft   = DRight
-rot180 DStay   = DStay
+--rot180 DStay   = DStay
 
 
 
