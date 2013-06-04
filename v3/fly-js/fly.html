@@ -18,9 +18,11 @@
 $(document).ready(function(){
 
   //var 
-  sim = FlySim.init( 'container' , function(){
-    sim.loadLevel( Levels.w1 ); 
+  s = FlySim.init( 'container' , function(sim){
+    
+    sim.loadLevel( Levels.w0 , FlySim.progLib.prog4 );
     //sim.run();
+
   });
   
 });
