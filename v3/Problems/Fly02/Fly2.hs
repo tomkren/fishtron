@@ -8,6 +8,7 @@ import Data.Ord (comparing)
 import System.Random
 
 
+
 import Problems.Fly02.Funs (Pos,Energy,Dist,Success)
 
 
@@ -518,6 +519,7 @@ rot180 DLeft   = DRight
 
 
 
+
 -- furt doprava
 prog1 = ( "prog1" , \ x -> Output (Travel DRight) (myRegs x) )
 
@@ -546,6 +548,15 @@ w1 = foldr (uncurry putFly) wNoFlies
  [ ( (10,10) , prog4 ) 
  --, ( (30,30) , prog3 ) 
  ]
+
+
+w1_orig :: World  
+w1_orig = foldr putApple boxedWorld applePoses
+ where
+  numApples = 20
+  (xs,ys) = splitAt numApples $ take (2*numApples) $ randomRs (2,35) (mkStdGen 424242)
+  applePoses = zip xs ys
+
 
 
 -- TODO

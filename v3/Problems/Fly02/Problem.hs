@@ -5,7 +5,71 @@ import Problems.Fly02.Fly2  --(  )
 
 --import Heval
 
-type Prog_ = Input_ -> Output_
+
+---------------------------------
+-- worlds stuff -----------------
+---------------------------------
+
+wo1_ = ff_world_complet_      prog1_
+wo1  = ff_world_complet  (snd prog1)
+
+wo2_ = ff_world_complet_      prog2_
+wo2  = ff_world_complet  (snd prog2)
+
+wo4_ = ff_world_complet_      prog4_
+wo4  = ff_world_complet  (snd prog4)
+
+
+prog1_,prog2_,prog4_ :: Prog_
+prog1_ = \ x -> output_ (travel_ dRight) (myRegs_ x)
+prog2_ = \ x -> output_ (travel_ (nAppleDir_ x) ) (myRegs_ x) 
+
+
+
+prog4_ i = if' ((xGet_ i) > 5) 
+               (output_ ( split_ dDown (myEnergy_ i `div` 2) defaultRegs_ ) ( xSet_ 0 $ myRegs_ i) )
+               ( if' ((yGet_ i) > 5)
+                     (output_ ( travel_ (nAppleDir_ i) ) ( xInc_         $ myRegs_ i) )
+                     (output_ ( travel_ dRight         ) ( xInc_ . yInc_ $ myRegs_ i) ) )
+
+
+{- add: 
+ >
+ div
+ 2
+
+ 
+-}
+
+
+ff_world_complet_ :: Prog_ -> World
+ff_world_complet_ = ff_world_complet . prog_2prog
+
+ff_world_complet :: Prog -> World
+ff_world_complet prog = 
+ foldr (uncurry putFly) ff_world_withEnvirFlies
+  [ ( ff_solutionFlyPos , ( "_" , prog ) ) ]
+
+ff_solutionFlyPos :: Pos
+ff_solutionFlyPos = (10,10)
+
+ff_world_withEnvirFlies :: World
+ff_world_withEnvirFlies  = 
+ foldr (uncurry putFly) ff_world_noFlies
+  [ ]--( (30,30) , prog1 ) ,
+    --( (35, 2) , prog3 ) ]
+
+ff_world_noFlies :: World
+ff_world_noFlies = w1_orig
+
+
+
+
+
+
+-------------------------------
+-- adapter stuff --------------
+-------------------------------
 
 prog_2prog :: Prog_ -> Prog
 prog_2prog prog_ = output_2output . prog_ . input2input_
