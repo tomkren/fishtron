@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+<head>
+
+    <title>fly.js demo</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+
+    <link href="css/jquery-ui.css" rel="stylesheet" media="screen">
+
+    <script src="js/libs/jquery.js"></script>
+    <script src="js/libs/jquery.ui.js"></script>
+
+    <script src="js/Problems/FlySim.js"></script>
+    <script src="js/Problems/Levels.js"></script>
+    
+<script>
+
+$(function(){
+
+  //var 
+  s = FlySim.init( 'container' , function(sim){
+
+    sim.loadLevelsDB( Levels );
+    
+    sim.loadLevel( 'w0' , 'my-prog4' , FlySim.progLib.prog4 );
+
+    sim.loadSolution( 'my-prog1' , FlySim.progLib.prog1 );
+    //sim.run();
+
+  });
+  
+});
+
+
+</script>
+</head>
+<body>
+
+
+  <div id="container"></div>
+
+
+</body>
+</html>

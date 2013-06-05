@@ -470,7 +470,11 @@ allFlyPoses w = reverse (doneFlies w) ++ (fliesToDo w)
 
 
 
+solutionFlies :: World -> [Object]
+solutionFlies w = filter (\(Fly fd) -> flyProgName fd == "_" ) . map (objOnPos w) $ allFlyPoses w
 
+solutionFliesSumEnergy :: World -> Energy
+solutionFliesSumEnergy = sum . map (\(Fly fd)-> flyEnergy fd ) . solutionFlies
 
 
 

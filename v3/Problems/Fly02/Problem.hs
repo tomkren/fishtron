@@ -1,9 +1,92 @@
 module Problems.Fly02.Problem where
 
+import Data.List
+
 import Problems.Fly02.Funs  --(  )
 import Problems.Fly02.Fly2  --(  )
 
+import TTerm  (Typ(..),Context)
+import GP_Core (FitFun(FF6))
+import GP_Data (CTTGen(..))
+
+import DrawIM( imGraphInJSON )
+
+import ProblemUtils 
+
+import JSONUtils
+import Text.JSON
+
+
 --import Heval
+
+reg = PO_CTTP_ PO_CTTP {
+  cttp_code        = "fly02"                                      ,
+  cttp_info        = "Fly 0.2 eating apples and stuff... "        ,
+  cttp_data        = jsData                                       ,
+  cttp_numRuns     = IntSlider "Runs"            1 10    1    1   ,
+  cttp_numGene     = IntSlider "Generations"     0 100   10   10  ,
+  cttp_popSize     = IntSlider "Population size" 0 5000  500  100 ,
+  
+  cttp_typ         = prog_typ                                     ,
+  cttp_ctx         = ctx                                          ,
+
+  cttp_gOpt        = CTTG_Koza2 prog_typ ctx                      , 
+  
+  cttp_ff          = FF6 prog_type ff "Problems.Fly02.Funs" 
+  
+}
+
+prog_type  = asType :: Prog_
+
+prog_typ   = input_typ :-> output_typ
+input_typ  = Typ "Input_"
+output_typ = Typ "Output_"
+move_typ   = Typ "Move_"
+regs_typ   = Typ "Registers_"
+dir_typ    = Typ "Dir_"
+
+
+
+ctx :: Context
+ctx = [
+  ( "output_"          , move_typ :-> regs_typ :-> output_typ         ) ,
+
+  ( "travel_"          , dir_typ :-> move_typ                         ) ,
+
+  ( "myRegs_"          , input_typ :-> regs_typ                       ) ,
+
+  ( "dUp"              , dir_typ                                      ) ,
+  ( "dDown"            , dir_typ                                      ) ,
+  ( "dLeft"            , dir_typ                                      ) ,
+  ( "dRight"           , dir_typ                                      ) 
+ 
+ ]
+
+
+
+
+
+ff :: Prog_ -> (Double,Bool)
+ff prog_ = 
+  let w  = ff_world_complet_ prog_
+      w' = steps w numSteps
+      finalEnergy = fromIntegral $ solutionFliesSumEnergy w'
+   in ( finalEnergy , False )
+
+
+numSteps :: Int
+numSteps = 100
+
+
+jsData = jsObj [ 
+ ( "world" , worldToJSON ff_solutionFlyPos ff_world_withEnvirFlies ),
+ ( "im"    , imGraphInJSON prog_typ ctx )]
+
+
+
+
+
+
 
 
 ---------------------------------
@@ -21,10 +104,10 @@ wo4  = ff_world_complet  (snd prog4)
 
 
 prog1_,prog2_,prog4_ :: Prog_
+
 prog1_ = \ x -> output_ (travel_ dRight) (myRegs_ x)
+
 prog2_ = \ x -> output_ (travel_ (nAppleDir_ x) ) (myRegs_ x) 
-
-
 
 prog4_ i = if' ((xGet_ i) > 5) 
                (output_ ( split_ dDown (myEnergy_ i `div` 2) defaultRegs_ ) ( xSet_ 0 $ myRegs_ i) )
@@ -125,4 +208,34 @@ regs2regs_ rs = ( xReg rs , yReg rs , zReg rs, dir2dir_ $ dReg rs )
 
 regs_2regs :: Registers_ -> Registers
 regs_2regs (x,y,z,d) = Registers x y z (dir_2dir d)
+
+
+
+
+-------------------------------
+-- world to json---------------
+---------------------------------
+
+worldToJSON :: Pos -> World -> JSValue
+worldToJSON solutionFlyPos@(x,y) w =
+  let mapaJSON = jsArr $ map (\row -> jsArr $ map f row ) $ transpose $ worldToLists defaultView w
+   in jsObj [ ("mapa"            , mapaJSON) , 
+              ("solutionFlyPos"  , jsArr [ jsNum x , jsNum y ] ) ,
+              ("fliesToDo"       , posesToJSON (fliesToDo  w)   ) ,
+              ("doneFlies"       , posesToJSON (doneFlies  w)   ) ,
+              ("applePoses"      , posesToJSON (applePoses w)   ) ,
+              ("numSteps"        , jsNum numSteps               ) ]
+ where
+  f :: Object -> JSValue
+  f o = case o of
+   Fly flyData -> jsObj [("type"     , jsStr "fly"  ),
+                         ("progName" , jsStr (flyProgName flyData) ),
+                         ("energy"   , jsNum (flyEnergy   flyData) )]
+   Apple energy-> jsObj [("type", jsStr "apple"),("energy" , jsNum energy )]
+   Wall _      -> jsObj [("type", jsStr "wall" )]
+   Free        -> jsObj [("type", jsStr "free" )]
+
+  posesToJSON :: [Pos] -> JSValue
+  posesToJSON poses = jsArr $ map (\(x,y)->jsArr [ jsNum x , jsNum y ]) poses
+  
 

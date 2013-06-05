@@ -196,7 +196,12 @@ var FlySim = function(){
 
   var div = cur2(function(x,y){  return Math.floor(x/y);  });
 
-
+  var Funs = {
+    output_ : output_ ,
+    travel_ : travel_ ,
+    dUp     : dUp     ,
+    myRegs_ : myRegs_
+  };
 
   var progLib = {
       prog1 : function(inp){
@@ -325,6 +330,9 @@ var FlySim = function(){
       var ctx            ;
       var infoDiv        ;
 
+      var maxForSteps    ;
+      var maxForBigSteps ;
+
       var wallImg, appleImg, flyImg ;
 
       // (private) member functions
@@ -336,6 +344,13 @@ var FlySim = function(){
           solutionsDB[name] = progLib[name] ;
         }
 
+        initSlidersMaxes();
+
+      };
+
+      var initSlidersMaxes = function(){
+        maxForSteps    = 64 ;
+        maxForBigSteps = 64 ;
       };
 
       var initHTML = function(){
@@ -396,6 +411,8 @@ var FlySim = function(){
 
         $('#_level-select').change(function(){
 
+          initSlidersMaxes();
+
           var lvlID = $('#_level-select').val() ;
 
           pause();
@@ -405,6 +422,8 @@ var FlySim = function(){
 
         $('#_solution-select').change(function(){
           
+          initSlidersMaxes();
+
           currProgName = $('#_solution-select').val() ;
           currProg     = solutionsDB[currProgName] ;
 
@@ -430,10 +449,23 @@ var FlySim = function(){
 
       };
 
+      var addNewSolution = function( name , prog ){
+        loadSolution( name, prog );
+
+        currProgName = $('#_solution-select').val() ;
+        currProg     = solutionsDB[currProgName] ;
+
+        var lvlID = $('#_level-select').val() ;
+        
+        pause();
+        loadLevel_( JSON.stringify( levelsDB[ lvlID ] )  );
+        setSolution( currProgName );
+
+      };
+
       var loadSolution = function( name , prog ){
         solutionsDB[name] = prog ;
         drawSolutionSelect();
-
       };
 
       var setSolution = function( name ){
@@ -448,7 +480,7 @@ var FlySim = function(){
         select.html('');
 
         for( var name in solutionsDB ){
-          select.append(  $('<option>').attr('value',name).html( name )  );
+          select.prepend(  $('<option>').attr('value',name).html( name )  );
         }
       };
 
@@ -517,7 +549,7 @@ var FlySim = function(){
           range: "min",
           value: 0 ,
           min: 0,
-          max: numSteps,
+          max: maxForBigSteps,
           slide: function( event, ui ) {
             pause();
             goToBigStep( ui.value );
@@ -529,7 +561,7 @@ var FlySim = function(){
           range: "min",
           value: 0 ,
           min: 0,
-          max: numSmallSteps,
+          max: maxForSteps,
           slide: function( event, ui ) {
             pause();
             goToStep( ui.value );
@@ -658,7 +690,20 @@ var FlySim = function(){
         setTimeout( function(){
           if( playState == 'pause' ) return;
           $('#_steps-slider'    ).slider('value',currStep);
-          $('#_big-steps-slider').slider('value',currBigStep); 
+          $('#_big-steps-slider').slider('value',currBigStep);
+
+          maxForSteps = $('#_steps-slider').slider('option','max');
+          if( currStep > maxForSteps ){
+            maxForSteps *= 2;
+            $('#_steps-slider').slider('option','max', maxForSteps );
+          }
+
+          maxForBigSteps = $('#_big-steps-slider').slider('option','max');
+          if( currBigStep > maxForBigSteps ){
+            maxForBigSteps *= 2;
+            $('#_big-steps-slider').slider('option','max', maxForBigSteps );
+          }
+
           run(n-1); 
         } , timeout ); 
       };
@@ -981,12 +1026,16 @@ var FlySim = function(){
         { loadLevel    : loadLevel 
         , restartLevel : restartLevel    
         , loadSolution : loadSolution  
+        , addNewSolution: addNewSolution
+        , play         : play
         , steps        : steps         
         , bigSteps     : bigSteps      
         , goToBigStep  : goToBigStep 
         , goToStep     : goToStep   
         , run          : run 
-        , loadLevelsDB : loadLevelsDB    
+        , loadLevelsDB : loadLevelsDB 
+        , Funs         : Funs   
+
 
         , mapaAt : mapaAt
         , getSolutionsDB : function(){return solutionsDB;} };

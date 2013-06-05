@@ -1,11 +1,6 @@
 module Problems.Fly02.Funs where
 
 
-
-
-
-
-
 s :: (a->b->c) -> (a->b) -> a -> c
 s x y z = x z (y z)
 
@@ -81,10 +76,11 @@ cAppleDir_    ( _ , _ , (x,_) , _ ) = x
 cAppleDist_   :: Input_ -> Dist
 cAppleDist_   ( _ , _ , (_,x) , _ ) = x
 
-
-
 myRegs_ :: Input_ -> Registers_
 myRegs_ ( _ , _ , _ , regs ) = regs
+
+
+
 
 defaultRegs_ :: Registers_
 defaultRegs_ = (0,0,0,dRight)
