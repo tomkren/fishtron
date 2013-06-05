@@ -1,15 +1,5 @@
 module Problems.Fly02.Funs where
 
-
-type Input_  = ( [Pos] , Maybe Pos , Pos , Energy )
-type Output_ = Dir_
-type Dir_    = Int
-type Energy  = Int
-type Pos = (Int,Int)
-
-
-
-
 s :: (a->b->c) -> (a->b) -> a -> c
 s x y z = x z (y z)
 
@@ -19,59 +9,89 @@ k x y = x
 i :: a -> a
 i x = x
 
+
+type Energy  = Int
+type Pos     = (Int,Int)
+type Success = Bool
+type Dist    = Double
+
+--type Input_  = ( [Pos] , Maybe Pos , Pos , Energy )
+
+type Dir_    = Int
+
+type Move_ = Either Dir_ (Dir_ ,Energy, Registers_)
+
+
+type Registers_ = (Int,Int, Int, Dir_ )
+ 
+type Input_  = ( (Energy,Dir_,Success) , (Dir_,Dist,Energy,  Dir_,Dist,Energy)  ,  (Dir_,Dist)  ,  Registers_ )
+
+type Output_ = ( Move_ , Registers_ )
+
+
+
+output_ :: Move_ -> Registers_ -> Output_
+output_ move regs = (move,regs) 
+
 if' :: Bool -> a -> a -> a
 if' p q r = if p then q else r 
 
-head_ :: [a] -> Maybe a
-head_ xs = case xs of
-  []  -> Nothing
-  x:_ -> Just x
 
-dStay , dUp , dDown , dLeft , dRight :: Dir_
-dStay   = 0 
+travel_ :: Dir_ -> Move_
+travel_ dir = Left dir
+
+split_ :: Dir_ -> Energy -> Registers_ -> Move_
+split_ dir en regs = Right (dir,en,regs)
+
+dUp , dDown , dLeft , dRight :: Dir_
 dUp     = 1
 dDown   = 2
 dLeft   = 3 
 dRight  = 4 
 
-output_ :: Dir_ -> Output_
-output_ = id
 
-myApplePoses_ :: Input_ -> [Pos]
-myApplePoses_ (x,_,_,_) = x
 
-nearestFlyPos_ :: Input_ -> Maybe Pos
-nearestFlyPos_ (_,x,_,_) = x
+nAppleDir_ :: Input_ -> Dir_
+nAppleDir_ ( _ , (x,_,_,_,_,_) , _ , _ ) = x
+nAppleDist_ :: Input_ -> Dist_
+nAppleDist_ ( _ , (_,x,_,_,_,_) , _ , _ ) = x
+nAppleEnergy_ :: Input_ -> Energy
+nAppleEnergy_ ( _ , (_,_,x,_,_,_) , _ , _ ) = x
+nFlyDir_ :: Input_ -> Dir_  
+nFlyDir_ ( _ , (_,_,_,x,_,_) , _ , _ ) = x
+nFlyDist_ :: Input_ -> Dist 
+nFlyDist_ ( _ , (_,_,_,_,x,_) , _ , _ ) = x
+nFlyEnergy_ :: Input_ -> Energy
+nFlyEnergy_ ( _ , (_,_,_,_,_,x) , _ , _ ) = x
 
-myPos_ :: Input_ -> Pos
-myPos_ (_,_,x,_) = x
-
-inputEnergy_ :: Input_ -> Energy
-inputEnergy_ (_,_,_,x) = x
-
-posToDir_ :: Pos -> Maybe Pos -> Dir_
-posToDir_ posMy Nothing = dStay 
-posToDir_ posMy (Just posHer) 
-  |   dx  > dy && (-dx) > dy = dUp
-  |   dx  > dy               = dRight
-  | (-dx) > dy               = dLeft
-  | otherwise                = dDown
- where (dx,dy) = posHer `minus` posMy
-
-avg :: [Pos] -> Maybe Pos
-avg xs = case xs of
-  [] -> Nothing
-  xs -> let (xs1,xs2) = unzip xs
-         in Just ( round $ mean xs1 , round $ mean xs2 )
- where
-  mean :: [Int] -> Double
-  mean xs = (fromIntegral $ sum xs) / (fromIntegral $ length xs)
+cAppleDir_ :: Input_ -> Dir_
+cAppleDir_ ( _ , _ , (x,_) , _ ) = x
+cAppleDist_ :: Input_ -> Dist
+cAppleDist_ ( _ , _ , (_,x) , _ ) = x
 
 
 
-minus :: Pos -> Pos -> Pos
-minus (x1,y1) (x2,y2) = (x1-x2,y1-y2) 
+myRegs_ :: Input_ -> Registers_
+myRegs_ ( _ , _ , _ , regs ) = regs
 
-dist :: Pos -> Pos -> Double
-dist (x1,y1) (x2,y2) = sqrt $ (d2 x1 x2) + (d2 y1 y2)
- where d2 a b = let c=a-b in fromIntegral $ c*c 
+xGet_,yGet_,zGet_ :: Input_ -> Int
+dGet_             :: Input_ -> Dir_
+xGet_ = (\(x,_,_,_)->x) . myRegs_ 
+yGet_ = (\(_,y,_,_)->y) . myRegs_ 
+zGet_ = (\(_,_,z,_)->z) . myRegs_ 
+dGet_ = (\(_,_,_,d)->d) . myRegs_ 
+
+xSet,ySet,zSet :: Int  -> Registers_ -> Registers_
+dSet           :: Dir_ -> Registers_ -> Registers_
+xSet i (x,y,z,d) = (i,y,z,d)
+ySet i (x,y,z,d) = (x,i,z,d)
+zSet i (x,y,z,d) = (x,y,i,d)
+dSet i (x,y,z,d) = (x,y,z,i)
+
+xInc,yInc,zInc :: Registers -> Registers
+xInc (x,y,z,d) = (x+1,y,z,d)
+yInc (x,y,z,d) = (x,y+1,z,d)
+zInc (x,y,z,d) = (x,y,z+1,d)
+
+
+

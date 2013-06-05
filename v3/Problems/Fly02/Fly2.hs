@@ -1,4 +1,4 @@
-module Problems.Fly.Fly2 where
+module Problems.Fly02.Fly2 where
 
 
 import qualified Data.Map as Map
@@ -8,7 +8,16 @@ import Data.Ord (comparing)
 import System.Random
 
 
-import Problems.Fly.Funs 
+import Problems.Fly02.Funs (Pos,Energy,Dist,Success)
+
+
+minus :: Pos -> Pos -> Pos
+minus (x1,y1) (x2,y2) = (x1-x2,y1-y2) 
+
+dist :: Pos -> Pos -> Double
+dist (x1,y1) (x2,y2) = sqrt $ (d2 x1 x2) + (d2 y1 y2)
+ where d2 a b = let c=a-b in fromIntegral $ c*c 
+
 
 
 data Object 
@@ -34,8 +43,7 @@ data Move
 type RelPos   = Pos -- relative pos
 type ObjInfo  = (RelPos,Energy)  
 type Prog     = Input -> Output
-type Success  = Bool
-type Dist     = Double
+
 
 
 data World = World { 
