@@ -194,13 +194,61 @@ var FlySim = function(){
     return ret;
   };
 
+  var rotCW_ = function( dir ){
+    switch( dir ){
+      case dUp    : return dRight ;      
+      case dDown  : return dLeft  ;     
+      case dLeft  : return dUp    ;      
+      case dRight : return dDown  ;       
+    }
+  };      
+
+
   var div = cur2(function(x,y){  return Math.floor(x/y);  });
 
   var Funs = {
+    
     output_ : output_ ,
+
+    if_     : if_     ,
+
     travel_ : travel_ ,
+    split_  : split_  ,
+
+    myEnergy_     : myEnergy_      ,
+    myLastTravel_ : myLastTravel_  ,
+    myWasSuccess_ : myWasSuccess_  ,
+    nAppleDir_    : nAppleDir_     ,
+    nAppleDist_   : nAppleDist_    ,
+    nAppleEnergy_ : nAppleEnergy_  ,
+    nFlyDir_      : nFlyDir_       ,
+    nFlyDist_     : nFlyDist_      ,
+    nFlyEnergy_   : nFlyEnergy_    ,
+    cAppleDir_    : cAppleDir_     ,
+    cAppleDist_   : cAppleDist_    ,
+    myRegs_       : myRegs_        ,
+
+    xGet_ : xGet_ ,
+    yGet_ : yGet_ ,
+    zGet_ : zGet_ ,
+    dGet_ : dGet_ ,
+    xSet_ : xSet_ ,
+    ySet_ : ySet_ ,
+    zSet_ : zSet_ ,
+    dSet_ : dSet_ ,
+    xInc_ : xInc_ ,
+    yInc_ : yInc_ ,
+    zInc_ : zInc_ ,
+
+    defaultRegs_ : defaultRegs_ ,
+
+    rotCW_ : rotCW_ ,
+
     dUp     : dUp     ,
-    myRegs_ : myRegs_
+    dDown   : dDown   ,
+    dLeft   : dLeft   ,
+    dRight  : dRight  
+
   };
 
   var progLib = {

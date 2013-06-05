@@ -51,6 +51,15 @@ dRight  = 4
 
 
 
+rotCW_ :: Dir_ -> Dir_
+rotCW_ dir_ 
+  | dir_ == dUp    = dRight     
+  | dir_ == dDown  = dLeft   
+  | dir_ == dLeft  = dUp     
+  | dir_ == dRight = dDown    
+
+
+
 myEnergy_     :: Input_ -> Energy   
 myEnergy_     ( (x,_,_) , _ , _ , _ ) = x
 myLastTravel_ :: Input_ -> Dir_      

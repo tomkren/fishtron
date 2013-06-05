@@ -30,7 +30,7 @@ reg = PO_CTTP_ PO_CTTP {
   cttp_typ         = prog_typ                                     ,
   cttp_ctx         = ctx                                          ,
 
-  cttp_gOpt        = CTTG_Koza2 prog_typ ctx                      , 
+  cttp_gOpt        = CTTG_Geom     prog_typ ctx 0.5 ,  --CTTG_Koza2 prog_typ ctx    , 
   
   cttp_ff          = FF6 prog_type ff "Problems.Fly02.Funs" 
   
@@ -44,6 +44,9 @@ output_typ = Typ "Output_"
 move_typ   = Typ "Move_"
 regs_typ   = Typ "Registers_"
 dir_typ    = Typ "Dir_"
+bool_typ   = Typ "Bool" 
+int_typ   = Typ "Int" 
+
 
 
 
@@ -51,15 +54,32 @@ ctx :: Context
 ctx = [
   ( "output_"          , move_typ :-> regs_typ :-> output_typ         ) ,
 
+  ( "if'"              , bool_typ :-> move_typ :-> move_typ :-> move_typ ),
+  ( "if'"              , bool_typ :-> output_typ :-> output_typ :-> output_typ ),
+
+
   ( "travel_"          , dir_typ :-> move_typ                         ) ,
 
+  ( "split_"           , dir_typ :-> int_typ :-> regs_typ :-> move_typ ),
+
+  ( "myLastTravel_"    , input_typ :-> dir_typ                        ) ,      
   ( "myRegs_"          , input_typ :-> regs_typ                       ) ,
+
+  ( "myWasSuccess_"    , input_typ :-> bool_typ                       ),  
+
+  ( "nAppleDir_"       , input_typ :-> dir_typ                        ),
+
+  ( "rotCW_"           , dir_typ :-> dir_typ                          ) ,
 
   ( "dUp"              , dir_typ                                      ) ,
   ( "dDown"            , dir_typ                                      ) ,
   ( "dLeft"            , dir_typ                                      ) ,
-  ( "dRight"           , dir_typ                                      ) 
+  ( "dRight"           , dir_typ                                      ) ,
  
+  ( "0"                , int_typ ),
+  ( "1"                , int_typ ),
+  ( "2"                , int_typ )
+
  ]
 
 
@@ -71,6 +91,7 @@ ff prog_ =
   let w  = ff_world_complet_ prog_
       w' = steps w numSteps
       finalEnergy = fromIntegral $ solutionFliesSumEnergy w'
+      --finalEnergy = fromIntegral . length . solutionFlies $ w' 
    in ( finalEnergy , False )
 
 
