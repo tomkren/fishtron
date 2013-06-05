@@ -186,6 +186,9 @@ var FlySim = function(){
 
       var sim            ;
 
+      var levelsDB       ;
+      var solutionsDB    ;
+
       var playState      ;
 
       var levelJSON      ;
@@ -193,6 +196,7 @@ var FlySim = function(){
       var currStep       ;
       var currBigStep    ;
       var currProg       ;
+      var currProgName   ;
           
       var mapa           ;
       var fliesToDo      ;
@@ -210,6 +214,15 @@ var FlySim = function(){
       var wallImg, appleImg, flyImg ;
 
       // (private) member functions
+
+      var initStructures = function(){
+        solutionsDB = {} ;
+
+        for( var name in progLib ){
+          solutionsDB[name] = progLib[name] ;
+        }
+
+      };
 
       var initHTML = function(){
 
@@ -239,14 +252,9 @@ var FlySim = function(){
          sliderPlace( 'Speed'    , 'fly-speed-slider' , 100 , 30 , 
          '<a id="_play-link" href="#">Play</a>' ) +
          sliderPlace( 'Steps'  , '_steps-slider'      , 500 , 40 ) +
-         sliderPlace( 'Rounds' , '_big-steps-slider'  , 500 , 27 ) +
-
-         '<select id="_level-select">'+
-         '  <option value="w0">Level 0</option>'+
-         '  <option value="w1">Level 1</option>'+
-         '</select>'
-
-          );
+         sliderPlace( 'Rounds' , '_big-steps-slider'  , 500 , 27 ) ) 
+        .append( $('<select>').attr('id','_level-select') )
+        .append( $('<select>').attr('id','_solution-select') );
 
         container.append( controlsDiv ).append( canvas ).append( infoDiv );
 
@@ -273,22 +281,80 @@ var FlySim = function(){
         });
 
         $('#_level-select').change(function(){
+
+          var lvlID = $('#_level-select').val() ;
+
           pause();
-          loadLevel( Levels[ $('#_level-select').val() ] , currProg );
+          loadLevel_( JSON.stringify( levelsDB[ lvlID ] )  );
+          setSolution( currProgName );
         });
 
+        $('#_solution-select').change(function(){
+          
+          currProgName = $('#_solution-select').val() ;
+          currProg     = solutionsDB[currProgName] ;
+
+          var lvlID = $('#_level-select').val() ;
+
+          pause();
+          loadLevel_( JSON.stringify( levelsDB[ lvlID ] )  );
+          setSolution( currProgName );
+        });
 
       };
 
+      var loadLevelsDB = function( lvlsDB ){
+        levelsDB = lvlsDB;
+
+        var select = $('#_level-select');
+
+        select.html('');
+
+        for( var i in levelsDB ){
+          select.append(  $('<option>').attr('value',i).html( levelsDB[i].name )  );
+        }
+
+      };
+
+      var loadSolution = function( name , prog ){
+        solutionsDB[name] = prog ;
+        drawSolutionSelect();
+
+      };
+
+      var setSolution = function( name ){
+        var prog = solutionsDB[name];
+        mapaAt( solutionFlyPos ).prog = prog ;
+        currProg = prog ;     
+        currProgName = name;
+      };
+
+      var drawSolutionSelect = function(){
+        var select = $('#_solution-select');
+        select.html('');
+
+        for( var name in solutionsDB ){
+          select.append(  $('<option>').attr('value',name).html( name )  );
+        }
+      };
+
       var restartLevel = function(){
-        loadLevel( levelJSON , currProg );
+        loadLevel_( levelJSON );
+        setSolution( currProgName );
         return sim;
       }
 
-      var loadLevel = function( lvlJSON , prog ){
+      var loadLevel = function( lvlID , progName , prog ){
+        loadSolution( progName , prog );
+        loadLevel_( JSON.stringify( levelsDB[ lvlID ] ) );
+        setSolution( progName );
+      };
+
+      var loadLevel_ = function( lvlJSON ){
         
-        var level = JSON.parse( lvlJSON );
         levelJSON = lvlJSON ; 
+       
+        var level = JSON.parse( levelJSON ) ;
 
         currStep    = 0 ;
         currBigStep = 0 ;   
@@ -323,7 +389,6 @@ var FlySim = function(){
               obj.wasSuccess = true  ;
               obj.lastTravel = dRight;
               obj.regs       = mkDefaultRegs();
-
             } else if( obj.type === 'apple' ){
 
               obj.energy = obj.energy || 1 ;
@@ -332,7 +397,6 @@ var FlySim = function(){
 
           }
         }
-
 
 
         $( "#_big-steps-slider" ).slider({
@@ -359,17 +423,11 @@ var FlySim = function(){
           }
         });
 
-        loadSolution( prog );
-
         drawMapa();
         return sim;
       }; 
 
-      var loadSolution = function( prog ){
-        mapaAt( solutionFlyPos ).prog = prog ;
-        currProg = prog ;
-        return sim ;
-      };
+
 
       // Drawing :
 
@@ -813,13 +871,16 @@ var FlySim = function(){
         , bigSteps     : bigSteps      
         , goToBigStep  : goToBigStep 
         , goToStep     : goToStep   
-        , run          : run     
+        , run          : run 
+        , loadLevelsDB : loadLevelsDB    
 
-        , mapaAt : mapaAt };
+        , mapaAt : mapaAt
+        , getSolutionsDB : function(){return solutionsDB;} };
 
       var imgs = loadImages( 
         ["img/wall.png", "img/fly.png", "img/apple.png" ], 
         function(){
+          initStructures();
           initHTML();
           afterFun( sim );
         });

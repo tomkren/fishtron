@@ -15,12 +15,16 @@
     
 <script>
 
-$(document).ready(function(){
+$(function(){
 
   //var 
   s = FlySim.init( 'container' , function(sim){
+
+    sim.loadLevelsDB( Levels );
     
-    sim.loadLevel( Levels.w0 , FlySim.progLib.prog4 );
+    sim.loadLevel( 'w0' , 'my-prog4' , FlySim.progLib.prog4 );
+
+    sim.loadSolution( 'my-prog1' , FlySim.progLib.prog1 );
     //sim.run();
 
   });
