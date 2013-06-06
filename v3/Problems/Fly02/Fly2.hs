@@ -633,3 +633,24 @@ putHLine o len (x,y) w = foldr (putObjOnPos o) w points
 putVLine :: Object -> Int -> Pos -> World -> World
 putVLine o len (x,y) w = foldr (putObjOnPos o) w points
   where points = [ (x,y') | y' <- [y..y+len-1] ]
+
+--------------------------
+
+
+worldFromStrs :: [String] -> World
+worldFromStrs strs = 
+  foldr (\(pos,obj) w -> f obj pos w ) emptyWorld (worldFromStrs' strs)
+ where
+  f obj = case obj of
+    Apple _ -> putApple 
+    _       -> putObjOnPos obj
+
+worldFromStrs' :: [String] -> [(Pos,Object)]
+worldFromStrs' strs = 
+  concatMap (\(str,y)-> map (\(ch,x)-> ((x,y),objectFromChar ch) ) (zip str [0..]) ) (zip strs [0..]) 
+
+objectFromChar :: Char -> Object
+objectFromChar ch = case ch of
+  '.' -> Free
+  'W' -> Wall 1
+  'A' -> Apple 1

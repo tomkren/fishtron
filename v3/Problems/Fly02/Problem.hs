@@ -45,7 +45,8 @@ move_typ   = Typ "Move_"
 regs_typ   = Typ "Registers_"
 dir_typ    = Typ "Dir_"
 bool_typ   = Typ "Bool" 
-int_typ   = Typ "Int" 
+int_typ    = Typ "Int" 
+dist_typ   = Typ "Double"
 
 
 
@@ -59,15 +60,42 @@ ctx = [
 
 
   ( "travel_"          , dir_typ :-> move_typ                         ) ,
-
   ( "split_"           , dir_typ :-> int_typ :-> regs_typ :-> move_typ ),
 
-  ( "myLastTravel_"    , input_typ :-> dir_typ                        ) ,      
-  ( "myRegs_"          , input_typ :-> regs_typ                       ) ,
 
+  ( "myEnergy_"        , input_typ :-> int_typ                         ),
+  ( "myLastTravel_"    , input_typ :-> dir_typ                        ) ,      
   ( "myWasSuccess_"    , input_typ :-> bool_typ                       ),  
 
+
   ( "nAppleDir_"       , input_typ :-> dir_typ                        ),
+
+  ( "nAppleDir_"       ,  input_typ :-> dir_typ                       ),           
+  ( "nAppleDist_"      ,  input_typ :-> dist_typ                      ),            
+  ( "nAppleEnergy_"    ,  input_typ :-> int_typ                       ),           
+  ( "nFlyDir_"         ,  input_typ :-> dir_typ                       ),             
+  ( "nFlyDist_"        ,  input_typ :-> dist_typ                      ),             
+  ( "nFlyEnergy_"      ,  input_typ :-> int_typ                       ),           
+  
+  ( "cAppleDir_"       , input_typ :-> dir_typ                         ),
+  ( "cAppleDist_"      , input_typ :-> dist_typ                        ),
+  
+  ( "myRegs_"          , input_typ :-> regs_typ                       ) ,
+
+  ( "xGet_"            , input_typ :-> int_typ                       ),
+  ( "yGet_"            , input_typ :-> int_typ                       ),
+  ( "zGet_"            , input_typ :-> int_typ                       ),
+  ( "dGet_"            , input_typ :-> dir_typ                       ),
+
+  ( "xSet_"            , int_typ :-> regs_typ :-> regs_typ           ),
+  ( "ySet_"            , int_typ :-> regs_typ :-> regs_typ           ),
+  ( "zSet_"            , int_typ :-> regs_typ :-> regs_typ           ),
+  ( "dSet_"            , dir_typ :-> regs_typ :-> regs_typ           ),
+
+  ( "xInc_"            , regs_typ :-> regs_typ                       ),
+  ( "yInc_"            , regs_typ :-> regs_typ                       ),
+  ( "zInc_"            , regs_typ :-> regs_typ                       ),
+
 
   ( "rotCW_"           , dir_typ :-> dir_typ                          ) ,
 
@@ -88,11 +116,16 @@ ctx = [
 
 ff :: Prog_ -> (Double,Bool)
 ff prog_ = 
-  let w  = ff_world_complet_ prog_
-      w' = steps w numSteps
-      finalEnergy = fromIntegral $ solutionFliesSumEnergy w'
+  let w0  = ff_world_complet_ prog_
+      w0' = steps w0 numSteps
+      finalEnergy0 = fromIntegral $ solutionFliesSumEnergy w0'
+
+      w1  = ff_world_complet2 prog_
+      w1' = steps w1 numSteps
+      finalEnergy1 = fromIntegral $ solutionFliesSumEnergy w1'
+
       --finalEnergy = fromIntegral . length . solutionFlies $ w' 
-   in ( finalEnergy , False )
+   in ( finalEnergy0 + finalEnergy1 , False )
 
 
 numSteps :: Int
@@ -100,8 +133,11 @@ numSteps = 100
 
 
 jsData = jsObj [ 
- ( "world" , worldToJSON ff_solutionFlyPos ff_world_withEnvirFlies ),
- ( "im"    , imGraphInJSON prog_typ ctx )]
+ ( "Levels" , jsObj [
+  ( "w0" , worldToJSON ff_solutionFlyPos  ff_world_withEnvirFlies  ),
+  ( "w1" , worldToJSON ff_solutionFlyPos2 ff_world_withEnvirFlies2 )
+  ]),
+ ( "im"     , imGraphInJSON prog_typ ctx )]
 
 
 
@@ -167,6 +203,72 @@ ff_world_noFlies :: World
 ff_world_noFlies = w1_orig
 
 
+
+
+
+
+
+
+
+
+
+ff_world_complet2 :: Prog_ -> World
+ff_world_complet2 prog_ = 
+ foldr (uncurry putFly) ff_world_withEnvirFlies2
+  [ ( ff_solutionFlyPos2 , ( "_" , prog_2prog prog_ ) ) ]
+
+ff_solutionFlyPos2 :: Pos
+ff_solutionFlyPos2 = (2,2)
+
+ff_world_withEnvirFlies2 :: World
+ff_world_withEnvirFlies2  = 
+ foldr (uncurry putFly) ff_world_noFlies2
+  [  ]
+
+
+ff_world_noFlies2 :: World
+ff_world_noFlies2 = worldFromStrs [
+--1234567890123456789012345678901234567890
+ "........................................",
+ ".WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW.",
+ ".W....A..A..A...A...A..A.....A...A...AW.",
+ ".W....WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW.W.",
+ ".W..................................W.W.",
+ ".W..................................W.W.",
+ ".WWW.AAAA...........................W.W.",
+ ".W.W..AAAA..........................W.W.",
+ ".W.W...AAAA.........................W.W.",
+ ".W.W....AAAAA.......................WAW.",
+ ".W.W.....AAAAAA.....................W.W.",
+ ".W.W......AAAAAAAA..................W.W.",
+ ".W.W......AAAAAAAA..................W.W.",
+ ".WAW.......AAAAAAAAA................WAW.",
+ ".W.W.......AAAAAAAAAAAA.............W.W.",
+ ".W.W......AAAAAAAAAAAAAA............W.W.",
+ ".W.W.....AAAAAAAAAAAAAAAAA..........W.W.",
+ ".W.W.....AAAAAAAAAAAAAAAAAAA........W.W.",
+ ".W.W....AAAAAAAAAAAAAAAAAAAAAA......WAW.",
+ ".W.W....AAAAAAAAAAAAAAAAAAAAAA......W.W.",
+ ".WAW....AAAAAAAAAAAAAAAAAAAAAA......W.W.",
+ ".W.W....AAAAAAAAAAAAAAAAAAAAAA......W.W.",
+ ".W.W....AAAAAAAAAAAAAAAAAAAAAA......WAW.",
+ ".W.W....AAAAAAAAAAAAAAAAAAAAAA......W.W.",
+ ".W.W.....AAAAAAAAAAAAAAAAAAAAA......W.W.",
+ ".WAW.....AAAAAAAAAAAAAAAAAAAA.......WAW.",
+ ".W.W......AAAAAAAAAAAAAAAAA.........W.W.",
+ ".W.W.........AAAAAAAAAAAAA..........W.W.",
+ ".W.W.............AAAAAAAAA..........WAW.",
+ ".W.W................................W.W.",
+ ".W.W................................W.W.",
+ ".WAW................................W.W.",
+ ".WAW................................W.W.",
+ ".W.W................................WAW.",
+ ".W.W................................W.W.",
+ ".W.W................................W.W.",
+ ".W.WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW.W.",
+ ".WA....A....A.....A.....A.....A.......W.",
+ ".WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW.",
+ "........................................"]
 
 
 

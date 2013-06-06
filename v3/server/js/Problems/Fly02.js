@@ -3,6 +3,8 @@ $(function() {
 
 var problemObject ;
 
+var problemData;
+
 var linksDiv  ;
 var flySim    ;
 
@@ -10,12 +12,15 @@ var solutions ;
 var nextSolutionID ;
 
 
+
 var log = function(x){ return console.log(x); };
 
 //---------------------------------------------------------------------
 
 var onLoadedProblemData = function( data ){ 
-  log(data); 
+  log(data);
+  problemData = data; 
+
 };
 
 var onGo = function(){
@@ -40,7 +45,7 @@ var onGo = function(){
 
   flySim = FlySim.init( '_fly-sim' , function(sim){
 
-    sim.loadLevelsDB( Levels );
+    sim.loadLevelsDB( problemData.Levels ); //Levels );
     
     sim.loadLevel( 'w0' , 'my-prog4' , FlySim.progLib.prog4 );
 

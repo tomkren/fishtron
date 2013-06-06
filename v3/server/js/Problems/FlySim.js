@@ -492,7 +492,7 @@ var FlySim = function(){
         select.html('');
 
         for( var i in levelsDB ){
-          select.append(  $('<option>').attr('value',i).html( levelsDB[i].name )  );
+          select.append(  $('<option>').attr('value',i).html( i )  );
         }
 
       };
@@ -734,6 +734,8 @@ var FlySim = function(){
 
       var run = function(n){
         if(n<=0){return;}
+        if( currBigStep == numSteps || currBigStep == numSteps + 1 ){ return;}
+
         ( timeout > 500 ? steps : bigSteps )(1);
         setTimeout( function(){
           if( playState == 'pause' ) return;
