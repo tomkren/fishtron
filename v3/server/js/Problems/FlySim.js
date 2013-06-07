@@ -451,7 +451,7 @@ var FlySim = function(){
         //}
 
         initSlidersMaxes();
-        initEnergy = 1000;
+        initEnergy = 100;
 
       };
 
