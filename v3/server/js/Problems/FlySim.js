@@ -203,8 +203,17 @@ var FlySim = function(){
     }
   };      
 
+  var equals = cur2(function(x,y){
+    return x == y ;
+  });
 
-  var div = cur2(function(x,y){  return Math.floor(x/y);  });
+  var lte = cur2(function(x,y){ return (x<=y) ; });
+
+  var easySplit = function(inp){
+      return split_( dDown , div( myEnergy_(inp) , 2) , myRegs_(inp) );
+  };
+
+  var div = cur2(function(x,y){  if(y==0){return 1;} return Math.floor(x/y);  });
 
   var Funs = {
     
@@ -247,9 +256,56 @@ var FlySim = function(){
     dUp     : dUp     ,
     dDown   : dDown   ,
     dLeft   : dLeft   ,
-    dRight  : dRight  
+    dRight  : dRight  ,
+
+    div     : div,
+
+    lte : lte,
+
+    easySplit : easySplit
 
   };
+
+
+  var progLib_BO2B = {
+    //BEST OF #2B
+
+
+    'B - gen 28 ff 658' : function (x0){return output_(if_(equals(1,zGet_(x0)),if_(equals(1,zGet_(x0)),travel_(nAppleDir_(x0)),split_(nAppleDir_(x0),2,xInc_(ySet_(2,zInc_(myRegs_(x0)))))),split_(nAppleDir_(x0),2,xInc_(ySet_(yGet_(x0),myRegs_(x0))))),zSet_(xGet_(x0),myRegs_(x0)));},
+    'B - gen 14 ff 626' : function (x0){return output_(if_(equals(1,zGet_(x0)),travel_(nAppleDir_(x0)),split_(nAppleDir_(x0),2,xInc_(ySet_(2,dSet_(dLeft,zInc_(myRegs_(x0))))))),ySet_(1,dSet_(rotCW_(if_(lte(2,2),dUp,rotCW_(dUp))),zSet_(xGet_(x0),myRegs_(x0)))));},
+    'B - gen 7  ff 446' : function (x0){return output_(if_(equals(1,zGet_(x0)),travel_(nAppleDir_(x0)),split_(rotCW_(dUp),2,xInc_(ySet_(2,dSet_(rotCW_(dRight),zInc_(myRegs_(x0))))))),ySet_(1,dSet_(rotCW_(dLeft),myRegs_(x0))));},
+    'B - gen 0  ff 339' : function (x0){return output_(travel_(cAppleDir_(x0)),myRegs_(x0));}
+  
+
+  };
+
+  var progLib_BO2 = {
+    //BEST OF #2
+
+    'A - gen 20 ff 1336' : function (x0){return if_(myWasSuccess_(x0),output_(easySplit(x0),zInc_(myRegs_(x0))),output_(travel_(if_(lte(yGet_(x0),1),dLeft,if_(lte(yGet_(x0),1),dLeft,nAppleDir_(x0)))),xSet_(2,xInc_(xInc_(yInc_(zInc_(xSet_(yGet_(x0),xInc_(dSet_(dLeft,myRegs_(x0)))))))))));},
+    'A - gen 17 ff 817'  : function (x0){return if_(myWasSuccess_(x0),output_(split_(dUp,myEnergy_(x0),myRegs_(x0)),myRegs_(x0)),output_(travel_(dGet_(x0)),dSet_(dLeft,dSet_(dGet_(x0),zSet_(2,xInc_(myRegs_(x0)))))));},
+    'A - gen 7  ff 815'  : function (x0){return if_(myWasSuccess_(x0),output_(split_(dUp,myEnergy_(x0),myRegs_(x0)),myRegs_(x0)),output_(travel_(if_(lte(yGet_(x0),1),dLeft,rotCW_(dDown))),xSet_(2,xInc_(myRegs_(x0)))));},
+    'A - gen 1  ff 489'  : function (x0){return if_(myWasSuccess_(x0),output_(easySplit(x0),ySet_(nAppleEnergy_(x0),yInc_(dSet_(dLeft,myRegs_(x0))))),output_(travel_(dLeft),myRegs_(x0)));},
+    'A - gen 0  ff 352'  : function (x0){return if_(myWasSuccess_(x0),output_(travel_(rotCW_(dDown)),zSet_(if_(lte(2,myEnergy_(x0)),1,1),yInc_(yInc_(yInc_(myRegs_(x0)))))),output_(travel_(nAppleDir_(x0)),dSet_(dDown,xSet_(1,myRegs_(x0)))));}
+
+  };
+
+
+  var progLib_BO1 = {
+    //BEST OF #1
+  
+    'gen 22 ff 199' : function (x0){return if_(myWasSuccess_(x0),if_(lte(yGet_(x0),nFlyEnergy_(x0)),output_(  travel_(dLeft),myRegs_(x0)),if_(lte(yGet_(x0),1),output_(travel_(dDown),yInc_(myRegs_(x0))),output_(  travel_(nAppleDir_(x0)),myRegs_(x0)))),output_(travel_(dDown),yInc_(dSet_(dDown,myRegs_(x0)))));},
+    'gen 13 ff 198' : function (x0){return if_(myWasSuccess_(x0),if_(lte(yGet_(x0),1),output_(travel_(dLeft),  myRegs_(x0)),output_(travel_(nAppleDir_(x0)),myRegs_(x0))),output_(travel_(dDown),yInc_(zInc_(ySet_(1,  myRegs_(x0))))));},
+    'gen 11 ff 197' : function (x0){return if_(myWasSuccess_(x0),if_(lte(yGet_(x0),1),output_(travel_(dLeft),  myRegs_(x0)),output_(travel_(nAppleDir_(x0)),myRegs_(x0))),output_(travel_(dDown),yInc_(dSet_(dDown,  myRegs_(x0)))));},
+    'gen 7 ff 124'  : function (x0){return if_(myWasSuccess_(x0),if_(lte(yGet_(x0),1),output_(travel_(dLeft),  myRegs_(x0)),output_(travel_(nAppleDir_(x0)),myRegs_(x0))),output_(travel_(nAppleDir_(x0)),yInc_(dSet_(  dDown,myRegs_(x0)))));},
+    'gen 6 ff 109'  : function (x0){return if_(lte(yGet_(x0),nAppleEnergy_(x0)),output_(travel_(dDown),yInc_(  myRegs_(x0))),output_(travel_(nAppleDir_(x0)),yInc_(myRegs_(x0))));},
+    'gen 5 ff 68'   : function (x0){return if_(myWasSuccess_(x0),if_(lte(yGet_(x0),1),output_(travel_(dLeft),  myRegs_(x0)),output_(travel_(rotCW_(dRight)),ySet_(2,myRegs_(x0)))),output_(travel_(nAppleDir_(x0)),  yInc_(dSet_(dDown,myRegs_(x0)))));},
+    'gen 3 ff 55'   : function (x0){return if_(myWasSuccess_(x0),output_(travel_(dLeft),myRegs_(x0)),output_(  travel_(nAppleDir_(x0)),myRegs_(x0)));},
+    'gen 2 ff 49'   : function (x0){return if_(equals(yGet_(x0),1),output_(travel_(rotCW_(dDown)),myRegs_(x0))  ,output_(travel_(if_(myWasSuccess_(x0),dLeft,rotCW_(dLeft))),myRegs_(x0)));},
+    'gen 0 ff 30'   : function (x0){return if_(lte(2,nFlyEnergy_(x0)),output_(travel_(dRight),myRegs_(x0)),  output_(travel_(dLeft),dSet_(dLeft,zInc_(myRegs_(x0)))));}
+      
+  };
+
 
   var progLib = {
       prog1 : function(inp){
@@ -353,6 +409,8 @@ var FlySim = function(){
 
       var sim            ;
 
+      var initEnergy     ;
+
       var levelsDB       ;
       var solutionsDB    ;
 
@@ -388,11 +446,12 @@ var FlySim = function(){
       var initStructures = function(){
         solutionsDB = {} ;
 
-        for( var name in progLib ){
-          solutionsDB[name] = progLib[name] ;
-        }
+        //for( var name in progLib ){
+        //  solutionsDB[name] = progLib[name] ;
+        //}
 
         initSlidersMaxes();
+        initEnergy = 1000;
 
       };
 
@@ -544,6 +603,8 @@ var FlySim = function(){
         setSolution( progName );
       };
 
+
+
       var loadLevel_ = function( lvlJSON ){
         
         levelJSON = lvlJSON ; 
@@ -566,7 +627,7 @@ var FlySim = function(){
         mapa[solutionFlyPos[0]][solutionFlyPos[1]] = {  
           type       : 'fly' ,
           progName   : '_'   ,
-          energy     : 1     ,
+          energy     : initEnergy , // 1 nebo  100   ,
           wasSuccess : true  ,
           lastTravel : dRight,
           regs       : mkDefaultRegs()
@@ -1084,11 +1145,21 @@ var FlySim = function(){
         , goToStep     : goToStep   
         , run          : run 
         , loadLevelsDB : loadLevelsDB 
-        , Funs         : Funs   
+        , Funs         : Funs  
+
+        , setInitEnergy : function(x){ initEnergy = x ; log('init energy:'+initEnergy);} 
 
 
         , mapaAt : mapaAt
-        , getSolutionsDB : function(){return solutionsDB;} };
+        , getSolutionsDB : function(){return solutionsDB;} 
+        , getLevelsDB    : function(){return levelsDB;}    
+        
+        , get_BO1  : function(){return progLib_BO1;}
+        , get_BO2  : function(){return progLib_BO2;}
+        , get_BO2B : function(){return progLib_BO2B;}
+
+
+        };
 
       var imgs = loadImages( 
         ["img/wall.png", "img/fly.png", "img/apple.png" ], 

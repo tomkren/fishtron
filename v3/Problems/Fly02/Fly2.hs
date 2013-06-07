@@ -612,7 +612,7 @@ putFly pos (progName,prog) w =
   let flyData = FlyData { 
                   flyProg       = prog , 
                   flyProgName   = progName ,
-                  flyEnergy     = 1      , 
+                  flyEnergy     = 100     , 
                   flyLastTravel = DRight ,
                   flyWasSuccess = True ,
                   

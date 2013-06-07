@@ -94,7 +94,10 @@ var mkProblemObject = function(){
     Funs                : {}, // inicializuje se až v onGo()
     onLoadedProblemData : onLoadedProblemData,
     onGo                : onGo,
-    fenotyp             : fenotyp
+    fenotyp             : fenotyp,
+
+    getProblemData      : function(){ return problemData; },
+    getFlySim           : function(){ return flySim; }
   };
 };
 

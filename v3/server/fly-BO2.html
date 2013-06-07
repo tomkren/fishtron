@@ -20,11 +20,32 @@ $(function(){
   //var 
   s = FlySim.init( 'container' , function(sim){
 
-    sim.setInitEnergy(1);
+    sim.setInitEnergy(100);
 
     sim.loadLevelsDB( Levels );
+
+
     
     sim.loadLevel( 'w0' , 'my-prog4' , FlySim.progLib.prog4 );
+
+
+    var BO2B = sim.get_BO2B();
+
+    for( var name in BO2B ){
+      sim.addNewSolution( name , BO2B[name] );  
+
+    }
+
+
+    var BO2 = sim.get_BO2();
+
+    for( var name in BO2 ){
+      sim.addNewSolution( name , BO2[name] );  
+
+    }
+
+
+
 
     //sim.loadSolution( 'my-prog1' , FlySim.progLib.prog1 );
     //sim.run();

@@ -43,6 +43,9 @@ travel_ dir = Left dir
 split_ :: Dir_ -> Energy -> Registers_ -> Move_
 split_ dir en regs = Right (dir,en,regs)
 
+easySplit :: Input_ -> Move_
+easySplit i = Right (dDown , (myEnergy_ i) `div` 2 , myRegs_ i ) 
+
 dUp , dDown , dLeft , dRight :: Dir_
 dUp     = 1
 dDown   = 2
