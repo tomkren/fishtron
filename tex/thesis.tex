@@ -251,9 +251,57 @@ Keywords:
 	\Lets first say some basic definitions.
 
 \section{Genetic Programming}
-	\subsection{Term generating}
-	\subsection{Crossover}
-	\subsection{Mutation}
+
+	\textit{Genetic programming} (GP) is a technique inspired by biological evolution
+	that for a given problem tries to find computer programs able to solve that problem. 
+	
+	A problem to be solved is given to GP in a form of \textit{fitness function}. 
+	Fitness function is a function which takes computer program as its input and 
+	returns numerical value called \textit{fitness} as output. 
+	The bigger fitness of a computer program is, the better solution of a problem it is.
+	
+	GP maintains a collection of computer programs called \textit{population}. 
+	A member of population is called \textit{individual}. 
+	By running GP algorithm evolution of those individuals is performed.
+	
+	\Lets describe GP algorithm briefly.
+	
+	At the beginning initial population is generated randomly.
+	
+	A step of GP algorithm is stochastic transformation of the current population into 	
+	the next population.
+	
+	This step consists of two sub steps\footnote{TODO : Technically it is done in a little  
+	bit different fashion which is equivalent.}:
+	\begin{itemize} 
+		\item Selection of \textit{parents} for individuals of the next population based on the   		          fitness.
+		      The bigger fitness of an individual of the current population is, 
+		      the better chance of success being selected as parent it has.  
+		\item Application of genetic operators (such as \textit{crossover}, 
+		      \textit{reproduction} and \textit{mutation}) 
+			  on parent individuals producing new individuals of the next population.  
+	\end{itemize}	  
+	This transformation is repeatedly applied for a predefined number of steps (which is called 
+	number of \textit{generations}) or until some predefined criterion is met.	
+	
+	...
+	\\\\
+	\textbf{TODO}
+	\begin{itemize} 
+		\item TALK ABOUT GP is part of EA etc. and maybe define the GP by defining EA and then
+		      specifying the differences or something like that...    
+		\item History, citations, etc ....
+	\end{itemize}	  
+	  
+	  
+	\subsection{Input}
+	\subsection{Output}
+	\subsection{GP algorithm}
+		\subsubsection{Generating initial population}
+		\subsubsection{Selection}
+		\subsubsection{Crossover}
+		\subsubsection{Reproduction}
+		\subsubsection{Mutation}
 		
 \section{Lambda term}
 \label{deflam}
