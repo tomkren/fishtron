@@ -11,6 +11,11 @@
 
 \usepackage[utf8]{inputenc}
 \usepackage{qtree}
+
+\usepackage[vlined]{algorithm2e}
+%% \usepackage{algpseudocode}
+\usepackage{framed}
+
 \usepackage{xspace}
 \usepackage{amsmath}
 \usepackage{amsfonts}
@@ -25,6 +30,17 @@
 
 \newcommand{\turst}[3]{$#1 \vdash #2 : #3$\xspace}
 \newcommand{\GMS}{\turst{\Gamma}{M}{\sigma}}
+
+
+\newcommand{\Pseudokod}[2]{
+	\begin{framed}
+	\begin{algorithm}[H]
+		\DontPrintSemicolon
+		\SetKwProg{Fn}{Algorithm}{}{}
+		\Fn{#1}{#2}
+	\end{algorithm}
+	\end{framed}
+}
 
 
 %% Balíček hyperref, kterým jdou vyrábět klikací odkazy v PDF,
@@ -252,48 +268,109 @@ Keywords:
 
 \section{Genetic Programming}
 
-	\textit{Genetic programming} (GP) is a technique inspired by biological evolution
-	that for a given problem tries to find computer programs able to solve that problem. 
+\textit{Genetic programming} (GP) is a technique inspired by biological evolution
+that for a given problem tries to find computer programs able to solve that problem. 
+GP was developed by John Koza \cite{koza92} in 1992.
+
+A problem to be solved is given to GP in a form of \textit{fitness function}. 
+Fitness function is a function which takes computer program as its input and 
+returns numerical value called \textit{fitness} as output. 
+The bigger fitness of a computer program is, the better solution of a problem.
+
+GP maintains a collection of computer programs called \textit{population}. 
+A member of population is called \textit{individual}. 
+By running GP algorithm evolution of those individuals is performed.
+
+Individuals are computer program \textit{expressions} kept as \textit{syntactic trees}. 
+Basically those trees are rooted trees with a function symbol in each internal node 
+and with constant symbol or variable symbol in each leaf node. 
+Number of child nodes for each internal node corresponds to the number of arguments of a function whose
+symbol is in that node.
+
+Another crucial input besides fitness function is a collection of \textit{building blocks}.
+It is collection of symbols (accompanied with an information about number of arguments).
+Those symbols are used to construct trees representing individuals.  
+\\\\
+\Lets describe GP algorithm briefly:
+
+At the beginning initial population is generated from building blocks randomly.
+
+A step of GP algorithm is stochastic transformation of the current population into 	
+the next population.
+
+This step consists of two sub steps\footnote{TODO : Technically it is done in a little  
+bit different fashion which is equivalent.}:
+\begin{itemize} 
+	\item Selection of \textit{parents} for individuals of the next population based on the fitness.
+	      The bigger fitness of an individual of the current population is, 
+	      the better chance of success being selected as parent it has.  
+	\item Application of genetic operators (such as \textit{crossover}, 
+	      \textit{reproduction} and \textit{mutation}) 
+		  on parent individuals producing new individuals of the next population.  
+\end{itemize}	  
+This transformation is repeatedly applied for a predefined number of steps (which is called 
+number of \textit{generations}) or until some predefined criterion is met.	
+\\\\
+\Lets now look on GP at more detail. Here is pseudocode for GP algorithm:
+
+\Pseudokod{GP(fitnessFun,buildingBlocks,numGens,popSize,probabs)}{
+	$gen \leftarrow$ 0 \;
+	$pop \leftarrow generateInitialPopuletion( buildingBlocks ) $ \;
+	($popWithFitnesses,terminate) \leftarrow$ evaluate($fitnessFun$, $pop$) \; 	
 	
-	A problem to be solved is given to GP in a form of \textit{fitness function}. 
-	Fitness function is a function which takes computer program as its input and 
-	returns numerical value called \textit{fitness} as output. 
-	The bigger fitness of a computer program is, the better solution of a problem it is.
+	\While{ $gen < numGens$ $\wedge$ $\neg terminate$  }{
+  	
 	
-	GP maintains a collection of computer programs called \textit{population}. 
-	A member of population is called \textit{individual}. 
-	By running GP algorithm evolution of those individuals is performed.
+	$newPop \leftarrow$ empty population \;
+	$i \leftarrow 0$ \;
 	
-	\Lets describe GP algorithm briefly.
+	\While{ $i < popSize$ }{
+		$op \leftarrow probabilisticallySelectOperation(probabs)$ \;		
+		\Switch{op}{
+			\Case{Crossover}{
+				$indiv1 \leftarrow$ selection( $popWithFitnesses$ ) \;
+				$indiv2 \leftarrow$ selection( $popWithFitnesses$ ) \;
+				($child1$,$child2$) = crossover( $indiv1$ , $indiv2$ ) \;
+				$newPop$.insert( $child1$ ) \;
+				$newPop$.insert( $child2$ ) \;
+				$i \leftarrow i + 2$ \;
+			}
+			\Case{Reproduction}{
+				$indiv \leftarrow$ selection( $popWithFitnesses$ ) \;
+				$newPop$.insert( $indiv$ ) \;
+				$i \leftarrow i + 1$ \;
+			}
+			\Case{Mutation}{
+				$indiv \leftarrow$ selection( $popWithFitnesses$ ) \;
+				$mutant \leftarrow$ mutate( $indiv$ ) \;
+				$newPop$.insert( $mutant$ ) \;
+				$i \leftarrow i + 1$ \;			
+			}		
+		}
+	}
 	
-	At the beginning initial population is generated randomly.
-	
-	A step of GP algorithm is stochastic transformation of the current population into 	
-	the next population.
-	
-	This step consists of two sub steps\footnote{TODO : Technically it is done in a little  
-	bit different fashion which is equivalent.}:
-	\begin{itemize} 
-		\item Selection of \textit{parents} for individuals of the next population based on the   		          fitness.
-		      The bigger fitness of an individual of the current population is, 
-		      the better chance of success being selected as parent it has.  
-		\item Application of genetic operators (such as \textit{crossover}, 
-		      \textit{reproduction} and \textit{mutation}) 
-			  on parent individuals producing new individuals of the next population.  
-	\end{itemize}	  
-	This transformation is repeatedly applied for a predefined number of steps (which is called 
-	number of \textit{generations}) or until some predefined criterion is met.	
-	
-	...
-	\\\\
-	\textbf{TODO}
-	\begin{itemize} 
-		\item TALK ABOUT GP is part of EA etc. and maybe define the GP by defining EA and then
-		      specifying the differences or something like that...    
-		\item History, citations, etc ....
-	\end{itemize}	  
-	  
-	  
+	$pop \leftarrow newPop$  \;
+	$gen \leftarrow gen + 1$ \;
+	\;
+	($popWithFitnesses,terminate) \leftarrow$ evaluate($fitnessFun$, $pop$) \; 
+ }
+ \Return pop \;
+}
+
+In order to clarify the code let us describe in greater detail inputs and
+contained procedures
+generateInitialPopuletion(),
+evaluate(),
+probabilisticallySelectOperation(),
+selection(),
+crossover() 
+and mutation().
+
+
+
+
+
+
 	\subsection{Input}
 	\subsection{Output}
 	\subsection{GP algorithm}
@@ -302,6 +379,17 @@ Keywords:
 		\subsubsection{Crossover}
 		\subsubsection{Reproduction}
 		\subsubsection{Mutation}
+
+
+    ...
+	\\\\
+	\textbf{TODO}
+	\begin{itemize} 
+		\item TALK ABOUT GP is part of EA etc. and maybe define the GP by defining EA and then
+		      specifying the differences or something like that...    
+		\item History, citations, etc ....
+		\item ten algoritmus v kozovi dělá "Designate Result" já tam vracim poslední populaci
+	\end{itemize}	  
 		
 \section{Lambda term}
 \label{deflam}
@@ -1005,7 +1093,16 @@ Every solution to a Inhabitation tree has this just described tree form of a typ
 
 \begin{thebibliography}{9}
 
+
+\bibitem{koza92}
+
+  John R. Koza,
+  \emph{Genetic Programming: On the Programming of Computers by Means of Natural Selection}.
+  MIT Press, Cambridge, MA,
+  1992. 
+
 \bibitem{barendregt10}
+
   Henk Barendregt, Wil Dekkers, Richard Statman,
   \emph{Lambda Calculus With Types}.
   Cambridge University Press,

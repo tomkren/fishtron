@@ -1,0 +1,51 @@
+\documentclass[12pt,a4paper]{report}
+
+\newcommand{\Lets}{Let us }
+
+
+\begin{document}
+
+\textit{Genetic programming} (GP) is a technique inspired by biological evolution
+that for a given problem tries to find computer programs able to solve that problem. 
+
+A problem to be solved is given to GP in a form of \textit{fitness function}. 
+Fitness function is a function which takes computer program as its input and 
+returns numerical value called \textit{fitness} as output. 
+The bigger fitness of a computer program is, the better solution of a problem.
+
+GP maintains a collection of computer programs called \textit{population}. 
+A member of population is called \textit{individual}. 
+By running GP algorithm evolution of those individuals is performed.
+
+Individuals are computer program \textit{expressions} kept as \textit{syntactic trees}. 
+Basically those trees are rooted trees with a function symbol in each internal node 
+and with constant symbol or variable symbol in each leaf node. 
+Number of child nodes for each internal node corresponds to the number of arguments of a function whose
+symbol is in that node.
+
+Another crucial input besides fitness function is a collection of \textit{building blocks}.
+It is collection of symbols (accompanied with an information about number of arguments).
+Those symbols are used to construct trees representing individuals.  
+\\\\
+\Lets describe GP algorithm briefly:
+
+At the beginning initial population is generated from building blocks randomly.
+
+A step of GP algorithm is stochastic transformation of the current population into 	
+the next population.
+
+This step consists of two sub steps:
+\begin{itemize} 
+	\item Selection of \textit{parents} for individuals of the next population based on the fitness.
+	      The bigger fitness of an individual of the current population is, 
+	      the better chance of success being selected as parent it has.  
+	\item Application of genetic operators (such as \textit{crossover}, 
+	      \textit{reproduction} and \textit{mutation}) 
+		  on parent individuals producing new individuals of the next population.  
+\end{itemize}	  
+This transformation is repeatedly applied for a predefined number of steps (which is called 
+number of \textit{generations}) or until some predefined criterion is met.	
+\\\\
+\Lets now look on GP at more detail. 	
+
+\end{document}
