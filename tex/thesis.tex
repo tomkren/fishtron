@@ -311,7 +311,52 @@ bit different fashion which is equivalent.}:
 This transformation is repeatedly applied for a predefined number of steps (which is called 
 number of \textit{generations}) or until some predefined criterion is met.	
 \\\\
-\Lets now look on GP at more detail. Here is pseudocode for GP algorithm:
+\Lets now look on GP at more detail. 
+
+
+\subsection{Program trees}
+
+In GP programs are represented as expressions. \Lets define expression inductively:
+
+\begin{itemize}
+	\item Constant or variable symbol $s$ is expression.
+	\item Let there be a function with symbol $f$ which has $n$ arguments. 
+	      And let there be expressions $e_{1}, ..., e_{n}$. 
+	      Then ( $f$ $e_{1}$ ... $e_{n}$ ) is expression.   
+\end{itemize}
+
+There is straightforward tree representation corresponding to these two cases:
+
+\begin{itemize}
+	\item One node tree $s$.
+    \item \Tree
+			[.$f$	
+		 		\text{$t_{1}$}
+		 		\text{...}
+		 		\text{$t_{n}$} ]\\\\
+		 Where $t_{1}, ..., t_{n}$ are trees corresponding to expressions $e_{1}, ..., e_{n}$.	   
+\end{itemize}
+
+Computer program with inputs $x_{1}, ..., x_{n}$ is realized as expression in which 
+may occur variables $x_{1}, ..., x_{n}$.
+
+\subsection{Building blocks}
+
+Set of building blocks consists of two sets.
+
+\begin{itemize}
+	\item Terminal set $T$ : Set of symbols used as leaf nodes of program trees.
+	\item Function set $F$ : Set of symbols used as internal nodes of program trees.
+\end{itemize}
+
+Therefore $building$ $blocks = T \cup F$.
+
+
+
+
+\subsection{GP algorithm in pseudocode}
+
+Here is pseudocode for GP algorithm:
 
 \Pseudokod{GP(fitnessFun,buildingBlocks,numGens,popSize,probabs)}{
 	$gen \leftarrow$ 0 \;
