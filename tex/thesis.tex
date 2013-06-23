@@ -284,8 +284,7 @@ By running GP algorithm evolution of those individuals is performed.
 Individuals are computer program \textit{expressions} kept as \textit{syntactic trees}. 
 Basically those trees are rooted trees with a function symbol in each internal node 
 and with constant symbol or variable symbol in each leaf node. 
-Number of child nodes for each internal node corresponds to the number of arguments of a function whose
-symbol is in that node.
+Number of child nodes for each internal node corresponds to the number of arguments of a function whose symbol is in that node.
 
 Another crucial input besides fitness function is a collection of \textit{building blocks}.
 It is collection of symbols (accompanied with an information about number of arguments).
@@ -319,10 +318,13 @@ number of \textit{generations}) or until some predefined criterion is met.
 In GP programs are represented as expressions. \Lets define expression inductively:
 
 \begin{itemize}
-	\item Constant or variable symbol $s$ is expression.
+	\item Constant\footnote{By constants we also mean procedures with zero  	
+		  arguments.} or variable symbol $s$ is expression.
 	\item Let there be a function with symbol $f$ which has $n$ arguments. 
 	      And let there be expressions $e_{1}, ..., e_{n}$. 
-	      Then ( $f$ $e_{1}$ ... $e_{n}$ ) is expression.   
+	      Then ( $f$ $e_{1}$ ... $e_{n}$ ) is expression
+	      \footnote{This notation comes from Lisp programming language, 
+	      classical notation would be $f(e_{1}, ... ,e_{n})$. }.   
 \end{itemize}
 
 There is straightforward tree representation corresponding to these two cases:
@@ -345,14 +347,30 @@ may occur variables $x_{1}, ..., x_{n}$.
 Set of building blocks consists of two sets.
 
 \begin{itemize}
-	\item Terminal set $T$ : Set of symbols used as leaf nodes of program trees.
-	\item Function set $F$ : Set of symbols used as internal nodes of program trees.
+	\item Terminal set $T$ : Set of symbols used as leaf nodes of program trees 		
+		  standing for constants and variables.
+	\item Function set $F$ : Set of symbols used as internal nodes of program trees
+	      standing for functions.
 \end{itemize}
 
-Therefore $building$ $blocks = T \cup F$.
+Therefore $building$ $blocks = T \cup F$.\\
 
+%For brevity we will als
 
+There is one important constrain on function implementations for functions from F:
+There should be type $A$ that for every function symbol $f \in F$ the corresponding function implementation standing behind this symbol should be of a type 
+$A \times ... \times A \rightarrow A$ and should be total (defined on all
+combinations of inputs). And analogically for $t \in T$ being of a type A.  
 
+Satisfying this constrain ensures that every program tree build 
+from $T \cup F$ will be total.
+
+We can say that the motivation behind this work is to construct system where we
+eliminate this constraint. 
+
+\subsection{Generating initial population}
+We will describe tree generating method used by Koza in \cite{koza92} called
+\textit{ramped half-and-half}. 
 
 \subsection{GP algorithm in pseudocode}
 
