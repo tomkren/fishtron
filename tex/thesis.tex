@@ -32,6 +32,13 @@
 \newcommand{\GMS}{\turst{\Gamma}{M}{\sigma}}
 
 
+\newcommand{\EA}{EA } % TODO nahradit správnym "evoluťionar algorithms"
+
+\newcommand{\setDots}[2]{ 
+	\lbrace #1 \dots #2 \rbrace
+}
+
+
 \newcommand{\Pseudokod}[2]{
 	\begin{framed}
 	\begin{algorithm}[H]
@@ -347,15 +354,18 @@ may occur variables $x_{1}, ..., x_{n}$.
 Set of building blocks consists of two sets.
 
 \begin{itemize}
-	\item Terminal set $T$ : Set of symbols used as leaf nodes of program trees 		
-		  standing for constants and variables.
-	\item Function set $F$ : Set of symbols used as internal nodes of program trees
-	      standing for functions.
+	\item Terminal set $T$ : Set of symbols used as leaf nodes of 	               
+	      program trees standing for constants and variables.
+	\item Function set $F$ : Set of symbols used as internal nodes 
+	      of program trees standing for functions.
 \end{itemize}
 
 Therefore $building$ $blocks = T \cup F$.\\
 
-%For brevity we will als
+Beside symbols in $T \cup F$ there must also be 
+an implementation for each symbol which is not variable. 
+And for every function symbol from $F$ there must be specified 
+number of arguments.\\
 
 There is one important constrain on function implementations for functions from F:
 There should be type $A$ that for every function symbol $f \in F$ the corresponding function implementation standing behind this symbol should be of a type 
@@ -363,48 +373,109 @@ $A \times ... \times A \rightarrow A$ and should be total (defined on all
 combinations of inputs). And analogically for $t \in T$ being of a type A.  
 
 Satisfying this constrain ensures that every program tree build 
-from $T \cup F$ will be total.
+from $T \cup F$ will be total.\\
 
 We can say that the motivation behind this work is to construct system where we
 eliminate this constraint. 
 
 \subsection{Generating initial population}
+
 We will describe tree generating method used by Koza in \cite{koza92} called
 \textit{ramped half-and-half}. 
 
+\textbf{TODO!}
+
+\subsection{Selection}
+
+In \EA there is plenty of options for selection mechanisms 
+for us to choose from. Again we will describe mechanism Koza
+used in his first book on GP. It is \textit{Roulette selection}.
+It uses fitness value of each individual in straightforward way to determine probability of selecting this individual.\\
+
+Let there be $popSize$ individuals in the population.\\
+And let $f_{i}$ be fitness value for individual i 
+where $i \in \setDots{1}{popSize}$. 
+
+Then $p_{i}$ probability of selection of individual $i$ is computed
+as follows:\\
+
+$p_{i} = \dfrac{ f_{i}  }{ \Sigma_{j=1}^{popSize} f_{j} } $
+
+\subsection{Crossover}
+
+For John Koza the most important genetic operator in GP is 
+crossover. It is operator inspired by sexual reproduction
+occurring in the nature. Generally speaking crossover takes
+two (parent) individuals and combines theirs genomes to produce 
+two possibly new (child) individuals.   
+
+In GP the most common mutation is \textit{Subtree swapping mutation}.
+This crossover randomly selects one node in each parent tree.
+Two new child individuals are constructed by swapping subtrees 
+which have roots in those selected nodes.\\
+
+Example should clarify this process. Here are two parent trees with 
+selected nodes in bold:
+
+\Tree [.$ifneq$ $1$
+		 	   [.\textbf{iflt} $0$ $x$ [.$-$ $0$ $x$ ] $1$ ]
+		 	   [.$+$ \text{$x$} \text{$2$} ]
+		 	   $1$ ]
+\Tree [.$\%$ \text{$x$}
+         	 [.\textbf{ifeq} \text{$1$} \text{$x$} \text{$x$} \text{$0$} ] ]\\
+
+And here are two child trees with swapped subtrees:
+
+\Tree [.$ifneq$ $1$
+		 	   [.\textbf{ifeq} \textbf{1} \textbf{x} \textbf{x} 
+		 	     \textbf{0} ]
+		 	   [.$+$ \text{$x$} \text{$2$} ]
+		 	   $1$ ]
+\Tree [.$\%$ \text{$x$}
+         	 [.\textbf{iflt} \textbf{0} \textbf{x} 
+         	   [.\textbf{-} \textbf{0} \textbf{x} ] \textbf{1} ] ]\\
+
+
+\subsection{Reproduction}
+\subsection{Mutation}
+
+
+
+\newpage
 \subsection{GP algorithm in pseudocode}
 
 Here is pseudocode for GP algorithm:
 
-\Pseudokod{GP(fitnessFun,buildingBlocks,numGens,popSize,probabs)}{
+\Pseudokod{GP(fitness,buildingBlocks,numGens,popSize,probabs)}{
 	$gen \leftarrow$ 0 \;
 	$pop \leftarrow generateInitialPopuletion( buildingBlocks ) $ \;
-	($popWithFitnesses,terminate) \leftarrow$ evaluate($fitnessFun$, $pop$) \; 	
+	($popWithF,terminate,best) \leftarrow$ evaluate($fitness$, $pop$)\; 	
 	
 	\While{ $gen < numGens$ $\wedge$ $\neg terminate$  }{
   	
 	
 	$newPop \leftarrow$ empty population \;
-	$i \leftarrow 0$ \;
+	$newPop$.insert( $best$ )\;
+	$i \leftarrow 1$ \;
 	
 	\While{ $i < popSize$ }{
 		$op \leftarrow probabilisticallySelectOperation(probabs)$ \;		
 		\Switch{op}{
 			\Case{Crossover}{
-				$indiv1 \leftarrow$ selection( $popWithFitnesses$ ) \;
-				$indiv2 \leftarrow$ selection( $popWithFitnesses$ ) \;
-				($child1$,$child2$) = crossover( $indiv1$ , $indiv2$ ) \;
+				$parent1 \leftarrow$ selection( $popWithF$ ) \;
+				$parent2 \leftarrow$ selection( $popWithF$ ) \;
+				($child1$,$child2$) = crossover( $parent1$ , $parent2$ ) \;
 				$newPop$.insert( $child1$ ) \;
 				$newPop$.insert( $child2$ ) \;
 				$i \leftarrow i + 2$ \;
 			}
 			\Case{Reproduction}{
-				$indiv \leftarrow$ selection( $popWithFitnesses$ ) \;
+				$indiv \leftarrow$ selection( $popWithF$ ) \;
 				$newPop$.insert( $indiv$ ) \;
 				$i \leftarrow i + 1$ \;
 			}
 			\Case{Mutation}{
-				$indiv \leftarrow$ selection( $popWithFitnesses$ ) \;
+				$indiv \leftarrow$ selection( $popWithF$ ) \;
 				$mutant \leftarrow$ mutate( $indiv$ ) \;
 				$newPop$.insert( $mutant$ ) \;
 				$i \leftarrow i + 1$ \;			
@@ -413,9 +484,8 @@ Here is pseudocode for GP algorithm:
 	}
 	
 	$pop \leftarrow newPop$  \;
-	$gen \leftarrow gen + 1$ \;
-	\;
-	($popWithFitnesses,terminate) \leftarrow$ evaluate($fitnessFun$, $pop$) \; 
+	($popWithF,terminate,best) \leftarrow$ evaluate($fitness$, $pop$)\;
+	$gen \leftarrow gen + 1$ \; 
  }
  \Return pop \;
 }
@@ -436,17 +506,11 @@ and mutation().
 
 	\subsection{Input}
 	\subsection{Output}
-	\subsection{GP algorithm}
-		\subsubsection{Generating initial population}
-		\subsubsection{Selection}
-		\subsubsection{Crossover}
-		\subsubsection{Reproduction}
-		\subsubsection{Mutation}
 
 
     ...
 	\\\\
-	\textbf{TODO}
+\subsection{TODO}
 	\begin{itemize} 
 		\item TALK ABOUT GP is part of EA etc. and maybe define the GP by defining EA and then
 		      specifying the differences or something like that...    

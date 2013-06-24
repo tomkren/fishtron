@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.1415926-2.4-1.40.13 (MiKTeX 2.9) (preloaded format=pdflatex 2013.6.21)  23 JUN 2013 16:18
+This is pdfTeX, Version 3.1415926-2.4-1.40.13 (MiKTeX 2.9) (preloaded format=pdflatex 2013.6.21)  24 JUN 2013 04:50
 entering extended mode
 **thesis.tex
 (C:\Users\Tomáš\Documents\GitHub\fishtron\tex\thesis.tex
@@ -662,20 +662,20 @@ Package uniquecounter Info: New unique counter `rerunfilecheck' on input line 2
 \Hy@SectionHShift=\skip140
 )
 (C:\Users\Tomáš\Documents\GitHub\fishtron\tex\thesis.aux)
-LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 80.
-LaTeX Font Info:    ... okay on input line 80.
-LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 80.
-LaTeX Font Info:    ... okay on input line 80.
-LaTeX Font Info:    Checking defaults for OT1/cmr/m/n on input line 80.
-LaTeX Font Info:    ... okay on input line 80.
-LaTeX Font Info:    Checking defaults for OMS/cmsy/m/n on input line 80.
-LaTeX Font Info:    ... okay on input line 80.
-LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 80.
-LaTeX Font Info:    ... okay on input line 80.
-LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 80.
-LaTeX Font Info:    ... okay on input line 80.
-LaTeX Font Info:    Checking defaults for PD1/pdf/m/n on input line 80.
-LaTeX Font Info:    ... okay on input line 80.
+LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 87.
+LaTeX Font Info:    ... okay on input line 87.
+LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 87.
+LaTeX Font Info:    ... okay on input line 87.
+LaTeX Font Info:    Checking defaults for OT1/cmr/m/n on input line 87.
+LaTeX Font Info:    ... okay on input line 87.
+LaTeX Font Info:    Checking defaults for OMS/cmsy/m/n on input line 87.
+LaTeX Font Info:    ... okay on input line 87.
+LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 87.
+LaTeX Font Info:    ... okay on input line 87.
+LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 87.
+LaTeX Font Info:    ... okay on input line 87.
+LaTeX Font Info:    Checking defaults for PD1/pdf/m/n on input line 87.
+LaTeX Font Info:    ... okay on input line 87.
 
 ("C:\Program Files (x86)\MiKTeX 2.9\tex\context\base\supp-pdf.mkii"
 [Loading MPS to PDF converter (version 2006.09.02).]
@@ -692,7 +692,7 @@ LaTeX Font Info:    ... okay on input line 80.
 \everyMPtoPDFconversion=\toks32
 )
 \AtBeginShipoutBox=\box60
-Package hyperref Info: Link coloring OFF on input line 80.
+Package hyperref Info: Link coloring OFF on input line 87.
  ("C:\Program Files (x86)\MiKTeX 2.9\tex\latex\hyperref\nameref.sty"
 Package: nameref 2012/10/27 v2.43 Cross-referencing by name of section
 
@@ -701,39 +701,39 @@ Package: gettitlestring 2010/12/03 v1.4 Cleanup title references (HO)
 )
 \c@section@level=\count126
 )
-LaTeX Info: Redefining \ref on input line 80.
-LaTeX Info: Redefining \pageref on input line 80.
-LaTeX Info: Redefining \nameref on input line 80.
+LaTeX Info: Redefining \ref on input line 87.
+LaTeX Info: Redefining \pageref on input line 87.
+LaTeX Info: Redefining \nameref on input line 87.
 
 (C:\Users\Tomáš\Documents\GitHub\fishtron\tex\thesis.out)
 (C:\Users\Tomáš\Documents\GitHub\fishtron\tex\thesis.out)
 \@outlinefile=\write3
 
-<logomff.png, id=175, 1367.1075pt x 1304.62407pt>
+<logomff.png, id=195, 1367.1075pt x 1304.62407pt>
 File: logomff.png Graphic file (type png)
  <use logomff.png>
-Package pdftex.def Info: logomff.png used on input line 116.
+Package pdftex.def Info: logomff.png used on input line 123.
 (pdftex.def)             Requested size: 205.05728pt x 195.68517pt.
 
 
 LaTeX Font Warning: Font shape `OT1/cmr/m/n' in size <13.08846> not available
-(Font)              size <12> substituted on input line 135.
+(Font)              size <12> substituted on input line 142.
 
-LaTeX Font Info:    Try loading font information for U+msa on input line 140.
+LaTeX Font Info:    Try loading font information for U+msa on input line 147.
 ("C:\Program Files (x86)\MiKTeX 2.9\tex\latex\amsfonts\umsa.fd"
 File: umsa.fd 2013/01/14 v3.01 AMS symbols A
 )
-LaTeX Font Info:    Try loading font information for U+msb on input line 140.
+LaTeX Font Info:    Try loading font information for U+msb on input line 147.
 
 ("C:\Program Files (x86)\MiKTeX 2.9\tex\latex\amsfonts\umsb.fd"
 File: umsb.fd 2013/01/14 v3.01 AMS symbols B
 )
 
 LaTeX Font Warning: Font shape `OT1/cmr/m/n' in size <8.5359> not available
-(Font)              size <9> substituted on input line 148.
+(Font)              size <9> substituted on input line 155.
 
 
-Overfull \hbox (34.16788pt too wide) in paragraph at lines 140--152
+Overfull \hbox (34.16788pt too wide) in paragraph at lines 147--159
  [][] 
  []
 
@@ -750,184 +750,225 @@ s/GitHub/fishtron/tex/logomff.png>] [2] [3] [4]
 ]
 Chapter 1.
 
-Underfull \hbox (badness 10000) in paragraph at lines 289--294
+Underfull \hbox (badness 10000) in paragraph at lines 296--301
 
  []
 
-LaTeX Font Info:    Try loading font information for OMS+cmr on input line 303.
+LaTeX Font Info:    Try loading font information for OMS+cmr on input line 310.
 
 ("C:\Program Files (x86)\MiKTeX 2.9\tex\latex\base\omscmr.fd"
 File: omscmr.fd 1999/05/25 v2.5h Standard LaTeX font definitions
 )
 LaTeX Font Info:    Font shape `OMS/cmr/m/n' in size <12> not available
-(Font)              Font shape `OMS/cmsy/m/n' tried instead on input line 303.
+(Font)              Font shape `OMS/cmsy/m/n' tried instead on input line 310.
 
-Underfull \hbox (badness 10000) in paragraph at lines 310--314
+Underfull \hbox (badness 10000) in paragraph at lines 317--321
 
  []
 
 [8
 
 ]
-Underfull \hbox (badness 10000) in paragraph at lines 334--340
+Underfull \hbox (badness 10000) in paragraph at lines 341--347
 
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 356--357
+Underfull \hbox (badness 10000) in paragraph at lines 363--364
+
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 365--369
+
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 375--377
 
  []
 
 [9]
-Underfull \hbox (badness 10000) in paragraph at lines 447--450
+Underfull \hbox (badness 10000) in paragraph at lines 390--394
+
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 399--401
+
+ []
+
+
+Overfull \hbox (4.73718pt too wide) in paragraph at lines 412--416
+[]\OT1/cmr/m/n/12 In GP the most com-mon mu-ta-tion is \OT1/cmr/m/it/12 Sub-tre
+e swap-ping mu-ta-tion\OT1/cmr/m/n/12 . This crossover
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 412--416
+
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 420--426
+
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 429--437
 
  []
 
 [10] [11]
+Underfull \hbox (badness 10000) in paragraph at lines 511--513
+
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 511--513
+
+ []
+
+[12]
 
 Package hyperref Warning: Token not allowed in a PDF string (PDFDocEncoding):
-(hyperref)                removing `math shift' on input line 494.
+(hyperref)                removing `math shift' on input line 558.
 
 
 Package hyperref Warning: Token not allowed in a PDF string (PDFDocEncoding):
-(hyperref)                removing `\sigma' on input line 494.
+(hyperref)                removing `\sigma' on input line 558.
 
 
 Package hyperref Warning: Token not allowed in a PDF string (PDFDocEncoding):
-(hyperref)                removing `math shift' on input line 494.
+(hyperref)                removing `math shift' on input line 558.
 
-LaTeX Font Info:    Try loading font information for U+euf on input line 506.
-("C:\Program Files (x86)\MiKTeX 2.9\tex\latex\amsfonts\ueuf.fd"
+[13]
+LaTeX Font Info:    Try loading font information for U+euf on input line 570.
+ ("C:\Program Files (x86)\MiKTeX 2.9\tex\latex\amsfonts\ueuf.fd"
 File: ueuf.fd 2013/01/14 v3.01 Euler Fraktur
 )
-Underfull \hbox (badness 10000) in paragraph at lines 517--520
+Underfull \hbox (badness 10000) in paragraph at lines 581--584
 
  []
 
 
 Package hyperref Warning: Token not allowed in a PDF string (PDFDocEncoding):
-(hyperref)                removing `math shift' on input line 523.
+(hyperref)                removing `math shift' on input line 587.
 
 
 Package hyperref Warning: Token not allowed in a PDF string (PDFDocEncoding):
-(hyperref)                removing `\Gamma' on input line 523.
+(hyperref)                removing `\Gamma' on input line 587.
 
 
 Package hyperref Warning: Token not allowed in a PDF string (PDFDocEncoding):
-(hyperref)                removing `\vdash' on input line 523.
+(hyperref)                removing `\vdash' on input line 587.
 
 
 Package hyperref Warning: Token not allowed in a PDF string (PDFDocEncoding):
-(hyperref)                removing `\sigma' on input line 523.
+(hyperref)                removing `\sigma' on input line 587.
 
 
 Package hyperref Warning: Token not allowed in a PDF string (PDFDocEncoding):
-(hyperref)                removing `math shift' on input line 523.
+(hyperref)                removing `math shift' on input line 587.
 
 
-Overfull \hbox (23.73802pt too wide) in paragraph at lines 545--552
+Overfull \hbox (23.73802pt too wide) in paragraph at lines 609--616
 $\OML/cmm/m/it/12 M[] \OT1/cmr/m/n/12 : \OML/cmm/m/it/12 []$\OT1/cmr/m/n/12 . 
 It al-lows as to use the in-fer-ence rule to de-rive state-ment []. 
  []
 
-[12] [13]
-Underfull \hbox (badness 10000) in paragraph at lines 640--642
+[14]
+Underfull \hbox (badness 10000) in paragraph at lines 704--706
 
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 656--658
+Underfull \hbox (badness 10000) in paragraph at lines 720--722
+
+ []
+
+[15]
+Underfull \hbox (badness 10000) in paragraph at lines 735--737
 
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 671--673
-
- []
-
-
-Overfull \hbox (5.89113pt too wide) in paragraph at lines 721--721
+Overfull \hbox (5.89113pt too wide) in paragraph at lines 785--785
 [] 
  []
 
-[14]
-Underfull \hbox (badness 10000) in paragraph at lines 757--759
+
+Underfull \hbox (badness 10000) in paragraph at lines 821--823
 
  []
 
 
-Overfull \hbox (46.49174pt too wide) detected at line 793
+Overfull \hbox (46.49174pt too wide) detected at line 857
 []
  []
 
-
-Underfull \hbox (badness 10000) in paragraph at lines 806--809
-
- []
-
-[15] [16]
-Underfull \hbox (badness 10000) in paragraph at lines 919--920
+[16]
+Underfull \hbox (badness 10000) in paragraph at lines 870--873
 
  []
 
 [17]
-
-Package hyperref Warning: Token not allowed in a PDF string (PDFDocEncoding):
-(hyperref)                removing `math shift' on input line 1001.
-
-
-Package hyperref Warning: Token not allowed in a PDF string (PDFDocEncoding):
-(hyperref)                removing `\lambda' on input line 1001.
-
-
-Package hyperref Warning: Token not allowed in a PDF string (PDFDocEncoding):
-(hyperref)                removing `math shift' on input line 1001.
-
-[18]
-Underfull \hbox (badness 10000) in paragraph at lines 1056--1063
+Underfull \hbox (badness 10000) in paragraph at lines 983--984
 
  []
 
-[19] [20]
+[18] [19]
+
+Package hyperref Warning: Token not allowed in a PDF string (PDFDocEncoding):
+(hyperref)                removing `math shift' on input line 1065.
+
+
+Package hyperref Warning: Token not allowed in a PDF string (PDFDocEncoding):
+(hyperref)                removing `\lambda' on input line 1065.
+
+
+Package hyperref Warning: Token not allowed in a PDF string (PDFDocEncoding):
+(hyperref)                removing `math shift' on input line 1065.
+
+[20]
+Underfull \hbox (badness 10000) in paragraph at lines 1120--1127
+
+ []
+
+[21]
 Chapter 2.
-[21
+[22
 
 ]
 Chapter 3.
-[22
+[23
 
-] [23
-
-]
-Package atveryend Info: Empty hook `BeforeClearDocument' on input line 1179.
- [24
+] [24
 
 ]
-Package atveryend Info: Empty hook `AfterLastShipout' on input line 1179.
+Package atveryend Info: Empty hook `BeforeClearDocument' on input line 1243.
+ [25
+
+]
+Package atveryend Info: Empty hook `AfterLastShipout' on input line 1243.
  (C:\Users\Tomáš\Documents\GitHub\fishtron\tex\thesis.aux)
-Package atveryend Info: Executing hook `AtVeryEndDocument' on input line 1179.
-Package atveryend Info: Executing hook `AtEndAfterFileList' on input line 1179.
+Package atveryend Info: Executing hook `AtVeryEndDocument' on input line 1243.
+Package atveryend Info: Executing hook `AtEndAfterFileList' on input line 1243.
 
+Package rerunfilecheck Info: File `thesis.out' has not changed.
+(rerunfilecheck)             Checksum: 1547249A7E7A9123C00393C4ED368458;3229.
 
-
-Package rerunfilecheck Warning: File `thesis.out' has changed.
-(rerunfilecheck)                Rerun to get outlines right
-(rerunfilecheck)                or use package `bookmark'.
-
-Package rerunfilecheck Info: Checksums for `thesis.out':
-(rerunfilecheck)             Before: 751DEDB4D91D1236B1B46DFBF396562F;2894
-(rerunfilecheck)             After:  2A36F6F358EAD45045E8DE68C2B67DC6;2978.
 
 LaTeX Font Warning: Size substitutions with differences
 (Font)              up to 1.08846pt have occurred.
 
-Package atveryend Info: Empty hook `AtVeryVeryEnd' on input line 1179.
+Package atveryend Info: Empty hook `AtVeryVeryEnd' on input line 1243.
  ) 
 Here is how much of TeX's memory you used:
- 7892 strings out of 493921
- 112133 string characters out of 3144870
- 233099 words of memory out of 3000000
- 10988 multiletter control sequences out of 15000+200000
+ 7899 strings out of 493921
+ 112253 string characters out of 3144870
+ 238116 words of memory out of 3000000
+ 10995 multiletter control sequences out of 15000+200000
  18924 words of font info for 73 fonts, out of 3000000 for 9000
  841 hyphenation exceptions out of 8191
  29i,23n,37p,333b,436s stack positions out of 5000i,500n,10000p,200000b,50000s
@@ -952,9 +993,9 @@ ype1/public/amsfonts/cm/cmti12.pfb><C:/Program Files (x86)/MiKTeX 2.9/fonts/typ
 e1/public/amsfonts/cm/cmtt12.pfb><C:/Program Files (x86)/MiKTeX 2.9/fonts/type1
 /public/amsfonts/euler/eufm10.pfb><C:/Program Files (x86)/MiKTeX 2.9/fonts/type
 1/public/amsfonts/symbols/msbm10.pfb>
-Output written on thesis.pdf (24 pages, 614721 bytes).
+Output written on thesis.pdf (25 pages, 623181 bytes).
 PDF statistics:
- 469 PDF objects out of 1000 (max. 8388607)
+ 493 PDF objects out of 1000 (max. 8388607)
  92 named destinations out of 1000 (max. 500000)
- 350 words of extra memory for PDF output out of 10000 (max. 10000000)
+ 390 words of extra memory for PDF output out of 10000 (max. 10000000)
 
