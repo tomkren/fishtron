@@ -27,12 +27,15 @@
 \newcommand{\Lets}{Let us }
 \newcommand{\lterm}{$\lambda$-term\xspace}
 \newcommand{\lterms}{$\lambda$-terms\xspace}
+\newcommand{\lhead}{$\lambda$-head\xspace}
+\newcommand{\lheads}{$\lambda$-heads\xspace}
+
 
 \newcommand{\turst}[3]{$#1 \vdash #2 : #3$\xspace}
 \newcommand{\GMS}{\turst{\Gamma}{M}{\sigma}}
 
 
-\newcommand{\EA}{EA } % TODO nahradit správnym "evoluťionar algorithms"
+\newcommand{\EA}{EA\xspace} % TODO nahradit správnym "evoluťionar algorithms"
 
 \newcommand{\setDots}[2]{ 
 	\lbrace #1 \dots #2 \rbrace
@@ -390,7 +393,7 @@ We will describe tree generating method used by Koza in \cite{koza92} called
 
 In \EA there is plenty of options for selection mechanisms 
 for us to choose from. Again we will describe mechanism Koza
-used in his first book on GP. It is \textit{Roulette selection}.
+used in his first book on GP. It is the \textit{Roulette selection}.
 It uses fitness value of each individual in straightforward way to determine probability of selecting this individual.\\
 
 Let there be $popSize$ individuals in the population.\\
@@ -398,9 +401,9 @@ And let $f_{i}$ be fitness value for individual i
 where $i \in \setDots{1}{popSize}$. 
 
 Then $p_{i}$ probability of selection of individual $i$ is computed
-as follows:\\
+as follows:
 
-$p_{i} = \dfrac{ f_{i}  }{ \Sigma_{j=1}^{popSize} f_{j} } $
+$$ p_{i} = \dfrac{ f_{i}  }{ \sum\limits_{j=1}^{popSize}{f_{j} }  } $$
 
 \subsection{Crossover}
 
@@ -978,8 +981,8 @@ Notice that it will closely follow the rules from \ref{barlike}:
 \item And all \textit{symbol nodes} have as child nodes only \textit{type nodes}. 
 \end{itemize}
 
+\begin{samepage}
 Now we will resolve the child nodes of the root node.
-
 There are two cases of $\sigma$ (recall \ref{deftype}): 
 \begin{description}
 	\item[Atomic type] 
@@ -988,6 +991,8 @@ There are two cases of $\sigma$ (recall \ref{deftype}):
 		$\sigma = \tau_1 \rightarrow \dots \rightarrow \tau_n \rightarrow \alpha$
 		where $n \geq 1, \alpha \in A$.
 \end{description}
+\end{samepage}
+
 
 First case \textbf{Atomic type} --- i.e., $\sigma = \alpha$ where $\alpha \in A$:\\
 For every $(f,\rho_1 \rightarrow \dots \rightarrow \rho_m \rightarrow \alpha) \in \Gamma$
@@ -1225,24 +1230,48 @@ Every solution to a Inhabitation tree has this just described tree form of a typ
 \begin{itemize}
 \item EXAMPLES of tree representations of \lterms  
 \item TALK (more?) ABOUT "Barendregt-like" subsection \ref{barlike}\\
-		Things about $\beta\eta$ normal form, etc.    
+		Things about $\beta\eta$ normal form, etc.   
+\item DESCRIBE Inhabitation Machine... 
 \end{itemize}
 		
 
-\subsection{Our approach to \textit{solving} Inhabitation machine}
+\subsection{Our approach to \textit{solving} Inhabitation tree}
+
+
+The main design choice behind our approach to solving inhabitation trees
+is ability to be variable enough to enable choice between 
+\textit{systematic} way of generating terms 
+and \textit{classical-GP-like} way of generating terms 
+by choice of simple search strategy.\\
+
+\Lets explain what is meant by \textit{systematic} and \textit{classical-GP-like}. \\
+
+\textit{Systematic} way of solving inhabitation tree corresponds to
+generating terms in order from smallest to largest in number of symbols and \lheads.
+That means minimizing number of and-nodes in and-or-tree view of point on inhabitation tree.
+But since inhabitation tree is a special kind of and-or-tree with alternating layers of 
+and-nodes (symbols and \lheads) and or-nodes (types) it is also minimizing number of 
+size of whole inhabitation/and-or tree. \\
+
+\textit{Classical-GP-like} ... \textbf{TODO}
 
 \subsubsection{A* algorithm}
 
-
-\subsection{Inhabitation Machine}
-\textbf{TODO} 
-\begin{itemize}
-\item DESCRIBE Inhabitation Machine...
-\end{itemize}
+A* is a general informed search algorithm used for finding shortest path in a state space.
+According to \cite{AIAMA} A* is the most widely known form of best-first search.
 
 
-\section{Roadmap}
-	\section{Conversion to SKI combinators}
+
+
+
+
+
+
+\section{Conversion to SKI combinators}
+
+
+
+
 
 \chapter{ Designed system }	
 	\section{Top level view}
@@ -1250,7 +1279,6 @@ Every solution to a Inhabitation tree has this just described tree form of a typ
 			\subsubsection{ Eva.hs }
 			\subsubsection{ GP\_{}Core.hs }
 	\section{Term generating}
-		\subsection{A* algorithm}
 	\section{Crossover}
 		\subsection{Finding same types}
 		\subsection{Two basic options}
@@ -1271,6 +1299,16 @@ Every solution to a Inhabitation tree has this just described tree form of a typ
 		\section{Artificial Ant}
 		\section{Boolean Alternate}
 	
+\chapter{Ideas yet not implemented}
+
+\section{Roadmap}
+\section{Tree ants}
+\section{[Propojení těch dvou barandrechtskejch odvozovacích pravidel do jedinýho]}
+\section{[Chytřejší heuristika pro A* která si to předpočítá na $\overline{\Gamma}$ ]}
+
+
+
+
 
 %\chapter{Conclusion}
 \chapter*{Conclusion}
@@ -1294,6 +1332,14 @@ Every solution to a Inhabitation tree has this just described tree form of a typ
   Cambridge University Press,
   2010. \\
   \url{http://www.cs.ru.nl/~henk/book.pdf}
+
+
+\bibitem{AIAMA}
+
+	Stuart J. Russell, Peter Norvig,
+	\emph{Artificial Intelligence: A Modern Approach}.
+	Pearson Education,
+	2003. 
 
 \end{thebibliography}
 
