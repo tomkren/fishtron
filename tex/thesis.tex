@@ -1,5 +1,11 @@
 \documentclass[12pt,a4paper]{report}
 
+
+% Nejistý fráze který tam všude používám
+% ... of a form ...
+% Let us ...
+
+
 \setlength\textwidth{145mm}
 \setlength\textheight{247mm}
 \setlength\oddsidemargin{15mm}
@@ -24,11 +30,16 @@
 \usepackage{hyperref}
 
 
-\newcommand{\Lets}{Let us }
+\newcommand{\Lets}{Let us\xspace}
+\newcommand{\lets}{let us\xspace}
 \newcommand{\lterm}{$\lambda$-term\xspace}
 \newcommand{\lterms}{$\lambda$-terms\xspace}
 \newcommand{\lhead}{$\lambda$-head\xspace}
 \newcommand{\lheads}{$\lambda$-heads\xspace}
+
+\newcommand{\la}{\leftarrow\xspace}
+\newcommand{\Lp}  {\Lambda^{\prime}\xspace}
+
 
 
 \newcommand{\turst}[3]{$#1 \vdash #2 : #3$\xspace}
@@ -46,7 +57,7 @@
 	\begin{framed}
 	\begin{algorithm}[H]
 		\DontPrintSemicolon
-		\SetKwProg{Fn}{Algorithm}{}{}
+		\SetKwProg{Fn}{function}{}{}
 		\Fn{#1}{#2}
 	\end{algorithm}
 	\end{framed}
@@ -598,7 +609,10 @@ and mutation().
 		\item TALK ABOUT "parenthesis" conventions (and packing of lambda abstractions).
 		\item BETTER SPECIFICATION $V$ is infinite spočetná (?countable)
 	\end{itemize}
-	
+
+\section{Conversion to SKI combinators}
+\textbf{TODO}
+
 \section{Type}
 \label{deftype}
 
@@ -942,7 +956,7 @@ Proof of correctness (\textbf{TODO REPAIR} Conceptually it is ok but there is sa
 \end{itemize}
 
 
-
+\newpage
 \section{Inhabitation tree}
 
 Now we will introduce \textit{Inhabitation tree}, structure slightly different from
@@ -961,12 +975,12 @@ It has two types of nodes:
 \begin{itemize}
   \item Type nodes   
   			- containing type $\sigma \in \mathbb{T}$ 
-  			- aka "OR-node" , Nonterminal-node. 
+  			- aka "OR-node" %, Nonterminal-node. 
   \item Symbol nodes 
   			%- containing $ x^{*} \in \mathfrak P \left(V\right) -blobost pač ordered $ or $c \in C$
   			- containing "$\lambda$-head" (nonempty finite sequence of variable names) or constant
   			  name. 
-  			- aka "AND-node" , Terminal-node.
+  			- aka "AND-node" %, Terminal-node. - ale nemusí, proto jsem to zakomentoval
 \end{itemize}
 \end{samepage}
 
@@ -998,7 +1012,7 @@ First case \textbf{Atomic type} --- i.e., $\sigma = \alpha$ where $\alpha \in A$
 For every $(f,\rho_1 \rightarrow \dots \rightarrow \rho_m \rightarrow \alpha) \in \Gamma$
 where $\alpha \in A$ there is a child \textit{symbol node} of the root containing constant name $f$.
 This symbol node containing $f$ has $m$ child subtrees corresponding to Inhabitation trees for 
-$(\rho_1,\Gamma),\dots,(\rho_n,\Gamma)$.   
+$(\rho_1,\Gamma),\dots,(\rho_m,\Gamma)$.   
 
 ~
 
@@ -1095,8 +1109,8 @@ for our purposes is this one sufficient.}:
 \textit{And-or tree} is a rooted tree where each node is labeled as either \textit{and-node} 
 or\footnote{xor} \textit{or-node}.
 
-By \textit{solving} And-or tree $T$ we mean finding $T'$
-subtree of $T$ such that it follows these conditions: 
+By \textit{solving} And-or tree $T$ we mean finding finite tree $T'$
+subgraph of $T$ such that it follows these conditions: 
 \begin{itemize}
 	\item The root of $T'$ is the root of $T$.
 	\item Each \textit{and-node} in $T'$ has all the child nodes as in $T$.
@@ -1127,22 +1141,23 @@ In order to understand this correspondence let's now talk about various tree rep
 of \lterms.
 
 \subsection{Tree representations of \lterms}
+\label{tree-reps}
 
 From the definition of \lterm (\ref{deflam}) we can straightforwardly derive 
 the classical tree representation for \lterms. Term M is translated into tree $T[M]$ by following rules:
 
 \begin{itemize}
 	\item $x \in V \cup C$ translates into \textit{leaf} $x$.
-	\item $(M N)$ translates into tree\\
+	\item $(P$ $Q)$ translates into tree\\
 		\Tree
 			[.@	
-		 		\text{$T[M]$}
-		 		\text{$T[N]$}		 			
+		 		\text{$T[P]$}
+		 		\text{$T[Q]$}		 			
 			] 
-	\item $\lambda x . M$ translates into tree\\
+	\item $\lambda x . P$ translates into tree\\
 	 	\Tree
 			[.\text{$\lambda x$}	
-		 	 	\text{$T[M]$}	
+		 	 	\text{$T[P]$}	
 			] 
 \end{itemize}
 
@@ -1150,17 +1165,17 @@ We can enhance this representation by compressing consecutive lambda abstraction
 tree node like this: 
 
 \begin{itemize}
-	\item $\lambda x_1 \dots x_n . M$ translates into tree\\
+	\item $\lambda x_1 \dots x_n . P$ translates into tree\\
 	 	\Tree
 			[.\text{$\lambda x_1 \dots x_n$ }	
-		 	 	\text{$T[M]$}	
+		 	 	\text{$T[P]$}	
 			] 
 \end{itemize}
 
 As this representation comes directly from definition it is evident 
 that it covers all possible \lterms.
 
-For representing expressions as trees it is however more common use a little different
+For representing expressions as trees it is however more common to use a little different
 representation. It will also be the representation suitable for showing 
 that \textit{solving} Inhabitation tree generates wanted \lterm.
 
@@ -1230,12 +1245,14 @@ Every solution to a Inhabitation tree has this just described tree form of a typ
 \begin{itemize}
 \item EXAMPLES of tree representations of \lterms  
 \item TALK (more?) ABOUT "Barendregt-like" subsection \ref{barlike}\\
-		Things about $\beta\eta$ normal form, etc.   
+		Things about $\beta\eta^{-1}$ normal form, etc.   
 \item DESCRIBE Inhabitation Machine... 
 \end{itemize}
 		
 
-\subsection{Our approach to \textit{solving} Inhabitation tree}
+\chapter{ A mathematical view of the designed system }	
+
+\section{Our approach to \textit{solving} Inhabitation tree}
 
 
 The main design choice behind our approach to solving inhabitation trees
@@ -1255,42 +1272,193 @@ size of whole inhabitation/and-or tree. \\
 
 \textit{Classical-GP-like} ... \textbf{TODO}
 
-\subsubsection{A* algorithm}
+\subsection{A* algorithm}
 
 A* is a general informed search algorithm used for finding least-cost 
 path from a given initial state to some goal state in a state space.
 According to \cite{AIAMA} A* is the most widely known form of best-first search.
 
 As A* traverses the state space, it follows a path of the lowest expected total cost.
-It uses a priority queue of alternative unfinished paths.
+It uses a priority queue of alternative unfinished paths.\\
+
+\textbf{TODO : víc to tu rozepsat hlavně zmínit heuristiku 
+a že stačí aby byla optimistická atd.. }
+
+\Pseudokod{A*( start , isGoal , heuristic )}{\;	
+
+	$open \la$ empty priority queue \;
+	$closed \la$ empty set \;\;
+	
+	$start$.G = 0 \;
+	$start$.F = 0 + $heuristic$( $start$ ) \;\;
+	
+	$open$.insert( $start$ )\;\;	
+	
+	\While{$\neg$ $open$.isEmpty() }{\;
+	
+		$state \la$ $open$.popWithLowestF()\;\;
+		
+		\If{ isGoal( $state$ ) }{
+			\Return $state$ \;
+		}\;
+		
+		closed.insert( $state$ ) \;\;
+		
+		\For{$next \in$ $state$.nexts() }{\;
+		
+		    $newG \la$ $state$.G + dist($state$,$next$)\;\;
+
+			\If{ $( next \not\in open \wedge next \not\in closed ) \vee newG < next.$G  }{\;
+			
+				$next$.G $\la newG$                          \;
+				$next$.F $\la newG + heuristic$( $next$ )  \;\;
+				
+				\If{ $next \not\in open$ }{
+					$open$.insert( $next$ )\;
+				}
+					
+			
+			}						
+		}
+	}\;
+	
+	\Return no-path-exists 
+}	
+		
+
+
+
 
 
 ...\\\\\\\\
 \textbf{TODO : čeknout jak je to v kódu jestli ten A* co tam je čekuje ty
- nódy co už navštívil při přidávání
+ nódy co už navštívil při přidávání - VŽDYŤ díky tomu žeje to tree-search 
+ (vs. graph search) to neni potřeba - pořádně se podívat do AIAMA jakj
+ je terminologie a napsat to sem.
 }
 
+\subsection{Our state space}
+
+% - Stavový prostor 
+%   Nedokončený term
+%   Navíc unfin typ gama
+%   my jen podmnozinu urcenou funkci nexts() a vsemi triv koreny unfin typ gama
+%   Vzdy vezmeme nejlevejsi unfin a udelame z nej konkrétnější term pomoci 
+%   vyberu v or uzlu tim nam vzniknou 
+%   nove unfin uzly odpovidajici pozadavkum and uzlu.
+%   Protoze vyplnovani jednotlivych vetvi je na sobe nezavisle 
+%   tak je jedno v jakem poradi je budem vyplnovat 
+%   a tak je nase "z leva doprava" ok.
+% - isFinal(state)
+%   Term který neobsahuje unfin uzel
+% - Heuristika 
+%   simple -pocet unfin uzlů. 
+%   Lepsi - predpocitat si to chytre s gama' a udelat si mapu v kery kdyz to neni tak dat 1.
+% - Vic nez 1 reseni
+%   staci pokracovat pri nalezeni reseni.
 
 
-\section{Conversion to SKI combinators}
+
+In order to describe our state space to search in \lets introduce
+extended version of our tree representation for typed \lterms from \ref{tree-reps}.
+This extension consists in adding a new type of leaf node $(\sigma,\Gamma)$ 
+standing for unfinished tree of a type $\sigma$ with context $\Gamma$ to use
+as set of building blocks
+\footnote{\textbf{TODO}: Tady to napsat nějak líp s tim gamma }.\\
+
+Initial start states are all of a form "one node tree $(\sigma,\Gamma)$" since we
+are trying to generate a typed \lterm of a type $\sigma$ from building blocks $\Gamma$.\\
+
+A tree with no unfinished leaf is considered as final state.  \\
+
+We will define our state space inductively by specifying algorithm for obtaining 
+successors of a state.
+
+A non-final state must have one or more unfinished leafs. 
+One of those unfinished leafs is selected. 
+It is the first one found by depth-first search (from the root of a state tree)
+i.e., the leftmost unfinished leaf (if we consider that tree written as expression).
+
+Let $(\sigma,\Gamma)$ be the selected leaf. Successor state is constructed 
+by replacing this leaf by new subtree. We must distinguish two cases of $\sigma$ :
+\textit{Atomic type} $\sigma$ and \textit{function type} $\sigma$.\\
+
+
+\textbf{Atomic type} $\sigma = \alpha $, $\alpha \in A$.
+
+For atomic $\sigma$ there are as many successors as there are members of $\Gamma$ of a form 
+$(f,\rho_1 \rightarrow \dots \rightarrow \rho_m \rightarrow \boldsymbol{\alpha} )$,
+where $m \geq 0 $. In other words all the members of $\Gamma$ of a type
+$\alpha$ or of a type for function which returns $\alpha$.
+
+For each 
+$(f,\rho_1 \rightarrow \dots \rightarrow \rho_m \rightarrow \boldsymbol{\alpha} ) \in \Gamma$,
+where $m > 0$ the new subtree which will replace $(\sigma,\Gamma)$ has following form: \\
+
+\Tree
+   [.$\alpha$
+	[.f	
+ 		\text{$(\rho_1,\Gamma)$}
+ 		\text{$(\rho_2,\Gamma)$}
+ 		\text{$\dots$} 		
+ 		\text{$(\rho_m,\Gamma)$}		 				 			
+	]   
+   ]\\
+
+And for m = 0:
+
+\Tree [.$\alpha$ f ] \\
+
+
+\textbf{Function type} 
+$\sigma = \tau_1 \rightarrow \dots \rightarrow \tau_n \rightarrow \alpha$
+where $n \geq 1, \alpha \in A$.
+
+For function type $\sigma$ there is exactly one successor.
+
+For every  $i \in \{1,\dots,n\}$ we create new \textit{variable name} $x_i$ which is not yet included in context $\Gamma$ as variable or constant name.
+
+The new subtree which will replace $(\sigma,\Gamma)$ has following form: \\
+
+\Tree
+   [.\text{$\tau_1 \rightarrow \dots \rightarrow \tau_n \rightarrow \alpha$}
+	[.\text{$\lambda x_1 \dots x_n$}	
+ 		\text{$(\alpha,\Gamma \cup \{ (x_1,\tau_1) , \dots , (x_n,\tau_n) \})$}		 				
+	]   
+   ]\\
+ 
+
+\textbf{TODO : Discuss that it is OK to expand only the DFS-found node. 
+The order of unfinished nodes is irrelevant since generation of each branch is 
+independent on generating other branches. Můžem na to koukat jako na takovou tu redukci 
+simetrií, najít to v AIAMA a pořádně popsat.  }
+
+\subsection{Our heuristic function}
+
+An heuristic function takes as input a state and returns as output an estimation of number
+of steps needed to get to a final state by the shortest possible path.
+
+Our heuristic function is a simple one: The number of unfinished leafs in the state tree.
+
+\textbf{TODO : rozebrat to, ukázat že je optimistická atd...}
 
 
 
 
+\chapter{ An implementation view of the designed system }	
 
-\chapter{ Designed system }	
-	\section{Top level view}
-		\subsection{Comments about main source files}
-			\subsubsection{ Eva.hs }
-			\subsubsection{ GP\_{}Core.hs }
-	\section{Term generating}
-	\section{Crossover}
-		\subsection{Finding same types}
-		\subsection{Two basic options}
-		Resolve problems with free variables or avoid variables completely. 
-		
-	\section{Mutation}
-		\subsection{Using term generation}
+\section{Top level view}
+	\subsection{Comments about main source files}
+		\subsubsection{ Eva.hs }
+		\subsubsection{ GP\_{}Core.hs }
+\section{Term generating}
+\section{Crossover}
+	\subsection{Finding same types}
+	\subsection{Two basic options}
+	Resolve problems with free variables or avoid variables completely. 
+	
+\section{Mutation}
+	\subsection{Using term generation}
 
 
 \chapter{Problems}
