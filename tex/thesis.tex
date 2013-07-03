@@ -18,6 +18,8 @@
 \usepackage[utf8]{inputenc}
 \usepackage{qtree}
 
+\usepackage[ampersand]{easylist}
+
 \usepackage[vlined]{algorithm2e}
 %% \usepackage{algpseudocode}
 \usepackage{framed}
@@ -49,7 +51,7 @@
 \newcommand{\EA}{EA\xspace} % TODO nahradit správnym "evoluťionar algorithms"
 
 \newcommand{\setDots}[2]{ 
-	\lbrace #1 \dots #2 \rbrace
+	\lbrace #1 , \dots , #2 \rbrace
 }
 
 
@@ -282,6 +284,53 @@ Keywords:
 %\chapter{Introduction}
 \chapter*{Introduction}
 \addcontentsline{toc}{chapter}{Introduction}
+
+Témata co zmínit v úvodu :\\
+
+\begin{easylist}[itemize]
+& Začít asi tim že evoluce je cool a že
+  tohle bude o tom jak do GP dát typy.
+& Říct jak jde text:
+  && Začnem popsanim klasickýho GP podle Kozy
+  && Vyslovíme definice okolo lambda termu a typu
+  && Vyslovíme definici inhabitačního stromu
+     kterej je stromovou verzí IM od Barendrechta.
+  && Matematicky popíšem jak na to dem my.
+  && Popíšem rozšíření zakladního systému na 
+     polymorfní.
+  && Popíšem to z programátorskýho hlediska
+  && Popíšem příklady na kterejch to demonstrujem
+  && Srovnáme to s nějakejma přístupama co už 
+     existujou 
+& Možná se zmínit o tý představě dvou pólu
+  induktivním a deduktivním -
+  klasickym GP a Dokazovačem, čim složitější
+  typovej sytem tim víc se jedná o deduktivní   
+  systém a blíží se to dokazovači.
+& Nějak naťuknout už tady v úvodu jak se to má při
+  srovnání s tim jak na to dou jiný (Yu atd)
+& Výkřiky co zmínit:
+  && Na co zaměřený:
+     &&& Proof of a concept
+     &&& Pořádně to vymáchat v typový teorii
+     &&& Spíš než bejt další z řady nástroju
+         se snaží zobecnovat ty už existující
+     &&& Spíš jednoduchost
+         &&&& Ve většině aspektú to sleduje
+              Kozu - tzn i v málo řídících
+              parametru
+     &&& Duraz na generování termu (!)              
+     &&& Po implementační stránce
+         &&&& Sranda s JS překladem
+         &&&& Servrová architektura
+         &&&& oboje spíš srandy
+  && Na co nezaměřený (ale snad taky ok v tom):
+     &&& Performance   
+     &&& Mature knihovna co by šla použít robustně
+         v cizim kódu - spíš to počítá že to 
+         bude dál rozvíjeno a tohle je mezizastávka
+\end{easylist}
+
 	
 \chapter{Definitions}
 	
@@ -593,25 +642,101 @@ and mutation().
 \newpage		
 \section{Lambda term}
 \label{deflam}
-	
-	Let $V$ be set of {\it variable names}.  \\* 
-	Let $C$ be set of {\it constant names}.	 \\*		
-	Then $\Lambda$ is set of {\it \lterms} inductively defined as follows:
-	
-	\begin{align*}
-		 x   \in V \cup C          &\Rightarrow     x   \in \Lambda \\
-		 M,N \in \Lambda           &\Rightarrow ( M N ) \in \Lambda \\
-		 x   \in V , M \in \Lambda &\Rightarrow ( \lambda x . M ) \in \Lambda 
-	\end{align*} 
 
-	\textbf{TODO} 
-	\begin{itemize} 
-		\item TALK ABOUT "parenthesis" conventions (and packing of lambda abstractions).
-		\item BETTER SPECIFICATION $V$ is infinite spočetná (?countable)
-	\end{itemize}
+\newcommand{\then}{\Rightarrow\xspace}
 
-\section{Conversion to SKI combinators}
-\textbf{TODO}
+Let $V$ be infinite countable set of {\it 
+variable names}.  \\* 
+Let $C$ be set of {\it constant names}.	 \\*		
+Then $\Lambda$ is set of {\it \lterms} inductively defined as follows:
+
+\newcommand{\lam}[2]{( \lambda #1 . #2 )}
+
+	
+\begin{align*}
+x   \in V \cup C          &\then x          \in \Lambda \\
+M,N \in \Lambda           &\then (M~N)      \in \Lambda \\
+x   \in V , M \in \Lambda &\then \lam{x}{M} \in \Lambda 
+\end{align*}
+\\
+It is usual to use $V = \Sigma^+$ set of all non-empty finite strings of symbols 
+from $\Sigma$ where $\Sigma$ is some alphabet set, e.g.  
+$
+\Sigma =
+\setDots{a}{z} \cup 
+\setDots{_0}{_9} $.
+
+And $C$ is set supplied by "the user" to enrich 
+the language with constant names standing
+for some predefined behavior.
+
+A constant may stand just for another \lterm
+or it may stand for some predefined constant 
+such as 0,1,2,... and primitive operations on
+them, e.g. addition. 
+But the specific implementations 
+of these constants will not be ours big concern 
+while reasoning about methods for generating 
+\lterms .\\
+
+We use upper case symbols such as 
+$M,N,M_1,M_2,...,N_1,N_2,...$
+to denote arbitrary lambda terms in contrast to
+those in lower case such as
+$a,b,c,...,x,y,z,$
+$f_1,f_2,...,g_1,g_2,...$
+denoting variable names, elements of $V$.\\
+	
+Examples of \lterms:\\
+
+
+\begin{easylist}[itemize]
+& $x$
+& $\lam{x}{x}$
+& $(\lam{x}{(x~x)}~\lam{x}{(x~x)})$
+& $\lam{x}{\lam{y}{x}}$
+& $\lam{f_1}{\lam{f_2}{\lam{x}{((f_1~x)~(f_2~x))}}}$
+\end{easylist}~
+
+We use following notation
+abbreviations for better readability:
+
+\begin{easylist}[itemize]
+& $M_1~M_2~M_3~\dots~M_n$ for 
+  $(\dots((M_1~M_2)~M_3)~\dots~M_n)$ 
+& $\lam{x_1 x_2 \dots x_n }{M}$ for
+  $\lam{x_1}{\lam{x_2}{\dots\lam{x_n}{M}\dots}}$
+\end{easylist}~
+  
+
+
+\subsection{$\beta$-reduction}
+
+
+
+\subsection{$\eta$-reduction}
+
+\subsection{Reductions for $c \in C$}
+TODO možná vynechat...
+
+\subsection{Normal form}
+
+\subsection{Long normal form}
+
+
+\textbf{TODO} 
+\begin{itemize} 
+	\item TALK ABOUT "parenthesis" conventions 
+	      (and packing of lambda abstractions).
+	\item Popsat ve stručnosti beta redukci,
+	      etha redukci, atd.
+	      Ale hlavně promluvit krátce o intuici
+	      a nějak to napojit na to jak to používám já
+	      pak v tom GP.
+	\item promluvit zde o long normal form což propojuje 
+		  tuhle sekci se sekcí o barenregt-like 	
+		  pravidlech \ref{barlike}.
+\end{itemize}
 
 \section{Type}
 \label{deftype}
@@ -657,7 +782,6 @@ and mutation().
 	In other words context is a set of statements with distinct variables or constants as subjects.
 	\\\\
 	\textbf{TODO:} TALK ABOUT Context represents library/building blocks.
-	
 	
 	
 \section{Statement of a form \GMS}
@@ -860,8 +984,16 @@ with $\Gamma = \{\}$.
 	~ \Big)
 \end{align*}
 
-\subsection{"Barendregt-like" inference and grammar rules}
+%"Barendregt-like"
+\subsection{Inference and grammar rules producing 
+terms in Long normal form}
 \label{barlike}
+
+As is said in \cite{barendregt10} there are two
+inference/grammar rules which together generate
+simply typed lambda terms in their long normal forms
+(from section \ref{deflam}).
+
 
 Inference rule 1: 
 \[
@@ -960,7 +1092,7 @@ Proof of correctness (\textbf{TODO REPAIR} Conceptually it is ok but there is sa
 \section{Inhabitation tree}
 
 Now we will introduce \textit{Inhabitation tree}, structure slightly different from
-\textit{Inhabitation machine}, which was introduced in \cite{barendregt10} by Henk Barendregt.
+\textit{Inhabitation machine}, which was introduced in \cite{barendregt10} by Barendregt.
 We can think about Inhabitation tree as about unfolded Inhabitation machine.
 The motivation for using Inhabitation trees is belief that it will help us 
 reason about generation of \lterms 
@@ -1443,9 +1575,48 @@ Our heuristic function is a simple one: The number of unfinished leafs in the st
 \textbf{TODO : rozebrat to, ukázat že je optimistická atd...}
 
 
+\section{Our approach to crossover}
+
+\subsection{Conversion to SKI combinators}
+\textbf{TODO}
 
 
 \chapter{ An implementation view of the designed system }	
+
+Předběžný náhodně uspořádaný body osnovy ..\\
+
+\begin{easylist}[itemize]
+& že je to v haskellu
+&& Jak moc hrotit vysvětlení haskellu?
+& že je to servrově řešený
+& architektura evolučního algoritmu 
+&& ty tři typový třídy a ta čtvrtá typová třída
+& evaluace
+&& vychytavka s vyhodnocenim celýho seznamu aby s eto nemuselo furt inicializovat - inicializace vyhodnocovače jednou za generaci 
+& hlavní soubory
+&& Eva.hs     - Eva monada
+&& GP-Core.hs - Evoluční algoritmus
+&& GP-Data.hs - Instance tříd z GP-Core
+&& IMx.hs - Term generating
+&& TTerm.hs   - typed lambda term
+&& TTree.hs   - CTT
+&& Server.hs  - main serveru
+&& Job.hs     - Registrace problemu
+&& Heval.hs   - Evaluator 
+&& složka Problems
+&&& pro každej problém složka 
+&&& ta typicky strukturu
+&&&& Problem.hs
+&&&& Funs.hs
+&& Slozka server
+&&& index.html
+&&& slozka js/Problems
+&&& .js pro kazdej problem
+\end{easylist}
+
+
+
+
 
 \section{Top level view}
 	\subsection{Comments about main source files}
