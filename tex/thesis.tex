@@ -650,13 +650,16 @@ variable names}.  \\*
 Let $C$ be set of {\it constant names}.	 \\*		
 Then $\Lambda$ is set of {\it \lterms} inductively defined as follows:
 
-\newcommand{\lam}[2]{( \lambda #1 . #2 )}
+\newcommand{\lamb}[2]{( \lambda #1 . #2 )}
+\newcommand{\lam}[2]{\lambda #1 . #2}
 
 	
 \begin{align*}
-x   \in V \cup C          &\then x          \in \Lambda \\
-M,N \in \Lambda           &\then (M~N)      \in \Lambda \\
-x   \in V , M \in \Lambda &\then \lam{x}{M} \in \Lambda 
+x   \in V \cup C          &\then x           \in \Lambda \\
+M,N \in \Lambda           &\then (M~N)       \in \Lambda 
+\textit{~~~~~~(Function application)} \\
+x   \in V , M \in \Lambda &\then \lamb{x}{M} \in \Lambda
+\textit{~~~~~($\lambda$-abstraction)} 
 \end{align*}
 \\
 It is usual to use $V = \Sigma^+$ set of all non-empty finite strings of symbols 
@@ -685,17 +688,24 @@ to denote arbitrary lambda terms in contrast to
 those in lower case such as
 $a,b,c,...,x,y,z,$
 $f_1,f_2,...,g_1,g_2,...$
-denoting variable names, elements of $V$.\\
+denoting variable names, elements of $V$.
+Sometimes we will use lower case symbols
+to denote arbitrary variable names (such as
+$x$ in $\lamb{x}{M}$),
+and at other times, we will use them
+as specific variable names in specific terms 
+(such as $x$ in $\lamb{x}{x}$).
+The distinction between the two should be
+clear from the context.\\
 	
-Examples of \lterms:\\
-
+Examples of \lterms:
 
 \begin{easylist}[itemize]
 & $x$
-& $\lam{x}{x}$
-& $(\lam{x}{(x~x)}~\lam{x}{(x~x)})$
-& $\lam{x}{\lam{y}{x}}$
-& $\lam{f_1}{\lam{f_2}{\lam{x}{((f_1~x)~(f_2~x))}}}$
+& $\lamb{x}{x}$
+& $(\lamb{x}{(x~x)}~\lamb{x}{(x~x)})$
+& $\lamb{x}{\lamb{y}{x}}$
+& $\lamb{f_1}{\lamb{f_2}{\lamb{x}{((f_1~x)~(f_2~x))}}}$
 \end{easylist}~
 
 We use following notation
@@ -705,12 +715,37 @@ abbreviations for better readability:
 & $M_1~M_2~M_3~\dots~M_n$ for 
   $(\dots((M_1~M_2)~M_3)~\dots~M_n)$ 
 & $\lam{x_1 x_2 \dots x_n }{M}$ for
-  $\lam{x_1}{\lam{x_2}{\dots\lam{x_n}{M}\dots}}$
+  $\lamb{x_1}{\lamb{x_2}{\dots\lamb{x_n}{M}\dots}}$
 \end{easylist}~
   
+For example we can write
+$\lamb{f_1}{\lamb{f_2}{\lamb{x}{((f_1~x)~(f_2~x))}}}$
+as $\lam{f_1 f_2 x}{f_1~x~(f_2~x)}$.
+
+\subsection{ Subterms, free variables and substitution }
+
+Let us quickly define $ST(M)$ set of subterms of a term $M$:\\  
+
+\begin{easylist}[itemize]
+& If $M = x$ then $ST(M) = {x}$.
+& If $M = (P~Q)$ then $ST(M) = \{(P~Q)\} \cup ST(P) \cup ST(Q)$
+& If $M = \lam{x}{M}$ then $ST(M) = \{\lam{x}{M}\} \cup ST(M)$
+\end{easylist}~
+
+\textbf{TODO FV a Substituci...}
 
 
 \subsection{$\beta$-reduction}
+
+In order to perform computation there must be some
+mechanism for term evaluation. In $\lambda$-calculus there
+is $\beta$-reduction for this reason.\\
+
+Any term of a form $\lamb{x}{M}N$ can be $\beta$-reduced to 
+term $M[x:=N]$. This fact is written as relation of those
+two terms in the following way:
+
+$$\lamb{x}{M}N \rightarrow_\beta M[x:=N]$$
 
 
 
