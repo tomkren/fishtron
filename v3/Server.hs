@@ -15,7 +15,7 @@ import Control.Concurrent
 import Control.Monad
 import Control.Monad.State
 import System.IO
-import System.Directory
+import System.Directory (doesFileExist, removeFile, createDirectory, doesDirectoryExist,removeDirectoryRecursive,getDirectoryContents)
 import System.Environment
 
 import Utils ( unescape )

@@ -1,7 +1,7 @@
 module ServerInterface where
 
 import System.IO
-import System.Directory
+--import System.Directory
 
 import Text.JSON
 import JSONUtils
