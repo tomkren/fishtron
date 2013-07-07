@@ -5,6 +5,10 @@
 % ... of a form ...
 % Let us ...
 
+%takle asi spíš psát ty anglický věty !!!!!!!!!!!!!!!!!!!!!! 
+% takle nak to píše barendrecht :
+%$\FV(M)$ the set of free variables of term M is defined inductively as follows.
+
 
 \setlength\textwidth{145mm}
 \setlength\textheight{247mm}
@@ -19,6 +23,8 @@
 \usepackage{qtree}
 
 \usepackage[ampersand]{easylist}
+
+\usepackage{amssymb}
 
 \usepackage[vlined]{algorithm2e}
 %% \usepackage{algpseudocode}
@@ -645,18 +651,26 @@ and mutation().
 
 \newcommand{\then}{\Rightarrow\xspace}
 
-Let $V$ be infinite countable set of {\it 
-variable names}.  \\* 
-Let $C$ be set of {\it constant names}.	 \\*		
-Then $\Lambda$ is set of {\it \lterms} inductively defined as follows:
-
 \newcommand{\lamb}[2]{( \lambda #1 . #2 )}
 \newcommand{\lam}[2]{\lambda #1 . #2}
 
+Let $V$ be infinite countable set of {\it 
+variable names}.  \\* 
+Let $C$ be set of {\it constant names}.	 \\*		
+Then $\Lambda$ is set of {\it \lterms} defined inductively as follows
+\footnote{Function application and $\lambda$-abstraction are concepts
+well known from common programming languages. 
+For example in JavaScript 
+$(M~N)$ translates to expression \texttt{$M$($N$)} and
+$\lamb{x}{M}$ translates to expression \texttt{function($x$)\{return $M$;\}}.
+In other words, the $\lambda$-abstraction is equivalent to 
+\textit{anonymous function}. 
+}.
+
 	
 \begin{align*}
-x   \in V \cup C          &\then x           \in \Lambda \\
-M,N \in \Lambda           &\then (M~N)       \in \Lambda 
+x   \in V \cup C  &\then x     \in \Lambda \\
+M,N \in \Lambda   &\then (M~N) \in \Lambda 
 \textit{~~~~~~(Function application)} \\
 x   \in V , M \in \Lambda &\then \lamb{x}{M} \in \Lambda
 \textit{~~~~~($\lambda$-abstraction)} 
@@ -684,7 +698,7 @@ while reasoning about methods for generating
 
 We use upper case symbols such as 
 $M,N,M_1,M_2,...,N_1,N_2,...$
-to denote arbitrary lambda terms in contrast to
+to denote arbitrary lambda terms in contrast with
 those in lower case such as
 $a,b,c,...,x,y,z,$
 $f_1,f_2,...,g_1,g_2,...$
@@ -724,15 +738,40 @@ as $\lam{f_1 f_2 x}{f_1~x~(f_2~x)}$.
 
 \subsection{ Subterms, free variables and substitution }
 
-Let us quickly define $ST(M)$ set of subterms of a term $M$:\\  
+\newcommand{\ST}{\mathop{\mathrm{ST}}}
+\newcommand{\FV}{\mathop{\mathrm{FV}}}
 
-\begin{easylist}[itemize]
-& If $M = x$ then $ST(M) = {x}$.
-& If $M = (P~Q)$ then $ST(M) = \{(P~Q)\} \cup ST(P) \cup ST(Q)$
-& If $M = \lam{x}{M}$ then $ST(M) = \{\lam{x}{M}\} \cup ST(M)$
-\end{easylist}~
+In order to demonstrate what is a subterm of a term
+\lets define inductively $\ST(M)$ set of all subterms of a term $M$.
+\begin{align*}
+\ST(x)          &= \{x\} \\
+\ST((P~Q))      &= \{(P~Q)\} \cup \ST(P) \cup \ST(Q) \\
+\ST(\lam{x}{P}) &= \{\lam{x}{P}\} \cup \ST(P) 
+\end{align*}
 
-\textbf{TODO FV a Substituci...}
+%takle asi spíš psát ty anglický věty !!!!!!!!!!!!!!!!!!!!!! 
+% takle nak to píše barendrecht :
+ 
+$\FV(M)$ the set of free variables of a term M is defined inductively as follows.
+\begin{align*}
+\FV(x)          &= \{x\} \\
+\FV((P~Q))      &= \FV(P) \cup \FV(Q) \\
+\FV(\lam{x}{P}) &= \FV(P) \smallsetminus \{x\}
+\end{align*}
+
+$M[x:=N]$ the substitution of a term $N$ for the free occurrences of 
+a variable $x$ in a term $M$ is defined inductively as follows.
+\begin{align*}
+x[x:=N]           &= N \\
+y[x:=N]           &= y \text{ ~~~~where } x \not= y  \\
+(P~Q)[x:=N]       &= ( P[x:=N]  ~ Q[x:=N] ) \\
+\lamb{x}{P}[x:=N] &= \lam{x}{P}\\
+\lamb{y}{P}[x:=N] &= \lam{y}{( P[x:=N] )} \text{ ~~~~where } x \not= y
+\end{align*}
+
+
+\textbf{TODO možná zmínit že y nesmí být v N volně v připadě\\
+$\lamb{y}{P}[x:=N] = \lam{y}{( P[x:=N] )}$ }, ale řekl bych že zbytečnej detail
 
 
 \subsection{$\beta$-reduction}
@@ -741,36 +780,66 @@ In order to perform computation there must be some
 mechanism for term evaluation. In $\lambda$-calculus there
 is $\beta$-reduction for this reason.\\
 
-Any term of a form $\lamb{x}{M}N$ can be $\beta$-reduced to 
-term $M[x:=N]$. This fact is written as relation of those
-two terms in the following way:
+\newcommand{\bRedex}{$\beta$-redex\xspace}
+\newcommand{\bRedexes}{$\beta$-redexes\xspace}
+\newcommand{\bArrow}{\rightarrow_\beta\xspace}
+\newcommand{\eArrow}{\rightarrow_\eta\xspace}
+\newcommand{\eeArrow}{\rightarrow_{\eta^{-1}}\xspace}
 
-$$\lamb{x}{M}N \rightarrow_\beta M[x:=N]$$
+A term of a form $\lamb{x}{M}N$ is called \textit{\bRedex}.
+A \bRedex can be $\beta$-reduced to term $M[x:=N]$. 
+This fact is written as \textit{relation} $\bArrow$ 
+of those two terms:
+\begin{equation} \label{eq:bRed}
+\lamb{x}{M}N \bArrow M[x:=N]
+\end{equation}
+It is also possible to reduce \textit{subterm \bRedexes} 
+which can be formally stated as:
+\begin{align*}
+P \bArrow Q &\then (R~P)      \bArrow (R~Q) \\
+P \bArrow Q &\then (P~R)      \bArrow (Q~R) \\
+P \bArrow Q &\then \lam{x}{P} \bArrow \lam{x}{Q}  
+\end{align*}
 
 
 
 \subsection{$\eta$-reduction}
 
+Similarly as for $\beta$-reduction we can define $\eta$-reduction 
+except that instead of \ref{eq:bRed} we use:  
+
+$$\lamb{x}{(M~x)} \eArrow M \text{ ~~~~where } x \not\in FV(M) $$
+
+\subsection{$\eta^{-1}$-reduction}
+
+$\eta^{-1}$-reduction (also called $\eta$-expansion) is 
+the reduction converse to $\eta$-reduction.
+Again it may be obtained by replacing \ref{eq:bRed}, now with:  
+
+$$M \eeArrow \lamb{x}{(M~x)} \text{ ~~~~where } x \not\in FV(M) $$
+
+
+
 \subsection{Reductions for $c \in C$}
-TODO možná vynechat...
+\textbf{TODO možná vynechat...}
 
-\subsection{Normal form}
+\subsection{$\beta$-normal form}
 
-\subsection{Long normal form}
+A \lterm is a \textit{$\beta$-normal form} if it does not have a $\beta$-redex as
+subterm.
+\\\\
+A normal form may be thought of as a result of a term evaluation. 
 
 
+
+
+~\\\\
 \textbf{TODO} 
 \begin{itemize} 
-	\item TALK ABOUT "parenthesis" conventions 
-	      (and packing of lambda abstractions).
-	\item Popsat ve stručnosti beta redukci,
-	      etha redukci, atd.
-	      Ale hlavně promluvit krátce o intuici
+	\item promluvit krátce o intuici
 	      a nějak to napojit na to jak to používám já
 	      pak v tom GP.
-	\item promluvit zde o long normal form což propojuje 
-		  tuhle sekci se sekcí o barenregt-like 	
-		  pravidlech \ref{barlike}.
+	\item Citovat nějakýho bárendrechta jako zdroj podrobnějších informací
 \end{itemize}
 
 \section{Type}
@@ -790,6 +859,15 @@ TODO možná vynechat...
 	\item TALK ABOUT arrow/parenthesis conventions. 
 \end{itemize}
 	
+\subsection{Long normal form}
+\label{lnf}
+
+\textbf{TODO : promluvit zde o long normal form což propojuje 
+		  tuhle sekci se sekcí o barenregt-like 	
+		  pravidlech \ref{barlike}.
+}
+
+
 	
 \section{Statement of a form $M : \sigma$}
 
@@ -1027,7 +1105,7 @@ terms in Long normal form}
 As is said in \cite{barendregt10} there are two
 inference/grammar rules which together generate
 simply typed lambda terms in their long normal forms
-(from section \ref{deflam}).
+(defined in \ref{lnf}).
 
 
 Inference rule 1: 
@@ -1119,7 +1197,7 @@ Proof of correctness (\textbf{TODO REPAIR} Conceptually it is ok but there is sa
 	\item SHOW more examples of inference rules transformed into grammar rules.
 	\item DESCRIBE general algorithm for this transformation.
 	\item TALK ABOUT $\tau_1 \rightarrow \dots \rightarrow \tau_n \rightarrow \alpha$ 
-	\item TALK ABOUT $\beta \eta$-normal form which is generated by this method.
+	\item TALK ABOUT $\beta \eta^{-1}$-normal form which is generated by this method.
 \end{itemize}
 
 
@@ -1599,6 +1677,21 @@ The new subtree which will replace $(\sigma,\Gamma)$ has following form: \\
 The order of unfinished nodes is irrelevant since generation of each branch is 
 independent on generating other branches. Můžem na to koukat jako na takovou tu redukci 
 simetrií, najít to v AIAMA a pořádně popsat.  }
+
+\textbf{TODO : Odiskutovat nějak tohle:
+přirozeně chceme při produkci velkýho množství termů obhospodařovávat nějaký
+velký množství rozdělanejch termů v nějaký struktuře a postuipně je dodělávat.
+Proto přichází jako tahle struktura na mysl nějaká prioritní fronta,
+otázka je kde vzít ty priority a A* je jednoduchá ale přitom optimum hledající 
+odpověď na tuhle otázku, dostatečně volná skrz tu heuristiku.  }
+
+\textbf{TODO: určitě někde zmínit ospravedlnění proč si napsat dokazovač sám
+a né požít nějakej už hotovej - de o to, že dokazovače jsou delaný na to aby
+udělali jeden důkaz typicky složitýho tvrzení, my sme v situaci kdy
+chceme co nejvíc (a co možná co nejvíc rozmanitejch) důkazů jednoduchýho problému.
+ }
+
+
 
 \subsection{Our heuristic function}
 
