@@ -820,8 +820,8 @@ $$M \eeArrow \lamb{x}{(M~x)} \text{ ~~~~where } x \not\in FV(M) $$
 
 
 
-\subsection{Reductions for $c \in C$}
-\textbf{TODO možná vynechat...}
+%\subsection{Reductions for $c \in C$}
+%\textbf{TODO možná vynechat...}
 
 \subsection{$\beta$-normal form}
 
@@ -845,28 +845,53 @@ A normal form may be thought of as a result of a term evaluation.
 \section{Type}
 \label{deftype}
 
-	Let $A$ be set of {\it atomic type names}. \\*
-	Then $\mathbb{T}$ is set of {\it types} inductively defined as follows:
-	
-	\begin{align*}
-	\alpha      \in A          &\Rightarrow     \alpha   \in \mathbb{T} \\
-	\sigma,\tau \in \mathbb{T} &\Rightarrow ( \sigma \rightarrow  \tau ) \in \mathbb{T} 
-	\end{align*} 
+\newcommand{\ar}{\rightarrow\xspace}
+\newcommand{\T}{\mathbb{T}\xspace}
 
+Let $A$ be set of {\it atomic type names}. \\*
+Then $\mathbb{T}$ is set of {\it types} inductively defined as follows:
+
+\begin{align*}
+\alpha      \in A  &\then   \alpha \in \T \\
+\sigma,\tau \in \T &\then ( \sigma \ar  \tau ) \in \T 
+\end{align*} 
+
+Type $\sigma \ar \tau$ is type for functions taking as input
+something of a type $\sigma$ and returning 
+as output something of a type $\tau$. \\
+
+We use following notation
+abbreviation for better readability:\\
+
+$\tau_1 \ar \tau_2 \ar \dots \ar \tau_n$ means 
+$\tau_1 \ar (\tau_2 \ar (\dots \ar (\tau_{n-1} \ar \tau_n)\dots))$.\\
+
+In other words, the operator $\ar$ is right-associative.\\
+
+It is easy to see that every $\sigma \in \T$ may be expressed as 
+$\tau_1 \ar \dots \ar \tau_n \ar \alpha$ 
+where $\alpha \in A$ and $n \geq 0$.\footnote{ 
+We can prove it by induction on size of $\sigma$. 
+For $\sigma = \alpha \in \T$ is $n = 0$ and for $\sigma = \tau_0 \ar \rho$
+we have from induction hypothesis that $\rho = \tau_1 \ar \dots \ar \tau_n \ar \alpha$,
+therefore
+$\sigma = \tau_0 \ar \tau_1 \ar \dots \ar \tau_n \ar \alpha$.}
+
+Technically speaking, we have types only for functions with one argument, but
+this property suggests how we can "simulate" function which takes $n$ arguments.
+  
+
+% We will utilize this property ... asi netřeba řikat
+
+~\\
 \textbf{TODO} 
 \begin{itemize}
-	\item TALK ABOUT $\tau_1 \rightarrow \dots \rightarrow \tau_n \rightarrow \alpha$ 
-	\item TALK ABOUT arrow/parenthesis conventions. 
+	\item určitě promluvit nějak v úvodu k tomu že se jedná o 
+	Simply typed lambda kalkulus, zmínit že klasicky se těm alfa z A 
+	řiká proměný, ale že je to matoucí vzhledem k polymorfizmu
+	\item možná se hlobějc zmínit o curryingu  
 \end{itemize}
 	
-\subsection{Long normal form}
-\label{lnf}
-
-\textbf{TODO : promluvit zde o long normal form což propojuje 
-		  tuhle sekci se sekcí o barenregt-like 	
-		  pravidlech \ref{barlike}.
-}
-
 
 	
 \section{Statement of a form $M : \sigma$}
@@ -979,6 +1004,9 @@ A normal form may be thought of as a result of a term evaluation.
 		 	}
 		 }
 	\end{equation*}		
+
+
+
 	
 \section{Term generating grammar}
 
@@ -1097,15 +1125,33 @@ with $\Gamma = \{\}$.
 	~ \Big)
 \end{align*}
 
+
+\section{Long normal form}
+\label{lnf}
+
+Let \GMS where $\sigma = \tau_0 \ar \tau_1 \ar \dots \ar \tau_n \ar \alpha$.\\
+Then $M$ is in \textit{long normal form} if following 
+conditions are satisfied:
+
+\begin{itemize}
+ \item $M$ is term of a form $\lam{x_1 \dots x_n}{f~M_1~\dots~M_n}$,
+ \item each $M_i$ is in \textit{long normal form}.
+\end{itemize}
+
+
+
+
+
+
+
 %"Barendregt-like"
-\subsection{Inference and grammar rules producing 
+\section{Inference and grammar rules producing 
 terms in Long normal form}
 \label{barlike}
 
 As is said in \cite{barendregt10} there are two
 inference/grammar rules which together generate
-simply typed lambda terms in their long normal forms
-(defined in \ref{lnf}).
+simply typed lambda terms in their long normal forms.
 
 
 Inference rule 1: 
@@ -1495,7 +1541,7 @@ Every solution to a Inhabitation tree has this just described tree form of a typ
 \end{itemize}
 		
 
-\chapter{ A mathematical view of the designed system }	
+\chapter{ Our approach }	
 
 \section{Our approach to \textit{solving} Inhabitation tree}
 
