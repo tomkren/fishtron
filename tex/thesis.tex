@@ -9,6 +9,7 @@
 % takle nak to píše barendrecht :
 %$\FV(M)$ the set of free variables of term M is defined inductively as follows.
 
+% !!! místo we can atd psát one can ...
 
 \setlength\textwidth{145mm}
 \setlength\textheight{247mm}
@@ -74,6 +75,13 @@
 \newenvironment{enum}
 {\begin{easylist}[itemize]}
 {\end{easylist}}
+
+\newenvironment{todo}
+{ ~\\[1em]
+  \textbf{TODO}
+  \begin{easylist}[itemize]}
+{\end{easylist}~\\[1em]}
+
 
 
 %% Balíček hyperref, kterým jdou vyrábět klikací odkazy v PDF,
@@ -433,9 +441,11 @@ Set of building blocks consists of two sets.
 	      of program trees standing for functions.
 \end{itemize}
 
-Therefore $building$ $blocks = T \cup F$.\\
+\newcommand{\TuF}{$T \cup F$\xspace}
 
-Beside symbols in $T \cup F$ there must also be 
+Therefore $building$ $blocks = $ \TuF.\\
+
+Beside symbols in \TuF there must also be 
 an implementation for each symbol which is not variable. 
 And for every function symbol from $F$ there must be specified 
 number of arguments.\\
@@ -446,18 +456,43 @@ $A \times ... \times A \rightarrow A$ and should be total (defined on all
 combinations of inputs). And analogically for $t \in T$ being of a type A.  
 
 Satisfying this constrain ensures that every program tree build 
-from $T \cup F$ will be total.\\
+from \TuF will be total.\\
 
 We can say that the motivation behind this work is to construct system where we
 eliminate this constraint. 
 
 \subsection{Generating individual}
 
-We will describe tree generating method used by Koza in \cite{koza92} called
-\textit{ramped half-and-half}. 
+We will describe three tree generating method described by Koza 
+in \cite{koza92} called \textit{ramped half-and-half}. \\
 
-\textbf{TODO!}\\
-\textbf{Talk about Generating initial population}
+An individual tree is constructed by random (uniform) selection of symbol from 
+subset of \TuF for the root node and after that by generation of its 
+subtrees recursively. 
+Number of subtrees of a node corresponds 
+to the number of arguments for the selected symbol. 
+
+There are two generating sub-methods called \textit{full} and 
+\textit{grow} each restricting differently the subset of \TuF. 
+This restriction depends on depth of the
+node for which the symbol is being selected. 
+
+In order to perform \textit{ramped half-and-half} method
+one of those two sub-methods is randomly (uniformly) 
+selected and the selected one is performed.\\
+
+
+In the root (\textit{depth} = 0) both \textit{full} and \textit{grow}
+select the symbol from the set $F$.
+
+A maximum depth $D_{initial}$ is defined, i.e. 6.
+
+In nodes with \textit{depth} $\leq D_{initial}$ the \textit{full}
+method selects from the set $F$, whereas the \textit{grow} method 
+selects from whole \TuF.
+
+In nodes with \textit{depth} $= D_{initial}$ both methods select from the
+set $T$.
 
 \subsection{Selection}
 
@@ -510,6 +545,11 @@ And here are two child trees with swapped subtrees:
          	   [.\textbf{-} \textbf{0} \textbf{x} ] \textbf{1} ] ]\\
 
 
+\begin{todo}
+ & zmínit maximální hloubku vzniklýho dítěte (17)
+\end{todo}
+
+
 \subsection{Reproduction}
 
 Reproduction is simple mechanism providing preservation of solutions
@@ -552,13 +592,13 @@ This process continues until $pop_{t+1}$ is filled with
 $popSize$ individuals.  
 
 Selection of genetic operation in each operation is 
-controlled by probabilities for each genetic operator.
+controlled by probabilities for each genetic operator.\\
 
 Koza in \cite{koza92} uses as default probabilities those values:
 
 \begin{itemize}
-	\item \textit{Crossover}    : $70\%$
-	\item \textit{Reproduction} : $30\%$
+	\item \textit{Crossover}    : $90\%$
+	\item \textit{Reproduction} : $10\%$
 	\item \textit{Mutation}     :  $0\%$
 \end{itemize}
 
@@ -568,37 +608,30 @@ Koza in \cite{koza92} uses as default probabilities those values:
 \subsection{GP algorithm in pseudocode}
 
 Bellow is described GP algorithm in pseudocode.
-Inputs are:
 
-\begin{itemize}
-	\item \textit{fitness} - Fitness function.
-	\item \textit{TuF} - Building blocks accompanied with an  	
-	      information about implementations and argument numbers.
-	\item \textit{popSize} - Population size.
-	\item \textit{numGens} - Number of generations.
-	\item \textit{probabs} - Genetic operators probabilities.
-\end{itemize} 
-
-\Pseudokod{GP(fitness,TuF,popSize,numGens,probabs)}{
-	$gen \leftarrow$ 0 \;
-	$pop \leftarrow generateInitialPopuletion( TuF ) $ \;
-	($popWithF,terminate,best) \leftarrow$ 
-	evaluate($fitness$, $TuF$, $pop$)\; 	
+\Pseudokod{GP( fitness, \TuF, popSize, numGens, probabs )}{
+  $gen \leftarrow$ 0 \;\;
+  
+  $pop \leftarrow generateInitialPopuletion( $ \TuF$ ) $ \;
+  ($popWithF,terminate,best) \leftarrow$ 
+  evaluate($fitness$, \TuF, $pop$)\;\; 	
 	
-	\While{ $gen < numGens$ $\wedge$ $\neg terminate$  }{
-  	
-	
+  \While{ $gen < numGens$ $\wedge$ $\neg terminate$  }{  	
 	$newPop \leftarrow$ empty population \;
-	$newPop$.insert( $best$ )\;
-	$i \leftarrow 1$ \;
+	$newPop$.insert( $best$ )\;\;
 	
-	\While{ $i < popSize$ }{
-		$op \leftarrow probabilisticallySelectOperation(probabs)$ \;		
+	$i \leftarrow 1$ \;
+	\While{ $i < popSize$ }{	
+		$op \leftarrow probabilisticallySelectOperation(probabs)$ \;\;
+				
 		\Switch{op}{
+		
 			\Case{Crossover}{
 				$parent1 \leftarrow$ selection( $popWithF$ ) \;
-				$parent2 \leftarrow$ selection( $popWithF$ ) \;
-				($child1$,$child2$) = crossover( $parent1$ , $parent2$ )\;
+				$parent2 \leftarrow$ selection( $popWithF$ ) \;\;
+				
+				($child1$,$child2$) = crossover( $parent1$ , $parent2$ )\;\;
+				
 				$newPop$.insert( $child1$ ) \;
 				$newPop$.insert( $child2$ ) \;
 				$i \leftarrow i + 2$ \;
@@ -610,43 +643,56 @@ Inputs are:
 			}
 			\Case{Mutation}{
 				$indiv \leftarrow$ selection( $popWithF$ ) \;
-				$mutant \leftarrow$ mutate( $indiv$ , $TuF$ ) \;
+				$mutant \leftarrow$ mutate( $indiv$ , \TuF ) \;
 				$newPop$.insert( $mutant$ ) \;
-				$i \leftarrow i + 1$ \;			
+				$i \leftarrow i + 1$ \;	
 			}		
 		}
-	}
+	}\;
 	
 	$pop \leftarrow newPop$  \;
 	($popWithF,terminate,best) \leftarrow$ 
 	evaluate($fitness$, $TuF$, $pop$)\;
 	$gen \leftarrow gen + 1$ \; 
- }
+ }\;
+ 
  \Return pop \;
 }
 
-In order to clarify the code let us describe in greater detail inputs and
-contained procedures
+\begin{samepage}
+\Lets clarify the input arguments:
+\begin{itemize}
+	\item \textit{fitness} - Fitness function.
+	\item \textit{\TuF} - Building blocks accompanied with an  	
+	      information about implementations and argument numbers.
+	\item \textit{popSize} - Population size.
+	\item \textit{numGens} - Number of generations.
+	\item \textit{probabs} - Genetic operators probabilities.
+\end{itemize} 
+\end{samepage}
+
+%In order to clarify the code let us describe in greater detail inputs and
+
+Behaviors of contained procedures
 generateInitialPopuletion(),
 evaluate(),
 probabilisticallySelectOperation(),
 selection(),
 crossover() 
-and mutation().
-
-\textbf{TODO mention best preservation and same popSize checking. }
+and mutation() are hopefully clear from verbal description.
 
 
+\begin{todo}
+ & mention best preservation and same popSize checking.
+ & TALK ABOUT GP is part of EA etc. and maybe define the GP by 
+   defining EA and then specifying the differences or something 
+   like that...    
+ & History, citations, etc ....
+ & ten algoritmus v kozovi dělá "Designate Result" já tam vracim 
+   poslední populaci
+\end{todo}
 
 
-...\\\
-\subsection{TODO}
-	\begin{itemize} 
-		\item TALK ABOUT GP is part of EA etc. and maybe define the GP by defining EA and then
-		      specifying the differences or something like that...    
-		\item History, citations, etc ....
-		\item ten algoritmus v kozovi dělá "Designate Result" já tam vracim poslední populaci
-	\end{itemize}	  
 
 
 \newpage		
@@ -655,23 +701,21 @@ and mutation().
 
 \newcommand{\then}{\Rightarrow\xspace}
 
-\newcommand{\lamb}[2]{( \lambda #1 . #2 )}
-\newcommand{\lam}[2]{\lambda #1 . #2}
+\newcommand{\lamb}[2]{( \lambda \, #1 \, . \, #2 )}
+\newcommand{\lam}[2]{\lambda \, #1 \, . \, #2}
+
+\newcommand{\ST}{\mathop{\mathrm{ST}}}
+\newcommand{\FV}{\mathop{\mathrm{FV}}}
+
+\newcommand{\Scomb }{\mathbf{S}}
+\newcommand{\Kcomb }{\mathbf{K}}
+\newcommand{\Icomb }{\mathbf{I}}
+
 
 Let $V$ be infinite countable set of {\it 
 variable names}.  \\* 
 Let $C$ be set of {\it constant names}.	 \\*		
-Then $\Lambda$ is set of {\it \lterms} defined inductively as follows
-\footnote{Function application and $\lambda$-abstraction are concepts
-well known from common programming languages. 
-For example in JavaScript 
-$(M~N)$ translates to expression \texttt{$M$($N$)} and
-$\lamb{x}{M}$ translates to expression \texttt{function($x$)\{return $M$;\}}.
-In other words, the $\lambda$-abstraction is equivalent to 
-\textit{anonymous function}. 
-}.
-
-	
+Then $\Lambda$ is set of {\it \lterms} defined inductively as follows.	
 \begin{align*}
 x   \in V \cup C  &\then x     \in \Lambda \\
 M,N \in \Lambda   &\then (M~N) \in \Lambda 
@@ -679,13 +723,24 @@ M,N \in \Lambda   &\then (M~N) \in \Lambda
 x   \in V , M \in \Lambda &\then \lamb{x}{M} \in \Lambda
 \textit{~~~~~($\lambda$-abstraction)} 
 \end{align*}
-\\
+
+Function application and $\lambda$-abstraction are concepts
+well known from common programming languages. 
+For example in JavaScript 
+$(M~N)$ translates to expression \texttt{$M$($N$)} and
+$\lamb{x}{M}$ translates to expression \texttt{function($x$)\{return $M$;\}}.
+In other words, the function application 
+corresponds to the act of supplying a function 
+with an argument and
+the $\lambda$-abstraction is equivalent to 
+\textit{anonymous function}. \\
+
+
 It is usual to use $V = \Sigma^+$ set of all non-empty finite strings of symbols 
 from $\Sigma$ where $\Sigma$ is some alphabet set, e.g.  
 $
 \Sigma =
-\setDots{a}{z} \cup 
-\setDots{_0}{_9} $.
+\setDots{a}{z}$.
 
 And $C$ is set supplied by "the user" to enrich 
 the language with constant names standing
@@ -707,6 +762,7 @@ those in lower case such as
 $a,b,c,...,x,y,z,$
 $f_1,f_2,...,g_1,g_2,...$
 denoting variable names, elements of $V$.
+
 Sometimes we will use lower case symbols
 to denote arbitrary variable names (such as
 $x$ in $\lamb{x}{M}$),
@@ -714,16 +770,23 @@ and at other times, we will use them
 as specific variable names in specific terms 
 (such as $x$ in $\lamb{x}{x}$).
 The distinction between the two should be
-clear from the context.\\
+clear from the context.
+
+We use bold upper case symbols such as 
+$\Scomb, \Kcomb, \Icomb$ as abbreviation
+for specific terms, e.i. 
+$\Icomb = \lamb{x}{x}$.  
+\\
 	
 Examples of \lterms:
 
 \begin{easylist}[itemize]
 & $x$
 & $\lamb{x}{x}$
+& $\lamb{x}{f}$
 & $(\lamb{x}{(x~x)}~\lamb{x}{(x~x)})$
 & $\lamb{x}{\lamb{y}{x}}$
-& $\lamb{f_1}{\lamb{f_2}{\lamb{x}{((f_1~x)~(f_2~x))}}}$
+& $\lamb{f}{\lamb{g}{\lamb{x}{((f~x)~(g~x))}}}$
 \end{easylist}~
 
 We use following notation
@@ -737,13 +800,10 @@ abbreviations for better readability:
 \end{easylist}~
   
 For example we can write
-$\lamb{f_1}{\lamb{f_2}{\lamb{x}{((f_1~x)~(f_2~x))}}}$
-as $\lam{f_1 f_2 x}{f_1~x~(f_2~x)}$.
+$\lamb{f}{\lamb{g}{\lamb{x}{((f~x)\,(g~x))}}}$
+as $\lam{f\,g\,x}{f~x\,(g~x)}$.
 
 \subsection{ Subterms, free variables and substitution }
-
-\newcommand{\ST}{\mathop{\mathrm{ST}}}
-\newcommand{\FV}{\mathop{\mathrm{FV}}}
 
 In order to demonstrate what is a subterm of a term
 \lets define inductively $\ST(M)$ set of all subterms of a term $M$.
@@ -763,6 +823,22 @@ $\FV(M)$ the set of free variables of a term M is defined inductively as follows
 \FV(\lam{x}{P}) &= \FV(P) \smallsetminus \{x\}
 \end{align*}
 
+A variable in \lterm $M$ is called \textit{bound} if it is not free.
+
+\lterm M is called \textit{combinator} if $\FV(M)=\emptyset$.\\
+
+
+Notable examples of combinators are combinators
+$\Scomb$, $\Kcomb$ and $\Icomb$.
+\begin{align*}
+\Scomb &= \lam{f\,g\,x}{f\,x\,(g\,x)} \\
+\Kcomb &= \lam{x\,y}{x} \\
+\Icomb &= \lam{x}{x} 
+\end{align*}
+
+As will be shown in \ref{toSKI}
+these combinators will help us in performing crossover of \lterms.\\
+
 $M[x:=N]$ the substitution of a term $N$ for the free occurrences of 
 a variable $x$ in a term $M$ is defined inductively as follows.
 \begin{align*}
@@ -774,8 +850,13 @@ y[x:=N]           &= y \text{ ~~~~where } x \not= y  \\
 \end{align*}
 
 
-\textbf{TODO možná zmínit že y nesmí být v N volně v připadě\\
-$\lamb{y}{P}[x:=N] = \lam{y}{( P[x:=N] )}$ }, ale řekl bych že zbytečnej detail
+
+
+\begin{todo}
+& možná zmínit že y nesmí být v N volně v připadě\\
+  $\lamb{y}{P}[x:=N] = \lam{y}{( P[x:=N] )}$ , 
+  ale řekl bych že zbytečnej detail
+\end{todo}
 
 
 \subsection{$\beta$-reduction}
@@ -805,7 +886,9 @@ P \bArrow Q &\then (P~R)      \bArrow (Q~R) \\
 P \bArrow Q &\then \lam{x}{P} \bArrow \lam{x}{Q}  
 \end{align*}
 
-
+In other words, $\beta$-reduction is the process 
+of insertion of arguments supplied to a function into 
+its body. 
 
 \subsection{$\eta$-reduction}
 
@@ -836,15 +919,14 @@ A normal form may be thought of as a result of a term evaluation.
 
 
 
+\begin{todo}
+	& říct co to vubec je ty intutivně (v par větách jen) 
+	  a nějak to napojit na to jak to používám já
+	  pak v tom GP.
+	& Citovat nějakýho bárendrechta jako zdroj podrobnějších informací
+\end{todo}
 
-~\\\\
-\textbf{TODO} 
-\begin{itemize} 
-	\item promluvit krátce o intuici
-	      a nějak to napojit na to jak to používám já
-	      pak v tom GP.
-	\item Citovat nějakýho bárendrechta jako zdroj podrobnějších informací
-\end{itemize}
+
 
 \section{Type}
 \label{deftype}
@@ -887,14 +969,15 @@ this property suggests how we can "simulate" function which takes $n$ arguments.
 
 % We will utilize this property ... asi netřeba řikat
 
-~\\
-\textbf{TODO} 
-\begin{itemize}
-	\item určitě promluvit nějak v úvodu k tomu že se jedná o 
-	Simply typed lambda kalkulus, zmínit že klasicky se těm alfa z A 
-	řiká proměný, ale že je to matoucí vzhledem k polymorfizmu
-	\item možná se hlobějc zmínit o curryingu  
-\end{itemize}
+
+\begin{todo}
+   & určitě promluvit nějak v úvodu k tomu že se jedná o 
+	 Simply typed lambda kalkulus, zmínit že klasicky se těm alfa z A 
+	 řiká proměný, ale že je to matoucí vzhledem k polymorfizmu
+   & možná se hlobějc zmínit o curryingu  
+\end{todo}
+
+
 	
 
 	
@@ -922,8 +1005,11 @@ this property suggests how we can "simulate" function which takes $n$ arguments.
     \end{align*}
     
 	In other words context is a set of statements with distinct variables or constants as subjects.
-	\\\\
-	\textbf{TODO:} TALK ABOUT Context represents library/building blocks.
+	
+\begin{todo}
+ & TALK ABOUT Context represents library/building blocks.
+\end{todo}
+
 	
 	
 \section{Statement of a form \GMS}
@@ -1153,16 +1239,20 @@ always the case, then it also has a unique lnf and this will be its unique $\bet
 & \textbf{TODO : potřebuju eštěnějaký z tyhle knihy?}
 \end{easylist}
 
-\textbf{TODO : popsat tu jak ji předelat na beta nf
-pokud by se nám chtělo... 
-V barendrech84 (ta nová kniha s žlutejma deskama) je ukázano že je 
-eta CR (čurč roserovská) což snad stačí společně s 
-tim tvrzeničkem z book.pdf že vezmu lnf
-a dělám eta redukce dokud to de. až to nejde tak bych to měl mít v 
-beta-nf }
+
+\begin{todo}
+ & popsat tu jak ji předelat na beta nf
+	pokud by se nám chtělo... 
+	V barendrech84 (ta nová kniha s žlutejma deskama) je ukázano že je 
+	eta CR (čurč roserovská) což snad stačí společně s 
+	tim tvrzeničkem z book.pdf že vezmu lnf
+	a dělám eta redukce dokud to de. až to nejde tak bych to měl mít v 
+	beta-nf
+ & přepsat to nějak hezčejc, ten seznam heskejch vlastností
+\end{todo}
 
 
-~\\\textbf{TODO : přepsat to nějak hezčejc, ten seznam heskejch vlastností}
+
 
 
 %"Barendregt-like"
@@ -1256,23 +1346,24 @@ Proof of correctness (\textbf{TODO REPAIR} Conceptually it is ok but there is sa
 	  ( \rho_m , \Gamma )
 	  \quad \bigg)
 \]
-\\\\
-\textbf{TODO} 
-\begin{itemize}
-	\item SHOW correctness of those inference rules by composing them of 
-		  $E^{\rightarrow}$, $I^{\rightarrow}$ and \textit{axiom}.
-	\item SHOW more examples of inference rules transformed into grammar rules.
-	\item DESCRIBE general algorithm for this transformation.
-	\item TALK ABOUT $\tau_1 \rightarrow \dots \rightarrow \tau_n \rightarrow \alpha$ 
-	\item TALK ABOUT $\beta \eta^{-1}$-normal form which is generated by this method.
-\end{itemize}
 
 
-~\\\textbf{TODO : Napsat tu (nebo asi někam jinam
-ale hlavně někam), že de generovat přímo i termy v beta normalní 
-formě, ale že se mi to zdálo o dost pracnější díky tomu, že
-musíme čekovat jestli neni něco toho typu i v ne atomickejch
-vrcholech/typech... }
+\begin{todo}
+& SHOW correctness of those inference rules by composing them of 
+	  $E^{\rightarrow}$, $I^{\rightarrow}$ and \textit{axiom}.
+& SHOW more examples of inference rules transformed into grammar rules.
+& DESCRIBE general algorithm for this transformation.
+& TALK ABOUT $\tau_1 \rightarrow \dots \rightarrow \tau_n \rightarrow \alpha$ 
+& TALK ABOUT $\beta \eta^{-1}$-normal form which is generated by this method.
+& Napsat tu (nebo asi někam jinam
+	ale hlavně někam), že de generovat přímo i termy v beta normalní 
+	formě, ale že se mi to zdálo o dost pracnější díky tomu, že
+	musíme čekovat jestli neni něco toho typu i v ne atomickejch
+	vrcholech/typech...
+\end{todo}
+
+
+
 
 
 \newpage
@@ -1558,29 +1649,29 @@ TT[
 Now we can finally put the pieces together. 
 Every solution to a Inhabitation tree has this just described tree form of a typed \lterm. 
  
-
-~\\
-\textbf{TODO} 
-\begin{itemize}
-\item EXAMPLES of tree representations of \lterms  
-\item TALK (more?) ABOUT "Barendregt-like" subsection \ref{barlike}\\
+\begin{todo}
+& EXAMPLES of tree representations of \lterms  
+& TALK (more?) ABOUT "Barendregt-like" subsection \ref{barlike}\\
 		Things about $\beta\eta^{-1}$ normal form, etc.   
-\item DESCRIBE Inhabitation Machine... 
-\end{itemize}
+& DESCRIBE Inhabitation Machine... 
+\end{todo}
+
+
 		
 
 \chapter{ Our approach }	
 
 \section{Generating individuals}
 
-
-\textbf{TODO\\
-Dřív se to menovalo 
+\begin{todo}
+& Dřív se to menovalo 
 "Our approach to \textit{solving} Inhabitation tree"
 tak tu napsat pěknej uvod o tom, že naši jedinci jsou lambda
 termy a že je  budeme generovat pomocí 
-řešení inhabitačních stromů.\\\\
-}
+řešení inhabitačních stromu.
+\end{todo}
+
+
 
 The main design choice behind our approach to solving inhabitation trees
 is ability to be variable enough to enable choice between 
@@ -1597,7 +1688,12 @@ But since inhabitation tree is a special kind of and-or-tree with alternating la
 and-nodes (symbols and \lheads) and or-nodes (types) it is also minimizing number of 
 size of whole inhabitation/and-or tree. \\
 
-\textit{Classical-GP-like} ... \textbf{TODO}
+\textit{Classical-GP-like} 
+
+\begin{todo}
+!!!
+\end{todo}
+
 
 \subsection{A* algorithm}
 
@@ -1608,8 +1704,12 @@ According to \cite{AIAMA} A* is the most widely known form of best-first search.
 As A* traverses the state space, it follows a path of the lowest expected total cost.
 It uses a priority queue of alternative unfinished paths.\\
 
-\textbf{TODO : víc to tu rozepsat hlavně zmínit heuristiku 
-a že stačí aby byla optimistická atd.. }
+
+\begin{todo}
+& víc to tu rozepsat hlavně zmínit heuristiku 
+a že stačí aby byla optimistická atd..
+\end{todo}
+
 
 \Pseudokod{A*( start , isGoal , heuristic )}{\;	
 
@@ -1656,13 +1756,14 @@ a že stačí aby byla optimistická atd.. }
 
 
 
-
-...\\\\\\\\
-\textbf{TODO : čeknout jak je to v kódu jestli ten A* co tam je čekuje ty
+\begin{todo}
+& čeknout jak je to v kódu jestli ten A* co tam je čekuje ty
  nódy co už navštívil při přidávání - VŽDYŤ díky tomu žeje to tree-search 
  (vs. graph search) to neni potřeba - pořádně se podívat do AIAMA jakj
  je terminologie a napsat to sem.
-}
+\end{todo}
+
+
 
 \subsection{Our state space}
 
@@ -1755,23 +1856,27 @@ The new subtree which will replace $(\sigma,\Gamma)$ has following form: \\
    ]\\
  
 
-\textbf{TODO : Discuss that it is OK to expand only the DFS-found node. 
+\begin{todo}
+ & Discuss that it is OK to expand only the DFS-found node. 
 The order of unfinished nodes is irrelevant since generation of each branch is 
-independent on generating other branches. Můžem na to koukat jako na takovou tu redukci 
-simetrií, najít to v AIAMA a pořádně popsat.  }
+independent on generating other branches. Mužem na to koukat jako na takovou tu redukci simetrií, najít to v AIAMA a pořádně popsat.
 
-\textbf{TODO : Odiskutovat nějak tohle:
-přirozeně chceme při produkci velkýho množství termů obhospodařovávat nějaký
-velký množství rozdělanejch termů v nějaký struktuře a postuipně je dodělávat.
+& Odiskutovat nějak tohle:
+přirozeně chceme při produkci velkýho množství termu obhospodařovávat nějaký
+velký množství rozdělanejch termu v nějaký struktuře a postuipně je dodělávat.
 Proto přichází jako tahle struktura na mysl nějaká prioritní fronta,
 otázka je kde vzít ty priority a A* je jednoduchá ale přitom optimum hledající 
-odpověď na tuhle otázku, dostatečně volná skrz tu heuristiku.  }
+odpověď na tuhle otázku, dostatečně volná skrz tu heuristiku.  
 
-\textbf{TODO: určitě někde zmínit ospravedlnění proč si napsat dokazovač sám
+& určitě někde zmínit ospravedlnění proč si napsat dokazovač sám
 a né požít nějakej už hotovej - de o to, že dokazovače jsou delaný na to aby
-udělali jeden důkaz typicky složitýho tvrzení, my sme v situaci kdy
-chceme co nejvíc (a co možná co nejvíc rozmanitejch) důkazů jednoduchýho problému.
- }
+udělali jeden dukaz typicky složitýho tvrzení, my sme v situaci kdy
+chceme co nejvíc (a co možná co nejvíc rozmanitejch) dukazu jednoduchýho problému.
+\end{todo}
+
+
+
+
 
 
 
@@ -1782,21 +1887,24 @@ of steps needed to get to a final state by the shortest possible path.
 
 Our heuristic function is a simple one: The number of unfinished leafs in the state tree.
 
-\textbf{TODO : rozebrat to, ukázat že je optimistická atd...}
+\begin{todo}
+ & rozebrat to, ukázat že je optimistická atd...
+\end{todo}
+
 
 
 \section{Crossover}
 
-
-\textbf{TODO}
-\begin{enum}
+\begin{todo}
 & Prostě budem křížit jen podstromy stejnýho typu
 & ALE! Hlavní problém jsou proměnný
 & ve stručnosti kouknout na dvě hlavní metody
   && křížit prostě lambda stromy a vzniklý problémy řešit online 
   && zbavit se proměnejch 
 & říct že nakonec sme přilnuli k zbavit se proměnejch
-\end{enum}
+\end{todo}
+
+
 
 
 \subsection{Finding same types}
@@ -1808,25 +1916,65 @@ completely.
 
 
 
+\subsection{Abstraction elimination}
+\label{toSKI}
+%... Conversion to SKI combinators
+
+\textit{Abstraction elimination} is a process of transforming 
+an arbitrary \lterm into \lterm witch contains no lambda abstractions
+and no bound variables.
+The newly produced \lterm may contain function applications, 
+free symbols from former \lterm and some new symbols standing for 
+combinators $\Scomb$, $\Kcomb$ and $\Icomb$. \\
+
+Those combinators are defined as:
+\begin{align*}
+\Scomb &= \lam{f\,g\,x}{f\,x\,(g\,x)} \\
+\Kcomb &= \lam{x\,y}{x} \\
+\Icomb &= \lam{x}{x} 
+\end{align*}
+
+\newcommand{\Ae}{\mathop{\mathrm{\AE}}}
+
+\Lets describe transformation $\Ae$ performing this process.
+\begin{align*}
+\Ae[x]           &= x &\\[0.4em]
+\Ae[\,(M\,N)\,]  &= (\Ae[M]\;\;\Ae[N]) &\\[0.4em]
+\Ae[\lam{x}{x}]  &= \Icomb &\\
+\Ae[\lam{x}{M}]  &= (\Kcomb~\Ae[M]) &\textbf{if } x \not\in \FV(M)\\
+\Ae[\lam{x}{\lamb{y}{M}}] &= \Ae[\lam{x}{\Ae[\lam{y}{M}]}]  
+&\textbf{if } x \in \FV(M)\\
+\Ae[\lam{x}{(M\,N)}] &= (\Scomb~\Ae[\lam{x}{M}]~\Ae[\lam{x}{N}])  
+&\textbf{if } x \in \FV(M) \vee x \in \FV(N)\\
+\end{align*}
 
 
+\begin{todo}
+& přidat (ale i do kódu) B a C
+& říct že my musíme řešit i typy 
+& říct o složitosti , a že je to docela
+disadventič vzhledem k bloatu
+& citovat Simon Peyton Jones implementaition of FP languages
+jako source of further reading on this subject.
+\end{todo}
 
 
-\subsection{Conversion to SKI combinators}
-\textbf{TODO}
 
 
 \section{Mutation}
 
-\textbf{TODO: 
-říct že na tu sme se moc nesoustředili ze dvou důvodů
-ktery to ospravedlňujou \\
-1) koza taky\\
-2) ta s vygereovanim podstromu je v zásadě použití
+\begin{todo}
+& říct že na tu sme se moc nesoustředili ze dvou duvodu
+  ktery to ospravedlňujou 
+&& koza taky
+&& ta s vygereovanim podstromu je v zásadě použití
    algoritmu na generovaní jedince a tak nám přišlo
    lepší pořádně se soustředit na generování jedince a
    začít do toho mutaci tahat až bude generování pořádně
-   prozkoumáno.}
+   prozkoumáno.
+\end{todo}
+
+
 
 \subsection{Using term generation}
 
@@ -1894,7 +2042,9 @@ Předběžný náhodně uspořádaný body osnovy ..\\
 		\section{Simple Symbolic Regression}
 		\section{Artificial Ant}
 		\section{Boolean Alternate}
-	
+		
+\chapter{Comparison with others}
+
 \chapter{Ideas yet not implemented}
 
 \section{Roadmap}
