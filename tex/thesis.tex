@@ -77,10 +77,11 @@
 {\end{easylist}}
 
 \newenvironment{todo}
-{ ~\\[1em]
+{ ~\\[0.5em]
   \textbf{TODO}
   \begin{easylist}[itemize]}
-{\end{easylist}~\\[1em]}
+{ \end{easylist}
+  ~}
 
 
 
@@ -355,6 +356,7 @@ Témata co zmínit v úvodu :\\
 	\Lets first say some basic definitions.
 
 \section{Genetic Programming}
+\label{GP}
 
 \textit{Genetic programming} (GP) is a technique inspired by biological evolution
 that for a given problem tries to find computer programs able to solve that problem. 
@@ -405,6 +407,10 @@ number of \textit{generations}) or until some predefined criterion is met.
 
 In GP programs are represented as expressions. \Lets define expression inductively:
 
+\begin{todo}
+ & Asi to přejmenvat na S-expression.  
+\end{todo}
+
 \begin{itemize}
 	\item Constant\footnote{By constants we also mean procedures with zero  	
 		  arguments.} or variable symbol $s$ is expression.
@@ -431,6 +437,7 @@ Computer program with inputs $x_{1}, ..., x_{n}$ is realized as expression in wh
 may occur variables $x_{1}, ..., x_{n}$.
 
 \subsection{Building blocks}
+\label{building-blocks}
 
 Set of building blocks consists of two sets.
 
@@ -456,12 +463,16 @@ $A \times ... \times A \rightarrow A$ and should be total (defined on all
 combinations of inputs). And analogically for $t \in T$ being of a type A.  
 
 Satisfying this constrain ensures that every program tree build 
-from \TuF will be total.\\
+from \TuF will be total.
+
+We will refer to this constrain as \textit{over-one-type} constrain
+in the further text.\\
 
 We can say that the motivation behind this work is to construct system where we
 eliminate this constraint. 
 
 \subsection{Generating individual}
+\label{GPgene}
 
 We will describe three tree generating method described by Koza 
 in \cite{koza92} called \textit{ramped half-and-half}. \\
@@ -1550,8 +1561,13 @@ a found tree $T'$ corresponds to generated \lterm.
 In order to understand this correspondence let's now talk about various tree representations
 of \lterms.
 
-\subsection{Tree representations of \lterms}
+\section{Tree representations of \lterms}
 \label{tree-reps}
+
+\newcommand{\sexprTree}{sexpr-tree\xspace}
+\newcommand{\atTree}{@-tree\xspace}
+
+
 
 From the definition of \lterm (\ref{deflam}) we can straightforwardly derive 
 the classical tree representation for \lterms. Term M is translated into tree $T[M]$ by following rules:
@@ -1585,6 +1601,9 @@ tree node like this:
 As this representation comes directly from definition it is evident 
 that it covers all possible \lterms.
 
+We will refer to this representation as to \textit{\atTree}.\\
+ 
+
 For representing expressions as trees it is however more common to use a little different
 representation. It will also be the representation suitable for showing 
 that \textit{solving} Inhabitation tree generates wanted \lterm.
@@ -1607,8 +1626,10 @@ that \textit{solving} Inhabitation tree generates wanted \lterm.
 \end{itemize}
 
 Notice that this representation does not cover all \lterms, 
-e.g. $(\lambda x.x) y$ is not expressible in it. But it does not bother us.  
-\\\\
+e.g. $(\lambda x.x) y$ is not expressible in it. But it does not bother us. 
+
+We will refer to this representation as to \textit{\sexprTree}.\\ 
+
 \Lets now consider representation for \textit{typed \lterms}.
 Straightforward approach would be to add to each node a type entry which 
 would be the type of the \lterm corresponding to subtree having this
@@ -1645,15 +1666,44 @@ TT[
 	] 
 }
 \end{equation*}
+
+\begin{todo}
+ & říct že to je přesně ta notace co používá koza
+ & EXAMPLES of tree representations of \lterms  
+ & napsat transformace mezi \atTree a \sexprTree
+ & nějak to sjednotit s tim uplně na začátku v popisu GP kde se popisuje
+   přímo \sexprTree a říct proč se tomu tak řiká 
+   (na tom místě co je v textu dřív)
+ 
+\end{todo}
+
+
+\section{ Generating terms in Long normal form by solving Inhabitation tree }
 	  	
 Now we can finally put the pieces together. 
-Every solution to a Inhabitation tree has this just described tree form of a typed \lterm. 
+Every solution to an Inhabitation tree has this just described tree form of a typed \lterm. 
+
  
 \begin{todo}
-& EXAMPLES of tree representations of \lterms  
+& !!!
 & TALK (more?) ABOUT "Barendregt-like" subsection \ref{barlike}\\
 		Things about $\beta\eta^{-1}$ normal form, etc.   
-& DESCRIBE Inhabitation Machine... 
+\end{todo}
+
+
+\section{ Inhabitation machine }
+
+\begin{todo}
+  & DESCRIBE Inhabitation Machine...
+   && něco jako na závěrještě ve stručnosti popišme 
+      IM, strukturu ze který je odvozenej IT. 
+  & říct, že je to hezkej konstrukt vzhledem k tomu že je konečnej
+  & ale je popsanej velmi zrychla (v tý knize) a implementační
+     detaily jsou celkem vynechaný
+  & na stromový verzi jsou implementační detaily hezky vidět
+  & a navíc pro polymorfní verzi jsou už i IM nekonečný takže
+     se strácí i ta konečnostní výhoda
+  & dát tam obrázek 
 \end{todo}
 
 
@@ -1661,39 +1711,98 @@ Every solution to a Inhabitation tree has this just described tree form of a typ
 
 \chapter{ Our approach }	
 
-\section{Generating individuals}
+In this chapter we will describe our system trying to 
+dive into implementation details as little as possible.
+Some of those details will be revealed in the next chapter
+devoted to the implementation. 
+
+This chapter will be
+presented in the mix between the mathematical terminology 
+described in the previous chapter and the algorithmic terminology.\\
+
+We can summarize our approach to design of 
+the system for Genetic programming with types
+by its main design goals:\\ 
+
+\begin{enum}
+ & It should eliminate the \textit{over-one-type} constrain of classical GP
+   (see \ref{building-blocks}). 
+ & It should be generalization of the classical GP described in \ref{GP},
+   by which is meant that for \textit{building blocks} satisfying 
+   constrains of classical GP there should be simple setup of control parameters
+   of the system which will make the system behave in precisely the same way
+   as the classical GP behaves. 
+ & It should utilize the theory around typed $\lambda$-calculus.  
+\end{enum}
+
+\section{Individuals and Building blocks}
 
 \begin{todo}
-& Dřív se to menovalo 
-"Our approach to \textit{solving} Inhabitation tree"
-tak tu napsat pěknej uvod o tom, že naši jedinci jsou lambda
-termy a že je  budeme generovat pomocí 
-řešení inhabitačních stromu.
+ & několik fází, několik reprezentací
+ & během generování se reprezentace mění 
+   && nejdří obsahuje lambdy i volný proměnný pak už ne
+      &&& vygeneruje se v \sexprTree
+      &&& ta se převedena na \atTree aby jsme provedli abstraction elimination
+ & dvě možnosti jak uchovávat jedince po vygenerování
+   && \sexprTree
+      &&& currently implemented
+   && \atTree
+      &&& currently not implemented, ale neni problém dodělat
+      &&& DOĎELAT! :)
+   && ale de mezi nima volně převádět
+      &&& díky tomu že nemaj lambda abstrakce, jinak by museli bejt ve 
+          WHNF/HNF nebo něco takovýho
+   && dusledky pro křížení
+      &&& \atTree umožňuje víc křížení než \sexprTree
+          &&&& každý co de v \sexprTree umí i \atTree ale obráceně to neplatí
+      &&& \atTree je zase ekvivalentní tomu kozovskýmu  
+ & říct že bilding blocks je prostě kontext
 \end{todo}
 
+\section{Generating individuals}
+
+%\begin{todo}
+%& Dřív se to menovalo 
+%"Our approach to \textit{solving} Inhabitation tree"
+%tak tu napsat pěknej uvod o tom, že naši jedinci jsou lambda
+%termy a že je  budeme generovat pomocí 
+%řešení inhabitačních stromu.
+%\end{todo}
 
 
+Input for term generating algorithm is pair $(\sigma,\Gamma)$ where:\\
+
+\begin{enum}
+ & $\sigma$ is desired type of each generated individual.
+ & $\Gamma$ is \textit{building blocks} context. 
+\end{enum}~
+ 
+Each generated \lterms $M$ should  satisfy \GMS. \\
+
+We generate terms in long normal form.
+This is achieved by \textit{solving} inhabitation tree for $(\sigma,\Gamma)$.  
 The main design choice behind our approach to solving inhabitation trees
 is ability to be variable enough to enable choice between 
-\textit{systematic} way of generating terms 
-and \textit{classical-GP-like} way of generating terms 
+\textit{systematic}  
+and \textit{ramped half-and-half} (described in \ref{GPgene}) 
+methods of generating terms 
 by choice of simple search strategy.\\
 
-\Lets explain what is meant by \textit{systematic} and \textit{classical-GP-like}. \\
+\Lets explain what is meant by \textit{systematic} 
+method of generating terms. 
 
-\textit{Systematic} way of solving inhabitation tree corresponds to
-generating terms in order from smallest to largest in number of symbols and \lheads.
+Systematic way of solving inhabitation tree corresponds to
+generating terms in their long normal forms
+in order from smallest to largest in number of symbols and \lheads.
 That means minimizing number of and-nodes in and-or-tree view of point on inhabitation tree.
 But since inhabitation tree is a special kind of and-or-tree with alternating layers of 
 and-nodes (symbols and \lheads) and or-nodes (types) it is also minimizing number of 
-size of whole inhabitation/and-or tree. \\
-
-\textit{Classical-GP-like} 
+size of whole inhabitation/and-or tree. 
 
 \begin{todo}
-!!!
+ & Ten poslední odstavec je napsanej divně, přepsat.
+   && říct v něm že na to budem teda používat A*. 
 \end{todo}
-
 
 \subsection{A* algorithm}
 
@@ -1893,6 +2002,25 @@ Our heuristic function is a simple one: The number of unfinished leafs in the st
 
 
 
+\subsection{Other tried approach to generating individuals}
+
+\begin{todo}
+ & popsat tu ten puvodní přístup, kde se bralo přímo 
+   zavedení a eliminace pro každej typovej konstrukt 
+   a podle toho se pak udělali příslušný term generating grammar pravidla
+   kerý odpovídaj manipulacímse strommem
+ & ale má nevýhody
+   && hlavně to neni v normální formě, takže generujeme spoustu 
+      ruzně dopočítanejch beta-rovnáse-ekvivalentních termu
+   && u pravidla zavedení implikace neni uplně zřejmý
+      co tam použít za typ
+   && takže sice to na to ze začátku běhalo ale nakonec to bylo vyměněno
+      za IM metodu since ta je jednoduší, líp se přemejšlí o ní,
+      konstrukty jako and a or nemusíme zavádět na urovni pravidel
+      ale stačí tam dat vhodný polymorfní konstruktory/destruktory 
+ & nějak tu metodu pomenovat a přemenovat podle toho nadpis
+\end{todo}
+
 \section{Crossover}
 
 \begin{todo}
@@ -1966,12 +2094,14 @@ jako source of further reading on this subject.
 \begin{todo}
 & říct že na tu sme se moc nesoustředili ze dvou duvodu
   ktery to ospravedlňujou 
-&& koza taky
-&& ta s vygereovanim podstromu je v zásadě použití
-   algoritmu na generovaní jedince a tak nám přišlo
-   lepší pořádně se soustředit na generování jedince a
-   začít do toho mutaci tahat až bude generování pořádně
-   prozkoumáno.
+	&& koza taky
+	&& ta s vygereovanim podstromu je v zásadě použití
+	   algoritmu na generovaní jedince a tak nám přišlo
+	   lepší pořádně se soustředit na generování jedince a
+	   začít do toho mutaci tahat až bude generování pořádně
+	   prozkoumáno.
+& To ale neznamená že jí nemáme radi, naopak se těšíme
+  že její vhodný zavedení celou metodu ještě zlepší.
 \end{todo}
 
 
@@ -1981,6 +2111,15 @@ jako source of further reading on this subject.
 
 
 
+\section{ Complexity discussion }
+
+\begin{todo}
+& !!!
+& zmínit že mi moc neřešíme formální/asymptotický složitosti
+  && de nám hlavně o realný časy
+& vyjít z komplexnosti A* asi
+  && složitost výrazně ovlivněná kvalitou heuristický funkce
+\end{todo}
 
 
 
@@ -2051,7 +2190,8 @@ Předběžný náhodně uspořádaný body osnovy ..\\
 \section{Tree ants}
 \section{[Propojení těch dvou barandrechtskejch odvozovacích pravidel do jedinýho]}
 \section{[Chytřejší heuristika pro A* která si to předpočítá na $\overline{\Gamma}$ ]}
-
+\section{[šlechtění těch strategií na generování termů]}
+\section{[šlechtění fitness funkcí a nápad s "turnajem olympioniků"]}
 
 
 
