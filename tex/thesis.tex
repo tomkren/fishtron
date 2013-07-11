@@ -72,6 +72,15 @@
 	\end{framed}
 }
 
+\newcommand{\pseudo}[1]{
+	\begin{framed}
+	\begin{algorithm}[H]
+		\DontPrintSemicolon
+		#1
+	\end{algorithm}
+	\end{framed}
+}
+
 \newenvironment{enum}
 {\begin{easylist}[itemize]}
 {\end{easylist}}
@@ -829,9 +838,10 @@ In order to demonstrate what is a subterm of a term
  
 $\FV(M)$ the set of free variables of a term M is defined inductively as follows.
 \begin{align*}
-\FV(x)          &= \{x\} \\
-\FV((P~Q))      &= \FV(P) \cup \FV(Q) \\
-\FV(\lam{x}{P}) &= \FV(P) \smallsetminus \{x\}
+\FV(x)          &= \{\}                        &\textbf{if } x \in C  \\
+\FV(x)          &= \{x\}                       &\textbf{if } x \in V  \\
+\FV((P~Q))      &= \FV(P) \cup \FV(Q)          &          \\
+\FV(\lam{x}{P}) &= \FV(P) \smallsetminus \{x\} &
 \end{align*}
 
 A variable in \lterm $M$ is called \textit{bound} if it is not free.
@@ -1815,6 +1825,8 @@ It uses a priority queue of alternative unfinished paths.\\
 
 
 \begin{todo}
+& Mužem nás zajímat buď cesta nebo jen cílovej stav, nás bude zajímat
+  cílovej stav - proto nebudem zaznamenávat cestu.
 & víc to tu rozepsat hlavně zmínit heuristiku 
 a že stačí aby byla optimistická atd..
 \end{todo}
@@ -1844,7 +1856,7 @@ a že stačí aby byla optimistická atd..
 		
 		    $newG \la$ $state$.G + dist($state$,$next$)\;\;
 
-			\If{ $( next \not\in open \wedge next \not\in closed ) \vee newG < next.$G  }{\;
+			\If{ $( next \not\in open \wedge next \not\in closed ) \vee newG < next.$G}{\;
 			
 				$next$.G $\la newG$                          \;
 				$next$.F $\la newG + heuristic$( $next$ )  \;\;
@@ -1858,11 +1870,49 @@ a že stačí aby byla optimistická atd..
 		}
 	}\;
 	
-	\Return no-path-exists 
+	\Return no-reachable-goal 
 }	
+
+	
+\begin{todo}
+& náš stavovej prostor je strom takže 
+  && vime že $next \not\in open \wedge next \not\in closed$
+  && a tedy ani nepotřebujeme udržovat množinu closed
+& dist(state,next) = 1 
+\end{todo}
+	
+... thus ...
+
+
+
+\Pseudokod{Our-A*( start , isGoal , heuristic )}{	
+
+	$open \la$ empty priority queue \;\;
+	
+	$start$.G = 0 \;
+	$start$.F = $heuristic$( $start$ ) \;\;
+	
+	$open$.insert( $start$ )\;\;	
+	
+	\While{$\neg$ $open$.isEmpty() }{
+	
+		$state \la$ $open$.popWithLowestF()\;\;
 		
-
-
+		\If{ isGoal( $state$ ) }{
+			\Return $state$ \;
+		}\;
+		
+		closed.insert( $state$ ) \;\;
+		
+		\For{$next \in$ $state$.nexts() }{
+			$next$.G $\la $state$.G + 1$ \;
+			$next$.F $\la $next$.G + heuristic$( $next$ )  \;
+			$open$.insert( $next$ )\;			
+		}
+	}\;
+	
+	\Return no-reachable-goal 
+}
 
 
 \begin{todo}

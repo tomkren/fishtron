@@ -804,6 +804,17 @@ testSO2 soFun = do
   mapM_ (putStrLn . show) ctts
   putStrLn $ "num terms : " ++ (show $ length ctts)
 
+testSO3 :: (StdGen->SearchOptions) -> IO ()
+testSO3 soFun = do
+  let stdGen = mkStdGen 424242
+  let ctts = prove (soFun stdGen)
+  mapM_ (putStrLn . show) ctts
+  putStrLn $ "num terms : " ++ (show $ length ctts)
+
+
+
+
+
 test_ep = testSO2 $ \ stdGen -> SearchOptions {
     so_n                  = 500            ,
     so_typ                = l_bool :-> bool ,
@@ -913,6 +924,28 @@ test_ssr_koza = testSO2 $ \ stdGen -> SearchOptions {
     so_ctx                = ctx_ttSSR  ,
     so_stdGen             = stdGen    ,
     so_runLen             = Just 1    ,  --Nothing   ,
+    so_isPolymorphic      = False,
+    so_randomRunState     = KozaRandomRunState Nothing Nothing ,
+    so_edgeSelectionModel = KozaESM
+  } 
+
+test_ssr_koza_1 = testSO3 $ \ stdGen -> SearchOptions {
+    so_n                  = 500       ,
+    so_typ                = dou1 ,
+    so_ctx                = ctx_ttSSR  ,
+    so_stdGen             = stdGen    ,
+    so_runLen             = Just 1    ,  --Nothing   ,
+    so_isPolymorphic      = False,
+    so_randomRunState     = KozaRandomRunState Nothing Nothing ,
+    so_edgeSelectionModel = KozaESM
+  } 
+
+test_ssr_koza_2 = testSO3 $ \ stdGen -> SearchOptions {
+    so_n                  = 500       ,
+    so_typ                = dou1 ,
+    so_ctx                = ctx_ttSSR  ,
+    so_stdGen             = stdGen    ,
+    so_runLen             = Nothing   ,
     so_isPolymorphic      = False,
     so_randomRunState     = KozaRandomRunState Nothing Nothing ,
     so_edgeSelectionModel = KozaESM
