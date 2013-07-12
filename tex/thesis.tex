@@ -23,6 +23,8 @@
 \usepackage[utf8]{inputenc}
 \usepackage{qtree}
 
+\usepackage{color}
+
 \usepackage[ampersand]{easylist}
 
 \usepackage{amssymb}
@@ -87,7 +89,7 @@
 
 \newenvironment{todo}
 { ~\\[0.5em]
-  \textbf{TODO}
+  {\color{red}\textbf{TODO}}
   \begin{easylist}[itemize]}
 { \end{easylist}
   ~}
@@ -1804,36 +1806,50 @@ method of generating terms.
 Systematic way of solving inhabitation tree corresponds to
 generating terms in their long normal forms
 in order from smallest to largest in number of symbols and \lheads.
-That means minimizing number of and-nodes in and-or-tree view of point on inhabitation tree.
-But since inhabitation tree is a special kind of and-or-tree with alternating layers of 
-and-nodes (symbols and \lheads) and or-nodes (types) it is also minimizing number of 
-size of whole inhabitation/and-or tree. 
 
-\begin{todo}
- & Ten poslední odstavec je napsanej divně, přepsat.
-   && říct v něm že na to budem teda používat A*. 
-\end{todo}
+We will achieve this by using \textit{A* algorithm}. 
+
+%That means minimizing number of and-nodes in 
+%and-or-tree view of point on inhabitation tree.
+%But since inhabitation tree is a special kind of 
+%and-or-tree with alternating layers of 
+%and-nodes (symbols and \lheads) and or-nodes 
+%(types) it is also minimizing number of 
+%size of whole inhabitation/and-or tree. 
+
 
 \subsection{A* algorithm}
 
 A* is a general informed search algorithm used for finding least-cost 
-path from a given initial state to some goal state in a state space.
+path from a given start state to some goal state in a state space.
 According to \cite{AIAMA} A* is the most widely known form of best-first search.
 
-As A* traverses the state space, it follows a path of the lowest expected total cost.
-It uses a priority queue of alternative unfinished paths.\\
+By state space is meant oriented weighted graph with states as vertices and edges 
+labeled with numbers corresponding to distance or cost. 
+Edge from $s_i$ to $s_j$ means that state 
+$s_j$ is reachable from state $s_i$ in one step with cost $dist(s_i,s_j)$.
+In pseudocode we will refer to set of states reachable from 
+state $s$ in one step as to $s.nexts()$.
 
+Typically we use A* algorithm to find path from one specific start state to another 
+specific goal state. But sometimes  
+we can be interested only in finding a goal state which 
+is specified by some $isGoal$ predicate give to the algorithm as
+input (and the state space may contain many such goal states). 
+This later variant corresponds to our situation, 
+so we will continue by describing this variant.
 
-\begin{todo}
-& Mužem nás zajímat buď cesta nebo jen cílovej stav, nás bude zajímat
-  cílovej stav - proto nebudem zaznamenávat cestu.
-& víc to tu rozepsat hlavně zmínit heuristiku 
-a že stačí aby byla optimistická atd..
-\end{todo}
+As A* traverses the state space, it follows a path of the lowest 
+expected total cost. The expectation is based on \textit{heuristic}
+function which for state $s$ predicts distance to the nearest goal state. 
+It uses a priority queue of states as its crucial data structure.
+In this queue the priority of state $s$ is 
+the total expected cost of the path from start state 
+going through $s$ and continuing to the nearest goal state. \\
 
+Here follows A* algorithm written in pseudocode:  
 
-\Pseudokod{A*( start , isGoal , heuristic )}{\;	
-
+\Pseudokod{A*( start , isGoal , heuristic )}{
 	$open \la$ empty priority queue \;
 	$closed \la$ empty set \;\;
 	
@@ -1842,9 +1858,8 @@ a že stačí aby byla optimistická atd..
 	
 	$open$.insert( $start$ )\;\;	
 	
-	\While{$\neg$ $open$.isEmpty() }{\;
-	
-		$state \la$ $open$.popWithLowestF()\;\;
+	\While{$\neg$ $open$.isEmpty() }{
+		$state \la$ $open$.popStateWithLowestF()\;\;
 		
 		\If{ isGoal( $state$ ) }{
 			\Return $state$ \;
@@ -1852,8 +1867,7 @@ a že stačí aby byla optimistická atd..
 		
 		closed.insert( $state$ ) \;\;
 		
-		\For{$next \in$ $state$.nexts() }{\;
-		
+		\For{$next \in$ $state$.nexts() }{		
 		    $newG \la$ $state$.G + dist($state$,$next$)\;\;
 
 			\If{ $( next \not\in open \wedge next \not\in closed ) \vee newG < next.$G}{\;
@@ -1873,21 +1887,29 @@ a že stačí aby byla optimistická atd..
 	\Return no-reachable-goal 
 }	
 
-	
-\begin{todo}
-& náš stavovej prostor je strom takže 
-  && vime že $next \not\in open \wedge next \not\in closed$
-  && a tedy ani nepotřebujeme udržovat množinu closed
-& dist(state,next) = 1 
-\end{todo}
-	
-... thus ...
+Now we will modify this general A* algorithm so
+it will be more suited for our needs. We want following 
+properties:\\
 
+\begin{enum}
+& The state space is a tree.
+& $dist(s_i,s_j) = 1$
+& We do not want to find one, but $n$ goal states. 
+\end{enum}~
 
+For state space which is a tree the condition
+$(next \not\in open \wedge next \not\in closed)$ 
+is always true, since it is possible
+to come to a state only from its parent state. 
+This fact results in simplification of algorithm's code and behavior;
+we may completely omit the $closed$ set and the checks in the for loop.\\
 
-\Pseudokod{Our-A*( start , isGoal , heuristic )}{	
+Those changes result in the following code:
+ 
+\Pseudokod{Our-A*( start , n , isGoal , heuristic )}{	
 
-	$open \la$ empty priority queue \;\;
+	$open    \la$ empty priority queue \;
+	$results \la$ empty set\;\;	
 	
 	$start$.G = 0 \;
 	$start$.F = $heuristic$( $start$ ) \;\;
@@ -1896,13 +1918,16 @@ a že stačí aby byla optimistická atd..
 	
 	\While{$\neg$ $open$.isEmpty() }{
 	
-		$state \la$ $open$.popWithLowestF()\;\;
+		$state \la$ $open$.popStateWithLowestF()\;\;
 		
 		\If{ isGoal( $state$ ) }{
-			\Return $state$ \;
+			
+			$results$.insert( $state$ )\;
+						
+			\If{ $\vert results \vert = n$ }{
+				\Return $results$ \;
+			}
 		}\;
-		
-		closed.insert( $state$ ) \;\;
 		
 		\For{$next \in$ $state$.nexts() }{
 			$next$.G $\la $state$.G + 1$ \;
@@ -1911,18 +1936,23 @@ a že stačí aby byla optimistická atd..
 		}
 	}\;
 	
-	\Return no-reachable-goal 
+	\Return results
 }
 
 
-\begin{todo}
-& čeknout jak je to v kódu jestli ten A* co tam je čekuje ty
- nódy co už navštívil při přidávání - VŽDYŤ díky tomu žeje to tree-search 
- (vs. graph search) to neni potřeba - pořádně se podívat do AIAMA jakj
- je terminologie a napsat to sem.
-\end{todo}
+The most important part of A* algorithm is the heuristic function.
+A heuristic function must be \textit{admissible} in order to make
+A* algorithm find the shortest possible path.
 
+A heuristic function $h$ is said to be \textit{admissible} if it satisfies 
+following condition for every state $s$:
+$$ h(s) \leq h^{*}(s) $$
 
+where $h^{*}(s)$ is the true length of the shortest path from $s$ to 
+the nearest goal state.
+
+In other words, a heuristic function is \textit{admissible} if it is
+\textit{optimistic}.
 
 \subsection{Our state space}
 
@@ -1948,7 +1978,7 @@ a že stačí aby byla optimistická atd..
 
 In order to describe our state space to search in \lets introduce
 extended version of our tree representation for typed \lterms from \ref{tree-reps}.
-This extension consists in adding a new type of leaf node $(\sigma,\Gamma)$ 
+This extension consists in adding a new kind of leaf node $(\sigma,\Gamma)$ 
 standing for unfinished tree of a type $\sigma$ with context $\Gamma$ to use
 as set of building blocks
 \footnote{\textbf{TODO}: Tady to napsat nějak líp s tim gamma }.\\
@@ -2003,7 +2033,8 @@ where $n \geq 1, \alpha \in A$.
 
 For function type $\sigma$ there is exactly one successor.
 
-For every  $i \in \{1,\dots,n\}$ we create new \textit{variable name} $x_i$ which is not yet included in context $\Gamma$ as variable or constant name.
+For every  $i \in \{1,\dots,n\}$ we create new \textit{variable name} $x_i$ which is not yet used anywhere in the whole tree.
+%included in context $\Gamma$ as variable or constant name.
 
 The new subtree which will replace $(\sigma,\Gamma)$ has following form: \\
 
@@ -2012,30 +2043,39 @@ The new subtree which will replace $(\sigma,\Gamma)$ has following form: \\
 	[.\text{$\lambda x_1 \dots x_n$}	
  		\text{$(\alpha,\Gamma \cup \{ (x_1,\tau_1) , \dots , (x_n,\tau_n) \})$}		 				
 	]   
-   ]\\
+   ]\\[3em]
+
+We should discuss that it is correct to have as successors of a state those
+created by expansion of the leftmost unfinished leaf (in contrast with
+more broad successor set where any unfinished leaf may be expanded).
+What we need to show is that no final state will be omitted by the method 
+and that there is no shorter path omitted. 
+
+One can see that it is correct by considering that 
+the order of expanding unfinished leafs is irrelevant 
+since expansion of each unfinished leaf is 
+independent from expansion of any other unfinished leaf
+(up to renaming of variables which is irrelevant).
+
+Every unfinished leaf of a state must be replaced by 
+tree containing no unfinished leafs in order to be final state. 
+But since expansion of an unfinished leaf has no impact 
+(besides new variable names) on expansion of other unfinished
+leafs we may choose the order of expansions arbitrarily. \\
+
+We prefer this variant because:
+ \begin{enum}
+ 	& It has smaller or equal number successors for each state, 
+ 	  i.e. smaller or equal branching factor.
+ 	& It makes the state space a tree, in contrast with
+ 	  the naive state space which is not a tree. 
+ \end{enum}
+
  
-
 \begin{todo}
- & Discuss that it is OK to expand only the DFS-found node. 
-The order of unfinished nodes is irrelevant since generation of each branch is 
-independent on generating other branches. Mužem na to koukat jako na takovou tu redukci simetrií, najít to v AIAMA a pořádně popsat.
-
-& Odiskutovat nějak tohle:
-přirozeně chceme při produkci velkýho množství termu obhospodařovávat nějaký
-velký množství rozdělanejch termu v nějaký struktuře a postuipně je dodělávat.
-Proto přichází jako tahle struktura na mysl nějaká prioritní fronta,
-otázka je kde vzít ty priority a A* je jednoduchá ale přitom optimum hledající 
-odpověď na tuhle otázku, dostatečně volná skrz tu heuristiku.  
-
-& určitě někde zmínit ospravedlnění proč si napsat dokazovač sám
-a né požít nějakej už hotovej - de o to, že dokazovače jsou delaný na to aby
-udělali jeden dukaz typicky složitýho tvrzení, my sme v situaci kdy
-chceme co nejvíc (a co možná co nejvíc rozmanitejch) dukazu jednoduchýho problému.
+Mužem na to koukat jako na takovou tu redukci simetrií, 
+najít to v AIAMA a pořádně popsat.
 \end{todo}
-
-
-
-
 
 
 
@@ -2046,8 +2086,42 @@ of steps needed to get to a final state by the shortest possible path.
 
 Our heuristic function is a simple one: The number of unfinished leafs in the state tree.
 
+
 \begin{todo}
- & rozebrat to, ukázat že je optimistická atd...
+& rozebrat to, ukázat že je optimistická atd...
+\end{todo}
+
+\subsection{Search strategy}
+
+\begin{todo}
+ & Internal state
+ & Edge selection model
+
+\end{todo}
+
+
+
+
+
+
+
+
+\begin{todo}
+ 
+& sjednotit terminologii nexts successors atd
+ 
+& Odiskutovat nějak tohle:
+přirozeně chceme při produkci velkýho množství termu obhospodařovávat nějaký
+velký množství rozdělanejch termu v nějaký struktuře a postuipně je dodělávat.
+Proto přichází jako tahle struktura na mysl nějaká prioritní fronta,
+otázka je kde vzít ty priority a A* je jednoduchá ale přitom optimum hledající 
+odpověď na tuhle otázku, dostatečně volná skrz tu heuristiku.  
+
+& určitě někde zmínit ospravedlnění proč si napsat dokazovač sám
+a né požít nějakej už hotovej - de o to, že dokazovače jsou delaný na to aby
+udělali jeden dukaz typicky složitýho tvrzení, my sme v situaci kdy
+chceme co nejvíc (a co možná co nejvíc rozmanitejch) dukazu jednoduchýho problému. 
+ 
 \end{todo}
 
 
