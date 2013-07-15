@@ -16,6 +16,12 @@
 
 % ujednotit kurzívu a normální písmo v pseudocodu
 
+% zčekovat: za any musí bejt plural, nejde any term ale musí bejt any terms atd
+%           pro singular je a term.
+
+
+
+
 \setlength\textwidth{145mm}
 \setlength\textheight{247mm}
 \setlength\oddsidemargin{15mm}
@@ -342,6 +348,11 @@ Témata co zmínit v úvodu :\\
   klasickym GP a Dokazovačem, čim složitější
   typovej sytem tim víc se jedná o deduktivní   
   systém a blíží se to dokazovači.
+   && Ve světle toho, je pak hezky vidět, že
+      je chytrý exhaustivně systematicky prohledávat od nejmenšího
+      po největší- jak budeme zesložiťovat typovej systém, tak
+      čim dál víc bude už stačit najít vubec nějaký řešení a bude čim dál těžší
+      jich generovat kvanta
 & Nějak naťuknout už tady v úvodu jak se to má při
   srovnání s tim jak na to dou jiný (Yu atd)
 & Výkřiky co zmínit:
@@ -2205,10 +2216,11 @@ our formal states contain above each symbol node a type node.
 \subsubsection{Systematic strategy}
 
 The previous systematic behavior may be obtained by trivial 
-$filter$ function which returns all $nexts$
-and $init$ is doing nothing.
+$filter$ function which returns all $nexts$.
+Systematic strategy needs no internal state, 
+therefore $init$ is doing nothing.
 
-\subsubsection{Ramped half-and-half}
+\subsubsection{Ramped half-and-half strategy}
 
 In the $init$ are randomly (uniformly) initialized two variables of the
 strategy internal state:
@@ -2254,9 +2266,59 @@ whole $nexts$ set.
 & eště se musí nějak prohrotit to, že tam je navíc ta lambda hlava
 kerá ještě o něco kazí tu $depth$
 & ukázat že je to fakt to samý co kozovský klasický
+& zavýst tam pojem běhu pro ten jeden vnější while cyklus
 \end{todo}
 
 
+
+\subsubsection{Geometric strategy}
+
+
+We can see those two previous strategies as two extremes on the spectrum of 
+possible strategies.
+
+\textit{Systematic strategy} filters no successor state thus performing
+exhaustive search resulting in discovery of $n$ smallest terms in one run.
+
+On the other hand, \textit{ramped half-and-half strategy} filters 
+all but one successor states resulting in degradation of 
+priority queue to "fancy variable". 
+And each term is generated in its own run.\\
+
+\textit{Geometric strategy} is simple yet fairly effective term generating 
+strategy somewhere in the middle of this spectrum.
+
+It is parameterized by parametr $q \in (0,1)$. 
+
+For each element of $nexts$ it is probabilistically decided whether
+it will be returned or omitted. A probability $p$ of returning is
+same for all elements, but depends on $depth$. 
+It is computed as follows:
+
+$$ p = q^{depth} $$
+   
+This formula is motivated by idea that it is important to
+explore all possible root symbols, but as the $depth$ 
+increases it becomes less "dangerous" to omit 
+an exploration branch. 
+
+We can see this by considering that this strategy results in
+somehow undisciplined A* search.
+With each omission we make the search space smaller. But with
+increasing depth these omissions have smaller impact on the search space,
+i.e., they cut out lesser portion of the search space.
+
+Another slightly esoteric argument supporting this formula is that "root 
+parts" of a program usually stand for more crucial parts
+with radical impact on global behavior of a program, 
+whereas "leaf parts" of a program usually
+stand for less important local parts (e.g. constants).  
+
+It also plays nicely with the idea that "too big trees should be killed".\\
+
+
+
+Systematic strategy does not have an internal state, thus $init$ does nothing.
 
 
 
@@ -2383,6 +2445,39 @@ jako source of further reading on this subject.
 	   prozkoumáno.
 & To ale neznamená že jí nemáme radi, naopak se těšíme
   že její vhodný zavedení celou metodu ještě zlepší.
+  
+& Nápad na to jak to dělat:
+  && nutno ošetřit - co všechno do gammy alemyslim že v phodě když je uplne 
+     stejná jako ta generujicí, pač ve vy SKI-ovanym termu stejne nejsou zadny 
+     proměný 
+  && mít nějakej předem danej počet pohybu na frontě, abych mohl efektivně
+     kontrolovat že to přidání mutací moc nespomalý
+  && Po tom počtu pohybu končim generování
+  && mam nějakej počet vygenerovanejch termu
+  && pro chytrou mutaci mužu chtít třeba 10 termu
+     &&& pokud se mi jich vygenerovalo míň, tak beru míň
+     &&& pokud se mi jich vygenerovalo víc, tak vemu 10 náhodně
+     &&& těch 10 vyhodnotim (jakože dosazenejch na jejich místo)
+     &&& nejlepší si vezmu
+     &&& dobrý udělat to zase najednou pro všechny v tý generaci mutovaný
+         pánčto je nákladný spouštět Hint
+& Další mutace - beta eta redukce (?? asi moc naroční viz dale) 
+  && zmenšující mutace
+  && udělaná že převedem SKIBC do lambda termu a to redukujem? to asi ne pač
+     pak převod to spíš prodlouží, spíš asi mít redukční pravidla pro SKIBC
+     a těma redukovat, ale je otázka jak moc tam budou vznikat SKIBC-redexi
+     - ty mohou vznikat jen při @-tree reprezentaci
+  && to otevírá otázku toho, že by elementy gammy mohla mít k sobě redukční pravidla
+& Další mutace - jednoduše náhrada podstromu/uzlu za nějakej z gammy
+  && nezvětšující mutace
+& Další mutace - mutace číselnejch-like konstant
+& To mě přivádí k myšlence sice pro generování ale myslim podstatný:
+  jakmile jsou v problému číselný-like konstanty tak mužu udělat pro 
+  jeden tvar hodně jedincu - což šetří jak čas na generování, tak to prozkomává 
+  víc danej tvar
+
+
+  
 \end{todo}
 
 
@@ -2473,6 +2568,7 @@ Předběžný náhodně uspořádaný body osnovy ..\\
 \section{[Chytřejší heuristika pro A* která si to předpočítá na $\overline{\Gamma}$ ]}
 \section{[šlechtění těch strategií na generování termů]}
 \section{[šlechtění fitness funkcí a nápad s "turnajem olympioniků"]}
+\section{[šlechtění search strategií pro prohledávání]}
 
 
 
