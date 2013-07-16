@@ -10,6 +10,8 @@
 %$\FV(M)$ the set of free variables of term M is defined inductively as follows.
 
 % !!! místo we can atd psát one can ...
+%      - ale ted to vypada že to neni tak žhavý pravidlo
+
 % ujednotit i.e. , ty čaky kolem toho atd
 
 % myslim že používam málo čárek, přečíst to a vygooglit kde mi příde že by mohla bejt
@@ -559,6 +561,7 @@ as follows:
 $$ p_{i} = \dfrac{ f_{i}  }{ \sum\limits_{j=1}^{popSize}{f_{j} }  } $$
 
 \section{Crossover}
+\label{GPxover}
 
 For Koza the most important genetic operator in GP is 
 crossover. It is operator inspired by sexual reproduction
@@ -566,7 +569,7 @@ occurring in the nature. Generally speaking crossover takes
 two (parent) individuals and combines theirs genomes to produce 
 two possibly new (child) individuals.   
 
-In GP the most common mutation is \textit{Subtree swapping mutation}.
+In GP the most common crossover is \textit{Subtree swapping crossover}.
 This crossover randomly selects one node in each parent tree.
 Two new child individuals are constructed by swapping subtrees 
 which have roots in those selected nodes.\\
@@ -1714,6 +1717,11 @@ TT[
 \end{equation*}
 
 \begin{todo}
+
+& ujistit se že je v části o tree reprezentacích 
+  je napsaný co to znamená že podstrom má nějakej typ,
+  že podstromy odpovídaj podvýrazum atd
+
  & říct že to je přesně ta notace co používá koza
  & EXAMPLES of tree representations of \lterms  
  & napsat transformace mezi \atTree a \sexprTree
@@ -2344,7 +2352,6 @@ jen z těch přidávanejch podstromu ale že tim nechcem komplikovat popis
 \end{todo}
 
 
-
 \subsection{Other tried approach to generating individuals}
 
 \begin{todo}
@@ -2364,28 +2371,55 @@ jen z těch přidávanejch podstromu ale že tim nechcem komplikovat popis
  & nějak tu metodu pomenovat a přemenovat podle toho nadpis
 \end{todo}
 
+
+
+\newpage
 \section{Crossover}
 
-\begin{todo}
-& Prostě budem křížit jen podstromy stejnýho typu
-& ALE! Hlavní problém jsou proměnný
-& ve stručnosti kouknout na dvě hlavní metody
-  && křížit prostě lambda stromy a vzniklý problémy řešit online 
-  && zbavit se proměnejch 
-& říct že nakonec sme přilnuli k zbavit se proměnejch
-\end{todo}
+The crossover operation in classical GP is performed 
+by swapping randomly selected subtrees in each parent 
+\sexprTree (see \ref{GPxover}).
+
+For typed lambda terms two difficulties arise: Types and variables.
+
+We will show how to crossover typed \lterm trees in both 
+\atTree and \sexprTree notation.\\
+
+As in classical GP our crossover will be performed by swapping
+two subtrees. But now with constraint that both subtrees have
+the same type. This is discussed in grater detail in \ref{typed-swapping}.\\
+
+Variables bring more difficulties then types do.
+This problem arises from variables that are free in subterms corresponding 
+to swapped subtrees. 
+
+Following example illustrates the problem. \Lets have these two
+parent trees with selected nodes in bold.\\
+
+\newcommand{\lh}[1]{\lambda #1}
+
+\Tree [.$\lh{x_1}$ [.f [.$\lh{x_2}$ [.\textbf{g} $x_2$ c ] ] $x_1$ ] ]
+\Tree [.$\lh{x_1}$ [.h $x_1$ $\mathbf{x_1}$ ] ]
+
+~\\The swap of subtrees results in following trees:\\
+
+\Tree [.$\lh{x_1}$ [.f [.$\lh{x_2}$ $\mathbf{x_1}$ ] $x_1$ ] ]
+\Tree [.$\lh{x_1}$ [.h $x_1$ [.\textbf{g} $\mathbf{x_2}$ \textbf{c} ] ] ]
+ 
+~\\The problem is that variable $x_2$ in second tree
+is not bound by any $\lambda$-head and since
+it is not element of $\Gamma$, the second tree is not well-typed \lterm.  
+
+% - This is only one example of a problem caused by swapping subtrees with variables,
+% - Resolve problems with free variables or avoid variables completely. 
 
 
+In \ref{repairing-method} is presented more detailed discussion of problems with
+variables and method which repairs such "broken" terms. 
 
-
-\subsection{Finding same types}
-\subsection{Two basic options}
-Resolve problems with free variables or avoid variables 
-completely. 
-
-
-
-
+But we can avoid dealing with this problem by avoiding use of variables.
+This can be achieved by process called abstraction elimination.
+ 
 
 \subsection{Abstraction elimination}
 \label{toSKI}
@@ -2430,8 +2464,27 @@ jako source of further reading on this subject.
 \end{todo}
 
 
+\subsection{Typed subtree swapping}
+\label{typed-swapping}
 
 
+\subsection{ Repairing method }
+\label{repairing-method}
+
+\begin{todo}
+& !!!
+\end{todo}
+
+
+\subsection{ Comparison of the two methods }
+\label{comarison-ski-repairing}
+
+\begin{todo}
+& !!!
+& říct že nakonec sme přilnuli k zbavit se proměnejch
+\end{todo}
+
+\newpage
 \section{Mutation}
 
 \begin{todo}
@@ -2498,7 +2551,13 @@ jako source of further reading on this subject.
 \end{todo}
 
 
+\chapter{Polymorphic variant}
 
+\begin{todo}
+ & poznamky o čem se mimojiné zmínit:
+   && $(\$) : (\alpha \ar \beta) \ar \alpha \ar \beta$ 
+      jako alternativa k ADF ! Myslim že hodně zajimavý
+\end{todo}
 
 \chapter{ Implementation }	
 
