@@ -21,7 +21,8 @@
 % zčekovat: za any musí bejt plural, nejde any term ale musí bejt any terms atd
 %           pro singular je a term.
 
-
+% The general rule you can use is “that" is for restricting the meaning of the subject, whereas "which" is for decorating the subject without adding to the meaning. 
+%http://www.wikihow.com/Use-%22That%22-and-%22Which%22-Correctly
 
 
 \setlength\textwidth{145mm}
@@ -337,9 +338,42 @@ Keywords:
 \chapter*{Introduction}
 \addcontentsline{toc}{chapter}{Introduction}
 
-Témata co zmínit v úvodu :\\
+Genetic programming (GP) is an AI technique, which falls into 
+broader category of evolutionary algorithms --- 
+mataheuristic search algorithms inspired by 
+biological evolution by natural selection.
+I dare say many people perceive its beauty in the fact that GP is
+a computer program constructing other computer programs 
+with desired properties by breeding them. 
+It is also pretty successful technique in a number of areas. 
+And perhaps that is why GP has become very popular.    
+
+
+
+~\\[3em]Témata co zmínit v úvodu :\\
 
 \begin{easylist}[itemize]
+
+& Co je to GP, 
+ && že je to část EVA
+ && že v clasickym GP je closure
+ && a ruzný prace ukazujou jak se ho zbavit
+
+& Co je to typ
+  && typ jedobře zaběhlá programátorská konstrukce
+  && matematicky uchopuje typy a programy v teorii typovaného lambda kalkulu
+
+& cílem této práce je 
+  && ukázat jak spolu hezky souvysej
+     &&& např skrzestavební bloky a context
+  && a jak využít konstrukty typový teorie k prospěchu v GP
+     &&& such as AE, beta,etha reduction,...
+  && na základě takto zmapované podobnosti navrhnout systém a implementovat
+     rather then build yet another GP system, generalize ten klasickej
+ 
+ 
+
+
 & Začít asi tim že evoluce je cool a že
   tohle bude o tom jak do GP dát typy.
 & Říct jak jde text:
@@ -394,7 +428,7 @@ Témata co zmínit v úvodu :\\
 \chapter{Genetic Programming}
 \label{GP}
 
-\textit{Genetic programming} (GP) is a technique inspired by biological evolution
+\textit{Genetic programming} is a technique inspired by biological evolution
 that for a given problem tries to find computer programs able to solve that problem. 
 GP was developed by John Koza \cite{koza92} in 1992.
 
@@ -2612,7 +2646,18 @@ Předběžný náhodně uspořádaný body osnovy ..\\
 \section{Crossover}
 \section{Mutation}
 
-
+\section{Brief history of the project}
+\begin{todo}
+ & zmínit třeba tyhle fáze:
+  && že sem si delal evaluator sám co sem pak s performenc duvodu opustil
+  && že sem hledal intuicionistickej dokazovač ale že nejsem nenarazil na vhodnej
+     pač nejsou delany na to plivat hodně dukazu  
+  && že sem nejdriv pouzival ten vypsychlej dokazovač co tam měl nějaký ty 
+     spešl rozhodovací stromy
+  && pak sem to přepsal tak aby to nebylo jen na GP šitý ale obecně na jakoukoliv 
+     evoluci
+  && ...
+\end{todo}
 
 
 \chapter{Problems}
