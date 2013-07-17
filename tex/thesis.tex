@@ -236,7 +236,7 @@ Prague 2013
 %% on tam měl %% \openright %!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 \noindent
-Dedication.
+$<$dedication$>$
 
 \newpage
 
@@ -349,23 +349,61 @@ Keywords:
 %	v závislosti na zvolených vstupních parametrech. 
 
 
-Genetic programming (GP) is an AI technique, which falls into 
-broader category of evolutionary algorithms --- 
-mataheuristic search algorithms inspired by 
-biological evolution by natural selection.
-I dare say many people perceive its beauty in the fact that GP is
-a computer program constructing other computer programs 
-%(property sometimes called \textit{automatic programming}) 
+Genetic programming (GP) is an AI technique, which falls into broader category 
+of evolutionary algorithms  ---  mataheuristic  search algorithms inspired  by 
+biological evolution by natural selection. I dare say many people perceive its beauty in the  fact that GP is a computer program  constructing other computer programs %(property sometimes called \textit{automatic programming}) 
 with desired properties by breeding them. 
-It is also pretty successful technique in a number of areas. 
+It is also pretty successful technique in a number of areas \cite{koza05}. 
 And perhaps that is why GP has become very popular.    
 
 GP constructs the population of solution programs from 
-two sets of building blocks; set F of functions 
-and set T of constants and variables. 
-In classical GP \textit{type consistency} of those 
-building blocks is required, property also called \textit{closure}.
-This means that all functions must accept 
+two sets of building blocks; set $F$ of functions 
+and set $T$ of constants and variables. 
+In classical GP \textit{closure} of those 
+building blocks is required.
+This means that all functions in $F$ must accept all 
+constants and variables from $T$ as its arguments and produce 
+such values that are also acceptable by all functions in $F$ as arguments.
+Main motivation behind this thesis is to design and implement a system that
+eliminates this constraint. 
+This can be achieved by utilization of \textit{types}.\\
+
+Utilization of types in GP is not a new idea; 
+it was dealt with in various previous works 
+\cite{yu01,montana95,haynes96,olsson94}.
+The contribution of this thesis can be seen 
+in that it deals with this task using concepts from
+theorie of typed $\lambda$-calculus and combinatory logic
+and shows how they can be used for benefit in GP.\\
+ 
+Notable highlights are: 
+\begin{itemize}
+ \item \textit{Inhabitation tree} (a slight modification 
+   of \textit{inhabitation machine} presented in \cite{barendregt10}
+   suited better for implementation purposes) 
+   is presented and used for \textit{generating of individuals}.
+ \item \textit{Abstraction elimination} is utilized
+   to enable use of simple \textit{mutation operator}.
+ \item \textit{Polymorphic} generalization of inhabitation tree,
+   enabling use of polymorphic functions as building blocks, 
+   is presented. 
+
+\end{itemize}
+
+Design of a GP system utilizing these methods is presented.
+This design aims to be generalization of classical GP 
+developed by Koza \cite{koza92}, rather than being 
+specialized variant of GP using more recent techniques.
+This decision is based on belief that modern specialized 
+techniques can be incorporated later and on belief
+that simplicity of design of classical GP plays nicely
+with testing those $\lambda$-calculus concepts in 
+the evolutionary context.
+ 
+The implementation aims 
+
+
+
 
 ~\\[3em]Témata co zmínit v úvodu :\\
 
@@ -389,7 +427,15 @@ This means that all functions must accept
      rather then build yet another GP system, generalize ten klasickej
  
  
-
+& zmínit že existuje i jinej pohled na to proč tam zavádět typy:
+  && mužem koukat na to tak že konstrejnt je naše TuF tim, že 
+     v ní nemužou bejt libovolný funkce
+  && ale tuhle constrain mužeme omezit tim že konstrjnujeme 
+     právě použití tech bilding bloku, kde constrains jsou daný těma typama
+     - jakoby výměna global constrain za localní konstrejny na tech bilding blockách
+  && druhá možná ješte silnější motivace je že pomocí typu pak mohou vznikat 
+     smysluplnější programy, tím že dostavají vstupy které přesně čekají
+     a dávají výstupy které mají nějaké očekávané vlastnosti    
 
 & Začít asi tim že evoluce je cool a že
   tohle bude o tom jak do GP dát typy.
@@ -2731,6 +2777,8 @@ a tady to jen tak líznout.}
 
 \begin{thebibliography}{9}
 
+% TODO bacha neni tam jednotnej formát!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
 
 \bibitem{koza92}
 
@@ -2739,13 +2787,54 @@ a tady to jen tak líznout.}
   MIT Press, Cambridge, MA,
   1992. 
 
+\bibitem{koza05}
+
+  Koza, J.R., Keane, M., Streeter, M., Mydlowec, W.,Yu, J., Lanza, G. 
+  \emph{Genetic Programming IV: Routine Human-Competitive Machine Intelligence.} 
+  Springer, 2005. ISBN 978-0-387-26417-2 
+
+\bibitem{yu01}
+
+  T. Yu. 
+  \emph{Hierachical processing for evolving recursive and modular 
+        programs using higher order functions and lambda abstractions}. 
+  Genetic Programming and Evolvable Machines,
+  2(4):345–380, December 2001. ISSN 1389-2576.
+
+
+\bibitem{montana95}
+
+D. J. Montana. 
+\emph{Strongly typed genetic programming.} 
+Evolutionary Computation, 3(2): 199–230, 1995.
+%URL \url{ http://vishnu.bbn.com/papers/stgp.pdf }. nefacha
+
+\bibitem{haynes96}
+
+T. D. Haynes, D. A. Schoenefeld, and R. L. Wainwright. 
+\emph{Type inheritance in strongly typed genetic programming.} 
+In P. J. Angeline and K. E. Kinnear, Jr., editors, Advances
+in Genetic Programming 2, chapter 18, pages 359–376.
+MIT Press, Cambridge, MA, USA, 1996. ISBN 0-262-01158-1.\\ 
+URL 
+\url{http://www.mcs.utulsa.edu/~rogerw/papers/Haynes-hier.pdf}.
+
+
+\bibitem{olsson94}
+
+J. R. Olsson. 
+\emph{Inductive functional programming using incremental program 
+transformation and Execution of logic programs by 
+iterative-deepening A* SLD-tree search.} 
+Dr scient thesis, University of Oslo, Norway, 1994.
+
 \bibitem{barendregt10}
 
   Henk Barendregt, Wil Dekkers, Richard Statman,
   \emph{Lambda Calculus With Types}.
   Cambridge University Press,
   2010. \\
-  \url{http://www.cs.ru.nl/~henk/book.pdf}
+  URL \url{http://www.cs.ru.nl/~henk/book.pdf}.
 
 
 \bibitem{AIAMA}
