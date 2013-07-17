@@ -24,6 +24,7 @@
 % The general rule you can use is “that" is for restricting the meaning of the subject, whereas "which" is for decorating the subject without adding to the meaning. 
 %http://www.wikihow.com/Use-%22That%22-and-%22Which%22-Correctly
 
+% možná místo classical GP řikat standard GP jako montana95
 
 \setlength\textwidth{145mm}
 \setlength\textheight{247mm}
@@ -338,17 +339,33 @@ Keywords:
 \chapter*{Introduction}
 \addcontentsline{toc}{chapter}{Introduction}
 
+%	Seznamte se s typovanými lambda kalkuly [1] 
+%	a s jejich praktickou implementací [5]. 
+%	Prostudujte standardní techniky genetického 
+%	programování [2-4]. Navrhněte a implementujte 
+%	prototyp systému řešící úlohu genetického 
+%	programování nad typovaným funkcionálním 
+%	jazykem. Porovnejte dosažené výsledky 
+%	v závislosti na zvolených vstupních parametrech. 
+
+
 Genetic programming (GP) is an AI technique, which falls into 
 broader category of evolutionary algorithms --- 
 mataheuristic search algorithms inspired by 
 biological evolution by natural selection.
 I dare say many people perceive its beauty in the fact that GP is
 a computer program constructing other computer programs 
+%(property sometimes called \textit{automatic programming}) 
 with desired properties by breeding them. 
 It is also pretty successful technique in a number of areas. 
 And perhaps that is why GP has become very popular.    
 
-
+GP constructs the population of solution programs from 
+two sets of building blocks; set F of functions 
+and set T of constants and variables. 
+In classical GP \textit{type consistency} of those 
+building blocks is required, property also called \textit{closure}.
+This means that all functions must accept 
 
 ~\\[3em]Témata co zmínit v úvodu :\\
 
