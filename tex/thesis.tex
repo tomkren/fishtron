@@ -1,5 +1,6 @@
 \documentclass[12pt,a4paper]{report}
 
+% dát pryč will, používat přítomnej čas
 
 % Nejistý fráze který tam všude používám
 % ... of a form ...
@@ -362,7 +363,7 @@ and set $T$ of constants and variables.
 In classical GP \textit{closure} of those 
 building blocks is required.
 This means that all functions in $F$ must accept all 
-constants and variables from $T$ as its arguments and produce 
+constants and variables from $T$ as their arguments and produce 
 such values that are also acceptable by all functions in $F$ as arguments.
 Main motivation behind this thesis is to design and implement a system that
 eliminates this constraint. 
@@ -373,15 +374,20 @@ it was dealt with in various previous works
 \cite{yu01,montana95,haynes96,olsson94}.
 The contribution of this thesis can be seen 
 in that it deals with this task using concepts from
-theorie of typed $\lambda$-calculus and combinatory logic
-and shows how they can be used for benefit in GP.\\
+theory of typed $\lambda$-calculus and combinatory logic
+and shows how to use them in GP.
+Hopefully, it is also shown that those two fields are
+nicely linked together, e.g., the concept of \textit{building blocks}
+corresponds to concept of \textit{context}. \\
  
 Notable highlights are: 
 \begin{itemize}
  \item \textit{Inhabitation tree} (a slight modification 
    of \textit{inhabitation machine} presented in \cite{barendregt10}
-   suited better for implementation purposes) 
-   is presented and used for \textit{generating of individuals}.
+   suited better for reasoning about implementation details) 
+   is presented and used for \textit{generation of individuals}.
+   This generation process is parameterized by simple 
+   \textit{search strategy}. Several search strategies are presented.   
  \item \textit{Abstraction elimination} is utilized
    to enable use of simple \textit{mutation operator}.
  \item \textit{Polymorphic} generalization of inhabitation tree,
@@ -394,96 +400,37 @@ Design of a GP system utilizing these methods is presented.
 This design aims to be generalization of classical GP 
 developed by Koza \cite{koza92}, rather than being 
 specialized variant of GP using more recent techniques.
-This decision is based on belief that modern specialized 
-techniques can be incorporated later and on belief
+This decision is based on belief
 that simplicity of design of classical GP plays nicely
 with testing those $\lambda$-calculus concepts in 
-the evolutionary context.
+the evolutionary context and on belief that modern specialized 
+techniques can be incorporated later.
  
-The implementation aims 
+%The implementation of our system aims 
+Described system is implemented in purely functional language 
+\textit{Haskell}. Evaluation of individual \lterms is 
+performed by translating them to
+Haskell programs and evaluating them in Haskell interpreter. 
+The core part of the system runs as server, which is 
+managed through user interface accessible via
+web browser. Solution individuals are also translated
+to \textit{JavaScript} expressions, which enables  
+an interactive solution presentation.
+This approach helps us with demonstrating 
+that \lterms can be easily translated to a 
+widely used programming language.
+
+Several example problems for the designed system are presented 
+and examined. Those examples are not intended to 
+bring breakthrough results; they are intended to 
+serve as demonstration of that the system is working properly
+and as demonstration of several directions in which the system
+can be used.      
 
 
-
-
-~\\[3em]Témata co zmínit v úvodu :\\
-
-\begin{easylist}[itemize]
-
-& Co je to GP, 
- && že je to část EVA
- && že v clasickym GP je closure
- && a ruzný prace ukazujou jak se ho zbavit
-
-& Co je to typ
-  && typ jedobře zaběhlá programátorská konstrukce
-  && matematicky uchopuje typy a programy v teorii typovaného lambda kalkulu
-
-& cílem této práce je 
-  && ukázat jak spolu hezky souvysej
-     &&& např skrzestavební bloky a context
-  && a jak využít konstrukty typový teorie k prospěchu v GP
-     &&& such as AE, beta,etha reduction,...
-  && na základě takto zmapované podobnosti navrhnout systém a implementovat
-     rather then build yet another GP system, generalize ten klasickej
- 
- 
-& zmínit že existuje i jinej pohled na to proč tam zavádět typy:
-  && mužem koukat na to tak že konstrejnt je naše TuF tim, že 
-     v ní nemužou bejt libovolný funkce
-  && ale tuhle constrain mužeme omezit tim že konstrjnujeme 
-     právě použití tech bilding bloku, kde constrains jsou daný těma typama
-     - jakoby výměna global constrain za localní konstrejny na tech bilding blockách
-  && druhá možná ješte silnější motivace je že pomocí typu pak mohou vznikat 
-     smysluplnější programy, tím že dostavají vstupy které přesně čekají
-     a dávají výstupy které mají nějaké očekávané vlastnosti    
-
-& Začít asi tim že evoluce je cool a že
-  tohle bude o tom jak do GP dát typy.
-& Říct jak jde text:
-  && Začnem popsanim klasickýho GP podle Kozy
-  && Vyslovíme definice okolo lambda termu a typu
-  && Vyslovíme definici inhabitačního stromu
-     kterej je stromovou verzí IM od Barendrechta.
-  && Matematicky popíšem jak na to dem my.
-  && Popíšem rozšíření zakladního systému na 
-     polymorfní.
-  && Popíšem to z programátorskýho hlediska
-  && Popíšem příklady na kterejch to demonstrujem
-  && Srovnáme to s nějakejma přístupama co už 
-     existujou 
-& Možná se zmínit o tý představě dvou pólu
-  induktivním a deduktivním -
-  klasickym GP a Dokazovačem, čim složitější
-  typovej sytem tim víc se jedná o deduktivní   
-  systém a blíží se to dokazovači.
-   && Ve světle toho, je pak hezky vidět, že
-      je chytrý exhaustivně systematicky prohledávat od nejmenšího
-      po největší- jak budeme zesložiťovat typovej systém, tak
-      čim dál víc bude už stačit najít vubec nějaký řešení a bude čim dál těžší
-      jich generovat kvanta
-& Nějak naťuknout už tady v úvodu jak se to má při
-  srovnání s tim jak na to dou jiný (Yu atd)
-& Výkřiky co zmínit:
-  && Na co zaměřený:
-     &&& Proof of a concept
-     &&& Pořádně to vymáchat v typový teorii
-     &&& Spíš než bejt další z řady nástroju
-         se snaží zobecnovat ty už existující
-     &&& Spíš jednoduchost
-         &&&& Ve většině aspektú to sleduje
-              Kozu - tzn i v málo řídících
-              parametru
-     &&& Duraz na generování termu (!)              
-     &&& Po implementační stránce
-         &&&& Sranda s JS překladem
-         &&&& Servrová architektura
-         &&&& oboje spíš srandy
-  && Na co nezaměřený (ale snad taky ok v tom):
-     &&& Performance   
-     &&& Mature knihovna co by šla použít robustně
-         v cizim kódu - spíš to počítá že to 
-         bude dál rozvíjeno a tohle je mezizastávka
-\end{easylist}
+\begin{todo}
+ & možná přidat ještě něco z poznámek co jsou teď v Conclusion
+\end{todo}
 
 	
 
@@ -493,7 +440,7 @@ The implementation aims
 
 \textit{Genetic programming} is a technique inspired by biological evolution
 that for a given problem tries to find computer programs able to solve that problem. 
-GP was developed by John Koza \cite{koza92} in 1992.
+GP was developed by John Koza in 1992 \cite{koza92}.
 
 A problem to be solved is given to GP in a form of \textit{fitness function}. 
 Fitness function is a function which takes computer program as its input and 
@@ -511,8 +458,8 @@ Number of child nodes for each internal node corresponds to the number of argume
 
 Another crucial input besides fitness function is a collection of \textit{building blocks}.
 It is collection of symbols (accompanied with an information about number of arguments).
-Those symbols are used to construct trees representing individuals.  
-\\\\
+Those symbols are used to construct trees representing individuals.\\
+
 \Lets describe GP algorithm briefly:
 
 At the beginning initial population is generated from building blocks randomly.
@@ -520,8 +467,7 @@ At the beginning initial population is generated from building blocks randomly.
 A step of GP algorithm is stochastic transformation of the current population into 	
 the next population.
 
-This step consists of two sub steps\footnote{TODO : Technically it is done in a little  
-bit different fashion which is equivalent.}:
+This step consists of two sub steps:
 \begin{itemize} 
 	\item Selection of \textit{parents} for individuals of the next population based on the fitness.
 	      The bigger fitness of an individual of the current population is, 
@@ -538,21 +484,22 @@ number of \textit{generations}) or until some predefined criterion is met.
 
 \section{Program trees}
 
-In GP programs are represented as expressions. \Lets define expression inductively:
+In GP programs are represented as \textit{S-expressions}. 
+\Lets define S-expression inductively:
 
-\begin{todo}
- & Asi to přejmenvat na S-expression.  
-\end{todo}
-
+\begin{samepage}
 \begin{itemize}
-	\item Constant\footnote{By constants we also mean procedures with zero  	
-		  arguments.} or variable symbol $s$ is expression.
-	\item Let there be a function with symbol $f$ which has $n$ arguments. 
-	      And let there be expressions $e_{1}, ..., e_{n}$. 
-	      Then ( $f$ $e_{1}$ ... $e_{n}$ ) is expression
-	      \footnote{This notation comes from Lisp programming language, 
-	      classical notation would be $f(e_{1}, ... ,e_{n})$. }.   
+	\item Constant or variable symbol $s$ is S-expression.\footnote{
+	      By constants we also mean procedures with zero arguments.}
+	\item Let there be a function with symbol $f$ which has $n$ arguments.
+	 
+	      And let there be S-expressions $e_{1}, ..., e_{n}$. 
+	      
+	      Then ( $f$ $e_{1}$ ... $e_{n}$ ) is expression.\footnote{
+	      This notation comes from Lisp programming language, 
+	      a more standard notation would be $f(e_{1}, ... ,e_{n})$.}   
 \end{itemize}
+\end{samepage}
 
 There is straightforward tree representation corresponding to these two cases:
 
@@ -563,7 +510,8 @@ There is straightforward tree representation corresponding to these two cases:
 		 		\text{$t_{1}$}
 		 		\text{...}
 		 		\text{$t_{n}$} ]\\\\
-		 Where $t_{1}, ..., t_{n}$ are trees corresponding to expressions $e_{1}, ..., e_{n}$.	   
+		 Where $t_{1}, ..., t_{n}$ are trees corresponding 
+		 to S-expressions $e_{1}, ..., e_{n}$.	   
 \end{itemize}
 
 Computer program with inputs $x_{1}, ..., x_{n}$ is realized as expression in which 
@@ -575,9 +523,9 @@ may occur variables $x_{1}, ..., x_{n}$.
 Set of building blocks consists of two sets.
 
 \begin{itemize}
-	\item Terminal set $T$ : Set of symbols used as leaf nodes of 	               
+	\item \textit{Terminal set $T$}: Set of symbols used as leaf nodes of 	               
 	      program trees standing for constants and variables.
-	\item Function set $F$ : Set of symbols used as internal nodes 
+	\item \textit{Function set $F$}: Set of symbols used as internal nodes 
 	      of program trees standing for functions.
 \end{itemize}
 
@@ -585,8 +533,8 @@ Set of building blocks consists of two sets.
 
 Therefore $building$ $blocks = $ \TuF.\\
 
-Beside symbols in \TuF there must also be 
-an implementation for each symbol which is not variable. 
+For each symbol in \TuF that is not variable 
+there must also be an implementation.
 And for every function symbol from $F$ there must be specified 
 number of arguments.\\
 
@@ -595,25 +543,17 @@ There should be type $A$ that for every function symbol $f \in F$ the correspond
 $A \times ... \times A \rightarrow A$ and should be total (defined on all
 combinations of inputs). And analogically for $t \in T$ being of a type A.  
 
-\begin{todo}
-& koza tomu řiká closure, přečíst si tu pasáž (str 81) a 
-upravit podle toho tady tu terminologii
-\end{todo}
-
 Satisfying this constrain ensures that every program tree build 
-from \TuF will be total.
+from \TuF will be total. We will refer to this constrain as to \textit{closure}.\\
 
-We will refer to this constrain as \textit{over-one-type} constrain
-in the further text.\\
-
-We can say that the motivation behind this work is to construct system where we
-eliminate this constraint. 
+We can say that the motivation behind this thesis is to construct system,
+where we eliminate this constraint. 
 
 \section{Generating individuals}
 \label{GPgene}
 
-We will describe three tree generating method described by Koza 
-in \cite{koza92} called \textit{ramped half-and-half}. \\
+We will describe tree generating method described by Koza 
+called \textit{ramped half-and-half}  \cite{koza92}. \\
 
 An individual tree is constructed by random (uniform) selection of symbol from 
 subset of \TuF for the root node and after that by generation of its 
@@ -622,7 +562,7 @@ Number of subtrees of a node corresponds
 to the number of arguments for the selected symbol. 
 
 There are two generating sub-methods called \textit{full} and 
-\textit{grow} each restricting differently the subset of \TuF. 
+\textit{grow}; each of them restricting differently the subset of \TuF. 
 This restriction depends on depth of the
 node for which the symbol is being selected. 
 
@@ -630,11 +570,11 @@ In order to perform \textit{ramped half-and-half} method
 one of those two sub-methods is randomly (uniformly) 
 selected and the selected one is performed.
 This selection is done for each generated tree, so there
-is 50\% chance to be generated by \textit{full} 
-and 50\% chance to be generated by \textit{grow}.\\
+is 50\% chance for tree to be generated by \textit{full} 
+and 50\% chance for tree to be generated by \textit{grow}.\\
 
 
-A maximum depth $D_{initial}$ is defined (e.g. 6).
+A maximum depth $D_{initial}$ is defined (e.g. $D_{initial} = 6$).
 
 For each tree is selected its 
 depth $d$ from $\setDots{2}{D_{initial}}$ randomly (uniformly).\\
@@ -652,7 +592,8 @@ set $T$.
 
 \section{Selection}
 
-In \EA there is plenty of options for selection mechanisms 
+In the field of evolutionary algorithms there is plenty of 
+options for selection mechanisms 
 for us to choose from. Again we will describe mechanism Koza
 used in his first book on GP. It is the \textit{Roulette selection}.
 It uses fitness value of each individual in straightforward way to determine probability of selecting this individual.\\
@@ -673,12 +614,12 @@ For Koza the most important genetic operator in GP is
 crossover. It is operator inspired by sexual reproduction
 occurring in the nature. Generally speaking crossover takes
 two (parent) individuals and combines theirs genomes to produce 
-two possibly new (child) individuals.   
+two possibly new (offspring) individuals.   
 
 In GP the most common crossover is \textit{Subtree swapping crossover}.
 This crossover randomly selects one node in each parent tree.
 Two new child individuals are constructed by swapping subtrees 
-which have roots in those selected nodes.\\
+that have roots in those selected nodes.\\
 
 Example should clarify this process. Here are two parent trees with 
 selected nodes in bold:
@@ -702,9 +643,12 @@ And here are two child trees with swapped subtrees:
          	   [.\textbf{-} \textbf{0} \textbf{x} ] \textbf{1} ] ]\\
 
 
-\begin{todo}
- & zmínit maximální hloubku vzniklýho dítěte (17)
-\end{todo}
+A maximum permissible depth $D_{created}$ 
+for offspring individuals is defined (e.g. $D_{created} = 17$).
+If one of the offspring has greater depth than this limit, then 
+this offspring is replaced by the first parent in the result of 
+the crossover operator. If both offspring exceeds this limit, than 
+both are replaced by both parents.  
 
 
 \section{Reproduction}
@@ -727,10 +671,13 @@ subtree with root in the selected node by new generated
 tree. This new tree is generated by mechanism for generating 
 individuals.
 
+Similarly as for crossover, a maximum permissible depth for mutant individual 
+is defined.
+
 
 \section{Construction of a next population}
 
-Let $pop_{t}$ be the current population which we want to 
+Let $pop_{t}$ be the current population that we want to 
 transform into the next population $pop_{t+1}$. 
 We start by initializing $pop_{t+1}$ by empty population.
 
@@ -759,6 +706,12 @@ Koza in \cite{koza92} uses as default probabilities those values:
 	\item \textit{Mutation}     :  $0\%$
 \end{itemize}
 
+\section{Evaluation}
+
+\begin{todo}
+ & !!!
+ & zmínit tu terminate bool
+\end{todo}
 
 
 \newpage
@@ -841,10 +794,8 @@ and mutation() are hopefully clear from verbal description.
 
 \begin{todo}
  & mention best preservation and same popSize checking.
- & TALK ABOUT GP is part of EA etc. and maybe define the GP by 
-   defining EA and then specifying the differences or something 
-   like that...    
- & History, citations, etc ....
+ & popsat co je to popWithF
+ & popsat co je to terminate 
  & ten algoritmus v kozovi dělá "Designate Result" já tam vracim 
    poslední populaci
 \end{todo}
@@ -853,13 +804,39 @@ and mutation() are hopefully clear from verbal description.
 
 
 \chapter{Mathematical background}
+
+In this chapter we briefly describe key concepts
+from simply typed $\lambda$-calculus.
+We try to favor readability over formality,
+for more detailed and formal treatment of this subject see 
+\cite{barendregt92}.
+
+After that, \textit{inhabitation tree} is introduced.
+It is structure used for reasoning about generation of individuals.
 	
-\begin{todo}
- & Shrnout tu nějak ve skratce tuhle kapitolu.. 
-\end{todo}
+\theoremstyle{plain} 
+\newtheorem{theorem}{Theorem} 
+\newtheorem{proposition}{Proposition} 
+\newtheorem{lemma}{Lemma} 
+\newtheorem*{corollary}{Corollary}
+
+\theoremstyle{definition} 
+\newtheorem*{definition}{Definition} 
+\newtheorem{conjecture}{Conjecture}
+ \newtheorem*{example}{Example} 
+
+\theoremstyle{remark} 
+\newtheorem*{remark}{Remark} 
+\newtheorem*{note}{Note} 
+\newtheorem{case}{Case}
+
 		
-\section{Lambda term}
+\section{\lterms}
 \label{deflam}
+
+Now we will formally describe programming language 
+in which we will generate individual programs --- so called \lterms.  
+
 
 \newcommand{\then}{\Rightarrow\xspace}
 
@@ -874,9 +851,12 @@ and mutation() are hopefully clear from verbal description.
 \newcommand{\Icomb }{\mathbf{I}}
 
 
+
+
+\begin{definition}
+
 Let $V$ be infinite countable set of {\it 
-variable names}.  \\* 
-Let $C$ be set of {\it constant names}.	 \\*		
+variable names}. Let $C$ be set of {\it constant names}.	 	
 Then $\Lambda$ is set of {\it \lterms} defined inductively as follows.	
 \begin{align*}
 x   \in V \cup C  &\then x     \in \Lambda \\
@@ -884,9 +864,13 @@ M,N \in \Lambda   &\then (M~N) \in \Lambda
 \textit{~~~~~~(Function application)} \\
 x   \in V , M \in \Lambda &\then \lamb{x}{M} \in \Lambda
 \textit{~~~~~($\lambda$-abstraction)} 
-\end{align*}
+\end{align*}~
+\end{definition}
 
-Function application and $\lambda$-abstraction are concepts
+
+
+\textit{Function application} and 
+\textit{$\lambda$-abstraction} are concepts
 well known from common programming languages. 
 For example in JavaScript 
 $(M~N)$ translates to expression \texttt{$M$($N$)} and
@@ -938,7 +922,7 @@ We use bold upper case symbols such as
 $\Scomb, \Kcomb, \Icomb$ as abbreviation
 for specific terms, e.i. 
 $\Icomb = \lamb{x}{x}$.  
-\\
+\\[1em]
 	
 Examples of \lterms:
 
@@ -1081,36 +1065,41 @@ subterm.
 A normal form may be thought of as a result of a term evaluation. 
 
 
-
-\begin{todo}
-	& říct co to vubec je ty intutivně (v par větách jen) 
-	  a nějak to napojit na to jak to používám já
-	  pak v tom GP.
-	& Citovat nějakýho bárendrechta jako zdroj podrobnějších informací
-\end{todo}
-
-
-
-\section{Type}
+\section{Types}
 \label{deftype}
 
 \newcommand{\ar}{\rightarrow\xspace}
 \newcommand{\T}{\mathbb{T}\xspace}
 
-Let $A$ be set of {\it atomic type names}. \\*
-Then $\mathbb{T}$ is set of {\it types} inductively defined as follows:
+A \lterm as described above
+corresponds to a program expression with no type information
+included. Now we will describe \textit{types} (or \textit{type terms}).
+After putting those two pieces 
+(\textit{\lterms} and \textit{types}) together 
+we will get system called \textit{simply typed $\lambda$-calculus}.
 
+
+\begin{definition}
+Let $A$ be set of {\it atomic type names}. \\
+Then $\mathbb{T}$ is set of {\it types} inductively defined as follows.
 \begin{align*}
 \alpha      \in A  &\then   \alpha \in \T \\
 \sigma,\tau \in \T &\then ( \sigma \ar  \tau ) \in \T 
-\end{align*} 
+\end{align*}~
+
+\end{definition}
 
 Type $\sigma \ar \tau$ is type for functions taking as input
 something of a type $\sigma$ and returning 
-as output something of a type $\tau$. \\
+as output something of a type $\tau$. 
+
+Usually A is called \textit{set of type variables}, 
+but since it might be source of confusion with polymorphic type variables
+we prefer this name, which also better suits our usage. 
+\\
 
 We use following notation
-abbreviation for better readability:\\
+abbreviation for better readability:
 
 $\tau_1 \ar \tau_2 \ar \dots \ar \tau_n$ means 
 $\tau_1 \ar (\tau_2 \ar (\dots \ar (\tau_{n-1} \ar \tau_n)\dots))$.\\
@@ -1132,17 +1121,9 @@ this property suggests how we can "simulate" function which takes $n$ arguments.
 
 % We will utilize this property ... asi netřeba řikat
 
-
-\begin{todo}
-   & určitě promluvit nějak v úvodu k tomu že se jedná o 
-	 Simply typed lambda kalkulus, zmínit že klasicky se těm alfa z A 
-	 řiká proměný, ale že je to matoucí vzhledem k polymorfizmu
-   & říct že se vždycky zastavěj (jak se to správně jmenuje?) ale
-     asi to říct na jinym místě než tady, tady se teprv definujou typy, 
-     říct to někde kde už se ví jak sou napojený na termy    
+\begin{todo}  
    & možná se hlobějc zmínit o curryingu  
 \end{todo}
-
 
 	
 
@@ -1262,6 +1243,13 @@ this property suggests how we can "simulate" function which takes $n$ arguments.
 	\end{equation*}		
 
 
+\section{Simply typed $\lambda$-calculus}
+
+\begin{todo}
+   & říct že se vždycky zastavěj (strong normalization) ale
+     asi to říct na jinym místě než tady, tady se teprv definujou typy, 
+     říct to někde kde už se ví jak sou napojený na termy    
+\end{todo}
 
 	
 \section{Term generating grammar}
@@ -1885,7 +1873,7 @@ the system for Genetic programming with types
 by its main design goals:\\ 
 
 \begin{enum}
- & It should eliminate the \textit{over-one-type} constrain of classical GP
+ & It should eliminate the \textit{closure} constrain of classical GP
    (see \ref{building-blocks}). 
  & It should be generalization of the classical GP described in \ref{GP},
    by which is meant that for \textit{building blocks} satisfying 
@@ -2574,6 +2562,8 @@ jako source of further reading on this subject.
 \label{typed-swapping}
 
 
+
+
 \subsection{ Repairing method }
 \label{repairing-method}
 
@@ -2641,7 +2631,7 @@ jako source of further reading on this subject.
 
 
 
-\subsection{Using term generation}
+%\subsection{Using term generation}
 
 
 
@@ -2752,8 +2742,84 @@ Předběžný náhodně uspořádaný body osnovy ..\\
 %\chapter{Conclusion}
 \chapter*{Conclusion}
 
-\textbf{Poznámky :\\
-bylo by asi mimojiný dobrý 
+
+\begin{todo}
+ & !!!!!!!!!!!!!!!!!
+\end{todo}
+
+
+Další témata co zmínit v úvodu nebo v závěru :\\
+
+\begin{easylist}[itemize]
+
+ 
+& zmínit že existuje i jinej pohled na to proč tam zavádět typy:
+  && mužem koukat na to tak že konstrejnt je naše TuF tim, že 
+     v ní nemužou bejt libovolný funkce
+  && ale tuhle constrain mužeme omezit tim že konstrjnujeme 
+     právě použití tech bilding bloku, kde constrains jsou daný těma typama
+     - jakoby výměna global constrain za localní konstrejny na tech bilding  
+       blockách
+  && druhá možná ješte silnější motivace je že pomocí typu pak mohou vznikat 
+     smysluplnější programy, tím že dostavají vstupy které přesně čekají
+     a dávají výstupy které mají nějaké očekávané vlastnosti    
+
+& Možná se zmínit o tý představě dvou pólu
+  induktivním a deduktivním -
+  klasickym GP a Dokazovačem, čim složitější
+  typovej sytem tim víc se jedná o deduktivní   
+  systém a blíží se to dokazovači.
+   && Ve světle toho, je pak hezky vidět, že
+      je chytrý exhaustivně systematicky prohledávat od nejmenšího
+      po největší- jak budeme zesložiťovat typovej systém, tak
+      čim dál víc bude už stačit najít vubec nějaký řešení a bude čim dál těžší
+      jich generovat kvanta
+
+
+& že imlementace je delana těma vtipnejamtajpklasama umožnujicima libovolný
+  evoluční struktury na evolvovani
+
+& říct že vnekterejch aspektech je videt, že to je work in progress
+  ale že si myaslime že i tak to ukazuje pěkný výsledky 
+  a že doufame že ty nedodělky budou další prací odstraněny
+
+
+& Říct jak jde text:
+  && Začnem popsanim klasickýho GP podle Kozy
+  && Vyslovíme definice okolo lambda termu a typu
+  && Vyslovíme definici inhabitačního stromu
+     kterej je stromovou verzí IM od Barendrechta.
+  && Matematicky popíšem jak na to dem my.
+  && Popíšem rozšíření zakladního systému na 
+     polymorfní.
+  && Popíšem to z programátorskýho hlediska
+  && Popíšem příklady na kterejch to demonstrujem
+  && Srovnáme to s nějakejma přístupama co už 
+     existujou 
+
+& Nějak naťuknout už tady v úvodu jak se to má při
+  srovnání s tim jak na to dou jiný (Yu atd)
+  
+& Výkřiky co zmínit:
+  && Na co zaměřený:
+     &&& Proof of a concept
+     &&& Spíš jednoduchost
+         &&&& Ve většině aspektú to sleduje
+              Kozu - tzn i v málo řídících
+              parametru
+     &&& Duraz na generování termu (!)              
+
+  && Na co nezaměřený (ale snad taky ok v tom):
+     &&& Performance   
+     &&& Mature knihovna co by šla použít robustně
+         v cizim kódu - spíš to počítá že to 
+         bude dál rozvíjeno a tohle je mezizastávka
+
+ & TALK ABOUT GP is part of EA etc. and maybe define the GP by 
+   defining EA and then specifying the differences or something 
+   like that...   
+
+& bylo by asi mimojiný dobrý 
 ospravedlnit/okomentovat tak fancy (=javascript frontend) 
 implementaci při 
 dost nedodělanejch jinejch věcech (heuristika by 
@@ -2765,10 +2831,13 @@ UI jaký vubec je na zemi teď (state of dzí art)
 a tak to snad nebyla stráta času.
 navíc se naskitla díky tomu další pěkná příležitost
 k ukázání toho, že to neni omezený na haskell
-ale že se kombinatorový konstrukty daj v zásadě přeložit do libovolnýho jazyka celkem bez problémů
+ale že se kombinatorový konstrukty daj 
+v zásadě přeložit do libovolnýho jazyka celkem bez problému
 nebo minimalně do JS. Ale todle možná nepsat tolik do závěru
 spíš nějaky podrobnosti přehodit do implementačních detailu
-a tady to jen tak líznout.}
+a tady to jen tak líznout.
+   
+\end{easylist}
 
 
 
@@ -2828,6 +2897,11 @@ transformation and Execution of logic programs by
 iterative-deepening A* SLD-tree search.} 
 Dr scient thesis, University of Oslo, Norway, 1994.
 
+\bibitem{barendregt92}
+H. Barendregt , S. Abramsky , D. M. Gabbay , T. S. E. Maibaum , H.  P.
+\emph{Lambda Calculi with Types.} 
+Handbook of Logic in Computer Science, 1992. 
+
 \bibitem{barendregt10}
 
   Henk Barendregt, Wil Dekkers, Richard Statman,
@@ -2835,6 +2909,11 @@ Dr scient thesis, University of Oslo, Norway, 1994.
   Cambridge University Press,
   2010. \\
   URL \url{http://www.cs.ru.nl/~henk/book.pdf}.
+
+\bibitem{jones87}
+Simon Peyton Jones. 
+\emph{The Implementation of Functional Programming Languages}. 
+Prentice Hall, 1987.
 
 
 \bibitem{AIAMA}
