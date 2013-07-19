@@ -68,6 +68,7 @@
 \newcommand{\Lp}  {\Lambda^{\prime}\xspace}
 
 
+\newcommand{\tur}[3]{#1 \vdash #2 : #3}
 
 \newcommand{\turst}[3]{$#1 \vdash #2 : #3$\xspace}
 \newcommand{\GMS}{\turst{\Gamma}{M}{\sigma}}
@@ -856,7 +857,8 @@ in which we will generate individual programs --- so called \lterms.
 \begin{definition}
 
 Let $V$ be infinite countable set of {\it 
-variable names}. Let $C$ be set of {\it constant names}.	 	
+variable names}. Let $C$ be set of {\it constant names}, 
+$V \cap C = \emptyset$.	 	
 Then $\Lambda$ is set of {\it \lterms} defined inductively as follows.	
 \begin{align*}
 x   \in V \cup C  &\then x     \in \Lambda \\
@@ -881,8 +883,13 @@ with an argument and
 the $\lambda$-abstraction is equivalent to 
 \textit{anonymous function}. \\
 
+It is usual to not distinguish between $V$ and $U$ and just use
+one set of variable names. But because this distinction is quite convenient
+for us in the implementation, we use it even here. 
+Hopefully, it will not confuse the reader.
+ 
 
-It is usual to use $V = \Sigma^+$ set of all non-empty finite strings of symbols 
+We can use $V = \Sigma^+$, set of all non-empty finite strings of symbols 
 from $\Sigma$ where $\Sigma$ is some alphabet set, e.g.  
 $
 \Sigma =
@@ -1080,7 +1087,7 @@ we will get system called \textit{simply typed $\lambda$-calculus}.
 
 
 \begin{definition}
-Let $A$ be set of {\it atomic type names}. \\
+Let $A$ be set of {\it atomic type names}. 
 Then $\mathbb{T}$ is set of {\it types} inductively defined as follows.
 \begin{align*}
 \alpha      \in A  &\then   \alpha \in \T \\
@@ -1096,7 +1103,12 @@ as output something of a type $\tau$.
 Usually A is called \textit{set of type variables}, 
 but since it might be source of confusion with polymorphic type variables
 we prefer this name, which also better suits our usage. 
-\\
+
+Specific definition of $A$ is not so important, but for practical purposes 
+we can think of it as the set of all non-function types relevant in our
+situation, e.g., $A = \{ Int , IntList , Bool, BoolList , Char, String \}$.
+Or we can think of $A$ more generally as of set of all non-empty strings
+of symbols of some alphabet. \\
 
 We use following notation
 abbreviation for better readability:
@@ -1119,55 +1131,142 @@ Technically speaking, we have types only for functions with one argument, but
 this property suggests how we can "simulate" function which takes $n$ arguments.
   
 
-% We will utilize this property ... asi netřeba řikat
-
-\begin{todo}  
-   & možná se hlobějc zmínit o curryingu  
-\end{todo}
-
 	
+\subsection{Statements of the form $M : \sigma$}
 
+\begin{definition}
+	Let $\Lambda$ be set of {\it \lterms}. 
+	Let $\mathbb{T}$ be set of {\it types}.       
+	A {\it statement} $M : \sigma$ is a pair 
+	$(M,\sigma) \in \Lambda \times \mathbb{T}$.
+	\\ 
+\end{definition}
 	
-\section{Statement of a form $M : \sigma$}
+Statement $M : \sigma$ is vocalized as {\it "$M$ has type $\sigma$"}.
+The type $\sigma$ is called the {\it predicate} and 
+the term $M$ is called the {\it subject} of the statement $M : \sigma$. \\
 
-	Let $\Lambda$ be set of {\it \lterms}. \\*
-	Let $\mathbb{T}$ be set of {\it types}.       \\*
-	A {\it statement} $M : \sigma$ is a pair $(M,\sigma) \in \Lambda \times \mathbb{T}$. \\*
-	$M : \sigma$ is vocalized as {\it "$M$ has type $\sigma$"}.\footnote{ 
-	$M : \sigma$ can be also imagined as $M \in \sigma$ } \\*
-	The type $\sigma$ is the {\it predicate} and the term $M$ is the
-	{\it subject} of the statement.  
-	
-\section{Context}
+We can look on this relation in tree different ways.
 
-	Let $\Gamma \in \mathfrak P \left({\Lambda \times  \mathbb{T}}\right)$. 
-	($\Gamma$ is a set of {\it statements} of a form $M : \sigma$.)	\\*
-	Then $\Gamma$ is {\it context} if it obeys following 
-	conditions\footnote{
-	The $\pi_1$ corresponds to the projection of the first component of the Cartesian product.
-	}:
-	\begin{align*}
-		 \forall (x,\sigma) \in \Gamma &: x \in V \cup C \\
-		 \forall s_1,s_2 \in \Gamma &: s_1 \neq s_2 \Rightarrow \pi_1(s_1) \neq \pi_1(s_2)
-    \end{align*}
+\begin{description}
+  \item[Programming point of view.] 
+   Statement $M : \sigma$ means that value $M$ is 
+   an instance of data type
+   $\sigma$. So statement $M : \sigma$ is
+   somehow analogous to \textit{Java}
+   expression \texttt{$M$ instanceof $\sigma$}.    
+   
+   Type \textit{constrains} the value 
+   and gives \textit{information} about it, 
+   e.g., function $f : \sigma \ar \tau$ 
+   is constrained to only accept values of a type $\sigma$
+   as input and must return value of a type $\tau$ as output.
+     
+  \item[Set point of view.] 
+     Statement $M : \sigma$ can also be viewed as relation
+     $M \in \sigma$. This makes us look on types as on
+     collections of their instances.
+      
+  \item[Logic point of view.] According to 
+  the \textit{Curry–Howard correspondence}
+  we can read statement $M : \sigma$ as 
+  \textit{"$M$ is a proof of formula $\sigma$"}.
+  We will not treat this interesting subject in much detail,
+  \lets just say that $\ar$ corresponds to the
+  implication $\then$ and \textit{atomic types} correspond to
+  \textit{propositional variables}. The whole system of
+  \textit{simply typed $\lambda$-calculus} then corresponds
+  to the \textit{implicational fragment of propositional 
+  intuitionistic logic}. We are mentioning this beautiful
+  correspondence in hope that it will help clarify 
+  use of \textit{inference rules} which are key concept
+  in the process of deriving valid statements about
+  terms and types.  
     
-	In other words context is a set of statements with distinct variables or constants as subjects.
+  
+\end{description}  	
 	
-\begin{todo}
- & TALK ABOUT Context represents library/building blocks.
-\end{todo}
+
 
 	
-	
-\section{Statement of a form \GMS}
+\subsection{Context}
 
-	By writing \GMS we say 
-	{\it statement $M : \sigma$ is derivable from context $\Gamma$ }.
+%\begin{definition}
+%Let $\Gamma \in \mathfrak P \left({\Lambda \times  \mathbb{T}}\right)$. 
+%($\Gamma$ is a set of statements of a form $M : \sigma$.)	
+%Then $\Gamma$ is {\it context} if it obeys following 
+%conditions.
+%%\footnote{The $\pi_1$ corresponds to the projection of the 
+%%first component of the Cartesian product.}
+%\begin{align*}
+%\forall (x,\sigma) \in \Gamma &: x \in V \cup C  
+%&\textit{(x is variable or constant)}\\
+%\forall (x_1,\sigma_1),(x_2,\sigma_2) \in \Gamma &: 
+%x_1,x_2 \in V , x_1 \neq x_2 \then \sigma_1 \neq \sigma_2
+%&\textit{(variables are distinct)}
+%\end{align*}~
+%Ten druhej je navíc blbě, má tam bejt celej stejtment se nerovná pak...
+%\end{definition}
 
-	We construct valid statements of form \GMS by using inference rules.
+\begin{definition}
+~
+\begin{enumerate}
+ \item A \textit{declaration} is a statement 
+ $x : \sigma$ where $x \in V \cup C$.
+  
+ \item A \textit{context} (or \textit{basis}) 
+ is set of declarations with distinct variables as subjects.
+\end{enumerate}~
+\end{definition}
+    
+
+Again our definition slightly differs from the standard one
+in that it permits more than one declaration with the same 
+\textit{constant}, which enables us to simulate very primitive
+kind of ad-hoc polymorphism by \textit{"constant overloading"}.  
+And again it does not affect the theory; it just seems less
+confusing to me to state these definitions as they are later 
+used in the implementation.   \\
+
+In our system, the set of \textit{building blocks} 
+(the equivalent of the set $T \cup F$ in classical GP)
+will be a context with all declarations having \textit{constants}
+as subjects, i.e., a set of constants together with their types.
+
+In the process of term generation, 
+this initial context is being further extend with variables
+ --- by "entering inner scopes of bodies of lambda functions".   
 	
+%\subsection{Statements of the form \GMS}
+
 		
-\section{Inference rule}		
+%\subsection{Inference rules}
+\subsection{Simply typed $\lambda$-calculus}
+
+\begin{definition}
+A statement $M : \sigma$ is \textit{derivable from}
+a context $\Gamma$ if it can be produced by the following rules.
+\begin{align*}
+(x,\sigma) \in \Gamma &~\then~ \tur{\Gamma}{x}{\sigma}\\
+\tur{\Gamma}{M}{(\sigma \ar \tau)}~,~\tur{\Gamma}{N}{\sigma} 
+&~\then~ \tur{\Gamma}{(M~N)}{\tau}\\  
+\tur{\Gamma \cup (x,\sigma)}{M}{\tau}
+&~\then~ \tur{\Gamma}{\lamb{x}{M}}{(\sigma \ar \tau)} 
+\end{align*}~
+\end{definition}
+
+
+
+
+
+
+
+By writing \GMS we say 
+{\it statement $M : \sigma$ is derivable from context $\Gamma$ }.
+
+We construct valid statements of the form \GMS 
+by using inference rules.\\
+	
 	
 	Basically speaking, inference rules are used for deriving statements of a form 
 	\GMS from yet derived statements of such a form.
@@ -1243,9 +1342,10 @@ this property suggests how we can "simulate" function which takes $n$ arguments.
 	\end{equation*}		
 
 
-\section{Simply typed $\lambda$-calculus}
+\subsection{Simply typed $\lambda$-calculus}
 
 \begin{todo}
+   & tady to nějak okomentovat že to je teda vono
    & říct že se vždycky zastavěj (strong normalization) ale
      asi to říct na jinym místě než tady, tady se teprv definujou typy, 
      říct to někde kde už se ví jak sou napojený na termy    
