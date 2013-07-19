@@ -68,9 +68,9 @@
 \newcommand{\Lp}  {\Lambda^{\prime}\xspace}
 
 
-\newcommand{\tur}[3]{#1 \vdash #2 : #3}
+\newcommand{\tur}[3]{#1\vdash{}#2:#3}
 
-\newcommand{\turst}[3]{$#1 \vdash #2 : #3$\xspace}
+\newcommand{\turst}[3]{$#1\vdash{}#2:#3$\xspace}
 \newcommand{\GMS}{\turst{\Gamma}{M}{\sigma}}
 
 
@@ -388,7 +388,9 @@ Notable highlights are:
    suited better for reasoning about implementation details) 
    is presented and used for \textit{generation of individuals}.
    This generation process is parameterized by simple 
-   \textit{search strategy}. Several search strategies are presented.   
+   \textit{search strategy}. Several search strategies are presented,
+   such as \textit{systematic} strategy and strategy performing
+   classical GP individual generation.     
  \item \textit{Abstraction elimination} is utilized
    to enable use of simple \textit{mutation operator}.
  \item \textit{Polymorphic} generalization of inhabitation tree,
@@ -1044,6 +1046,12 @@ In other words, $\beta$-reduction is the process
 of insertion of arguments supplied to a function into 
 its body. 
 
+\begin{todo}
+& zmínit $=_\beta$ a $\twoheadrightarrow_\beta$ 
+jestli se k tomu někde dál v textu odkazuju
+\end{todo}
+
+
 \subsection{$\eta$-reduction}
 
 Similarly as for $\beta$-reduction we can define $\eta$-reduction 
@@ -1244,181 +1252,281 @@ this initial context is being further extend with variables
 \subsection{Simply typed $\lambda$-calculus}
 
 \begin{definition}
-A statement $M : \sigma$ is \textit{derivable from}
-a context $\Gamma$ if it can be produced by the following rules.
+A statement $M\colon\sigma$ is \textit{derivable from}
+a context $\Gamma$ (notation $\Gamma\vdash{}M\colon\sigma$) 
+if it can be produced by the following rules.
 \begin{align*}
 (x,\sigma) \in \Gamma &~\then~ \tur{\Gamma}{x}{\sigma}\\
-\tur{\Gamma}{M}{(\sigma \ar \tau)}~,~\tur{\Gamma}{N}{\sigma} 
+\tur{\Gamma}{M}{\sigma \ar \tau}~,~\tur{\Gamma}{N}{\sigma} 
 &~\then~ \tur{\Gamma}{(M~N)}{\tau}\\  
-\tur{\Gamma \cup (x,\sigma)}{M}{\tau}
-&~\then~ \tur{\Gamma}{\lamb{x}{M}}{(\sigma \ar \tau)} 
+\tur{\Gamma \cup \{(x,\sigma)\}}{M}{\tau}
+&~\then~ \tur{\Gamma}{\lamb{x}{M}}{\sigma \ar \tau} 
 \end{align*}~
 \end{definition}
 
+Those rules are usually stated in the form of \textit{inference rules}.
+
+\newcommand{\ruleI}[2]{\dfrac{#1}{#2}}
+\newcommand{\ruleII}[3]{\dfrac{#1 \qquad #2}{#3}}
+\newcommand{\ruleIII}[4]{\dfrac{#1 \qquad #2 \qquad #3}{#4}}
+\newcommand{\ruleIV}[5]{\dfrac{#1 \qquad #2 \qquad #3 \qquad #4}{#5}}
+
+
+\begin{align*}
+\ruleI { (x:\sigma) \in \Gamma }
+       { \tur{\Gamma}{x}{\sigma} }
+&& \textit{(axiom)} \\[1em]
+\ruleII{ \tur{\Gamma}{M}{\sigma \ar \tau} }
+       { \tur{\Gamma}{N}{\sigma} }
+       { \tur{\Gamma}{(M~N)}{\tau} }
+&& \textit{($\ar$-elimination)} \\[1em]
+\ruleI { \tur{\Gamma,x:\sigma}{M}{\tau} }
+       { \tur{\Gamma}{\lamb{x}{M}}{\sigma \ar \tau} }
+&& \textit{($\ar$-introduction)} \\[1em]
+\end{align*}
+
+\Lets consider following example statement of a form \GMS.
+
+$$
+	\{\} \vdash (\lambda f . (\lambda x . (f x) )) : 
+	(\sigma \rightarrow \tau) \rightarrow ( \sigma \rightarrow \tau ) 
+$$~
+	
+This statement is derived as follows. 
+
+\begin{equation*}
+\dfrac{
+	\dfrac{ (f,\sigma \rightarrow \tau) \in \{ (f,\sigma \rightarrow \tau) , (x,\sigma)  \}  }
+	     { \{ (f,\sigma \rightarrow \tau) , (x,\sigma)  \} \vdash f : \sigma \rightarrow \tau }
+	\qquad
+	\dfrac{ (x,\sigma) \in \{ (f,\sigma \rightarrow \tau) , (x,\sigma)  \}  }
+	     { \{ (f,\sigma \rightarrow \tau) , (x,\sigma)  \} \vdash x : \sigma }
+	 }
+	 {
+		\dfrac{		 	
+	 		\{ (f,\sigma \rightarrow \tau) , (x,\sigma)  \} \vdash (f x) : \tau
+	 	}{
+			\dfrac{\{ (f,\sigma \rightarrow \tau) \} \vdash (\lambda x . (f x) ) : 
+			\sigma \rightarrow \tau}
+			{ \{ \} \vdash (\lambda f . (\lambda x . (f x) ) ) 
+			  : (\sigma \rightarrow \tau) \rightarrow (\sigma \rightarrow \tau) }
+	 	}
+	 }
+\end{equation*}		
+
+If we turn the derivation upside down, we can see that it is a tree with 
+desired statement in the root and \textit{axioms} in the leafs. \\
+
+
+New valid inference rules may be produced by finite composition of 
+other valid inference rules. 
+
+\Lets consider following rule.
+
+$$
+\ruleII
+ { \tur{\Gamma,x:\sigma}{M}{\tau} }
+ { \tur{\Gamma}{N}{\sigma} }
+ { \tur{\Gamma}{(\lamb{x}{M}~N)}{\tau} }
+$$
+
+Its validity is shown by the following rule composition.
+
+$$
+\ruleII
+	{ \ruleI 
+	     { \tur{\Gamma,x:\sigma}{M}{\tau} }
+	     { \tur{\Gamma}{\lamb{x}{M}}{\sigma \ar \tau} }
+	}
+	{ \tur{\Gamma}{N}{\sigma} }
+	{ \tur{\Gamma}{(\lamb{x}{M}~N)}{\tau} }
+$$~
 
 
 
 
 
 
-By writing \GMS we say 
-{\it statement $M : \sigma$ is derivable from context $\Gamma$ }.
+\Lets consider following strange rule.
 
-We construct valid statements of the form \GMS 
-by using inference rules.\\
-	
-	
-	Basically speaking, inference rules are used for deriving statements of a form 
-	\GMS from yet derived statements of such a form.
-	Those inference rules are written in the following form:
-	
-	\begin{equation*}
-		\frac{\Gamma_1 \vdash M_1 : \sigma_1 \qquad
-			  \Gamma_2 \vdash M_2 : \sigma_2 \quad
-			  \dotsm \quad
-		      \Gamma_n \vdash M_n : \sigma_n}
-		     {\Gamma_{n+1} \vdash M_{n+1} : \sigma_{n+1}}
-	\end{equation*}	
-	
-	Suppose we have yet derived statements 
-	$\Gamma_1 \vdash M_1 : \sigma_1 ,
-	 \Gamma_2 \vdash M_2 : \sigma_2 ,
-	 \dots ,
-	 \Gamma_n \vdash M_n : \sigma_n$. 
-	It allows as to use the inference rule to derive statement
-	\mbox{ $\Gamma_{n+1} \vdash M_{n+1} : \sigma_{n+1}$ }.
-	 
-	For deriving statements including types of a form 
-	$(\sigma \rightarrow \tau)$ are essential those two 
-	inference rules:
-	
-	\begin{equation*}
-		\frac{\Gamma \vdash M : \sigma \rightarrow \tau \qquad
-			  \Gamma \vdash N : \sigma }
-		     {\Gamma \vdash (M N) : \tau }
-	\end{equation*}	
-	
-	\begin{equation*}
-		\frac{\Gamma \cup \{ ( x,\sigma ) \} \vdash M : \tau }
-		     {\Gamma \vdash (\lambda x . M) : \sigma \rightarrow \tau }
-	\end{equation*}		 
-	 
-	This kind of inference rules allows us to derive new statements from yet derived statements, but 
-	what if we do not have any statement yet? 
-	For this purpose we have other kinds of inference rules such as {\it axiom} inference rule:   
-	
-	\begin{equation*}
-		\frac{( x , \sigma )  \in \Gamma}
-		     {\Gamma \vdash x : \sigma}
-	\end{equation*}	
-	
-	\Lets consider an example statement of a form \GMS :
-	
-	\[
-		\{\} \vdash (\lambda f . (\lambda x . (f x) )) : 
-		(\sigma \rightarrow \tau) \rightarrow ( \sigma \rightarrow \tau ) 
-	\]
-		
-	This statement is derived as follows: 
-	
-	\begin{equation*}
-	\dfrac{
-		\dfrac{ (f,\sigma \rightarrow \tau) \in \{ (f,\sigma \rightarrow \tau) , (x,\sigma)  \}  }
-		     { \{ (f,\sigma \rightarrow \tau) , (x,\sigma)  \} \vdash f : \sigma \rightarrow \tau }
-		\qquad
-		\dfrac{ (x,\sigma) \in \{ (f,\sigma \rightarrow \tau) , (x,\sigma)  \}  }
-		     { \{ (f,\sigma \rightarrow \tau) , (x,\sigma)  \} \vdash x : \sigma }
-		 }
-		 {
-			\dfrac{		 	
-		 		\{ (f,\sigma \rightarrow \tau) , (x,\sigma)  \} \vdash (f x) : \tau
-		 	}{
-				\dfrac{\{ (f,\sigma \rightarrow \tau) \} \vdash (\lambda x . (f x) ) : 
-				\sigma \rightarrow \tau}
-				{ \{ \} \vdash (\lambda f . (\lambda x . (f x) ) ) 
-				  : (\sigma \rightarrow \tau) \rightarrow (\sigma \rightarrow \tau) }
-		 	}
-		 }
-	\end{equation*}		
+$$
+\ruleII
+ { \tur{\Gamma,x:\rho \ar \pi}{M}{\tau} }
+ { \tur{\Gamma,y:\rho}{N}{\pi} }
+ { \tur{\Gamma}{(\lamb{x}{M}~\lamb{y}{N})}{\tau} }
+$$
+
+Its validity is shown by the following rule composition.
+
+$$
+\ruleII
+	{ \ruleI 
+	     { \tur{\Gamma,x:\rho \ar \pi}{M}{\tau} }
+	     { \tur{\Gamma}{\lamb{x}{M}}{(\rho \ar \pi) \ar \tau} }
+	}
+	{ \ruleI 
+	     { \tur{\Gamma,y:\rho}{N}{\pi} }
+	     { \tur{\Gamma}{\lamb{y}{N}}{\rho \ar \pi} }
+	}	 { \tur{\Gamma}{(\lamb{x}{M}~\lamb{y}{N})}{\tau} }
+$$~
 
 
-\subsection{Simply typed $\lambda$-calculus}
+
+
+	
+	
+Generally speaking, inference rules are used for deriving statements of a form 
+\GMS from yet derived statements of such a form (with exception of 
+\textit{axiom} rule, which serves as a "starting point").
+Those inference rules are written in the following form.
+
+$$ 
+\ruleIV
+  { \tur{\Gamma_1}{M_1}{\sigma_1} }
+  { \tur{\Gamma_2}{M_2}{\sigma_2} }
+  { \dotsm }
+  { \tur{\Gamma_n}{M_n}{\sigma_n} }
+  { \tur{\Gamma_{n+1}}{ \mathbf{T}(M_1,M_2,\dots,M_n)}{\sigma_{n+1}} } 
+$$
+
+Where $\mathbf{T}(M_1,M_2,\dots,M_n)$ stands for some 
+specific \lterm that may contain \textit{"meta-variables"}
+$M_1,M_2,\dots,M_n$. 
+
+In the example above $\mathbf{T}(M,N) = (\lamb{x}{M}~\lamb{y}{N})$
+
+Suppose we have derived statements 
+$\Gamma_1 \vdash M_1 : \sigma_1 ,
+ \Gamma_2 \vdash M_2 : \sigma_2 ,
+ \dots ,
+ \Gamma_n \vdash M_n : \sigma_n$. 
+Then we are allowed to use the inference rule to derive statement
+\mbox{ $\Gamma_{n+1} \vdash \mathbf{T}(M_1,M_2,\dots,M_n) : \sigma_{n+1}$ }.\\
+ 
+ 
+ 
+ 
+%For deriving statements including types of a form 
+%$(\sigma \rightarrow \tau)$ are essential those two 
+%inference rules:
+%
+%\begin{equation*}
+%	\frac{\Gamma \vdash M : \sigma \rightarrow \tau \qquad
+%		  \Gamma \vdash N : \sigma }
+%	     {\Gamma \vdash (M N) : \tau }
+%\end{equation*}	
+%
+%\begin{equation*}
+%	\frac{\Gamma \cup \{ ( x,\sigma ) \} \vdash M : \tau }
+%	     {\Gamma \vdash (\lambda x . M) : \sigma \rightarrow \tau }
+%\end{equation*}		 
+% 
+%This kind of inference rules allows us to derive new statements from yet derived statements, but 
+%what if we do not have any statement yet? 
+%For this purpose we have other kinds of inference rules such as {\it axiom} inference rule:   
+%	
+%\begin{equation*}
+%	\frac{( x , \sigma )  \in \Gamma}
+%	     {\Gamma \vdash x : \sigma}
+%\end{equation*}	
+
+
+
+
 
 \begin{todo}
-   & tady to nějak okomentovat že to je teda vono
-   & říct že se vždycky zastavěj (strong normalization) ale
-     asi to říct na jinym místě než tady, tady se teprv definujou typy, 
-     říct to někde kde už se ví jak sou napojený na termy    
+   & říct že se vždycky zastavěj (strong normalization),
+     && potřebný definice pro to uvést v \lterms sekci
+   & možná zmínit že se jedná o \textit{gentzen style proof}
+   & říct že jsou to modus ponens a jeden směr věty o dedukci  
 \end{todo}
 
-	
+
 \section{Term generating grammar}
-
-Inference rules are good for deriving statements of a form \GMS, but our
+Inference rules are good for deriving statements of the form \GMS, but our
 goal is slightly different; we would like to generate many \lterms M for a given type 
-$\sigma$ and context $\Gamma$.
+$\sigma$ and context $\Gamma$.\\
 
-Our approach will be to take each inference rule and transform it to a rule of term generating
-grammar. With this term generating grammar it will be much easier to reason about generating 
-\lterms.
-	
-It won't be a grammar in classical sense because we will be operating with infinite sets of
-nonterminal symbols and rules. \footnote{TODO : mention terminal symbols - situation around 
-variables and their construction with ' symbol.}
+\Lets start our reasoning about generation of \lterms with
+notion of term generating grammar. We will show how to
+transform an inference rule into a rule of term generating grammar.
+With the appropriate term generating grammar 
+in hands it is just a simple step to \textit{inhabitation trees}.\\
 
-Let $Non = Type \times Context $ be our {\it nonterminal} set. 
-So for every $i \in Non$ is $i = (\sigma_i , \Gamma_i )$.
+It is not a grammar in classical sense, because we will be operating with infinite sets of nonterminal symbols and rules. Technically it it
+2-level grammer \cite{todo}.\\
 
-\Lets consider each relevant inference rule and its corresponding grammar rule.
+Our terminals are symbols used for writing \lterms 
+.%,i.e., parentheses,  . 
 
-First inference rule is {\it implication elimination} also known as 
-{\it modus ponens}: 
-\[
-	\frac{\Gamma \vdash M : \sigma \rightarrow \tau \qquad
-		  \Gamma \vdash N : \sigma }
-	     {\Gamma \vdash (M N) : \tau }
-\]
-\\
-For every $\sigma, \tau \in \mathbb{T}$ and for every {\it context} 
-$\Gamma \in \mathfrak P \left({\Lambda \times  \mathbb{T}}\right)$ there is a grammar rule of a form\footnote{ 
-Terminal symbols for parenthesis and normally {\it space} now \textvisiblespace \quad (for {\it function application} operator) are visually highlighted. }: 
-\[	
+Our non-terminals are pairs $(\tau,\Gamma)$ where 
+$\tau \in \T$ and $\Gamma$ is a \textit{context}.
+
+Our initial non-terminal is $S = (\sigma_S,\Gamma_S)$
+where $\sigma_S$ is desired type of generated \lterms and
+$\Gamma_S$ is \textit{building blocks} context. \\
+
+\Lets begin with \textit{axiom} inference rule.
+
+$$
+\ruleI { (x:\sigma) \in \Gamma }
+       { \tur{\Gamma}{x}{\sigma} }
+$$~
+
+%It corresponds to following grammar rule schema.
+%$$ ( \sigma , \Gamma )  \longmapsto \mbox{ {\Large x}} 
+%~~~~~~~~~~~~~ \textbf{if } (x,\sigma) \in \Gamma$$ 
+
+For every non-terminal $(\sigma,\Gamma)$ 
+and for every $x$ such that $(x:\sigma) \in \Gamma$,
+there is following grammar rule.
+$$ ( \sigma , \Gamma )  \longmapsto \mbox{ {\Large x}} $$ \\
+
+Next is \textit{$\ar$-elimination}.
+
+$$
+\ruleII{ \tur{\Gamma}{M}{\sigma \ar \tau} }
+       { \tur{\Gamma}{N}{\sigma} }
+       { \tur{\Gamma}{(M~N)}{\tau} }
+$$~
+
+For every non-terminal $(\tau,\Gamma)$ 
+and for every type $\sigma \in \T$ 
+there is following grammar rule.\footnote{ 
+Terminal symbols for parenthesis and normally {\it space} 
+now \textvisiblespace \quad (for {\it function application} operator) 
+are visually highlighted. } 
+$$
 	( \tau , \Gamma )  \longmapsto
 	\bigg( ( \sigma \rightarrow \tau , \Gamma ) 
-	  \mbox{ \Vtextvisiblespace[1em] } ( \sigma , \Gamma ) \bigg)
-\]
-\\
+	\mbox{ \Vtextvisiblespace[1em] } ( \sigma , \Gamma ) \bigg)
+$$\\
 
-Second inference rule is {\it implication introduction}: 
-\[
-	\frac{\Gamma \cup \{ ( x,\sigma ) \} \vdash M : \tau }
-	     {\Gamma \vdash (\lambda x . M) : \sigma \rightarrow \tau }
-\]
-\\
-$\forall \sigma, \tau \in \mathbb{T}$ 
-$\forall${\it context} $\Gamma \in \mathfrak P \left({\Lambda \times  \mathbb{T}}\right) $ 
-$\forall x \in V $ such that there is no $(x,\rho) \in \Gamma$ 
-there is a grammar rule:
-\[ 
+And finally {\it $\ar$-introduction}. 
+$$
+\ruleI { \tur{\Gamma,x:\sigma}{M}{\tau} }
+       { \tur{\Gamma}{\lamb{x}{M}}{\sigma \ar \tau} }
+$$
+
+For every non-terminal $(\sigma \ar \tau,\Gamma)$
+and for every variable $x$
+there is following grammar rule.\footnote{
+\textbf{TODO !!!!} nějak okomentovat že by měla být freš,
+pokudmožno v celym termu ale to že byse dělalo blě aby to
+zůstala bezkontextová gramatika, ale je to celkem nepodtatnej detail
+protože tyhle term generating gramatiky sou tu spíš
+pro zajímavost a pro pevnější kramfleky, než pro praktický 
+generování}
+ 
+
+%and let $x$ be variable name that is
+%not present in any declaration in $\Gamma$.
+%(since we want to generate "fresh" variables). 
+
+$$ 
 	( \sigma \rightarrow \tau , \Gamma )  \longmapsto
 	\bigg( \mbox{ {\Large $\lambda$ x . }}( \tau , \Gamma \cup \{ (x,\sigma) \} ) \quad \bigg)
-\]
-\\	
-
-Third inference rule is {\it axiom}: 
-\[
-		\frac{( x , \sigma )  \in \Gamma}
-		     {\Gamma \vdash x : \sigma}
-\]
-\\
-$\forall \sigma \in \mathbb{T}$ 
-$\forall${\it context} $\Gamma \in \mathfrak P \left({\Lambda \times  \mathbb{T}}\right) $ 
-$\forall x \in V \cup C $ such that $(x,\sigma) \in \Gamma$ 
-there is a grammar rule:
-\[ 
-	( \sigma , \Gamma )  \longmapsto \mbox{ {\Large x}}
-\]
-\\
+$$\\
 
 We will demonstrate \lterm generation on example. 
 Again on $(\lambda f . (\lambda x . (f x) ))$. 
@@ -1467,13 +1575,169 @@ with $\Gamma = \{\}$.
 			  \mbox{{\Large x}} \Big) 
 		~ \Big)  	 
 	~ \Big)
-\end{align*}
+\end{align*}~\\
 
+
+\Lets consider a general inference rule again.
+$$ 
+\ruleIV
+  { \tur{\Gamma_1}{M_1}{\sigma_1} }
+  { \tur{\Gamma_2}{M_2}{\sigma_2} }
+  { \dotsm }
+  { \tur{\Gamma_n}{M_n}{\sigma_n} }
+  { \tur{\Gamma_{n+1}}{ \mathbf{T}(M_1,M_2,\dots,M_n)}{\sigma_{n+1}} } 
+$$
+
+The corresponding grammar rule can be summarized as follows.
+
+$$
+ (\sigma_{n+1},\Gamma_{n+1})
+ \longmapsto
+ \mbox{ {\Large \textbf{T}}} 
+ \bigg( 
+ (\sigma_1,\Gamma_1)
+ \mbox{ {\Large ,}}
+ (\sigma_2,\Gamma_2)
+ \mbox{ {\Large ,}}
+ ~\dots
+ \mbox{ {\Large ,}}
+ (\sigma_n,\Gamma_n)
+ \bigg)  
+$$
+
+
+\begin{todo}
+   & asi ocitovat toho van Wijngaarden [1981] s těma 2-level grammar
+     jak je to v Barendregtovi \cite{barendregt10} 
+   & vyřešit jak je to stou freš proměnnou x v introdukci...
+     && stejně tak v tom obecnym případě to dělá neplechu
+\end{todo}
+
+	
+%\section{Term generating grammar}
+%
+%Inference rules are good for deriving statements of the form \GMS, but our
+%goal is slightly different; we would like to generate many \lterms M for a given type 
+%$\sigma$ and context $\Gamma$.
+%
+%Our approach will be to take each inference rule and transform it to a rule of term generating
+%grammar. With this term generating grammar it will be much easier to reason about generating 
+%\lterms.
+%	
+%It won't be a grammar in classical sense because we will be operating with infinite sets of
+%nonterminal symbols and rules. \footnote{TODO : mention terminal symbols - situation around 
+%variables and their construction with ' symbol.}
+%
+%Let $Non = Type \times Context $ be our {\it nonterminal} set. 
+%So for every $i \in Non$ is $i = (\sigma_i , \Gamma_i )$.
+%
+%\Lets consider each relevant inference rule and its corresponding grammar rule.
+%
+%First inference rule is {\it implication elimination} also known as 
+%{\it modus ponens}: 
+%\[
+%	\frac{\Gamma \vdash M : \sigma \rightarrow \tau \qquad
+%		  \Gamma \vdash N : \sigma }
+%	     {\Gamma \vdash (M N) : \tau }
+%\]
+%\\
+%For every $\sigma, \tau \in \mathbb{T}$ and for every {\it context} 
+%$\Gamma \in \mathfrak P \left({\Lambda \times  \mathbb{T}}\right)$ there is a grammar rule of a form\footnote{ 
+%Terminal symbols for parenthesis and normally {\it space} now \textvisiblespace \quad (for {\it function application} operator) are visually highlighted. }: 
+%\[	
+%	( \tau , \Gamma )  \longmapsto
+%	\bigg( ( \sigma \rightarrow \tau , \Gamma ) 
+%	  \mbox{ \Vtextvisiblespace[1em] } ( \sigma , \Gamma ) \bigg)
+%\]
+%\\
+%
+%Second inference rule is {\it implication introduction}: 
+%\[
+%	\frac{\Gamma \cup \{ ( x,\sigma ) \} \vdash M : \tau }
+%	     {\Gamma \vdash (\lambda x . M) : \sigma \rightarrow \tau }
+%\]
+%\\
+%$\forall \sigma, \tau \in \mathbb{T}$ 
+%$\forall${\it context} $\Gamma \in \mathfrak P \left({\Lambda \times  \mathbb{T}}\right) $ 
+%$\forall x \in V $ such that there is no $(x,\rho) \in \Gamma$ 
+%there is a grammar rule:
+%\[ 
+%	( \sigma \rightarrow \tau , \Gamma )  \longmapsto
+%	\bigg( \mbox{ {\Large $\lambda$ x . }}( \tau , \Gamma \cup \{ (x,\sigma) \} ) \quad \bigg)
+%\]
+%\\	
+%
+%Third inference rule is {\it axiom}: 
+%\[
+%		\frac{( x , \sigma )  \in \Gamma}
+%		     {\Gamma \vdash x : \sigma}
+%\]
+%\\
+%$\forall \sigma \in \mathbb{T}$ 
+%$\forall${\it context} $\Gamma \in \mathfrak P \left({\Lambda \times  \mathbb{T}}\right) $ 
+%$\forall x \in V \cup C $ such that $(x,\sigma) \in \Gamma$ 
+%there is a grammar rule:
+%\[ 
+%	( \sigma , \Gamma )  \longmapsto \mbox{ {\Large x}}
+%\]
+%\\
+%
+%We will demonstrate \lterm generation on example. 
+%Again on $(\lambda f . (\lambda x . (f x) ))$. 
+%We would like to generate \lterm of a type 
+%$(\sigma \rightarrow \tau) \rightarrow (\sigma \rightarrow \tau)$
+%with $\Gamma = \{\}$.
+%\begin{align*}
+%	& ((\sigma \rightarrow \tau) \rightarrow (\sigma \rightarrow \tau),\{\}) \\ 
+%	\longmapsto & \Big( \mbox{ {\Large $\lambda$f.}}
+%	  ( \sigma \rightarrow \tau , \{ (f,\sigma \rightarrow \tau) \} ) 
+%	~ \Big)
+%	\\
+%	\longmapsto & 
+%	\Big( \mbox{ {\Large $\lambda$f. }}
+%		\Big( \mbox{ {\Large $\lambda$x. }}
+%	  	 	( \tau , \{ (f,\sigma \rightarrow \tau) , (x,\sigma) \} ) 
+%		~ \Big)  	 
+%	~ \Big)
+%	\\
+%	\longmapsto & 
+%	\Big( \mbox{ {\Large $\lambda$f. }}
+%		\Big( \mbox{ {\Large $\lambda$x. }}	  	 	
+%	  	 	\Big( 
+%	  	 	  ( \sigma \rightarrow \tau , \{ (f,\sigma \rightarrow \tau) , (x,\sigma) \} ) 
+%			  \mbox{ \Vtextvisiblespace[1em] } 
+%			  ( \sigma , \{ (f,\sigma \rightarrow \tau) , (x,\sigma) \} )  \Big) 
+%		~ \Big)  	 
+%	 ~ \Big)
+%	\\
+%	\longmapsto & 
+%	\Big( \mbox{ {\Large $\lambda$f. }}
+%		\Big( \mbox{ {\Large $\lambda$x. }}	  	 	
+%	  	 	\Big( 
+%	  	 	  \mbox{ {\Large f}} 
+%			  \mbox{ \Vtextvisiblespace[1em] } 
+%			  ( \sigma , \{ (f,\sigma \rightarrow \tau) , (x,\sigma) \} ) \Big) 
+%		~ \Big)  	 
+%	~ \Big)		
+%	\\
+%	\longmapsto & 
+%	\Big( \mbox{ {\Large $\lambda$f. }}
+%		\Big( \mbox{ {\Large $\lambda$x. }}	  	 	
+%	  	 	\Big( 
+%	  	 	  \mbox{ {\Large f}} 
+%			  \mbox{ \Vtextvisiblespace[1em] } 
+%			  \mbox{{\Large x}} \Big) 
+%		~ \Big)  	 
+%	~ \Big)
+%\end{align*}
+%
 
 \section{Long normal form}
 \label{lnf}
 
-Let \GMS where $\sigma = \tau_0 \ar \tau_1 \ar \dots \ar \tau_n \ar \alpha$.\\
+Let \GMS where 
+$\sigma = \tau_0 \ar \tau_1 \ar \dots \ar \tau_n \ar \alpha$,
+$n \geq 0$.\\
 Then $M$ is in \textit{long normal form} if following 
 conditions are satisfied:
 
@@ -1510,8 +1774,7 @@ always the case, then it also has a unique lnf and this will be its unique $\bet
 
 
 %"Barendregt-like"
-\section{Inference and grammar rules producing 
-terms in Long normal form}
+\section{Inference and grammar rules producing terms in Long normal form}
 \label{barlike}
 
 As is said in \cite{barendregt10} there are two
