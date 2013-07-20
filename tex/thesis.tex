@@ -819,7 +819,7 @@ It is structure used for reasoning about generation of individuals.
 	
 \theoremstyle{plain} 
 \newtheorem{theorem}{Theorem} 
-\newtheorem{proposition}{Proposition} 
+\newtheorem*{proposition}{Proposition} 
 \newtheorem{lemma}{Lemma} 
 \newtheorem*{corollary}{Corollary}
 
@@ -1047,8 +1047,7 @@ of insertion of arguments supplied to a function into
 its body. 
 
 \begin{todo}
-& zmínit $=_\beta$ a $\twoheadrightarrow_\beta$ 
-jestli se k tomu někde dál v textu odkazuju
+& !!!!!!! zmínit $=_\beta$ a $\twoheadrightarrow_\beta$  a i pro ostatní redukce!!!!!
 \end{todo}
 
 
@@ -1247,6 +1246,10 @@ this initial context is being further extend with variables
 	
 %\subsection{Statements of the form \GMS}
 
+
+\begin{todo}
+ & zapsat sem notaci s $\Gamma,x:\sigma $ denotes $ \Gamma\cup\{(x:\sigma)\}$ 
+\end{todo}
 		
 %\subsection{Inference rules}
 \subsection{Simply typed $\lambda$-calculus}
@@ -1268,6 +1271,7 @@ Those rules are usually stated in the form of \textit{inference rules}.
 
 \newcommand{\ruleI}[2]{\dfrac{#1}{#2}}
 \newcommand{\ruleII}[3]{\dfrac{#1 \qquad #2}{#3}}
+\newcommand{\ruleIIs}[3]{\dfrac{#1 ~ #2}{#3}}
 \newcommand{\ruleIII}[4]{\dfrac{#1 \qquad #2 \qquad #3}{#4}}
 \newcommand{\ruleIV}[5]{\dfrac{#1 \qquad #2 \qquad #3 \qquad #4}{#5}}
 
@@ -1443,6 +1447,9 @@ Then we are allowed to use the inference rule to derive statement
 
 
 \section{Term generating grammar}
+
+\newcommand{\gar}{\longmapsto}
+
 Inference rules are good for deriving statements of the form \GMS, but our
 goal is slightly different; we would like to generate many \lterms M for a given type 
 $\sigma$ and context $\Gamma$.\\
@@ -1474,7 +1481,7 @@ $$
 $$~
 
 %It corresponds to following grammar rule schema.
-%$$ ( \sigma , \Gamma )  \longmapsto \mbox{ {\Large x}} 
+%$$ ( \sigma , \Gamma )  \gar \mbox{ {\Large x}} 
 %~~~~~~~~~~~~~ \textbf{if } (x,\sigma) \in \Gamma$$ 
 
 For every non-terminal $(\sigma,\Gamma)$ 
@@ -1497,7 +1504,7 @@ Terminal symbols for parenthesis and normally {\it space}
 now \textvisiblespace \quad (for {\it function application} operator) 
 are visually highlighted. } 
 $$
-	( \tau , \Gamma )  \longmapsto
+	( \tau , \Gamma )  \gar
 	\bigg( ( \sigma \rightarrow \tau , \Gamma ) 
 	\mbox{ \Vtextvisiblespace[1em] } ( \sigma , \Gamma ) \bigg)
 $$\\
@@ -1524,7 +1531,7 @@ generování}
 %(since we want to generate "fresh" variables). 
 
 $$ 
-	( \sigma \rightarrow \tau , \Gamma )  \longmapsto
+	( \sigma \rightarrow \tau , \Gamma )  \gar
 	\bigg( \mbox{ {\Large $\lambda$ x . }}( \tau , \Gamma \cup \{ (x,\sigma) \} ) \quad \bigg)
 $$\\
 
@@ -1535,18 +1542,18 @@ $(\sigma \rightarrow \tau) \rightarrow (\sigma \rightarrow \tau)$
 with $\Gamma = \{\}$.
 \begin{align*}
 	& ((\sigma \rightarrow \tau) \rightarrow (\sigma \rightarrow \tau),\{\}) \\ 
-	\longmapsto & \Big( \mbox{ {\Large $\lambda$f.}}
+	\gar & \Big( \mbox{ {\Large $\lambda$f.}}
 	  ( \sigma \rightarrow \tau , \{ (f,\sigma \rightarrow \tau) \} ) 
 	~ \Big)
 	\\
-	\longmapsto & 
+	\gar & 
 	\Big( \mbox{ {\Large $\lambda$f. }}
 		\Big( \mbox{ {\Large $\lambda$x. }}
 	  	 	( \tau , \{ (f,\sigma \rightarrow \tau) , (x,\sigma) \} ) 
 		~ \Big)  	 
 	~ \Big)
 	\\
-	\longmapsto & 
+	\gar & 
 	\Big( \mbox{ {\Large $\lambda$f. }}
 		\Big( \mbox{ {\Large $\lambda$x. }}	  	 	
 	  	 	\Big( 
@@ -1556,7 +1563,7 @@ with $\Gamma = \{\}$.
 		~ \Big)  	 
 	 ~ \Big)
 	\\
-	\longmapsto & 
+	\gar & 
 	\Big( \mbox{ {\Large $\lambda$f. }}
 		\Big( \mbox{ {\Large $\lambda$x. }}	  	 	
 	  	 	\Big( 
@@ -1566,7 +1573,7 @@ with $\Gamma = \{\}$.
 		~ \Big)  	 
 	~ \Big)		
 	\\
-	\longmapsto & 
+	\gar & 
 	\Big( \mbox{ {\Large $\lambda$f. }}
 		\Big( \mbox{ {\Large $\lambda$x. }}	  	 	
 	  	 	\Big( 
@@ -1588,11 +1595,11 @@ $$
   { \tur{\Gamma_{n+1}}{ \mathbf{T}(M_1,M_2,\dots,M_n)}{\sigma_{n+1}} } 
 $$
 
-The corresponding grammar rule can be summarized as follows.
+The corresponding grammar rule can be summarized as following schema.
 
 $$
  (\sigma_{n+1},\Gamma_{n+1})
- \longmapsto
+ \gar
  \mbox{ {\Large \textbf{T}}} 
  \bigg( 
  (\sigma_1,\Gamma_1)
@@ -1607,144 +1614,35 @@ $$
 
 
 \begin{todo}
-   & asi ocitovat toho van Wijngaarden [1981] s těma 2-level grammar
+   & buď dokázat ty převody na grammar rules explicitně
+     nebo říct že se to dokáže podobnym stylem jako v dukazu 
+     v sekci \ref{barlike}
+   & možná ocitovat toho van Wijngaarden [1981] s těma 2-level grammar
      jak je to v Barendregtovi \cite{barendregt10} 
    & vyřešit jak je to stou freš proměnnou x v introdukci...
      && stejně tak v tom obecnym případě to dělá neplechu
 \end{todo}
 
 	
-%\section{Term generating grammar}
-%
-%Inference rules are good for deriving statements of the form \GMS, but our
-%goal is slightly different; we would like to generate many \lterms M for a given type 
-%$\sigma$ and context $\Gamma$.
-%
-%Our approach will be to take each inference rule and transform it to a rule of term generating
-%grammar. With this term generating grammar it will be much easier to reason about generating 
-%\lterms.
-%	
-%It won't be a grammar in classical sense because we will be operating with infinite sets of
-%nonterminal symbols and rules. \footnote{TODO : mention terminal symbols - situation around 
-%variables and their construction with ' symbol.}
-%
-%Let $Non = Type \times Context $ be our {\it nonterminal} set. 
-%So for every $i \in Non$ is $i = (\sigma_i , \Gamma_i )$.
-%
-%\Lets consider each relevant inference rule and its corresponding grammar rule.
-%
-%First inference rule is {\it implication elimination} also known as 
-%{\it modus ponens}: 
-%\[
-%	\frac{\Gamma \vdash M : \sigma \rightarrow \tau \qquad
-%		  \Gamma \vdash N : \sigma }
-%	     {\Gamma \vdash (M N) : \tau }
-%\]
-%\\
-%For every $\sigma, \tau \in \mathbb{T}$ and for every {\it context} 
-%$\Gamma \in \mathfrak P \left({\Lambda \times  \mathbb{T}}\right)$ there is a grammar rule of a form\footnote{ 
-%Terminal symbols for parenthesis and normally {\it space} now \textvisiblespace \quad (for {\it function application} operator) are visually highlighted. }: 
-%\[	
-%	( \tau , \Gamma )  \longmapsto
-%	\bigg( ( \sigma \rightarrow \tau , \Gamma ) 
-%	  \mbox{ \Vtextvisiblespace[1em] } ( \sigma , \Gamma ) \bigg)
-%\]
-%\\
-%
-%Second inference rule is {\it implication introduction}: 
-%\[
-%	\frac{\Gamma \cup \{ ( x,\sigma ) \} \vdash M : \tau }
-%	     {\Gamma \vdash (\lambda x . M) : \sigma \rightarrow \tau }
-%\]
-%\\
-%$\forall \sigma, \tau \in \mathbb{T}$ 
-%$\forall${\it context} $\Gamma \in \mathfrak P \left({\Lambda \times  \mathbb{T}}\right) $ 
-%$\forall x \in V $ such that there is no $(x,\rho) \in \Gamma$ 
-%there is a grammar rule:
-%\[ 
-%	( \sigma \rightarrow \tau , \Gamma )  \longmapsto
-%	\bigg( \mbox{ {\Large $\lambda$ x . }}( \tau , \Gamma \cup \{ (x,\sigma) \} ) \quad \bigg)
-%\]
-%\\	
-%
-%Third inference rule is {\it axiom}: 
-%\[
-%		\frac{( x , \sigma )  \in \Gamma}
-%		     {\Gamma \vdash x : \sigma}
-%\]
-%\\
-%$\forall \sigma \in \mathbb{T}$ 
-%$\forall${\it context} $\Gamma \in \mathfrak P \left({\Lambda \times  \mathbb{T}}\right) $ 
-%$\forall x \in V \cup C $ such that $(x,\sigma) \in \Gamma$ 
-%there is a grammar rule:
-%\[ 
-%	( \sigma , \Gamma )  \longmapsto \mbox{ {\Large x}}
-%\]
-%\\
-%
-%We will demonstrate \lterm generation on example. 
-%Again on $(\lambda f . (\lambda x . (f x) ))$. 
-%We would like to generate \lterm of a type 
-%$(\sigma \rightarrow \tau) \rightarrow (\sigma \rightarrow \tau)$
-%with $\Gamma = \{\}$.
-%\begin{align*}
-%	& ((\sigma \rightarrow \tau) \rightarrow (\sigma \rightarrow \tau),\{\}) \\ 
-%	\longmapsto & \Big( \mbox{ {\Large $\lambda$f.}}
-%	  ( \sigma \rightarrow \tau , \{ (f,\sigma \rightarrow \tau) \} ) 
-%	~ \Big)
-%	\\
-%	\longmapsto & 
-%	\Big( \mbox{ {\Large $\lambda$f. }}
-%		\Big( \mbox{ {\Large $\lambda$x. }}
-%	  	 	( \tau , \{ (f,\sigma \rightarrow \tau) , (x,\sigma) \} ) 
-%		~ \Big)  	 
-%	~ \Big)
-%	\\
-%	\longmapsto & 
-%	\Big( \mbox{ {\Large $\lambda$f. }}
-%		\Big( \mbox{ {\Large $\lambda$x. }}	  	 	
-%	  	 	\Big( 
-%	  	 	  ( \sigma \rightarrow \tau , \{ (f,\sigma \rightarrow \tau) , (x,\sigma) \} ) 
-%			  \mbox{ \Vtextvisiblespace[1em] } 
-%			  ( \sigma , \{ (f,\sigma \rightarrow \tau) , (x,\sigma) \} )  \Big) 
-%		~ \Big)  	 
-%	 ~ \Big)
-%	\\
-%	\longmapsto & 
-%	\Big( \mbox{ {\Large $\lambda$f. }}
-%		\Big( \mbox{ {\Large $\lambda$x. }}	  	 	
-%	  	 	\Big( 
-%	  	 	  \mbox{ {\Large f}} 
-%			  \mbox{ \Vtextvisiblespace[1em] } 
-%			  ( \sigma , \{ (f,\sigma \rightarrow \tau) , (x,\sigma) \} ) \Big) 
-%		~ \Big)  	 
-%	~ \Big)		
-%	\\
-%	\longmapsto & 
-%	\Big( \mbox{ {\Large $\lambda$f. }}
-%		\Big( \mbox{ {\Large $\lambda$x. }}	  	 	
-%	  	 	\Big( 
-%	  	 	  \mbox{ {\Large f}} 
-%			  \mbox{ \Vtextvisiblespace[1em] } 
-%			  \mbox{{\Large x}} \Big) 
-%		~ \Big)  	 
-%	~ \Big)
-%\end{align*}
-%
+
 
 \section{Long normal form}
 \label{lnf}
 
-Let \GMS where 
-$\sigma = \tau_0 \ar \tau_1 \ar \dots \ar \tau_n \ar \alpha$,
-$n \geq 0$.\\
-Then $M$ is in \textit{long normal form} if following 
-conditions are satisfied:
+\newcommand{\lnf}{\textit{lnf}\xspace}
 
-\begin{itemize}
- \item $M$ is term of a form $\lam{x_1 \dots x_n}{f~M_1~\dots~M_n}$,
+\begin{definition}
+Let \GMS where 
+$\sigma = \tau_1 \ar \dots \ar \tau_n \ar \alpha$,
+$n \geq 0$.
+Then $M$ is in \textit{long normal form} (\textit{lnf}) if following 
+conditions are satisfied.
+\begin{enumerate}
+ \item $M$ is term of the form $\lam{x_1 \dots x_n}{f~M_1~\dots~M_m}$\\
+  (specially for $n = 0$, $M$ is term of the form $f$),
  \item each $M_i$ is in \textit{long normal form}.
-\end{itemize}
+\end{enumerate}
+\end{definition}~
 
 As is shown in \cite{barendregt10} long normal form has those 
 nice properties:
@@ -1759,6 +1657,8 @@ always the case, then it also has a unique lnf and this will be its unique $\bet
 
 
 \begin{todo}
+ & v barendrechtovi je to v definici lnf $\lam{x_1 \dots x_n}{f~M_1~\dots~M_n}$ místo 
+   $M_m$ ale to musí bejt určitě překlep...
  & popsat tu jak ji předelat na beta nf
 	pokud by se nám chtělo... 
 	V barendrech84 (ta nová kniha s žlutejma deskama) je ukázano že je 
@@ -1773,114 +1673,269 @@ always the case, then it also has a unique lnf and this will be its unique $\bet
 
 
 
-%"Barendregt-like"
-\section{Inference and grammar rules producing terms in Long normal form}
+
+\section{Grammar producing \lterms in \lnf}
 \label{barlike}
 
-As is said in \cite{barendregt10} there are two
-inference/grammar rules which together generate
-simply typed lambda terms in their long normal forms.
+In \cite{barendregt10} is shown term generating grammar with 
+following rules (our notation is used, but we will not 
+highlighted terminals anymore).\footnote{
+I was using term generating grammars for term generation
+on my own before I encountered with \cite{barendregt10},
+where i happily discovered that Barendregt is using
+almost identical notation.
+}
+\begin{align*}
+( \alpha , \Gamma )  
+&\gar
+(~f~( \rho_1 , \Gamma )~\dots~( \rho_m , \Gamma )~)
+& \textbf{if } \alpha \in A,
+(f : \rho_1 \ar \dots \ar \rho_m \ar \alpha) \in \Gamma
+\\ 
+( \sigma \rightarrow \tau , \Gamma )  
+&\gar
+(~\lambda~x~.~( \tau ; \Gamma,x:\sigma )~)
+&   
+\end{align*}
 
-
-Inference rule 1: 
-\[
-	\frac{\Gamma \cup \{ (x_1,\tau_1),\dots,(x_n,\tau_n) \} \vdash M : \alpha }
-	     {\Gamma \vdash (\lambda x_1 \dots x_n . M) : 
-	     \tau_1 \rightarrow \dots \rightarrow \tau_n \rightarrow \alpha }
-\]
-\\
-Proof of correctness:
-\[
-	\dfrac{
-		\dfrac
-		 {\Gamma \cup \{ (x_1,\tau_1),\dots,(x_n,\tau_n) \} \vdash M : \alpha}
-		 {\dfrac
-		   {\Gamma \cup \{ (x_1,\tau_1),\dots,(x_{n-1},\tau_{n-1})\} \cup 
-		                \{(x_n,\tau_n) \} \vdash M : \alpha}
-		   {\dfrac{\Gamma \cup \{ (x_1,\tau_1),\dots,(x_{n-1},\tau_{n-1})\}  
-		                \vdash (\lambda x_n . M) : \tau_n \rightarrow \alpha}
-				  { \vdots }		   
-		   }
-		 }		 
-	 }
-	     {\Gamma \vdash (\lambda x_1 \dots x_n . M) : 
-	     \tau_1 \rightarrow \dots \rightarrow \tau_n \rightarrow \alpha }
-\]
-\\
-... there is a grammar rule:
+The second rule can be replaced by more effective one.
 \[ 
-	( \tau_1 \rightarrow \dots \rightarrow \tau_n \rightarrow \alpha , \Gamma )  \longmapsto
-	\bigg( \mbox{ {\Large 
-	$\lambda x_1 \dots x_n .$ 
-	}}( \alpha , \Gamma \cup \{ (x_1,\tau_1),\dots,(x_n,\tau_n) \} ) \quad \bigg)
-\]
-\\
+( \tau_1 \ar \dots \ar \tau_n \ar \alpha , \Gamma )  
+\gar
+(~\lambda~x_1~\dots~x_n~.~
+( \alpha ; \Gamma , x_1:\tau_1 , \dots , x_n:\tau_n  )~)
+\] 
 
-Inference rule 2: 
-\[
-	\frac{ (f , \rho_1 \rightarrow \dots \rightarrow \rho_m \rightarrow \alpha ) \in \Gamma \qquad
-	       \Gamma \vdash M_1 : \rho_1 \quad
-	       \dotsm \quad
-	       \Gamma \vdash M_m : \rho_m        
-	      }
-	     {\Gamma \vdash (f M_1 \dots M_m) : \alpha}
-\]
-\\
-Proof of correctness (\textbf{TODO REPAIR} Conceptually it is ok but there is sazba-bug somewhere): 
-\[
-   \dfrac
-     {\dfrac
-      {\dfrac
-       {\dfrac         
-         {\dfrac  
-          {\dfrac
-           {\boxed{(f , \rho_1 \rightarrow \dots \rightarrow \rho_m \rightarrow \alpha ) \in \Gamma}}
-           {\Gamma \vdash f : \rho_1 \rightarrow \dots \rightarrow \rho_m \rightarrow \alpha}
-           \quad
-           \boxed{\Gamma \vdash M_1 : \rho_1} }
-          {\Gamma \vdash (f M_1) : \rho_2 \rightarrow \dots \rightarrow \rho_m \rightarrow \alpha }
-          }{\vdots} 
-         \quad 
-         \ddots }
-       {\Gamma \vdash (f M_1 \dots M_{m-2}) : \rho_{m-1} \rightarrow \rho_m \rightarrow \alpha}
-       \quad
-       \boxed{\Gamma \vdash M_{m-1} : \rho_{m-1}}  }
-      {\Gamma \vdash (f M_1 \dots M_{m-1}) : \rho_m \rightarrow \alpha}       
-      \quad 
-      \boxed{\Gamma \vdash M_m : \rho_m} }
-	 {\Gamma \vdash (f M_1 \dots M_m) : \alpha}
-\]
-\\
-... there is a grammar rule:
-\[ 
-	( \alpha , \Gamma )  \longmapsto
-	\bigg( \mbox{ {\Large f }}
-	  \mbox{ \Vtextvisiblespace[1em] } 
-	  ( \rho_1 , \Gamma )
-	  \mbox{ \Vtextvisiblespace[1em] } 
-	  \dots
-	  \mbox{ \Vtextvisiblespace[1em] } 
-	  ( \rho_m , \Gamma )
-	  \quad \bigg)
-\]
+This rule packs consecutive uses of the second rule into one use.
+This is valid since the use of the second rule is deterministic;
+it is used if and only if the non-terminal's type is not atomic.\\
+
+Following proposition about this grammar is stated (but not proven)
+in~\cite{barendregt10}. Since it is key proposition for our 
+term generating method, we also provide a proof.
 
 
-\begin{todo}
-& SHOW correctness of those inference rules by composing them of 
-	  $E^{\rightarrow}$, $I^{\rightarrow}$ and \textit{axiom}.
-& SHOW more examples of inference rules transformed into grammar rules.
-& DESCRIBE general algorithm for this transformation.
-& TALK ABOUT $\tau_1 \rightarrow \dots \rightarrow \tau_n \rightarrow \alpha$ 
-& TALK ABOUT $\beta \eta^{-1}$-normal form which is generated by this method.
-& Napsat tu (nebo asi někam jinam
-	ale hlavně někam), že de generovat přímo i termy v beta normalní 
-	formě, ale že se mi to zdálo o dost pracnější díky tomu, že
-	musíme čekovat jestli neni něco toho typu i v ne atomickejch
-	vrcholech/typech...
-\end{todo}
+\newcommand{\garr}{\leadsto}%{\Rrightarrow}%
+\newcommand{\Gp}{\Gamma^\prime}
+
+\begin{proposition}
+Let context $\Gamma$, \lterm $M$ and type $\sigma$ be given.\\
+Let $\garr$ be transitive reflexive closure of $\gar$. 
+Then
+$$ 
+(\sigma,\Gamma) \garr M 
+\Leftrightarrow
+\tur{\Gamma}{M}{\sigma} \text{ and $M$ is in lnf}.   
+$$
+\end{proposition}
+
+\begin{proof}~
+
+\Lets start with proving 
+
+$ (\sigma,\Gamma) \garr M 
+\then
+\tur{\Gamma}{M}{\sigma} \text{ and $M$ is in \textit{lnf}}$
+
+by induction on the length of rewriting chain of $(\sigma,\Gamma) \garr M$.\\
+
+Let $\sigma = \tau_1 \ar \dots \ar \tau_n \ar \alpha (n \geq 0)$,
+
+$\Gp = \Gamma , x_1:\tau_1 , \dots , x_n:\tau_n$.\\
+
+$(\tau_1 \ar \dots \ar \tau_n \ar \alpha,\Gamma), n>0$ must rewrite to
+$(~\lambda~x_1~\dots~x_n~.~( \alpha , \Gp )~)$, 
+
+thus (even for $n = 0$) the chain must go through
+$(~\lambda~x_1~\dots~x_n~.~( \alpha , \Gp )~)$.\\
+
+$(\alpha,\Gp)$ must rewrite to 
+$(~f~( \rho_1 , \Gp )~\dots~( \rho_m , \Gp )~)$ 
+
+for some $(f,\rho_1\ar\dots\ar\rho_m\ar\alpha) \in \Gp$,
+
+thus the chain must go through 
+$(~\lambda~x_1~\dots~x_n~.~(~f~( \rho_1 , \Gp )~\dots~( \rho_m , \Gp )~)~)$.\\
+
+After that each $( \rho_i , \Gp ) \garr M_i$
+with shorter chain than $(\sigma,\Gamma) \garr M $.
+
+Thus we have from the induction hypothesis for each $M_i$ that
+ 
+$\tur{\Gp}{M_i}{\rho_i}$ and $M_i$ is in \textit{lnf}.\\
+
+$M = (~\lambda~x_1~\dots~x_n~.~(~f~M_1~\dots~M_m~)~)$ 
+and each $M_i$ is in \lnf, 
+
+thus M is in \lnf.\\
+
+Following derivation shows how to derive \GMS.\\
+
+$
+\ruleI{
+\ruleI{ 
+\ruleI{
+\ruleI{
+\ruleIIs{
+\ruleIIs{
+\ruleIIs{
+\ruleIIs{ 
+\ruleI
+{\boxed{(f,\rho_1\ar\dots\ar\rho_m\ar\alpha) \in \Gp} }
+{\tur{\Gp}{f}{\rho_1\ar\dots\ar\rho_m\ar\alpha}}}
+{\boxed{
+ \tur{\Gp }
+     {M_1 }
+     {\rho_1 }}}
+{
+\tur{\Gp}{(~f~M_1~)}{\rho_2\ar\dots\ar\rho_m\ar\alpha} 
+}}
+{\boxed{
+ \tur{\Gp }
+     {M_2 }
+     {\rho_2 }}}
+{\vdots}}
+{\ddots}
+{\tur{\Gp }
+     {(~f~M_1~\dots~M_{m-1}~) }
+     {\rho_m \ar \alpha}}}
+{\boxed{
+ \tur{\Gp }
+     {M_m }
+     {\rho_m}} }
+{\tur{\Gp }
+     {(~f~M_1~\dots~M_m~) }
+     {\alpha}}}
+{\tur{\Gamma,x_1:\tau_1,\dots,x_{n-1}:\tau_{n-1} }
+     {\lam{x_n}{(~f~M_1~\dots~M_m~)} }
+     {\tau_n \ar \alpha} }}
+{\vdots}}
+{\tur{\Gamma,x_1:\tau_1 }
+       {\lam{x_2~\dots~x_n}{(~f~M_1~\dots~M_m~)} }
+       {\tau_2 \ar \dots \ar \tau_n \ar \alpha} } }
+{\boxed{
+ \tur{\Gamma }
+     {\lam{x_1~x_2~\dots~x_n}{(~f~M_1~\dots~M_m~)} }
+     {\tau_1 \ar \tau_2 \ar \dots \ar \tau_n \ar \alpha} }}
+$
+
+~\\~\\
+
+Now \lets prove the opposite direction 
+
+$\tur{\Gamma}{M}{\sigma} \text{ and $M$ is in \textit{lnf}}
+\then
+(\sigma,\Gamma) \garr M$
+   
+by induction on the size of M.\\
+
+
+Let $M = \lam{x_1 \dots x_n}{f~M_1~\dots~M_m}$,
+
+$\sigma = \tau_1 \ar \dots \ar \tau_n \ar \alpha$,
+
+$\Gp = \Gamma , x_1:\tau_1 , \dots , x_n:\tau_n$.\\
+
+Then
+
+$
+( \sigma , \Gamma ) =
+( \tau_1 \ar \dots \ar \tau_n \ar \alpha , \Gamma )  
+\gar
+(~\lambda~x_1~\dots~x_n~.~
+( \alpha , \Gp )~)
+$
+
+by using the updated second grammar rule.\\
+
+From \GMS we have that $(f,\rho_1\ar\dots\ar\rho_m\ar\alpha) \in \Gp$
+and $\tur{\Gp}{M_i}{\rho_i}$.
+
+(This can be easily observed from definition of \GMS.)\\
+
+Therefore 
+
+$
+(~\lambda~x_1~\dots~x_n~.~( \alpha , \Gp )~)
+\gar
+(~\lambda~x_1~\dots~x_n~.~
+	(~f~( \rho_1 , \Gp )~\dots~( \rho_m , \Gp )~)
+~)
+$
+
+by using the first rule.\\
+
+Each $M_i$ is in \lnf, 
+is smaller in size then $M$
+and $\tur{\Gp}{M_i}{\rho_i}$; 
+
+therefore we have from the induction hypothesis that 
+$(\rho_i,\Gp) \garr M_i$.\\
+
+Therefore 
+$
+( \sigma , \Gamma )
+\garr
+(~\lambda~x_1~\dots~x_n~.~
+	(~f~M_1~\dots~M_m~)
+~)
+$.
+ 
+\end{proof}~
+
+
+This means that we can use this grammar to generate all \lterms $M$ in \lnf
+with desired type $\sigma$ from \textit{building blocks} context $\Gamma$.\\
 
 
 
+\subsection{Benefits of generating \lterms in \lnf}
+
+By generating \lterms in \textit{lnf} we avoid generating 
+\lterms $M$,$N$ such that $M \not= N$, but $M =_{\beta\eta} N$.
+In other words, we avoid generating two programs with different 
+source codes, but performing the same computation.
+
+Every \lterm $M$ such that \GMS has its unique \lnf $L$, 
+for which $L =_{\beta\eta} M$.
+Therefore the computation performed by \lterm $M$ 
+is not omitted, because it is the same computation
+as the computation performed by \lterm $L$. \\
+
+\newcommand{\bnf}{$\beta$-\textit{nf}\xspace}
+\newcommand{\beenf}{$\beta\eta^{-1}$-\textit{nf}\xspace}
+
+Generating \lterms in \lnf is even better than generating 
+\lterms in \bnf. Since \lnf is the same thing as \beenf,
+every \lterm in \lnf is also in \bnf. 
+
+This comes straight from the definition of \beenf, 
+but one can also see it from observing method for generating
+terms in \bnf. As is shown in \cite{barendregt10}, 
+this method is obtained simply by replacement of 
+the first grammar rule by slightly modified rule,
+resulting in following grammar.
+\begin{align*}
+( \pi , \Gamma )  
+&\gar
+(~f~( \rho_1 , \Gamma )~\dots~( \rho_m , \Gamma )~)
+& \textbf{if } (f : \rho_1 \ar \dots \ar \rho_m \ar \pi) \in \Gamma
+\\ 
+( \sigma \rightarrow \tau , \Gamma )  
+&\gar
+(~\lambda~x~.~( \tau ; \Gamma,x:\sigma )~)
+&   
+\end{align*}
+
+The difference lies in that $f$'s type is no longer obligated to be fully expanded
+($\pi \in \T$ instead of $\alpha \in A$). This makes the grammar less deterministic,
+resulting in bigger search space. The new rule is generalization of the old one,
+thus all terms in \lnf will be generated, along with many new terms in \bnf that 
+are not in \lnf. 
+    
+By generating \lterms in \lnf we avoid generating 
+\lterms $M$,$N$ such that $M \not= N$ and $M =_{\eta} N$; 
+but by generating in \bnf we do not avoid this.
 
 
 \newpage
@@ -1945,7 +2000,7 @@ $(\rho_1,\Gamma),\dots,(\rho_m,\Gamma)$.
 
 Compare this case with corresponding grammar rule:
 \[ 
-	( \alpha , \Gamma )  \longmapsto
+	( \alpha , \Gamma )  \gar
 	\bigg( \mbox{ {\Large f }}
 	  \mbox{ \Vtextvisiblespace[1em] } 
 	  ( \rho_1 , \Gamma )
@@ -1971,7 +2026,7 @@ $(\alpha,\Gamma \cup \{ (x_1,\tau_1) , \dots , (x_n,\tau_n) \})$.
 
 Compare this case with corresponding grammar rule:
 \[ 
-	( \tau_1 \rightarrow \dots \rightarrow \tau_n \rightarrow \alpha , \Gamma )  \longmapsto
+	( \tau_1 \rightarrow \dots \rightarrow \tau_n \rightarrow \alpha , \Gamma )  \gar
 	\bigg( \mbox{ {\Large 
 	$\lambda x_1 \dots x_n .$ 
 	}}( \alpha , \Gamma \cup \{ (x_1,\tau_1),\dots,(x_n,\tau_n) \} ) \quad \bigg)
@@ -3089,7 +3144,8 @@ Předběžný náhodně uspořádaný body osnovy ..\\
 		
 \chapter{Comparison with others}
 
-\chapter{Ideas yet not implemented}
+%\chapter{Ideas yet not implemented}
+\chapter{Future work}
 
 \section{Roadmap}
 \section{Tree ants}
@@ -3291,3 +3347,250 @@ Prentice Hall, 1987.
 	
 	
 \end{document}
+
+
+
+
+
+%-------------------------------------------------------------------------------
+%% STARY pasaže co vnich je možna eště něco co by se dalo použit
+%-------------------------------------------------------------------------------
+
+
+
+
+
+%\section{Term generating grammar}
+%
+%Inference rules are good for deriving statements of the form \GMS, but our
+%goal is slightly different; we would like to generate many \lterms M for a given type 
+%$\sigma$ and context $\Gamma$.
+%
+%Our approach will be to take each inference rule and transform it to a rule of term generating
+%grammar. With this term generating grammar it will be much easier to reason about generating 
+%\lterms.
+%	
+%It won't be a grammar in classical sense because we will be operating with infinite sets of
+%nonterminal symbols and rules. \footnote{TODO : mention terminal symbols - situation around 
+%variables and their construction with ' symbol.}
+%
+%Let $Non = Type \times Context $ be our {\it nonterminal} set. 
+%So for every $i \in Non$ is $i = (\sigma_i , \Gamma_i )$.
+%
+%\Lets consider each relevant inference rule and its corresponding grammar rule.
+%
+%First inference rule is {\it implication elimination} also known as 
+%{\it modus ponens}: 
+%\[
+%	\frac{\Gamma \vdash M : \sigma \rightarrow \tau \qquad
+%		  \Gamma \vdash N : \sigma }
+%	     {\Gamma \vdash (M N) : \tau }
+%\]
+%\\
+%For every $\sigma, \tau \in \mathbb{T}$ and for every {\it context} 
+%$\Gamma \in \mathfrak P \left({\Lambda \times  \mathbb{T}}\right)$ there is a grammar rule of a form\footnote{ 
+%Terminal symbols for parenthesis and normally {\it space} now \textvisiblespace \quad (for {\it function application} operator) are visually highlighted. }: 
+%\[	
+%	( \tau , \Gamma )  \gar
+%	\bigg( ( \sigma \rightarrow \tau , \Gamma ) 
+%	  \mbox{ \Vtextvisiblespace[1em] } ( \sigma , \Gamma ) \bigg)
+%\]
+%\\
+%
+%Second inference rule is {\it implication introduction}: 
+%\[
+%	\frac{\Gamma \cup \{ ( x,\sigma ) \} \vdash M : \tau }
+%	     {\Gamma \vdash (\lambda x . M) : \sigma \rightarrow \tau }
+%\]
+%\\
+%$\forall \sigma, \tau \in \mathbb{T}$ 
+%$\forall${\it context} $\Gamma \in \mathfrak P \left({\Lambda \times  \mathbb{T}}\right) $ 
+%$\forall x \in V $ such that there is no $(x,\rho) \in \Gamma$ 
+%there is a grammar rule:
+%\[ 
+%	( \sigma \rightarrow \tau , \Gamma )  \gar
+%	\bigg( \mbox{ {\Large $\lambda$ x . }}( \tau , \Gamma \cup \{ (x,\sigma) \} ) \quad \bigg)
+%\]
+%\\	
+%
+%Third inference rule is {\it axiom}: 
+%\[
+%		\frac{( x , \sigma )  \in \Gamma}
+%		     {\Gamma \vdash x : \sigma}
+%\]
+%\\
+%$\forall \sigma \in \mathbb{T}$ 
+%$\forall${\it context} $\Gamma \in \mathfrak P \left({\Lambda \times  \mathbb{T}}\right) $ 
+%$\forall x \in V \cup C $ such that $(x,\sigma) \in \Gamma$ 
+%there is a grammar rule:
+%\[ 
+%	( \sigma , \Gamma )  \gar \mbox{ {\Large x}}
+%\]
+%\\
+%
+%We will demonstrate \lterm generation on example. 
+%Again on $(\lambda f . (\lambda x . (f x) ))$. 
+%We would like to generate \lterm of a type 
+%$(\sigma \rightarrow \tau) \rightarrow (\sigma \rightarrow \tau)$
+%with $\Gamma = \{\}$.
+%\begin{align*}
+%	& ((\sigma \rightarrow \tau) \rightarrow (\sigma \rightarrow \tau),\{\}) \\ 
+%	\gar & \Big( \mbox{ {\Large $\lambda$f.}}
+%	  ( \sigma \rightarrow \tau , \{ (f,\sigma \rightarrow \tau) \} ) 
+%	~ \Big)
+%	\\
+%	\gar & 
+%	\Big( \mbox{ {\Large $\lambda$f. }}
+%		\Big( \mbox{ {\Large $\lambda$x. }}
+%	  	 	( \tau , \{ (f,\sigma \rightarrow \tau) , (x,\sigma) \} ) 
+%		~ \Big)  	 
+%	~ \Big)
+%	\\
+%	\gar & 
+%	\Big( \mbox{ {\Large $\lambda$f. }}
+%		\Big( \mbox{ {\Large $\lambda$x. }}	  	 	
+%	  	 	\Big( 
+%	  	 	  ( \sigma \rightarrow \tau , \{ (f,\sigma \rightarrow \tau) , (x,\sigma) \} ) 
+%			  \mbox{ \Vtextvisiblespace[1em] } 
+%			  ( \sigma , \{ (f,\sigma \rightarrow \tau) , (x,\sigma) \} )  \Big) 
+%		~ \Big)  	 
+%	 ~ \Big)
+%	\\
+%	\gar & 
+%	\Big( \mbox{ {\Large $\lambda$f. }}
+%		\Big( \mbox{ {\Large $\lambda$x. }}	  	 	
+%	  	 	\Big( 
+%	  	 	  \mbox{ {\Large f}} 
+%			  \mbox{ \Vtextvisiblespace[1em] } 
+%			  ( \sigma , \{ (f,\sigma \rightarrow \tau) , (x,\sigma) \} ) \Big) 
+%		~ \Big)  	 
+%	~ \Big)		
+%	\\
+%	\gar & 
+%	\Big( \mbox{ {\Large $\lambda$f. }}
+%		\Big( \mbox{ {\Large $\lambda$x. }}	  	 	
+%	  	 	\Big( 
+%	  	 	  \mbox{ {\Large f}} 
+%			  \mbox{ \Vtextvisiblespace[1em] } 
+%			  \mbox{{\Large x}} \Big) 
+%		~ \Big)  	 
+%	~ \Big)
+%\end{align*}
+%
+
+
+
+
+
+
+
+%\section{-OLD-Inference and grammar rules producing terms in Long normal form}
+%
+%As is said in \cite{barendregt10} there are two
+%inference/grammar rules which together generate
+%simply typed lambda terms in their long normal forms.
+%
+%
+%Inference rule 1: 
+%\[
+%	\frac{\Gamma \cup \{ (x_1,\tau_1),\dots,(x_n,\tau_n) \} \vdash M : \alpha }
+%	     {\Gamma \vdash (\lambda x_1 \dots x_n . M) : 
+%	     \tau_1 \rightarrow \dots \rightarrow \tau_n \rightarrow \alpha }
+%\]
+%\\
+%Proof of correctness:
+%\[
+%	\dfrac{
+%		\dfrac
+%		 {\Gamma \cup \{ (x_1,\tau_1),\dots,(x_n,\tau_n) \} \vdash M : \alpha}
+%		 {\dfrac
+%		   {\Gamma \cup \{ (x_1,\tau_1),\dots,(x_{n-1},\tau_{n-1})\} \cup 
+%		                \{(x_n,\tau_n) \} \vdash M : \alpha}
+%		   {\dfrac{\Gamma \cup \{ (x_1,\tau_1),\dots,(x_{n-1},\tau_{n-1})\}  
+%		                \vdash (\lambda x_n . M) : \tau_n \rightarrow \alpha}
+%				  { \vdots }		   
+%		   }
+%		 }		 
+%	 }
+%	     {\Gamma \vdash (\lambda x_1 \dots x_n . M) : 
+%	     \tau_1 \rightarrow \dots \rightarrow \tau_n \rightarrow \alpha }
+%\]
+%\\
+%... there is a grammar rule:
+%\[ 
+%	( \tau_1 \rightarrow \dots \rightarrow \tau_n \rightarrow \alpha , \Gamma )  \gar
+%	\bigg( \mbox{ {\Large 
+%	$\lambda x_1 \dots x_n .$ 
+%	}}( \alpha , \Gamma \cup \{ (x_1,\tau_1),\dots,(x_n,\tau_n) \} ) \quad \bigg)
+%\]
+%\\
+%
+%Inference rule 2: 
+%\[
+%	\frac{ (f , \rho_1 \rightarrow \dots \rightarrow \rho_m \rightarrow \alpha ) \in \Gamma \qquad
+%	       \Gamma \vdash M_1 : \rho_1 \quad
+%	       \dotsm \quad
+%	       \Gamma \vdash M_m : \rho_m        
+%	      }
+%	     {\Gamma \vdash (f M_1 \dots M_m) : \alpha}
+%\]
+%\\
+%Proof of correctness (\textbf{TODO REPAIR} Conceptually it is ok but there is sazba-bug somewhere): 
+%\[
+%   \dfrac
+%     {\dfrac
+%      {\dfrac
+%       {\dfrac         
+%         {\dfrac  
+%          {\dfrac
+%           {\boxed{(f , \rho_1 \rightarrow \dots \rightarrow \rho_m \rightarrow \alpha ) \in \Gamma}}
+%           {\Gamma \vdash f : \rho_1 \rightarrow \dots \rightarrow \rho_m \rightarrow \alpha}
+%           \quad
+%           \boxed{\Gamma \vdash M_1 : \rho_1} }
+%          {\Gamma \vdash (f M_1) : \rho_2 \rightarrow \dots \rightarrow \rho_m \rightarrow \alpha }
+%          }{\vdots} 
+%         \quad 
+%         \ddots }
+%       {\Gamma \vdash (f M_1 \dots M_{m-2}) : \rho_{m-1} \rightarrow \rho_m \rightarrow \alpha}
+%       \quad
+%       \boxed{\Gamma \vdash M_{m-1} : \rho_{m-1}}  }
+%      {\Gamma \vdash (f M_1 \dots M_{m-1}) : \rho_m \rightarrow \alpha}       
+%      \quad 
+%      \boxed{\Gamma \vdash M_m : \rho_m} }
+%	 {\Gamma \vdash (f M_1 \dots M_m) : \alpha}
+%\]
+%\\
+%... there is a grammar rule:
+%\[ 
+%	( \alpha , \Gamma )  \gar
+%	\bigg( \mbox{ {\Large f }}
+%	  \mbox{ \Vtextvisiblespace[1em] } 
+%	  ( \rho_1 , \Gamma )
+%	  \mbox{ \Vtextvisiblespace[1em] } 
+%	  \dots
+%	  \mbox{ \Vtextvisiblespace[1em] } 
+%	  ( \rho_m , \Gamma )
+%	  \quad \bigg)
+%\]
+
+
+%\begin{todo}
+%& SHOW correctness of those inference rules by composing them of 
+%	  $E^{\rightarrow}$, $I^{\rightarrow}$ and \textit{axiom}.
+%& SHOW more examples of inference rules transformed into grammar rules.
+%& DESCRIBE general algorithm for this transformation.
+%& TALK ABOUT $\tau_1 \rightarrow \dots \rightarrow \tau_n \rightarrow \alpha$ 
+%& TALK ABOUT $\beta \eta^{-1}$-normal form which is generated by this method.
+%& Napsat tu (nebo asi někam jinam
+%	ale hlavně někam), že de generovat přímo i termy v beta normalní 
+%	formě, ale že se mi to zdálo o dost pracnější díky tomu, že
+%	musíme čekovat jestli neni něco toho typu i v ne atomickejch
+%	vrcholech/typech...
+%\end{todo}
+
+
+
+
+
+
+
