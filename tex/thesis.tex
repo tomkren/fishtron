@@ -488,6 +488,7 @@ number of \textit{generations}) or until some predefined criterion is met.
 
 
 \section{Program trees}
+\label{GP-prog-trees}
 
 In GP programs are represented as \textit{S-expressions}. 
 \Lets define S-expression inductively:
@@ -521,6 +522,11 @@ There is straightforward tree representation corresponding to these two cases:
 
 Computer program with inputs $x_{1}, ..., x_{n}$ is realized as expression in which 
 may occur variables $x_{1}, ..., x_{n}$.
+
+\begin{todo}
+ & nějak to tu přepsat aby to bylo ve stejnym stylu jako v \ref{tree-reps}
+\end{todo}
+
 
 \section{Building blocks}
 \label{building-blocks}
@@ -810,14 +816,50 @@ and mutation() are hopefully clear from verbal description.
 
 \chapter{Mathematical background}
 
+\newcommand{\then}{\Rightarrow\xspace}
+
+\newcommand{\lamb}[2]{( \lambda \, #1 \, . \, #2 )}
+\newcommand{\lam}[2]{\lambda \, #1 \, . \, #2}
+
+\newcommand{\ST}{\mathop{\mathrm{ST}}}
+\newcommand{\FV}{\mathop{\mathrm{FV}}}
+
+\newcommand{\Scomb }{\mathbf{S}}
+\newcommand{\Kcomb }{\mathbf{K}}
+\newcommand{\Icomb }{\mathbf{I}}
+
+\newcommand{\etar}{\twoheadrightarrow_\eta}
+\newcommand{\ered}{$\eta$-reduction\xspace}
+\newcommand{\bnf}{$\beta$-\textit{nf}\xspace}
+\newcommand{\enf}{$\eta$-\textit{nf}\xspace}
+\newcommand{\eenf}{$\eta^{-1}$-\textit{nf}\xspace}
+\newcommand{\beenf}{$\beta\eta^{-1}$-\textit{nf}\xspace}
+\newcommand{\benf}{$\beta\eta$-\textit{nf}\xspace}
+\newcommand{\bredex}{$\beta$-redex\xspace} 
+
+\newcommand{\lnf}{\textit{lnf}\xspace}
+
+
 In this chapter we briefly describe key concepts
-from simply typed $\lambda$-calculus.
+of simply typed $\lambda$-calculus.
 We try to favor readability over formality,
 for more detailed and formal treatment of this subject see 
-\cite{barendregt92}.
+\cite{barendregt92,barendregt10}.
 
-After that, \textit{inhabitation tree} is introduced.
-It is structure used for reasoning about generation of individuals.
+After introductory description, an analysis of term generation follows; 
+a path from inference rules to term generating grammar rules is shown,
+\textit{long normal form (lnf)} is described,
+followed by term generating grammar for \textit{lnf}
+and analysis of its relevant properties (such as its relation to \benf),
+then \textit{inhabitation tree} is presented --- 
+an implementation friendly refinement of 
+\textit{lnf} term generating grammar.
+
+\begin{todo}
+ & Až to bude dostatečně sepsáno, tak do této kapitoly taky přidat
+   část o abstraction elimination a o polymorfním zobecnění inhabitation tree.
+   Nezapomenout to pak zmínit i v tomhle úvodu.
+\end{todo}
 	
 \theoremstyle{plain} 
 \newtheorem{theorem}{Theorem} 
@@ -839,21 +881,11 @@ It is structure used for reasoning about generation of individuals.
 \section{\lterms}
 \label{deflam}
 
-Now we will formally describe programming language 
-in which we will generate individual programs --- so called \lterms.  
+Here we  %formally 
+describe programming language, 
+in which we generate individual programs --- so called \lterms.  
 
 
-\newcommand{\then}{\Rightarrow\xspace}
-
-\newcommand{\lamb}[2]{( \lambda \, #1 \, . \, #2 )}
-\newcommand{\lam}[2]{\lambda \, #1 \, . \, #2}
-
-\newcommand{\ST}{\mathop{\mathrm{ST}}}
-\newcommand{\FV}{\mathop{\mathrm{FV}}}
-
-\newcommand{\Scomb }{\mathbf{S}}
-\newcommand{\Kcomb }{\mathbf{K}}
-\newcommand{\Icomb }{\mathbf{I}}
 
 
 
@@ -869,7 +901,7 @@ x   \in V \cup C  &\then x     \in \Lambda \\
 M,N \in \Lambda   &\then (M~N) \in \Lambda 
 \textit{~~~~~~(Function application)} \\
 x   \in V , M \in \Lambda &\then \lamb{x}{M} \in \Lambda
-\textit{~~~~~($\lambda$-abstraction)} 
+\textit{~~~~($\lambda$-abstraction)} 
 \end{align*}~
 \end{definition}
 
@@ -934,22 +966,11 @@ $\Scomb, \Kcomb, \Icomb$ as abbreviation
 for specific terms, e.i. 
 $\Icomb = \lamb{x}{x}$.  
 \\[1em]
-	
-Examples of \lterms:
-
-\begin{easylist}[itemize]
-& $x$
-& $\lamb{x}{x}$
-& $\lamb{x}{f}$
-& $(\lamb{x}{(x~x)}~\lamb{x}{(x~x)})$
-& $\lamb{x}{\lamb{y}{x}}$
-& $\lamb{f}{\lamb{g}{\lamb{x}{((f~x)~(g~x))}}}$
-\end{easylist}~
 
 We use following notation
-abbreviations for better readability:
+abbreviations for better readability. \vspace{3mm}
 
-\begin{easylist}[itemize]
+\begin{easylist}[enumerate]
 & $M_1~M_2~M_3~\dots~M_n$ for 
   $(\dots((M_1~M_2)~M_3)~\dots~M_n)$ 
 & $\lam{x_1 x_2 \dots x_n }{M}$ for
@@ -959,6 +980,25 @@ abbreviations for better readability:
 For example we can write
 $\lamb{f}{\lamb{g}{\lamb{x}{((f~x)\,(g~x))}}}$
 as $\lam{f\,g\,x}{f~x\,(g~x)}$.
+
+\newcommand{\ods}{\hspace{3mm}}
+
+~
+
+Here follow some examples of \lterms. \vspace{1mm}
+
+\ods $x$
+
+\ods $\lamb{x}{x}$
+
+\ods $\lamb{x}{f}$
+
+\ods $(\lamb{x}{(x~x)}~\lamb{x}{(x~x)})$
+
+\ods $\lamb{x}{\lamb{y}{x}}$
+
+\ods $\lamb{f}{\lamb{g}{\lamb{x}{((f~x)~(g~x))}}}$
+
 
 \subsection{ Subterms, free variables and substitution }
 
@@ -1049,8 +1089,14 @@ of insertion of arguments supplied to a function into
 its body. 
 
 \begin{todo}
+& asi to přepsat nějak obecně pro redukci R a pak zadat beta,eta,eta-1 
+  jako specialni připady
 & !!!!!!! zmínit $=_\beta$ a $\twoheadrightarrow_\beta$  a i pro ostatní redukce!!!!!
 & definovat \textbf{CR} a říct o tom lemátku, že má CR redukce má unikátní nf.
+&& V \cite{barendregt84} (ta nová kniha s žlutejma deskama) je ukázano že je 
+	 eta CR (Church Rosserovská)
+& zmínit Theorem 2B.4 z \cite{barendregt10}
+& co to znamená mít nf
 \end{todo}
 
 
@@ -1082,6 +1128,98 @@ subterm.
 A normal form may be thought of as a result of a term evaluation. 
 
 
+\subsection{Tree representations of \lterms}
+\label{tree-reps}
+
+\newcommand{\sexprTree}{sexpr-tree\xspace}
+\newcommand{\atTree}{@-tree\xspace}
+
+
+From the definition of \lterm we can straightforwardly derive 
+the standard tree representation for \lterms, which we call 
+\textit{\atTree}. Term M is 
+translated into \atTree $T_@[M]$ by following rules.
+
+
+\begin{enumerate}
+	\item $T_@[x] := x$ (i.e. $x \in V \cup C$ becomes one node tree $x$)
+	\item \mbox{$T_@[(P$ $Q)] := $ \Tree
+			[.@	
+		 		\text{$T_@[P]$}
+		 		\text{$T_@[Q]$}		 			
+			] }
+	\item \mbox{$T_@[\lambda x . P] := $ \Tree
+			[.\text{$\lambda x$}	
+		 	 	\text{$T_@[P]$}	
+			] }
+\end{enumerate}
+
+
+We can enhance this representation by replacing third rule
+by following one. It compressing consecutive 
+$\lambda$-abstractions into one \atTree node. \\
+
+\mbox{$T_@[\lambda x_1 \dots x_n . P] := $ \Tree
+	[.\text{$\lambda x_1 \dots x_n$ }	
+ 	 	\text{$T_@[P]$}	
+	] } 
+	
+	~\\
+
+Since this representation comes directly from definition, 
+it is evident that it covers all possible \lterms.\\
+ 
+Following tree representation is extension of 
+\textit{S-expression trees} described in~\ref{GP-prog-trees},
+thus we call it \textit{\sexprTree}.
+Unlike \atTree, it is not able to cover all \lterms, but only those
+in \bnf. 
+Term M is translated into \sexprTree $T_S[M]$ by following rules.
+
+%It will also be the representation suitable for showing 
+%that \textit{solving} Inhabitation tree generates wanted \lterm.
+
+
+\begin{enumerate}
+    \item $T_S[x] := x$
+	\item \mbox{ $T_S[(f M_1 M_2 \dots M_m)] := $ 
+	%where $f \in V \cup C, n \geq 1$ translates into tree\\
+		\Tree
+			[.f	
+		 		\text{$T_S[M_1]$}
+		 		\text{$T_S[M_2]$}
+		 		\text{$\dots$}
+		 		\text{$T_S[M_m]$}		 				 			
+			] }
+	\item \mbox{$T_S[\lambda x_1 \dots x_n . M] := $
+	 	\Tree
+			[.\text{$\lambda x_1 \dots x_n$ }	
+		 	 	\text{$T_S[M]$}	
+			] }
+\end{enumerate}~
+
+
+
+\begin{todo}
+
+& ujistit se že je v části o tree reprezentacích 
+  je napsaný co to znamená že podstrom má nějakej typ,
+  že podstromy odpovídaj podvýrazum atd
+
+ & říct že to je přesně ta notace co používá koza
+ & EXAMPLES of tree representations of \lterms  
+ & napsat transformace mezi \atTree a \sexprTree
+ & nějak to sjednotit s tim uplně na začátku v popisu GP kde se popisuje
+   přímo \sexprTree a říct proč se tomu tak řiká 
+   (na tom místě co je v textu dřív)
+ 
+
+ & zkontrolovat že reference tree-reps se odkazuje na dobrý místo,
+   mohlo by se to rozbít tim že tree reprezentations - typovany/netypovany 
+   jsou od sebe oddelený
+\end{todo}
+
+\newpage
 \section{Types}
 \label{deftype}
 
@@ -1460,6 +1598,83 @@ Then we are allowed to use the inference rule to derive statement
 \end{todo}
 
 
+\subsection{Tree representations of typed \lterms}
+
+\newcommand{\lsCurry}{$\lambda^{\ar}$\nobreakdash-Curry\xspace}
+\newcommand{\lsChurch}{$\lambda^{\ar}$\nobreakdash-Church\xspace}
+
+
+Simply typed $\lambda$-calculus as described above is formally
+called the \textit{system \lsCurry}. 
+Other slightly different formalization is called 
+\textit{system \lsChurch}. 
+They differ in that \lsCurry uses as terms above described
+untyped terms, whereas \lsChurch uses slightly modified
+terms with information about types of variables written in
+lambda abstraction along with variable name.
+Since those systems are proven to be equivalent,
+we are not giving this subject much attention here.
+For more detailed information on this subject see \cite{barendregt92}.\\
+
+In our implementation we also use modified representation of \lterms
+storing information about types. But our representation is more 
+radical than that of \lsChurch; it stores information about types
+of all subterms.
+
+Regarding tree representation of such a typed
+\lterm, most of the time it is more convenient to 
+understand this information as invisibly sitting
+in the tree nodes alongside with visible
+term symbols.
+
+But as we will see below in the section about \textit{inhabitation trees},
+there are situations when the explicit type information in the tree representation
+comes in handy. Thus we are presenting following tree representation.\\
+
+
+Straightforward approach would be to add to each node a visible type entry 
+that would be the type of the subterm corresponding to subtree having this
+node as the root node. 
+
+Approach more suitable for our further purpose 
+is to add a special type node \textit{above} each node.
+
+More specifically,
+\lets consider \textit{\sexprTree} $t$ corresponding to a \lterm of the type
+$\sigma$ with root $r$ and subtrees $s_1 , \dots , s_n$. 
+Then corresponding \textit{typed \sexprTree} $TT_S[t]$ for typed \lterm is 
+obtained from the tree $t$ as follows.  
+
+\begin{equation*}
+\mbox{ 
+TT[
+\Tree
+	[.r 	
+	  	  \text{$s_1$}
+		  \text{$s_2$}
+		  \text{$\dots$}
+		  \text{$s_n$}
+	] 
+}]=
+\mbox{
+\Tree
+	[.\text{$\sigma$ }
+	    [.r 	
+	  	  \text{$TT[s_1]$}
+		  \text{$TT[s_2]$}
+		  \text{$\dots$}
+		  \text{$TT[s_n]$}
+		]	  	
+	] 
+}
+\end{equation*}
+
+We silently suppose here that type information about every subterm is available.
+
+\begin{todo}
+ & možná konec týhle subsekce trochu přeformulovat, je to takový kostrbatý...
+\end{todo}
+
 \section{Term generating grammar}
 
 \newcommand{\gar}{\longmapsto}
@@ -1633,7 +1848,7 @@ $$
      v sekci \ref{barlike}
    & možná ocitovat toho van Wijngaarden [1981] s těma 2-level grammar
      jak je to v Barendregtovi \cite{barendregt10} 
-   & vyřešit jak je to stou freš proměnnou x v introdukci...
+   & vyřešit jak to tu popsat s tou freš proměnnou x v introdukci...
      && stejně tak v tom obecnym případě to dělá neplechu
 \end{todo}
 
@@ -1643,44 +1858,49 @@ $$
 \section{Long normal form}
 \label{lnf}
 
-\newcommand{\lnf}{\textit{lnf}\xspace}
+%v barendrechtovi je to v definici lnf
+%$\lam{x_1 \dots x_n}{f~M_1~\dots~M_n}$ místo $M_m$ 
+%ale to musí bejt určitě překlep...
 
 \begin{definition}
 Let \GMS where 
-$\sigma = \tau_1 \ar \dots \ar \tau_n \ar \alpha$,
-$n \geq 0$.
-Then $M$ is in \textit{long normal form} (\textit{lnf}) if following 
-conditions are satisfied.
-\begin{enumerate}
- \item $M$ is term of the form $\lam{x_1 \dots x_n}{f~M_1~\dots~M_m}$\\
-  (specially for $n = 0$, $M$ is term of the form $f$),
- \item each $M_i$ is in \textit{long normal form}.
-\end{enumerate}
+$\sigma = \tau_1 \ar \dots \ar \tau_n \ar \alpha, n \geq 0$.
+	\begin{enumerate}
+	  \item	
+		Then $M$ is in \textit{long normal form} (\lnf) if following 
+		conditions are satisfied.
+		\begin{enumerate}
+		 \item $M$ is term of the form $\lam{x_1 \dots x_n}{f~M_1~\dots~M_m}$\\
+		  (specially for $n = 0$, $M$ is term of the form $f$).
+		 \item Each $M_i$ is in \lnf.
+		\end{enumerate}	
+	  \item 
+	    $M$ has a \lnf if $M =_{\beta\eta} N$ and $N$ is in \lnf.
+	\end{enumerate}
 \end{definition}~
 
-As is shown in \cite{barendregt10} long normal form has those 
-nice properties:
+As is shown in \cite{barendregt10}, \lnf has following nice properties.
 
-\begin{easylist}[itemize]
-& Every $M$ in $\beta$-normal form has a long normal form 
-$N$ such that $N \twoheadrightarrow_{\eta} M$.
-& \textbf{TODO jen zkopčeno přepsat!!} .. if M has a beta-nf, which according to Theorem 2B.4 is
-always the case, then it also has a unique lnf and this will be its unique $\beta\eta^{-1}$-nf.
-& \textbf{TODO : potřebuju eštěnějaký z tyhle knihy?}
-\end{easylist}
+\begin{proposition}
+If $M$ has a \bnf, 
+%which according to Theorem 2B.4 is always the case, 
+then it also has a unique \lnf, 
+which is also its unique \beenf.
+\end{proposition}
+
+\begin{proposition}
+Every $B$ in \bnf has a \lnf 
+$L$ such that $L \twoheadrightarrow_{\eta} B$.
+\end{proposition}
 
 
 \begin{todo}
- & v barendrechtovi je to v definici lnf $\lam{x_1 \dots x_n}{f~M_1~\dots~M_n}$ místo 
-   $M_m$ ale to musí bejt určitě překlep...
- & popsat tu jak ji předelat na beta nf
-	pokud by se nám chtělo... 
-	V barendrech84 (ta nová kniha s žlutejma deskama) je ukázano že je 
-	eta CR (čurč roserovská) což snad stačí společně s 
-	tim tvrzeničkem z book.pdf že vezmu lnf
-	a dělám eta redukce dokud to de. až to nejde tak bych to měl mít v 
-	beta-nf
- & přepsat to nějak hezčejc, ten seznam heskejch vlastností
+ & co to znamená mít lnf
+ & potřebuju eště nějaký \textbf{propositions} z tyhle knihy?
+ & ta definice je tam daná pro $\tur{}{M}{\sigma}$,
+   ukazat ze ta naše je ok, že tam má navíc to $\Gamma$.
+   Stačí udělat tríček že beru funkci co má lambda hlavu odpovídající 
+   tomu kontextu.
 \end{todo}
 
 
@@ -1697,7 +1917,10 @@ highlighted terminals anymore).\footnote{
 I was using term generating grammars for term generation
 on my own before I encountered with \cite{barendregt10},
 where i happily discovered that Barendregt is using
-almost identical notation.
+almost identical notation. 
+But his \lnf grammar was more clever then my grammar
+that was using grammar rules corresponding to the three basic
+inference rules. 
 }
 \begin{align*}
 ( \alpha , \Gamma )  
@@ -1901,7 +2124,12 @@ $.
 This means that we can use this grammar to generate all \lterms $M$ in \lnf
 with desired type $\sigma$ from \textit{building blocks} context $\Gamma$.\\
 
-
+\begin{todo}
+ & zmínit že podobně jako mužeme transformovat inference rules
+   na grammar rules, mužeme i obráceně grammar rules
+   převést na inference rules - to bylo ostatně uděláno v tom dukazu ale
+   je to podle mě hezký říct ty pravidla explicitně.
+\end{todo}
 
 \subsection{Benefits of generating \lterms in \lnf}
 
@@ -1915,17 +2143,6 @@ for which $L =_{\beta\eta} M$.
 Therefore the computation performed by \lterm $M$ 
 is not omitted, because it is the same computation
 as the computation performed by \lterm $L$. \\
-
-
-\newcommand{\etar}{\twoheadrightarrow_\eta}
-\newcommand{\ered}{$\eta$-reduction\xspace}
-\newcommand{\bnf}{$\beta$-\textit{nf}\xspace}
-\newcommand{\enf}{$\eta$-\textit{nf}\xspace}
-\newcommand{\eenf}{$\eta^{-1}$-\textit{nf}\xspace}
-\newcommand{\beenf}{$\beta\eta^{-1}$-\textit{nf}\xspace}
-\newcommand{\benf}{$\beta\eta$-\textit{nf}\xspace}
-\newcommand{\bredex}{$\beta$-redex\xspace} 
-
 
 Generating \lterms in \lnf is even better than generating 
 \lterms in \bnf. Since \lnf is the same thing as \beenf,
@@ -2089,7 +2306,7 @@ is a rooted possibly infinite tree that is recursively defined as follows.\\
 
 If $\sigma = \alpha$ such that $\alpha \in A$, then 
 
-$\IT(\sigma,\Gamma) = $ \\
+$\IT(\sigma,\Gamma) := $ \\
 
 \Tree 
 [.$\alpha$ 
@@ -2109,7 +2326,7 @@ f_k : \rho^k_1 \ar \dots \ar \rho^k_{m_k} \ar \alpha \} \\ ~\,~~~~~~~~~~=
 Otherwise, for $\sigma = \tau_1 \ar \dots \ar \tau_n \ar \alpha$ 
 such that $n> 0, \alpha \in A$
 
-$\IT(\sigma,\Gamma) =$\\
+$\IT(\sigma,\Gamma) := $\\
  
 \Tree [.$\tau_1\ar\dots\ar\tau_n\ar\alpha$ 
  [.$\lh{x_1~\dots~x_n}$ [.$\IT(\alpha;\Gamma,x_1:\tau_1,\dots,x_n:\tau_n)$ ] ] ]    
@@ -2310,126 +2527,6 @@ of \lterms.
 \end{todo}
 
 
-\section{Tree representations of \lterms}
-\label{tree-reps}
-
-\newcommand{\sexprTree}{sexpr-tree\xspace}
-\newcommand{\atTree}{@-tree\xspace}
-
-
-
-From the definition of \lterm (\ref{deflam}) we can straightforwardly derive 
-the classical tree representation for \lterms. Term M is translated into tree $T[M]$ by following rules:
-
-\begin{itemize}
-	\item $x \in V \cup C$ translates into \textit{leaf} $x$.
-	\item $(P$ $Q)$ translates into tree\\
-		\Tree
-			[.@	
-		 		\text{$T[P]$}
-		 		\text{$T[Q]$}		 			
-			] 
-	\item $\lambda x . P$ translates into tree\\
-	 	\Tree
-			[.\text{$\lambda x$}	
-		 	 	\text{$T[P]$}	
-			] 
-\end{itemize}
-
-We can enhance this representation by compressing consecutive lambda abstractions into one
-tree node like this: 
-
-\begin{itemize}
-	\item $\lambda x_1 \dots x_n . P$ translates into tree\\
-	 	\Tree
-			[.\text{$\lambda x_1 \dots x_n$ }	
-		 	 	\text{$T[P]$}	
-			] 
-\end{itemize}
-
-As this representation comes directly from definition it is evident 
-that it covers all possible \lterms.
-
-We will refer to this representation as to \textit{\atTree}.\\
- 
-
-For representing expressions as trees it is however more common to use a little different
-representation. It will also be the representation suitable for showing 
-that \textit{solving} Inhabitation tree generates wanted \lterm.
-
-\begin{itemize}
-    \item $x \in V \cup C$ translates into \textit{leaf} $x$.
-	\item $(f M_1 M_2 \dots M_n)$ where $f \in V \cup C, n \geq 1$ translates into tree\\
-		\Tree
-			[.f	
-		 		\text{$T[M_1]$}
-		 		\text{$T[M_2]$}
-		 		\text{$\dots$}
-		 		\text{$T[M_n]$}		 				 			
-			] 
-	\item $\lambda x_1 \dots x_n . M$ translates into tree\\
-	 	\Tree
-			[.\text{$\lambda x_1 \dots x_n$ }	
-		 	 	\text{$T[M]$}	
-			] 
-\end{itemize}
-
-Notice that this representation does not cover all \lterms, 
-e.g. $(\lambda x.x) y$ is not expressible in it. But it does not bother us. 
-
-We will refer to this representation as to \textit{\sexprTree}.\\ 
-
-\Lets now consider representation for \textit{typed \lterms}.
-Straightforward approach would be to add to each node a type entry which 
-would be the type of the \lterm corresponding to subtree having this
-node as the root node. 
-
-Approach more suitable for our purpose is to add a special type node above each node.
-More specifically:
-
-\Lets consider tree $t$ corresponding to a \lterm of a type
-$\sigma$ with root $r$ and subtrees $s_1 , \dots , s_n$. 
-Then corresponding tree $TT[t]$ for typed \lterm is 
-obtained from the tree $t$ as follows:  
-
-\begin{equation*}
-\mbox{ 
-TT[
-\Tree
-	[.r 	
-	  	  \text{$s_1$}
-		  \text{$s_2$}
-		  \text{$\dots$}
-		  \text{$s_n$}
-	] 
-}]=
-\mbox{
-\Tree
-	[.\text{$\sigma$ }
-	    [.r 	
-	  	  \text{$TT[s_1]$}
-		  \text{$TT[s_2]$}
-		  \text{$\dots$}
-		  \text{$TT[s_n]$}
-		]	  	
-	] 
-}
-\end{equation*}
-
-\begin{todo}
-
-& ujistit se že je v části o tree reprezentacích 
-  je napsaný co to znamená že podstrom má nějakej typ,
-  že podstromy odpovídaj podvýrazum atd
-
- & říct že to je přesně ta notace co používá koza
- & EXAMPLES of tree representations of \lterms  
- & napsat transformace mezi \atTree a \sexprTree
- & nějak to sjednotit s tim uplně na začátku v popisu GP kde se popisuje
-   přímo \sexprTree a říct proč se tomu tak řiká 
-   (na tom místě co je v textu dřív)
- 
-\end{todo}
 
 
 \section{ Generating terms in Long normal form by solving Inhabitation tree }
@@ -3457,20 +3554,17 @@ a tady to jen tak líznout.
 
 
 \bibitem{koza92}
-
   John R. Koza,
   \emph{Genetic Programming: On the Programming of Computers by Means of Natural Selection}.
   MIT Press, Cambridge, MA,
   1992. 
 
 \bibitem{koza05}
-
   Koza, J.R., Keane, M., Streeter, M., Mydlowec, W.,Yu, J., Lanza, G. 
   \emph{Genetic Programming IV: Routine Human-Competitive Machine Intelligence.} 
   Springer, 2005. ISBN 978-0-387-26417-2 
 
 \bibitem{yu01}
-
   T. Yu. 
   \emph{Hierachical processing for evolving recursive and modular 
         programs using higher order functions and lambda abstractions}. 
@@ -3479,14 +3573,12 @@ a tady to jen tak líznout.
 
 
 \bibitem{montana95}
-
 D. J. Montana. 
 \emph{Strongly typed genetic programming.} 
 Evolutionary Computation, 3(2): 199–230, 1995.
 %URL \url{ http://vishnu.bbn.com/papers/stgp.pdf }. nefacha
 
 \bibitem{haynes96}
-
 T. D. Haynes, D. A. Schoenefeld, and R. L. Wainwright. 
 \emph{Type inheritance in strongly typed genetic programming.} 
 In P. J. Angeline and K. E. Kinnear, Jr., editors, Advances
@@ -3497,15 +3589,19 @@ URL
 
 
 \bibitem{olsson94}
-
 J. R. Olsson. 
 \emph{Inductive functional programming using incremental program 
 transformation and Execution of logic programs by 
 iterative-deepening A* SLD-tree search.} 
 Dr scient thesis, University of Oslo, Norway, 1994.
 
+\bibitem{barendregt84}
+H. P. Barendregt,
+\emph{The Lambda Calculus: its Syntax and Semantics}, 
+revised ed., North-Holland, 1984.
+
 \bibitem{barendregt92}
-H. Barendregt , S. Abramsky , D. M. Gabbay , T. S. E. Maibaum , H.  P.
+H. Barendregt , S. Abramsky , D. M. Gabbay , T. S. E. Maibaum.
 \emph{Lambda Calculi with Types.} 
 Handbook of Logic in Computer Science, 1992. 
 
@@ -3524,7 +3620,6 @@ Prentice Hall, 1987.
 
 
 \bibitem{AIAMA}
-
 	Stuart J. Russell, Peter Norvig,
 	\emph{Artificial Intelligence: A Modern Approach}.
 	Pearson Education,
@@ -3776,6 +3871,108 @@ Prentice Hall, 1987.
 %	vrcholech/typech...
 %\end{todo}
 
+
+
+%\section{---OLD---Tree representations of \lterms}
+
+
+%From the definition of \lterm (\ref{deflam}) we can straightforwardly derive 
+%the classical tree representation for \lterms. Term M is translated into tree $T[M]$ by following rules:
+%
+%\begin{itemize}
+%	\item $x \in V \cup C$ translates into \textit{leaf} $x$.
+%	\item $(P$ $Q)$ translates into tree\\
+%		\Tree
+%			[.@	
+%		 		\text{$T[P]$}
+%		 		\text{$T[Q]$}		 			
+%			] 
+%	\item $\lambda x . P$ translates into tree\\
+%	 	\Tree
+%			[.\text{$\lambda x$}	
+%		 	 	\text{$T[P]$}	
+%			] 
+%\end{itemize}
+%
+%We can enhance this representation by compressing consecutive lambda abstractions into one
+%tree node like this: 
+%
+%\begin{itemize}
+%	\item $\lambda x_1 \dots x_n . P$ translates into tree\\
+%	 	\Tree
+%			[.\text{$\lambda x_1 \dots x_n$ }	
+%		 	 	\text{$T[P]$}	
+%			] 
+%\end{itemize}
+%
+%As this representation comes directly from definition it is evident 
+%that it covers all possible \lterms.
+%
+%We will refer to this representation as to \textit{\atTree}.\\
+% 
+%
+%For representing expressions as trees it is however more common to use a little different
+%representation. It will also be the representation suitable for showing 
+%that \textit{solving} Inhabitation tree generates wanted \lterm.
+%
+%\begin{itemize}
+%    \item $x \in V \cup C$ translates into \textit{leaf} $x$.
+%	\item $(f M_1 M_2 \dots M_n)$ where $f \in V \cup C, n \geq 1$ translates into tree\\
+%		\Tree
+%			[.f	
+%		 		\text{$T[M_1]$}
+%		 		\text{$T[M_2]$}
+%		 		\text{$\dots$}
+%		 		\text{$T[M_n]$}		 				 			
+%			] 
+%	\item $\lambda x_1 \dots x_n . M$ translates into tree\\
+%	 	\Tree
+%			[.\text{$\lambda x_1 \dots x_n$ }	
+%		 	 	\text{$T[M]$}	
+%			] 
+%\end{itemize}
+%
+%Notice that this representation does not cover all \lterms, 
+%e.g. $(\lambda x.x) y$ is not expressible in it. But it does not bother us. 
+%
+%We will refer to this representation as to \textit{\sexprTree}.\\ 
+%
+%\Lets now consider representation for \textit{typed \lterms}.
+%Straightforward approach would be to add to each node a type entry which 
+%would be the type of the \lterm corresponding to subtree having this
+%node as the root node. 
+%
+%Approach more suitable for our purpose is to add a special type node above each node.
+%More specifically:
+%
+%\Lets consider tree $t$ corresponding to a \lterm of a type
+%$\sigma$ with root $r$ and subtrees $s_1 , \dots , s_n$. 
+%Then corresponding tree $TT[t]$ for typed \lterm is 
+%obtained from the tree $t$ as follows:  
+%
+%\begin{equation*}
+%\mbox{ 
+%TT[
+%\Tree
+%	[.r 	
+%	  	  \text{$s_1$}
+%		  \text{$s_2$}
+%		  \text{$\dots$}
+%		  \text{$s_n$}
+%	] 
+%}]=
+%\mbox{
+%\Tree
+%	[.\text{$\sigma$ }
+%	    [.r 	
+%	  	  \text{$TT[s_1]$}
+%		  \text{$TT[s_2]$}
+%		  \text{$\dots$}
+%		  \text{$TT[s_n]$}
+%		]	  	
+%	] 
+%}
+%\end{equation*}
 
 
 
