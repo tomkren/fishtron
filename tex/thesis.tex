@@ -335,7 +335,7 @@ Keywords:
 \setcounter{page}{1}
 
 
-\tableofcontents	
+\tableofcontents
 	
 %\chapter{Introduction}
 \chapter*{Introduction}
@@ -1441,6 +1441,11 @@ Then we are allowed to use the inference rule to derive statement
 \begin{todo}
    & říct že se vždycky zastavěj (strong normalization),
      && potřebný definice pro to uvést v \lterms sekci
+     && musí se říc t co, tzn simpli typed l. kalkulus termy
+        a betaeta-redukce
+     && řekl bych že eta redukce je SN vždycky (tzn i untyped lk)
+        pač plati (CR+terminující pak SN) a je CR vzhledem k barendrecht-stará-žlutá
+        a terminující je rpotože zmenšuje term s nemuže zmenšovat donekonečna    
    & možná zmínit že se jedná o \textit{gentzen style proof}
    & říct že jsou to modus ponens a jeden směr věty o dedukci  
 \end{todo}
@@ -1912,9 +1917,9 @@ every \lterm in \lnf is also in \bnf.
 This comes straight from the definition of \beenf, 
 but one can also see it from observing method for generating
 terms in \bnf. As is shown in \cite{barendregt10}, 
-this method is obtained simply by replacement of 
+this method is obtained simply by replacing  
 the first grammar rule by slightly modified rule,
-resulting in following grammar.
+resulting in the following grammar.
 \begin{align*}
 ( \pi , \Gamma )  
 &\gar
@@ -1927,15 +1932,39 @@ resulting in following grammar.
 &   
 \end{align*}
 
-The difference lies in that $f$'s type is no longer obligated to be fully expanded
+The difference lies in that $f$'s type is no longer needed to be fully expanded
 ($\pi \in \T$ instead of $\alpha \in A$). This makes the grammar less deterministic,
-resulting in bigger search space. The new rule is generalization of the old one,
+resulting in a bigger search space. The new rule is generalization of the old one,
 thus all terms in \lnf will be generated, along with many new terms in \bnf that 
 are not in \lnf. 
     
 By generating \lterms in \lnf we avoid generating 
 \lterms $M$,$N$ such that $M \not= N$ and $M =_{\eta} N$; 
-but by generating in \bnf we do not avoid this.
+but by generating in \bnf we do not avoid it.\\
+
+
+The disadvantage of the \lnf, as the name suggests, is that it is long.
+Terms in \lnf are said to be \textit{fully $\eta$-expanded}. 
+Relevant property of $\eta$-reduction is that it always shortens the term
+that is being reduced be it. And conversely, $\eta$-expansion prolongs.
+$$\lamb{x}{(M~x)} \eArrow M \textbf{ ~~~~if } x \not\in FV(M) $$
+
+Chceme ukazat že pomocí libovolné posloupnosti eta-redukcí se dostaneme do
+unikátní eta-nf. To plyne z toho, že 
+
+ (a) každej lambda term má eta-NF (eta zmenšuje a nemuže se zmenšovat donekonečna)
+
+ (b) eta-redukce je CR (z žlutýho barendrechta) a z toho plyne že má unikátní NF (lemátko)
+
+pak chcem ukazat že eta redukcema nepřibude b-redex, když to dk
+tak víme že sme se tema eta redukce dostali do betaeta-NF. 
+
+to se ukaže tak, že víme že eta redukce ničí @, tn ten novej redex by musel
+mít svůj stare @. Zajímá nas levej "argument" @ , aby vznikl b-redex
+musel by se zmenit něco co nebylo abstrakce na abstrakci ale to se nemohlo stát
+protože se mohla tak akorat posunout blíž ta abstrakce M k tomu @
+ale na zavinači určitě nevysel ten redukovanej podterm protože to by tam předtim měl ten redex.
+
 
 
 \newpage
