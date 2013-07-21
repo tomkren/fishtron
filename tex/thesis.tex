@@ -80,6 +80,8 @@
 	\lbrace #1 , \dots , #2 \rbrace
 }
 
+\newcommand{\lh}[1]{\lambda #1}
+
 
 \newcommand{\Pseudokod}[2]{
 	\begin{framed}
@@ -1048,6 +1050,7 @@ its body.
 
 \begin{todo}
 & !!!!!!! zmínit $=_\beta$ a $\twoheadrightarrow_\beta$  a i pro ostatní redukce!!!!!
+& definovat \textbf{CR} a říct o tom lemátku, že má CR redukce má unikátní nf.
 \end{todo}
 
 
@@ -1184,13 +1187,19 @@ We can look on this relation in tree different ways.
   \textit{propositional variables}. The whole system of
   \textit{simply typed $\lambda$-calculus} then corresponds
   to the \textit{implicational fragment of propositional 
-  intuitionistic logic}. We are mentioning this beautiful
+  intuitionistic logic}.
+   
+  Intuition is that the proof of $A \then B$ 
+  can be imagined as function expecting proof of $A$
+  and utilizing it in production of the proof of $B$
+  that is returned as output of the function. 
+    
+  We are mentioning this beautiful
   correspondence in hope that it will help clarify 
-  use of \textit{inference rules} which are key concept
+  use of \textit{inference rules}, which are key concept
   in the process of deriving valid statements about
   terms and types.  
-    
-  
+      
 \end{description}  	
 	
 
@@ -1907,8 +1916,16 @@ Therefore the computation performed by \lterm $M$
 is not omitted, because it is the same computation
 as the computation performed by \lterm $L$. \\
 
+
+\newcommand{\etar}{\twoheadrightarrow_\eta}
+\newcommand{\ered}{$\eta$-reduction\xspace}
 \newcommand{\bnf}{$\beta$-\textit{nf}\xspace}
+\newcommand{\enf}{$\eta$-\textit{nf}\xspace}
+\newcommand{\eenf}{$\eta^{-1}$-\textit{nf}\xspace}
 \newcommand{\beenf}{$\beta\eta^{-1}$-\textit{nf}\xspace}
+\newcommand{\benf}{$\beta\eta$-\textit{nf}\xspace}
+\newcommand{\bredex}{$\beta$-redex\xspace} 
+
 
 Generating \lterms in \lnf is even better than generating 
 \lterms in \bnf. Since \lnf is the same thing as \beenf,
@@ -1944,90 +1961,208 @@ but by generating in \bnf we do not avoid it.\\
 
 
 The disadvantage of the \lnf, as the name suggests, is that it is long.
-Terms in \lnf are said to be \textit{fully $\eta$-expanded}. 
+Terms in \lnf are said to be \textit{fully $\eta$-expanded} \cite{barendregt10}. 
 Relevant property of $\eta$-reduction is that it always shortens the term
 that is being reduced be it. And conversely, $\eta$-expansion prolongs.
 $$\lamb{x}{(M~x)} \eArrow M \textbf{ ~~~~if } x \not\in FV(M) $$
 
-Chceme ukazat že pomocí libovolné posloupnosti eta-redukcí se dostaneme do
-unikátní eta-nf. To plyne z toho, že 
+Now we show that for every \lterm $M$ 
+every sequence of $\eta$-reductions is finite and
+leads to unique \enf $N$.
 
- (a) každej lambda term má eta-NF (eta zmenšuje a nemuže se zmenšovat donekonečna)
+\begin{enumerate}
+ \item Every application of \ered shortens the term.
+       Since every term has finite size, this process must 
+       end at some point. Thus every \lterm has \enf.
+ \item Since \ered is \textbf{CR}, \enf is unique (see \ref{todo}). 
+\end{enumerate}
 
- (b) eta-redukce je CR (z žlutýho barendrechta) a z toho plyne že má unikátní NF (lemátko)
+So we can take every generated \lterm $M$ in 
+\lnf and transform it to shorter term in \enf. 
+The question is whether it remains in \bnf, thus being in \benf.
+The answer is yes; it can be proven by showing that no 
+new \bredex is created by \ered.  
 
-pak chcem ukazat že eta redukcema nepřibude b-redex, když to dk
-tak víme že sme se tema eta redukce dostali do betaeta-NF. 
+\begin{proposition}
+Let $P$ be in \bnf and $P \eArrow Q$. Then $Q$ is in \bnf.    
+\end{proposition}
+\begin{proof}
 
-to se ukaže tak, že víme že eta redukce ničí @, tn ten novej redex by musel
-mít svůj stare @. Zajímá nas levej "argument" @ , aby vznikl b-redex
-musel by se zmenit něco co nebylo abstrakce na abstrakci ale to se nemohlo stát
-protože se mohla tak akorat posunout blíž ta abstrakce M k tomu @
-ale na zavinači určitě nevysel ten redukovanej podterm protože to by tam předtim měl ten redex.
+For better clarity \lets show the \ered and \bredex using trees.\\
+\ered: \\
 
+\Tree [.$\lh{x}$ [.@ $M$ $x$ ] ] 
+~~~~$\eArrow$~~~~
+$M$ 
+
+And \bredex:
+
+\Tree [.@ [.$\lh{x}$ $M$ ] $N$ ] \\
+
+\Lets assume that $P \eArrow Q$ creates a new \bredex $B$ in $Q$.
+
+Since \ered only destroys and never creates \textit{function applications} (i.e. @),
+the root @ of $B$ must be present in $P$.  
+But since $P$ contains no \bredex, the left subterm $L$ of this root @
+is not $\lambda$-abstraction.
+Only possible way for $L$ to be changed by $\eArrow$ into 
+a $\lambda$-abstraction is that $L$ is the reduced subterm (so that
+$L$ is changed for its subterm).
+But that is in contradiction with $P$ not containing any \bredex,
+because it would cause $L$ be a $\lambda$-abstraction.
+
+\end{proof}
+
+Notable property of \lnf and \benf is that there is \textit{bijection} 
+(i.e. one-to-one correspondence) of 
+the set of simply typed \lterms in \lnf and 
+the set of simply typed \lterms in \benf.
+
+\begin{proposition}
+
+Reduction to \enf is bijection between  
+the set of simply typed \lterms in \lnf and 
+the set of simply typed \lterms in \benf.
+\end{proposition}
+\begin{proof}
+
+Since reduction to \enf always leads to an unique term, it is a function.
+In previous proposition is shown that \ered of \lnf
+leads to a term in \benf.\\
+
+In order to show that a function is bijection it is sufficient to show that it is
+both \textit{injection} and \textit{surjection}.\\
+
+Suppose it is not injection.
+
+So there must be $M_1,M_2$ in \lnf such that $M_1 \not= M_2$
+and $N$ in \benf such that $M_1 \etar N$, $M_2 \etar N$.
+Therefore $M_1 =_\eta M_2$, 
+so $M_1 =_{\beta\eta^{-1}} M_2$.
+This contradicts with $M_1,M_2$ being distinct \lnf{}s.\\
+
+Every $M$ in \bnf has a \lnf $N$ such that 
+$N \twoheadrightarrow_{\eta} M$ (proposition from \ref{lnf}).
+Term $M$ in \benf is in \bnf, thus it has desired \lnf $N$
+which reduces to it. 
+
+Therefore it is surjection. 
+\end{proof}
+
+Suppose we have systematic (i.e. gradually generating all terms, 
+but no term twice) method for generating terms in \lnf,
+we may transform it to systematic method for generating terms in \benf
+by simply reducing each generated term to its \enf.  
+
+
+\begin{todo}
+& možná eště zmínit něco jako : \\
+Jedna drobná nevýhoda je, že pokud chceme generovat termy od nejmenšího do největšího
+a pokud lnf generujeme od nejmenšího po největší tak pak generovaní \benf
+timhle trikem nemusí bejt od nejmenšího po nějvětší. V naší aplikaci (tzn GP)
+ale nijak nebazírtujeme na týhle vlastnosti a nakonec budeme spíš stejně používat
+nějaký nedeterminizmy aby to fungovalo líp, takže to vubec nevadí, že budou trochu přeházený. 
+\end{todo}
+   
 
 
 \newpage
 \section{Inhabitation tree}
 
-Now we will introduce \textit{Inhabitation tree}, structure slightly different from
-\textit{Inhabitation machine}, which was introduced in \cite{barendregt10} by Barendregt.
-We can think about Inhabitation tree as about unfolded Inhabitation machine.
-The motivation for using Inhabitation trees is belief that it will help us 
-reason about generation of \lterms 
-of a given type $\sigma$ and with a given context $\Gamma$.  
+Now we introduce \textit{inhabitation tree}; structure slightly different from
+\textit{inhabitation machine}, which was introduced by Barendregt\cite{barendregt10}.
+We can think about inhabitation tree as about unfolded inhabitation machine.
+Inhabitation tree approach is further refinement 
+of the term generating grammar approach, which is too much textual.
+Whereas inhabitation tree approach aims at tree structure of \lterms.
 
-\subsection{Definition of Inhabitation tree}
+~\\
 
-\textit{Inhabitation tree} is a \textit{rooted tree}, possibly infinite. 
-It has two types of nodes:
+
+\newcommand{\IT}{\mathop{\mathrm{IT}}}
+
+\begin{definition}
+
+Let context $\Gamma$ and type $\sigma$ be given.
+\textit{Inhabitation tree} for $(\sigma,\Gamma)$, denoted as $\IT(\sigma,\Gamma)$,  
+is a rooted possibly infinite tree that is recursively defined as follows.\\
+
+If $\sigma = \alpha$ such that $\alpha \in A$, then 
+
+$\IT(\sigma,\Gamma) = $ \\
+
+\Tree 
+[.$\alpha$ 
+   [.$f_1$ $\IT(\rho^1_1,\Gamma)$ $\dots$ $\IT(\rho^1_{m_1},\Gamma)$ ]
+   [.$\dots$ ]
+   [.$f_k$ $\IT(\rho^k_1,\Gamma)$ $\dots$ $\IT(\rho^k_{m_k},\Gamma)$ ]           
+]\\[1em]
+
+~~~~~~where 
+
+$~~~~~~~~~~\{ \,
+f_1 : \rho^1_1 \ar \dots \ar \rho^1_{m_1} \ar \alpha ~,~\dots~,~
+f_k : \rho^k_1 \ar \dots \ar \rho^k_{m_k} \ar \alpha \} \\ ~\,~~~~~~~~~~= 
+\{\, f \: : \rho_1 \ar \dots \ar \rho_m \; \ar \alpha ~|~ 
+  (f,\rho_1 \ar \dots \ar \rho_m \ar \alpha ) \in \Gamma \,\}$.\\
+
+Otherwise, for $\sigma = \tau_1 \ar \dots \ar \tau_n \ar \alpha$ 
+such that $n> 0, \alpha \in A$
+
+$\IT(\sigma,\Gamma) =$\\
+ 
+\Tree [.$\tau_1\ar\dots\ar\tau_n\ar\alpha$ 
+ [.$\lh{x_1~\dots~x_n}$ [.$\IT(\alpha;\Gamma,x_1:\tau_1,\dots,x_n:\tau_n)$ ] ] ]    
+
+
+\end{definition}~\\[1em]
+
+\newpage
+
+\Lets discuss this definition in grater detail. 
+An inhabitation tree has two kinds of nodes.
 
 \begin{samepage}
-\begin{itemize}
-  \item Type nodes   
-  			- containing type $\sigma \in \mathbb{T}$ 
-  			- aka "OR-node" %, Nonterminal-node. 
-  \item Symbol nodes 
-  			%- containing $ x^{*} \in \mathfrak P \left(V\right) -blobost pač ordered $ or $c \in C$
-  			- containing "$\lambda$-head" (nonempty finite sequence of variable names) or constant
-  			  name. 
-  			- aka "AND-node" %, Terminal-node. - ale nemusí, proto jsem to zakomentoval
-\end{itemize}
-\end{samepage}
+\begin{enumerate}
+  \item \textit{Type node} (or \textit{OR-node}).
+  
+  	    This kind of node contains type. %$\sigma \in \mathbb{T}$  
+  \item \textit{Symbol node} (or \textit{AND-node}).
+  
+  		This kind of node contains 
+  		constant name, variable name 
+  		\\or \textit{$\lambda$-head} 
+  	    --- non-empty finite sequence of variable names. 
+\end{enumerate}
+\end{samepage}~
 
-We construct Inhabitation tree for given type $\sigma$ and context $\Gamma$.\\
-We will define Inhabitation tree by describing its construction for a given $(\sigma,\Gamma)$.
-Notice that it will closely follow the rules from \ref{barlike}:
-
-\begin{itemize}
+Following observation clarifies the alternation of node kinds.
+\begin{enumerate}
 \item The root of Inhabitation tree for $(\sigma,\Gamma)$ is 
       \textit{type node} with $\sigma$ as type.
 \item All \textit{type nodes} have as child nodes only \textit{symbol nodes}. 
-\item And all \textit{symbol nodes} have as child nodes only \textit{type nodes}. 
-\end{itemize}
+\item All \textit{symbol nodes} have as child nodes only \textit{type nodes}. 
+\end{enumerate}~
 
-\begin{samepage}
-Now we will resolve the child nodes of the root node.
-There are two cases of $\sigma$ (recall \ref{deftype}): 
-\begin{description}
-	\item[Atomic type] 
-		$\sigma = \alpha $ where $\alpha \in A$. 
-	\item[Function type] 
-		$\sigma = \tau_1 \rightarrow \dots \rightarrow \tau_n \rightarrow \alpha$
-		where $n \geq 1, \alpha \in A$.
-\end{description}
-\end{samepage}
+%~\\~\\~\\
 
 
-First case \textbf{Atomic type} --- i.e., $\sigma = \alpha$ where $\alpha \in A$:\\
+There are two cases of $\sigma$ --- 
+\textit{atomic type} and \textit{function type}. \\
+
+First case is \textbf{atomic type}, i.e., $\sigma = \alpha$ where $\alpha \in A$.
+
 For every $(f,\rho_1 \rightarrow \dots \rightarrow \rho_m \rightarrow \alpha) \in \Gamma$
-where $\alpha \in A$ there is a child \textit{symbol node} of the root containing constant name $f$.
-This symbol node containing $f$ has $m$ child subtrees corresponding to Inhabitation trees for 
-$(\rho_1,\Gamma),\dots,(\rho_m,\Gamma)$.   
+there is a child \textit{symbol node} containing constant or variable name $f$.
+This symbol node containing $f$ has $m$ child subtrees corresponding to  
+$\IT(\rho_1,\Gamma),\dots,\IT(\rho_m,\Gamma)$.  
+
+Therefore specially for $m = 0$ node containing $f$ is 
+a leaf of the inhabitation tree.
 
 ~
 
-Compare this case with corresponding grammar rule:
+Compare this case with corresponding grammar rule.
 \[ 
 	( \alpha , \Gamma )  \gar
 	\bigg( \mbox{ {\Large f }}
@@ -2040,25 +2175,28 @@ Compare this case with corresponding grammar rule:
 	  \quad \bigg)
 \]
 
-Second case \textbf{Function type} --- i.e., 
+Second case is \textbf{function type}, i.e., 
 $\sigma = \tau_1 \rightarrow \dots \rightarrow \tau_n \rightarrow \alpha$
-where $n~\geq~1, \alpha~\in~A$:\\
-For every  $i \in \{1,\dots,n\}$ we create new \textit{variable name} $x_i$ which is not yet included in context $\Gamma$ as variable or constant name.
+where $n~\geq~1, \alpha~\in~A$.\\
+For every  $i \in \{1,\dots,n\}$ we create new \textit{variable name} $x_i$ 
+that is not yet included in context $\Gamma$ as variable or constant name.
  
-There is one and only one child \textit{symbol node} of the root containing "$\lambda$-head" 
-$\lambda x_1 \dots x_n$ which stands for sequence of variable names $(x_1,\dots,x_n)$.
+There is one and only one child \textit{symbol node} 
+of function type node containing $\lambda$-head
+$\lambda x_1 \dots x_n$, which stands for 
+sequence of variable names $(x_1,\dots,x_n)$.
 This symbol node containing $\lambda x_1 \dots x_n$
-has one and only one child subtree corresponding to Inhabitation trees for 
-$(\alpha,\Gamma \cup \{ (x_1,\tau_1) , \dots , (x_n,\tau_n) \})$.   
+has one and only one child subtree corresponding to  
+$\IT(\alpha;\Gamma,x_1:\tau_1 , \dots , x_n:\tau_n )$.   
 
 ~
 
-Compare this case with corresponding grammar rule:
+Compare this case with corresponding grammar rule.
 \[ 
 	( \tau_1 \rightarrow \dots \rightarrow \tau_n \rightarrow \alpha , \Gamma )  \gar
 	\bigg( \mbox{ {\Large 
 	$\lambda x_1 \dots x_n .$ 
-	}}( \alpha , \Gamma \cup \{ (x_1,\tau_1),\dots,(x_n,\tau_n) \} ) \quad \bigg)
+	}}( \alpha ; \Gamma , x_1:\tau_1,\dots,x_n:\tau_n ) \quad \bigg)
 \]
 ~\\
 \Lets consider following $(\sigma,\Gamma)$ as a simple example:
@@ -2110,46 +2248,67 @@ Which results in following tree:
 	]
 ] 
 
-
+\newpage
 \subsection{And-or tree and searching in Inhabitation tree}
+
 \Lets consider following definition of 
-\textit{And-or tree}\footnote{
-\textbf{TODO}: Mention that on WIKI there is more general definition, but 
-for our purposes is this one sufficient.}:
+\textit{and-or tree}\footnote{
+\textbf{TODO}: Mention that on [WIKI] there is more general definition, but 
+for our purposes is this one sufficient.}.
 
-\textit{And-or tree} is a rooted tree where each node is labeled as either \textit{and-node} 
-or\footnote{xor} \textit{or-node}.
-
-By \textit{solving} And-or tree $T$ we mean finding finite tree $T'$
-subgraph of $T$ such that it follows these conditions: 
-\begin{itemize}
-	\item The root of $T'$ is the root of $T$.
-	\item Each \textit{and-node} in $T'$ has all the child nodes as in $T$.
-	\item Each \textit{or-node}  in $T'$ has precisely one child 
-	      node.\footnote{\textbf{TODO}: MENTION why precisely one 
-	      and not at least one ..or CHANGE the def. }   
-\end{itemize}
+\begin{definition}
 ~
-\Lets now consider following labeling of Inhabitation tree: 
+	\begin{enumerate}
+	\item \textit{And-or tree} is a rooted possibly infinite 
+	      tree with every node labeled as either \textit{and-node} 
+	      or
+	      %\footnote{xor} 
+	      \textit{or-node}.
+	
+	\item By \textit{solving and-or tree} $T$ is meant finding finite tree $T'$
+	      subgraph of $T$ such that following conditions are met. 
+	    \begin{enumerate}
+		  \item The root of $T'$ is the root of $T$.
+		  \item Each \textit{and-node} in $T'$ has all the child nodes as in $T$.
+		  \item Each \textit{or-node}  in $T'$ has precisely one child 
+		      node.\footnote{\textbf{TODO}: MENTION why precisely one 
+		      and not at least one ..or CHANGE the def. }   
+	    \end{enumerate}
+	
+	\end{enumerate}
+
+\end{definition}
+
+~\\[1em]
+\Lets now consider following labeling of Inhabitation tree.
 
 \begin{itemize}
   \item \textbf{Type nodes}   are labeled as \textbf{or-nodes}.   
   \item \textbf{Symbol nodes} are labeled as \textbf{and-nodes}.
-\end{itemize}
+\end{itemize}~
 
-This labeling has following justification: 
+This labeling has following justification.\\
 
 Selection of exactly one
 child node in \textit{type node} corresponds to selection of exactly one
-grammar rule in order to rewrite nonterminal symbol.  
+grammar rule in order to rewrite nonterminal symbol.  \\
 
 Selection of all the child nodes in \textit{symbol node} corresponds to 
-rewriting all the nonterminal symbols in string that is being generated.  
+rewriting all the nonterminal symbols in string that is being generated.
+Or put in different words, it corresponds to filling all the slots
+for arguments with values.\\  
 
 The motivation for defining \textit{solving} of a And-or tree the way we did is that
 a found tree $T'$ corresponds to generated \lterm. 
 In order to understand this correspondence let's now talk about various tree representations
 of \lterms.
+
+
+\begin{todo}
+ & Přepsat poslední odstavec --- počítal ještě s tím že 
+   pasaže o stromové reprezentaci jsou až po této kapitole, což bylo změněno.
+\end{todo}
+
 
 \section{Tree representations of \lterms}
 \label{tree-reps}
@@ -2289,8 +2448,8 @@ Every solution to an Inhabitation tree has this just described tree form of a ty
 \section{ Inhabitation machine }
 
 \begin{todo}
-  & DESCRIBE Inhabitation Machine...
-   && něco jako na závěrještě ve stručnosti popišme 
+  & Když na to zbude čas, tak popsat Inhabitation Machine...
+   && něco jako na závěr ještě ve stručnosti popišme 
       IM, strukturu ze který je odvozenej IT. 
   & říct, že je to hezkej konstrukt vzhledem k tomu že je konečnej
   & ale je popsanej velmi zrychla (v tý knize) a implementační
@@ -2937,7 +3096,7 @@ to swapped subtrees.
 Following example illustrates the problem. \Lets have these two
 parent trees with selected nodes in bold.\\
 
-\newcommand{\lh}[1]{\lambda #1}
+
 
 \Tree [.$\lh{x_1}$ [.f [.$\lh{x_2}$ [.\textbf{g} $x_2$ c ] ] $x_1$ ] ]
 \Tree [.$\lh{x_1}$ [.h $x_1$ $\mathbf{x_1}$ ] ]
