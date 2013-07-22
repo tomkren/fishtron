@@ -601,6 +601,10 @@ selects from whole \TuF.
 In nodes with \textit{depth} $= d$ both methods select from the
 set $T$.
 
+\begin{todo}
+ & Dozjistit a dopsat jak to Koza má s vyžadovánim unikátnosti při generování.
+\end{todo}
+
 \section{Selection}
 
 In the field of evolutionary algorithms there is plenty of 
@@ -863,7 +867,7 @@ an implementation friendly refinement of
 	
 \theoremstyle{plain} 
 \newtheorem{theorem}{Theorem} 
-\newtheorem*{proposition}{Proposition} 
+\newtheorem{proposition}{Proposition} 
 \newtheorem{lemma}{Lemma} 
 \newtheorem*{corollary}{Corollary}
 
@@ -1201,22 +1205,17 @@ Term M is translated into \sexprTree $T_S[M]$ by following rules.
 
 
 \begin{todo}
-
-& ujistit se že je v části o tree reprezentacích 
-  je napsaný co to znamená že podstrom má nějakej typ,
-  že podstromy odpovídaj podvýrazum atd
-
- & říct že to je přesně ta notace co používá koza
- & EXAMPLES of tree representations of \lterms  
  & napsat transformace mezi \atTree a \sexprTree
- & nějak to sjednotit s tim uplně na začátku v popisu GP kde se popisuje
-   přímo \sexprTree a říct proč se tomu tak řiká 
-   (na tom místě co je v textu dřív)
- 
-
- & zkontrolovat že reference tree-reps se odkazuje na dobrý místo,
-   mohlo by se to rozbít tim že tree reprezentations - typovany/netypovany 
-   jsou od sebe oddelený
+%& ujistit se že je v části o tree reprezentacích 
+%  je napsaný co to znamená že podstrom má nějakej typ,
+%  že podstromy odpovídaj podvýrazum atd
+% & EXAMPLES of tree representations of \lterms  
+% & nějak to sjednotit s tim uplně na začátku v popisu GP kde se popisuje
+%   přímo \sexprTree a říct proč se tomu tak řiká 
+%   (na tom místě co je v textu dřív) 
+% & zkontrolovat že reference tree-reps se odkazuje na dobrý místo,
+%   mohlo by se to rozbít tim že tree reprezentations - typovany/netypovany 
+%   jsou od sebe oddelený
 \end{todo}
 
 \newpage
@@ -1586,19 +1585,22 @@ Then we are allowed to use the inference rule to derive statement
 
 
 \begin{todo}
-   & říct že se vždycky zastavěj (strong normalization),
+   & říct že se vždycky zastavěj (strong normalization)
+     && a jaký to má výhody pro nás v GP (duležitý),
      && potřebný definice pro to uvést v \lterms sekci
-     && musí se říc t co, tzn simpli typed l. kalkulus termy
-        a betaeta-redukce
-     && řekl bych že eta redukce je SN vždycky (tzn i untyped lk)
-        pač plati (CR+terminující pak SN) a je CR vzhledem k barendrecht-stará-žlutá
-        a terminující je rpotože zmenšuje term s nemuže zmenšovat donekonečna    
+     && musí se říct co je strongly normalizing, 
+        tzn simpli typed $lambda$-kalkulus termy a $\beta$-redukce /
+        $\beta\eta$-redukce
+%     && řekl bych že eta redukce je SN vždycky (tzn i untyped lk)
+%        pač plati (CR+terminující pak SN) a je CR vzhledem k barendrecht-stará-žlutá
+%        a terminující je rpotože zmenšuje term s nemuže zmenšovat donekonečna    
    & možná zmínit že se jedná o \textit{gentzen style proof}
    & říct že jsou to modus ponens a jeden směr věty o dedukci  
 \end{todo}
 
 
 \subsection{Tree representations of typed \lterms}
+\label{typed-tree-reps}
 
 \newcommand{\lsCurry}{$\lambda^{\ar}$\nobreakdash-Curry\xspace}
 \newcommand{\lsChurch}{$\lambda^{\ar}$\nobreakdash-Church\xspace}
@@ -1642,12 +1644,12 @@ is to add a special type node \textit{above} each node.
 More specifically,
 \lets consider \textit{\sexprTree} $t$ corresponding to a \lterm of the type
 $\sigma$ with root $r$ and subtrees $s_1 , \dots , s_n$. 
-Then corresponding \textit{typed \sexprTree} $TT_S[t]$ for typed \lterm is 
+Then corresponding \textit{typed \sexprTree} $TT[t]$ for typed \lterm is 
 obtained from the tree $t$ as follows.  
 
 \begin{equation*}
 \mbox{ 
-TT[
+TT[ 
 \Tree
 	[.r 	
 	  	  \text{$s_1$}
@@ -1655,7 +1657,7 @@ TT[
 		  \text{$\dots$}
 		  \text{$s_n$}
 	] 
-}]=
+]} =
 \mbox{
 \Tree
 	[.\text{$\sigma$ }
@@ -1670,6 +1672,11 @@ TT[
 \end{equation*}
 
 We silently suppose here that type information about every subterm is available.
+
+%And analogically we can define transformation $TTtoTerm[]$ as follows.
+
+
+
 
 \begin{todo}
  & možná konec týhle subsekce trochu přeformulovat, je to takový kostrbatý...
@@ -1895,8 +1902,7 @@ $L$ such that $L \twoheadrightarrow_{\eta} B$.
 
 
 \begin{todo}
- & co to znamená mít lnf
- & potřebuju eště nějaký \textbf{propositions} z tyhle knihy?
+ & potřebuju eště nějaký \textbf{propositions} z \cite{barendregt10} tu uvíst ?
  & ta definice je tam daná pro $\tur{}{M}{\sigma}$,
    ukazat ze ta naše je ok, že tam má navíc to $\Gamma$.
    Stačí udělat tríček že beru funkci co má lambda hlavu odpovídající 
@@ -1941,6 +1947,7 @@ The second rule can be replaced by more effective one.
 \gar
 (~\lambda~x_1~\dots~x_n~.~
 ( \alpha ; \Gamma , x_1:\tau_1 , \dots , x_n:\tau_n  )~)
+~~~~ \textbf{if } n > 0
 \] 
 
 This rule packs consecutive uses of the second rule into one use.
@@ -1956,6 +1963,7 @@ term generating method, we also provide a proof.
 \newcommand{\Gp}{\Gamma^\prime}
 
 \begin{proposition}
+\label{gram-lnf-prop}
 Let context $\Gamma$, \lterm $M$ and type $\sigma$ be given.\\
 Let $\garr$ be transitive reflexive closure of $\gar$. 
 Then
@@ -2125,7 +2133,7 @@ This means that we can use this grammar to generate all \lterms $M$ in \lnf
 with desired type $\sigma$ from \textit{building blocks} context $\Gamma$.\\
 
 \begin{todo}
- & zmínit že podobně jako mužeme transformovat inference rules
+ & možná zmínit že podobně jako mužeme transformovat inference rules
    na grammar rules, mužeme i obráceně grammar rules
    převést na inference rules - to bylo ostatně uděláno v tom dukazu ale
    je to podle mě hezký říct ty pravidla explicitně.
@@ -2482,9 +2490,11 @@ for our purposes is this one sufficient.}.
 	      %\footnote{xor} 
 	      \textit{or-node}.
 	
-	\item By \textit{solving and-or tree} $T$ is meant finding finite tree $T'$
-	      subgraph of $T$ such that following conditions are met. 
+%	\item By \textit{solving and-or tree} $T$ is meant finding finite tree $T'$
+%	      subgraph of $T$ such that following conditions are met. 
+    \item $T'$ \textit{solves} and-or tree $T$ if $T'$ satisfy following conditions.
 	    \begin{enumerate}
+	      \item $T'$ is a finite tree, subgraph of $T$. 
 		  \item The root of $T'$ is the root of $T$.
 		  \item Each \textit{and-node} in $T'$ has all the child nodes as in $T$.
 		  \item Each \textit{or-node}  in $T'$ has precisely one child 
@@ -2515,30 +2525,154 @@ rewriting all the nonterminal symbols in string that is being generated.
 Or put in different words, it corresponds to filling all the slots
 for arguments with values.\\  
 
-The motivation for defining \textit{solving} of a And-or tree the way we did is that
-a found tree $T'$ corresponds to generated \lterm. 
-In order to understand this correspondence let's now talk about various tree representations
-of \lterms.
+\newpage
+\section{ Generating terms in \lnf by solving inhabitation tree }
+
+The motivation for defining \textit{solving} and-or tree the way we did is that
+solution trees of $\IT(\sigma,\Gamma)$ are  
+\textit{typed \sexprTree{}s} representing all \lterms M in \lnf such that \GMS.
+
+
+\begin{proposition}
+\label{gram-it-prop}
+(Correctness)\\
+If \sexprTree $M'$ solves $\IT(\sigma,\Gamma)$,\\ 
+then $M'$ represents \lterm $M$ in \lnf such that \GMS. 
+\end{proposition}
+\begin{proof}
+
+We will prove following statement from which follows 
+the rest by proposition \ref{gram-lnf-prop}:
+If \sexprTree $M'$ solves $\IT(\sigma,\Gamma)$,
+then $M'$ represents \lterm $M$ such that $(\sigma,\Gamma) \garr M$.\\
+
+By induction on size of $M'$.\\
+
+\textbf{If} $\sigma = \alpha$ such that $\alpha \in A$, then 
+
+\mbox{
+$M' = $ 
+\Tree 
+[.$\alpha$ 
+   [.$f$ $M'_1$ $\dots$ $M'_m$ ]
+]}\\
+
+For some $f : \rho_1 \ar \dots \ar \rho_m \ar \alpha \in \Gamma$.\\
+
+One can easily see that $M'_i$ solves $\IT(\rho_i,\Gamma)$. 
+
+Thus by induction hypothesis we get that 
+
+$M'_i$ represents \lterm $M_i$ such that $(\rho_i,\Gamma) \garr M_i$.\\
+
+$(\sigma,\Gamma) \gar (~f~(\rho_1,\Gamma)~\dots~(\rho_m,\Gamma)~)$,
+thus $(\sigma,\Gamma) \garr (~f~M_i~\dots~M_i~)$.
+
+Since $M'$ represents $(~f~M_i~\dots~M_i~)$, the proof for the first case is complete.\\
+
+\textbf{Otherwise}, for $\sigma = \tau_1 \ar \dots \ar \tau_n \ar \alpha$ 
+such that $n> 0, \alpha \in A$
+
+\mbox{$M' = $
+\Tree [.$\tau_1\ar\dots\ar\tau_n\ar\alpha$ 
+ [.$\lh{x_1~\dots~x_n}$ [.$N'$ ] ] ]    }
+
+Again, one can easily see that $N'$ solves 
+$\IT(\alpha;\Gamma,x_1:\tau_1,\dots,x_n:\tau_n)$.
+
+Thus by induction hypothesis we get that 
+
+$N'$ represents \lterm $N$ such that 
+$( \alpha ; \Gamma , x_1:\tau_1 , \dots , x_n:\tau_n  ) \garr N$.\\
+
+$
+( \tau_1 \ar \dots \ar \tau_n \ar \alpha , \Gamma )  
+\gar
+(~\lambda~x_1~\dots~x_n~.~
+( \alpha ; \Gamma , x_1:\tau_1 , \dots , x_n:\tau_n  )~)
+$,
+
+thus $(\sigma,\Gamma) \garr (~\lambda~x_1~\dots~x_n~.~N~)$.
+
+Since $M'$ represents $(~\lambda~x_1~\dots~x_n~.~N~)$, the proof is complete.
+
+
+\end{proof}  	
+
+\newpage
+\begin{proposition}
+(Completeness)\\
+If $M$ is \lterm in \lnf such that \GMS,\\
+then there exists exactly one \sexprTree $M'$ such that 
+$M'$ represents $M$ and
+$M'$ solves $\IT(\sigma,\Gamma)$.
+\end{proposition}
+\begin{proof}
+We will prove following statement from which follows 
+the rest by proposition \ref{gram-lnf-prop}:
+If $M$ is \lterm such that $(\sigma,\Gamma) \garr M$,
+then there exists exactly one \sexprTree $M'$ such that 
+$M'$ represents $M$ and
+$M'$ solves $\IT(\sigma,\Gamma)$.\\
+
+
+By induction on the length of rewriting chain of $(\sigma,\Gamma) \garr M$.\\
+
+\textbf{If} $\sigma = \alpha$ such that $\alpha \in A$, then:
+
+$(\sigma,\Gamma)$ must rewrite to
+$(~f~( \rho_1 , \Gamma )~\dots~( \rho_m , \Gamma )~)$.
+
+And there is only one possibility for $f$ since $M$ is given.
+
+$M = (~f~M_1~\dots~M_m~)$ where $( \rho_i , \Gamma ) \garr M_i$.\\
+
+From induction hypothesis we have that 
+there exists exactly one \sexprTree $M_i'$ such that 
+$M_i'$ represents $M_i$ and
+$M_i'$ solves $\IT(\rho_i,\Gamma)$.\\
+
+In order to construct $M'$ solving $\IT(\sigma,\Gamma)$ 
+we have only one possibility since we know the right $f$ to take:
+
+\mbox{
+$M' = $ 
+\Tree 
+[.$\alpha$ 
+   [.$f$ $M'_1$ $\dots$ $M'_m$ ]
+]}\\
+
+
+\textbf{Otherwise}, for $\sigma = \tau_1 \ar \dots \ar \tau_n \ar \alpha,$ $(n > 0)$:\\
+
+
+
+$(\sigma,\Gamma)$ must rewrite to
+$(~\lambda~x_1~\dots~x_n~.~( \alpha ; \Gamma , x_1:\tau_1 , \dots , x_n:\tau_n )~)$.
+
+$M = (~\lambda~x_1~\dots~x_n~.~N~)$ where 
+$( \alpha ; \Gamma , x_1:\tau_1 , \dots , x_n:\tau_n ) \garr N$.\\
+
+From induction hypothesis we have that 
+there exists exactly one \sexprTree $N'$ such that 
+$N'$ represents $N$ and
+$N'$ solves $\IT(\alpha,\Gp)$.\\
+
+In order to construct $M'$ solving $\IT(\sigma,\Gamma)$ in non-atomic $\sigma$
+we have only one possibility:
+
+\mbox{$M' = $
+\Tree [.$\tau_1\ar\dots\ar\tau_n\ar\alpha$ 
+ [.$\lh{x_1~\dots~x_n}$ [.$N'$ ] ] ]    }
+
+
+\end{proof}
 
 
 \begin{todo}
- & Přepsat poslední odstavec --- počítal ještě s tím že 
-   pasaže o stromové reprezentaci jsou až po této kapitole, což bylo změněno.
-\end{todo}
-
-
-
-
-\section{ Generating terms in Long normal form by solving Inhabitation tree }
-	  	
-Now we can finally put the pieces together. 
-Every solution to an Inhabitation tree has this just described tree form of a typed \lterm. 
-
- 
-\begin{todo}
-& !!!
-& TALK (more?) ABOUT "Barendregt-like" subsection \ref{barlike}\\
-		Things about $\beta\eta^{-1}$ normal form, etc.   
+& skontrolovat ty dukazy pořádně sepsal sem 
+  je dost rychle a mužou bejt divný. 
+& A možná to ještě to nějak okomentovat
 \end{todo}
 
 
@@ -2588,27 +2722,61 @@ by its main design goals:\\
 
 \section{Individuals and Building blocks}
 
-\begin{todo}
- & několik fází, několik reprezentací
- & během generování se reprezentace mění 
-   && nejdří obsahuje lambdy i volný proměnný pak už ne
-      &&& vygeneruje se v \sexprTree
-      &&& ta se převedena na \atTree aby jsme provedli abstraction elimination
- & dvě možnosti jak uchovávat jedince po vygenerování
-   && \sexprTree
-      &&& currently implemented
-   && \atTree
-      &&& currently not implemented, ale neni problém dodělat
-      &&& DOĎELAT! :)
-   && ale de mezi nima volně převádět
-      &&& díky tomu že nemaj lambda abstrakce, jinak by museli bejt ve 
-          WHNF/HNF nebo něco takovýho
-   && dusledky pro křížení
-      &&& \atTree umožňuje víc křížení než \sexprTree
-          &&&& každý co de v \sexprTree umí i \atTree ale obráceně to neplatí
-      &&& \atTree je zase ekvivalentní tomu kozovskýmu  
- & říct že bilding blocks je prostě kontext
-\end{todo}
+We have two competing variants for representing individuals ---
+\textit{\atTree} and \mbox{\textit{\sexprTree}} (see \ref{tree-reps}).
+
+Individuals generated by solving inhabitation tree 
+are \sexprTree{}s, which can be easily translated to \atTree{}s. \\
+
+
+Before we start generating we do one important trick.
+Suppose we want individuals of the type 
+$\sigma = \tau_1 \ar \dots \ar \tau_n \ar \alpha$
+from building blocks context $\Gamma$.
+
+All our individuals will have form $\lam{x_1\,\dots\,x_n}{M}$.
+%Later in this chapter we will discuss problems occurring with variables
+%when performing subtree swap in order to perform crossover.
+But since those variables are same for all individuals, 
+we may do following trick.
+
+Instead of generating individuals for
+$(\tau_1 \ar \dots \ar \tau_n \ar \alpha,\Gamma)$
+we generate individuals for $(\alpha;\Gamma,x_1:\tau_1,\dots,x_n:\tau_n)$
+and remember to add the $\lambda$-head $\lh{x_1\,\dots\,x_n}$ to
+each individual when evaluating it.\\
+
+This trick has two reasons:
+\begin{enumerate}
+ \item Later in this chapter we will discuss problems occurring with variables
+       when performing subtree swap in order to perform crossover.
+       We solve those problems by performing \textit{abstraction elimination},
+       which eliminates all occurences of variables and $lambda$-abstractions
+       in a \lterm. But those problems are caused by local variables. 
+       Since $x_1\,\dots\,x_n$ are common for all \lterms, it is valid
+       to exclude them from this elimination. Since abstraction elimination
+       prolongs size of \lterms it is beneficial to lessen 
+       the effect of abstraction elimination in this way. 
+        
+ \item It also makes our method compatible with classical GP, where
+       variables are treated as ordinary element of the set $T$
+       and no $\lambda$-abstraction is used.
+       
+       This ensures that S-expressions will be generated for
+       $\Gamma$ satisfying constrains of classical GP and that
+       abstraction elimination will have no effect on such individuals.
+\end{enumerate}
+
+
+
+
+%\begin{todo}
+% & několik fází, několik reprezentací
+% & během generování se reprezentace mění 
+%   && nejdří obsahuje lambdy i volný proměnný pak už ne
+%      &&& vygeneruje se v \sexprTree
+%      &&& ta se převedena na \atTree aby jsme provedli abstraction elimination
+%\end{todo}
 
 \section{Generating individuals}
 
@@ -2816,7 +2984,7 @@ In other words, a heuristic function is \textit{admissible} if it is
 
 
 In order to describe our state space to search in \lets introduce
-extended version of our tree representation for typed \lterms from \ref{tree-reps}.
+extended version of our tree representation for typed \lterms from \ref{typed-tree-reps}.
 This extension consists in adding a new kind of leaf node $(\sigma,\Gamma)$ 
 standing for unfinished tree of a type $\sigma$ with context $\Gamma$ to use
 as set of building blocks
@@ -3069,9 +3237,11 @@ whole $nexts$ set.
 
 \begin{todo}
 & eště se musí nějak prohrotit to, že tam je navíc ta lambda hlava
-kerá ještě o něco kazí tu $depth$
-& ukázat že je to fakt to samý co kozovský klasický
-& zavýst tam pojem běhu pro ten jeden vnější while cyklus
+kerá ještě o něco kazí tu $depth$  - to už uplně neplatí tim že je v
+uvodu popsaný to že se ta hlava ukousne ale stejně to ještě pořádně zkontrolovat
+& ukázat že je to fakt to samý co kozovský klasický generování
+& zavést tam pojem run pro ten jeden vnější while cyklus 
+ (i když to je asi jasný z kontextu)
 \end{todo}
 
 
@@ -3264,7 +3434,12 @@ jako source of further reading on this subject.
 \subsection{Typed subtree swapping}
 \label{typed-swapping}
 
-
+\begin{todo}
+   & rozdíli při křížení ruznejch reprezentací 
+      && \atTree umožňuje víc křížení než \sexprTree
+          &&& každý co de v \sexprTree umí i \atTree ale obráceně to neplatí
+      && \atTree je zase ekvivalentní tomu kozovskýmu  
+\end{todo}
 
 
 \subsection{ Repairing method }
