@@ -8,10 +8,10 @@ import Text.Printf   ( printf )
 import Data.Maybe    ( fromJust )
 
 
-import Eva   ( Eva, runEva, setJobID, evalsWith, evals, flushStdout, sendJSON )
+import Eva   ( Eva, runEva, setJobID, evalsWith, evals, flushStdout, sendJSON_ , setOutputBuffer, sendJSON_new, flushStdout_new )
 import Dist  ( Dist , mkDist, distTake_new, distGet, distMax, distMin, distAvg )
 import Utils ( logIt, boxIt , JShow, jshow, putList)
-import ServerInterface ( graphCmd, multiCmd ) 
+import ServerInterface ( graphCmd, multiCmd, OutputBuffer ) 
 
 
 class Gene term opt where
@@ -192,8 +192,10 @@ logGeneration (actRun,allRuns) i pop = do
  logIt  $ " │ Worst   " ++ p2 w ++ " │"
  logIt  $ " └────────────────────────┘" 
  boxIt  $ show best 
- stdout <- flushStdout 
- sendJSON $ multiCmd [ graphCmd actRun i (b,a,w) , stdout , jshow best ]
+ --stdout <- flushStdout 
+ --sendJSON_    $ multiCmd [ graphCmd actRun i (b,a,w) , stdout , jshow best ]
+ stdout_new <- flushStdout_new 
+ sendJSON_new $ multiCmd [ graphCmd actRun i (b,a,w) , stdout_new , jshow best ]
 
 
 
@@ -224,6 +226,11 @@ nRunsByServer jobID numRuns problem = do
   ret <- runEva $ setJobID (read jobID) >> multipleRuns numRuns problem
   putList ret
 
+nRunsByServer_new :: (Show term , Evolvable term a gOpt mOpt cOpt) => 
+                     OutputBuffer -> Int -> Problem term a gOpt mOpt cOpt -> IO ()
+nRunsByServer_new buff numRuns problem = do
+  ret <- runEva $ setOutputBuffer buff >> multipleRuns numRuns problem
+  putList ret
 
 multipleRuns :: Evolvable t a go mo co => Int -> Problem t a go mo co -> Eva [(t,FitVal,Maybe Int)]
 multipleRuns numRuns problem = multipleRuns' numRuns problem

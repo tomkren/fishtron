@@ -13,7 +13,7 @@ import Data.Time.Clock     ( getCurrentTime, diffUTCTime )
 
 import Text.JSON ( encode , JSValue )
 
-import ServerInterface (jsEmptyObj, stdoutCmd, writeNextOutput)
+import ServerInterface (jsEmptyObj, stdoutCmd, writeNextOutput, writeNextOutput_new ,OutputBuffer)
 import Heval (hevalsWith, hevals)
 import Utils (Randable(..),Logable(..))
 
@@ -23,9 +23,10 @@ type Eva = StateT EvaState IO
 type JobID = Int
 
 data EvaState = EvaState {
-     evaGen    :: StdGen ,
-     evaJobID  :: Maybe JobID ,
-     evaStdout :: String
+     evaGen          :: StdGen ,
+     evaJobID        :: Maybe JobID ,
+     evaOutputBuffer :: Maybe OutputBuffer,
+     evaStdout       :: String
   }
 
 runEva :: Eva a -> IO a
@@ -44,9 +45,10 @@ runEvaWith gen eva = do
 
 initEvaState :: StdGen -> EvaState
 initEvaState gen = EvaState { 
-  evaGen    = gen,
-  evaJobID  = Nothing,
-  evaStdout = "" 
+  evaGen          = gen,
+  evaJobID        = Nothing,
+  evaOutputBuffer = Nothing,
+  evaStdout       = "" 
  }
 
 
@@ -54,6 +56,12 @@ setJobID :: Int -> Eva ()
 setJobID jobID = do
   evaState <- get
   put $ evaState{ evaJobID = Just jobID }
+
+setOutputBuffer :: OutputBuffer -> Eva ()
+setOutputBuffer buff = do
+  evaState <- get
+  put $ evaState{ evaOutputBuffer = Just buff }
+
 
 evalsWith :: (Typeable a) => String -> [String] -> a -> Eva [a]
 evalsWith file strs as = liftIO $ hevalsWith file strs as
@@ -71,14 +79,32 @@ flushStdout = do
       put $ evaState{ evaStdout = "" }  
       return $ stdoutCmd stdout
 
-sendJSON :: JSValue -> Eva ()
-sendJSON json = do
+flushStdout_new :: Eva JSValue
+flushStdout_new = do
+  evaState <- get
+  case evaOutputBuffer evaState of
+    Nothing -> return jsEmptyObj
+    Just _  -> do
+      let stdout = evaStdout evaState
+      put $ evaState{ evaStdout = "" }  
+      return $ stdoutCmd stdout
+
+sendJSON_ :: JSValue -> Eva ()
+sendJSON_ json = do
   let jsonStr = encode json
   evaState <- get
   case evaJobID evaState of
     Nothing    -> return ()
     Just jobID -> liftIO $ writeNextOutput jobID jsonStr
-     
+
+sendJSON_new :: JSValue -> Eva ()
+sendJSON_new json = do
+  let jsonStr = encode json
+  evaState <- get
+  case evaOutputBuffer evaState of
+    Nothing    -> return ()
+    Just buff  -> liftIO $ writeNextOutput_new buff jsonStr
+
 
 evaSplitStdGen :: Eva StdGen
 evaSplitStdGen = do
@@ -102,7 +128,7 @@ instance Logable Eva where
  logIt  str = do
   liftIO . putStrLn $ str
   evaState <- get
-  case evaJobID evaState of
+  case evaOutputBuffer evaState of
     Nothing -> return ()
     Just _  -> do
       let stdout  = evaStdout evaState

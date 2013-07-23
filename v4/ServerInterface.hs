@@ -6,6 +6,18 @@ import System.IO
 import Text.JSON
 import JSONUtils
 
+import Control.Monad.STM (atomically)
+import Control.Concurrent.STM.TVar (TVar,modifyTVar)
+
+type OutputBuffer = TVar [OutRecord]
+data OutRecord = OutStr String | OutEnd
+
+
+writeNextOutput_new :: OutputBuffer -> String -> IO ()
+writeNextOutput_new buff output 
+  = atomically $ modifyTVar buff (\b->(OutStr output):b)
+
+
 writeNextOutput :: Int -> String -> IO ()
 writeNextOutput i output = do
   outI <- incrementFile ("server/output/" ++ (show i) ++ "/_hotovo.txt")

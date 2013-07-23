@@ -1,12 +1,14 @@
-module Job ( problemList_ , job_ ) where
+module Job ( problemList_ , job_ , job_new, problemList_new ) where
 
 import GP_Core ( nRunsByServer )
 import Text.JSON
 import JSONUtils
-import ProblemUtils ( ProblemOpts , po2json, poCode, json2po , runProblemOpts )
+import ProblemUtils ( ProblemOpts , po2json, poCode, json2po , runProblemOpts, runProblemOpts_new )
 import Data.Typeable ( Typeable )
 import Data.Map (Map)
 import qualified Data.Map as Map
+
+import ServerInterface ( OutputBuffer ) 
 
 
 
@@ -18,6 +20,49 @@ import qualified Problems.Ant.Problem        as Ant
 import qualified Problems.BA.Problem         as BA
 import qualified Problems.EvenParity.Problem as EvenParity
 
+
+regs_new = 
+ [ reg_new Fly02.reg
+ , reg_new Fly.reg 
+ , reg_new BigCtx.reg_head
+ , reg_new EvenParity.reg
+ , reg_new BigCtx.reg
+ , reg_new SSR.reg 
+ , reg_new Ant.reg
+ , reg_new (BA.reg :: POU) 
+ ]
+
+
+
+job_new :: OutputBuffer -> String -> IO ()
+job_new buff cmd = case ( decode cmd :: Result JSValue ) of
+  Error str  -> do
+    putStrLn $ "ERROR in job_new : " ++ str
+    putStrLn $ cmd
+  Ok jsvalue -> do
+    let code = fromJsStr $ jsProp jsvalue "code" 
+        Just runFun = Map.lookup code problemTab_new 
+    putStrLn code
+    runFun jsvalue buff
+
+problemList_new :: JSValue
+problemList_new = jsArr $ snd jobs_new
+
+jobs_new :: ( [ (Code , JSValue -> OutputBuffer -> IO()) ] , [JSValue] )
+jobs_new = unzip regs_new
+
+reg_new :: Typeable a => ProblemOpts a -> ((String, JSValue -> OutputBuffer -> IO ()), JSValue)
+reg_new po = ( (poCode po , \ jsv buff -> runProblemOpts_new (json2po po jsv) buff ) , po2json po )
+
+
+problemTab_new :: Map Code ( JSValue -> OutputBuffer -> IO () )
+problemTab_new  = Map.fromList $ fst jobs_new 
+
+
+
+
+
+
 regs = 
  [ reg Fly02.reg
  , reg Fly.reg 
@@ -28,7 +73,6 @@ regs =
  , reg Ant.reg
  , reg (BA.reg :: POU) 
  ]
-
 
 
 problemList_ :: JSValue
@@ -43,6 +87,7 @@ job_ jobID cmd = case ( decode cmd :: Result JSValue ) of
     putStrLn code
     runFun jsvalue jobID 
 
+ 
 
 type JobID = String
 type Code  = String
