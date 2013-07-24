@@ -1,10 +1,15 @@
-module ServerInterface where
+module ServerInterface 
+( OutputBuffer
+, OutRecord(..) 
+, writeNextOutput
+, jsEmptyObj
+, stdoutCmd 
+, graphCmd 
+, multiCmd ) where
 
-import System.IO
---import System.Directory
 
-import Text.JSON
-import JSONUtils
+import Text.JSON (JSValue)
+import JSONUtils (jsArr,jsObj,jsStr,jsNum)
 
 import Control.Monad.STM (atomically)
 import Control.Concurrent.STM.TVar (TVar,modifyTVar)
@@ -13,52 +18,9 @@ type OutputBuffer = TVar [OutRecord]
 data OutRecord = OutStr String | OutEnd
 
 
-writeNextOutput_new :: OutputBuffer -> String -> IO ()
-writeNextOutput_new buff output 
+writeNextOutput :: OutputBuffer -> String -> IO ()
+writeNextOutput buff output 
   = atomically $ modifyTVar buff (\b->(OutStr output):b)
-
-
-writeNextOutput :: Int -> String -> IO ()
-writeNextOutput i output = do
-  outI <- incrementFile ("server/output/" ++ (show i) ++ "/_hotovo.txt")
-  myWriteFile ("server/output/"++ (show i) ++ "/" ++ (show outI )++ ".txt" ) output
-
-
-incrementFile :: FilePath -> IO Int
-incrementFile filename = do 
-  file <- openFile filename ReadWriteMode
-  str <- hGetLine file 
-  let num  = 1 + ( read str ) :: Int
-      str' = show num
-  hSeek file AbsoluteSeek 0
-  hPutStr file str'
-  hClose file 
-  return num
-
-
-myWriteFile :: FilePath -> String -> IO ()
-myWriteFile filename str = do 
-  file <- openFile filename WriteMode
-  hPutStr file str
-  hClose file
-
-myReadFile :: FilePath -> IO String
-myReadFile filename = do
- file <- openFile filename ReadMode 
- str <- hGetLine file 
- hClose file
- return str
-
-
-problemListToJSON :: [(String,String,JSValue)] -> JSValue
-problemListToJSON problemList =  jsArr . map toProblemObj $ problemList
- where
-  toProblemObj :: (String,String,JSValue) -> JSValue
-  toProblemObj ( code , name , datas ) = jsObj [
-    ( "code" , jsStr code  ) ,
-    ( "name" , jsStr name  ) ,
-    ( "data" , datas       )
-   ]
 
 
 jsEmptyObj :: JSValue
@@ -69,11 +31,12 @@ stdoutCmd str = jsObj [
   ("type" , jsStr "stdout" ) ,
   ("msg"  , jsStr str      ) ]
 
-graphCmd :: Int -> Int -> (Double,Double,Double) -> JSValue
-graphCmd runI genI (best,avg,worst) = jsObj [ 
+graphCmd :: Int -> Int -> (Double,Double,Double) -> Bool -> JSValue
+graphCmd runI genI (best,avg,worst) isWinner = jsObj [ 
   ("type"   , jsStr "generationInfo" ) ,
   ("i"      , jsNum genI ) ,
   ("run"    , jsNum runI ) ,
+  ("isWinner", jsNum (if isWinner then 1 else 0) ),
   ("ffvals" , jsObj [
       ( "best"  , jsNum best  ) ,
       ( "avg"   , jsNum avg   ) ,

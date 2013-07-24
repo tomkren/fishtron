@@ -1,10 +1,16 @@
 {-# LANGUAGE TypeSynonymInstances, FlexibleInstances #-}
 
-module Eva where
+module Eva 
+( Eva
+, runEva
+, evalsWith
+, evals
+, setOutputBuffer
+, sendJSON
+, flushStdout
+, evaSplitStdGen
+) where
 
-import Data.List
-import Data.Map.Strict (Map)
-import qualified Data.Map.Strict as Map
 
 import System.Random       ( StdGen, getStdGen, split )
 import Control.Monad.State ( StateT, runStateT, put, get, liftIO )
@@ -13,7 +19,7 @@ import Data.Time.Clock     ( getCurrentTime, diffUTCTime )
 
 import Text.JSON ( encode , JSValue )
 
-import ServerInterface (jsEmptyObj, stdoutCmd, writeNextOutput, writeNextOutput_new ,OutputBuffer)
+import ServerInterface (jsEmptyObj, stdoutCmd, writeNextOutput ,OutputBuffer) 
 import Heval (hevalsWith, hevals)
 import Utils (Randable(..),Logable(..))
 
@@ -24,7 +30,6 @@ type JobID = Int
 
 data EvaState = EvaState {
      evaGen          :: StdGen ,
-     evaJobID        :: Maybe JobID ,
      evaOutputBuffer :: Maybe OutputBuffer,
      evaStdout       :: String
   }
@@ -46,16 +51,10 @@ runEvaWith gen eva = do
 initEvaState :: StdGen -> EvaState
 initEvaState gen = EvaState { 
   evaGen          = gen,
-  evaJobID        = Nothing,
   evaOutputBuffer = Nothing,
   evaStdout       = "" 
  }
 
-
-setJobID :: Int -> Eva ()
-setJobID jobID = do
-  evaState <- get
-  put $ evaState{ evaJobID = Just jobID }
 
 setOutputBuffer :: OutputBuffer -> Eva ()
 setOutputBuffer buff = do
@@ -69,19 +68,10 @@ evalsWith file strs as = liftIO $ hevalsWith file strs as
 evals :: (Typeable a) => [String] -> a -> Eva [a]
 evals strs as = liftIO $ hevals strs as
 
+
 flushStdout :: Eva JSValue
 flushStdout = do
   evaState <- get
-  case evaJobID evaState of
-    Nothing -> return jsEmptyObj
-    Just _  -> do
-      let stdout = evaStdout evaState
-      put $ evaState{ evaStdout = "" }  
-      return $ stdoutCmd stdout
-
-flushStdout_new :: Eva JSValue
-flushStdout_new = do
-  evaState <- get
   case evaOutputBuffer evaState of
     Nothing -> return jsEmptyObj
     Just _  -> do
@@ -89,21 +79,14 @@ flushStdout_new = do
       put $ evaState{ evaStdout = "" }  
       return $ stdoutCmd stdout
 
-sendJSON_ :: JSValue -> Eva ()
-sendJSON_ json = do
-  let jsonStr = encode json
-  evaState <- get
-  case evaJobID evaState of
-    Nothing    -> return ()
-    Just jobID -> liftIO $ writeNextOutput jobID jsonStr
 
-sendJSON_new :: JSValue -> Eva ()
-sendJSON_new json = do
+sendJSON :: JSValue -> Eva ()
+sendJSON json = do
   let jsonStr = encode json
   evaState <- get
   case evaOutputBuffer evaState of
     Nothing    -> return ()
-    Just buff  -> liftIO $ writeNextOutput_new buff jsonStr
+    Just buff  -> liftIO $ writeNextOutput buff jsonStr
 
 
 evaSplitStdGen :: Eva StdGen

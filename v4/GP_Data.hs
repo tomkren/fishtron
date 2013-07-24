@@ -8,11 +8,15 @@ import Eva (Eva,evaSplitStdGen)
 import GP_Core ( Gene, Muta, Cros, generateIt, mutateIt, crossIt , Prob )
 import Utils   ( getRandom, getRandomR, getRandomL, getNormal, randIf, randCase,logIt,boxIt,boxThem )
 
-import TTerm
-import TTree
+import TTerm (Typ,Context)
+import TTree (CTT(..),ttreeDepth,ttreeChangeSubtree,ttreeSubtree,TTree,ttreePoses2, 
+              TTPos,ttreePoses2WithTyps,ttreePoses2ByTyp, ttreePoses2WithTyps_onlyCompatible )
 
 import IM3 ( SearchOptions , prove , kozaSearchOptions , allEdgesSearchOptions , geomSearchOptions )
 --import IM2 ( SearchOptions , prove , kozaSearchOptions , allEdgesSearchOptions , geomSearchOptions )
+
+--import IM ( SearchOptions , prove , kozaSearchOptions , allEdgesSearchOptions , geomSearchOptions )
+
 import System.Random (StdGen)
 
 --import InhabitationMachines ( proveN , randProveN, randProveUnique, proveOneWithLimit, Limit, kozaProveN )
@@ -32,7 +36,7 @@ type StdDev = Double
 -- CTT -------------------------------------------------------------------------
 
 instance Gene CTT CTTGen where generateIt = cttGen
-instance Cros CTT CTTCro where crossIt    = cttCro2
+instance Cros CTT CTTCro where crossIt    = cttCro3
 
 data CTTGen  
 -- = CTTG_Koza     Typ Context Limit  -- pomocí starýho IM 
@@ -81,7 +85,9 @@ cttCro2 CTTC_Koza ctt1@(CTT v1 tree1) ctt2@(CTT v2 tree2) = do
   (cPos1,typ) <- crossPos1 tree1
   maybe_cPos2 <- crossPos2 tree2 typ
   case maybe_cPos2 of
-   Nothing -> return ( ctt1 , ctt2 )
+   Nothing -> do 
+    logIt "BUM!"
+    return ( ctt1 , ctt2 )
    Just cPos2 -> do
     let sub1          = ttreeSubtree tree1 cPos1
         (tree2',sub2) = ttreeChangeSubtree tree2 cPos2 sub1
@@ -92,7 +98,7 @@ cttCro2 CTTC_Koza ctt1@(CTT v1 tree1) ctt2@(CTT v2 tree2) = do
  where
   maxDepth = 17
   crossPos1 :: TTree -> Eva (TTPos,Typ)
-  crossPos1 tree = do
+  crossPos1 tree  = do
    poses <- let (ts,ns) = ttreePoses2WithTyps tree 
              in if null ns 
                  then return ts 
@@ -106,6 +112,46 @@ cttCro2 CTTC_Koza ctt1@(CTT v1 tree1) ctt2@(CTT v2 tree2) = do
                  else randCase 0.9 ns ts
    if null poses 
     then return Nothing 
+    else Just `liftM` getRandomL poses
+
+cttCro3 :: CTTCro -> CTT -> CTT -> Eva (CTT,CTT)
+cttCro3 CTTC_Koza ctt1@(CTT v1 tree1) ctt2@(CTT v2 tree2) = do
+  (cPos1,typ) <- crossPos1 tree1 tree2
+  maybe_cPos2 <- crossPos2 tree2 typ
+  case maybe_cPos2 of
+   Nothing -> do 
+    logIt "BUM!"
+    return ( ctt1 , ctt2 )
+   Just cPos2 -> do
+    let sub1          = ttreeSubtree tree1 cPos1
+        (tree2',sub2) = ttreeChangeSubtree tree2 cPos2 sub1
+        (tree1',_   ) = ttreeChangeSubtree tree1 cPos1 sub2
+        child1        = if ttreeDepth tree1' > maxDepth then tree1 else tree1'
+        child2        = if ttreeDepth tree2' > maxDepth then tree2 else tree2'
+    return ( (CTT v1 child1) , (CTT v2 child2) )
+ where
+  maxDepth = 17
+  crossPos1 :: TTree  -> TTree -> Eva (TTPos,Typ)
+  crossPos1 tree druhej = do
+   poses <- let (ts,ns) = ttreePoses2WithTyps_onlyCompatible tree druhej --ttreePoses2WithTyps tree 
+             in if null ns 
+                 then return ts 
+                 else if null ts
+                       then return ns
+                       else randCase 0.9 ns ts
+   getRandomL poses
+  crossPos2 :: TTree -> Typ -> Eva (Maybe TTPos)
+  crossPos2 tree typ = do
+   poses <- let (ts,ns) = ttreePoses2ByTyp typ tree -- ttreePoses2 tree 
+             in if null ns 
+                 then return ts 
+                 else if null ts
+                       then return ns
+                       else randCase 0.9 ns ts
+   if null poses 
+    then do
+      logIt "hamba" 
+      return Nothing 
     else Just `liftM` getRandomL poses
 
 -- KTree --------------------------------------------------------------------------

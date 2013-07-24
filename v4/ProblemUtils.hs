@@ -7,13 +7,13 @@ module ProblemUtils (
   boolListProblem2,
   asType,
   casesFF,
-  ProblemOpts(..),PO_BLP(..),PO_CTTP(..),IntSlider(..),JobID,runProblemOpts,po2json,poCode,json2po,
-  runProblemOpts_new
+  ProblemOpts(..),PO_BLP(..),PO_CTTP(..),IntSlider(..),JobID,po2json,poCode,json2po,
+  runProblemOpts
 ) where
 
 import GP_Core (FitFun(..),Problem(..),NumGene,PopSize,mkGenOps)
 import GP_Core (GenOpProbs,FitVal,mkFF1)
-import GP_Core ( nRunsByServer, nRunsByServer_new )
+import GP_Core ( nRunsByServer )
 import GP_Data (CTTGen(..),CTTCro(..))
 import GP_Data (ListGen(..),ListCro(..),ListMut(..), BoolGen(..), BoolMut(..), Len)
 
@@ -21,8 +21,8 @@ import GP_Data (ListGen(..),ListCro(..),ListMut(..), BoolGen(..), BoolMut(..), L
 import TTree (CTT)
 import TTerm (Typ,Context)
 
-import Text.JSON
-import JSONUtils
+import Text.JSON (JSValue)
+import JSONUtils (jsObj,jsStr,jsProp,jsArr,jsNum,fromJsStr,fromJsInt)
 
 import Data.Typeable ( Typeable )
 
@@ -149,8 +149,10 @@ json2intSlider json = IntSlider {
 
 type JobID = String
 
-runProblemOpts :: (Typeable a) => ProblemOpts a -> JobID -> IO ()
-runProblemOpts pOpts jobID = case pOpts of
+
+
+runProblemOpts :: (Typeable a) => ProblemOpts a -> OutputBuffer -> IO ()
+runProblemOpts pOpts buff = case pOpts of
   PO_BLP_ blp ->
    let numRuns     = ( slider_value . blp_numRuns $ blp )
        numGene     = ( slider_value . blp_numGene $ blp )
@@ -162,7 +164,7 @@ runProblemOpts pOpts jobID = case pOpts of
        genOps      = mkGenOps (mOpt,cOpt) (33,33,33)
        fitFun      = mkFF1 $ return . (blp_ff blp)
        problemName = blp_code blp
-    in nRunsByServer jobID numRuns $ Problem problemName popSize numGene genOps gOpt mOpt cOpt fitFun
+    in nRunsByServer buff numRuns $ Problem problemName popSize numGene genOps gOpt mOpt cOpt fitFun
   PO_CTTP_ cttp ->
    let numRuns     = ( slider_value . cttp_numRuns $ cttp )
        numGene     = ( slider_value . cttp_numGene $ cttp )
@@ -178,39 +180,7 @@ runProblemOpts pOpts jobID = case pOpts of
        genOpProbs  = (10,0,90)
        genOps      = mkGenOps (mOpt,cOpt) genOpProbs
        problemName = cttp_code cttp
-    in nRunsByServer jobID numRuns $ Problem problemName popSize numGene genOps gOpt mOpt cOpt fitFun
-
-
-runProblemOpts_new :: (Typeable a) => ProblemOpts a -> OutputBuffer -> IO ()
-runProblemOpts_new pOpts buff = case pOpts of
-  PO_BLP_ blp ->
-   let numRuns     = ( slider_value . blp_numRuns $ blp )
-       numGene     = ( slider_value . blp_numGene $ blp )
-       popSize     = ( slider_value . blp_popSize $ blp )
-       len         = ( slider_value . blp_length  $ blp )
-       gOpt        = LG_ BG_ len
-       mOpt        = LM_OnePoint BM_Not len 
-       cOpt        = LC_OnePoint () len
-       genOps      = mkGenOps (mOpt,cOpt) (33,33,33)
-       fitFun      = mkFF1 $ return . (blp_ff blp)
-       problemName = blp_code blp
-    in nRunsByServer_new buff numRuns $ Problem problemName popSize numGene genOps gOpt mOpt cOpt fitFun
-  PO_CTTP_ cttp ->
-   let numRuns     = ( slider_value . cttp_numRuns $ cttp )
-       numGene     = ( slider_value . cttp_numGene $ cttp )
-       popSize     = ( slider_value . cttp_popSize $ cttp )
-
-       typ         = cttp_typ  cttp
-       ctx         = cttp_ctx  cttp
-       fitFun      = cttp_ff   cttp
-       gOpt        = cttp_gOpt cttp -- CTTG_Koza2 typ ctx 
-       mOpt        = ()
-       cOpt        = CTTC_Koza
-
-       genOpProbs  = (10,0,90)
-       genOps      = mkGenOps (mOpt,cOpt) genOpProbs
-       problemName = cttp_code cttp
-    in nRunsByServer_new buff numRuns $ Problem problemName popSize numGene genOps gOpt mOpt cOpt fitFun
+    in nRunsByServer buff numRuns $ Problem problemName popSize numGene genOps gOpt mOpt cOpt fitFun
 
 
 -- ---------------------------------------------------------------

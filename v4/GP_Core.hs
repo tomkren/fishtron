@@ -1,14 +1,28 @@
 {-# LANGUAGE MultiParamTypeClasses, FlexibleInstances, TupleSections #-}
 
-module GP_Core where
+module GP_Core 
+( Gene(..)
+, Muta(..)
+, Cros(..)
+, Prob
+, FitFun(..)
+, Problem(..)
+, NumGene
+, PopSize
+, GenOpProbs
+, mkGenOps
+, FitVal
+, mkFF1
+, nRunsByServer
+) where
 
 import Control.Monad ( liftM )
 import Data.Typeable ( Typeable )
 import Text.Printf   ( printf )
-import Data.Maybe    ( fromJust )
+import Data.Maybe    ( fromJust,isJust )
 
 
-import Eva   ( Eva, runEva, setJobID, evalsWith, evals, flushStdout, sendJSON_ , setOutputBuffer, sendJSON_new, flushStdout_new )
+import Eva   ( Eva, runEva, evalsWith, evals, setOutputBuffer, sendJSON, flushStdout )
 import Dist  ( Dist , mkDist, distTake_new, distGet, distMax, distMin, distAvg )
 import Utils ( logIt, boxIt , JShow, jshow, putList)
 import ServerInterface ( graphCmd, multiCmd, OutputBuffer ) 
@@ -81,8 +95,8 @@ evolveBegin :: ( Gene t go, Typeable a,JShow t) => RunInfo -> Problem t a go mo 
 evolveBegin runInfo p = do
  let n = popSize p 
  terms <- generateIt n (gOpt p)
- ret@(pop0,_) <- evalFF (fitFun p) terms
- logGeneration runInfo 0 pop0
+ ret@(pop0,mWin) <- evalFF (fitFun p) terms
+ logGeneration runInfo 0 (isJust mWin) pop0
  return ret
 
 evolveStep ::(Muta t mo,Cros t co,Typeable a,JShow t)=> RunInfo->Problem t a go mo co -> Int -> Dist t -> Eva(Dist t,Maybe(t,FitVal))
@@ -90,8 +104,8 @@ evolveStep runInfo p i pop = do
  let best     =  getBest pop 
  terms        <- distTake_new (popSize p - 1) pop   
  terms'       <- performOps (genOps p) terms 
- ret@(pop',_) <- evalFF (fitFun p) ( best : terms' )
- logGeneration runInfo i pop'
+ ret@(pop',mWin) <- evalFF (fitFun p) ( best : terms' )
+ logGeneration runInfo i (isJust mWin) pop'
  return ret
 
 
@@ -173,8 +187,8 @@ getBest :: Dist term -> term
 getBest pop = best 
  where Just (best,_) = distMax pop 
 
-logGeneration :: (JShow term) => RunInfo -> Int -> Dist term -> Eva ()
-logGeneration (actRun,allRuns) i pop = do  
+logGeneration :: (JShow term) => RunInfo -> Int -> Bool -> Dist term -> Eva ()
+logGeneration (actRun,allRuns) i isWinner pop = do  
  let Just (best,b) = distMax pop
      a             = distAvg pop
      Just (_   ,w) = distMin pop 
@@ -191,11 +205,10 @@ logGeneration (actRun,allRuns) i pop = do
  logIt  $ " │ Average " ++ p2 a ++ " │"
  logIt  $ " │ Worst   " ++ p2 w ++ " │"
  logIt  $ " └────────────────────────┘" 
+ if isWinner then logIt "WINNER!!!!!!!" else return ()
  boxIt  $ show best 
- --stdout <- flushStdout 
- --sendJSON_    $ multiCmd [ graphCmd actRun i (b,a,w) , stdout , jshow best ]
- stdout_new <- flushStdout_new 
- sendJSON_new $ multiCmd [ graphCmd actRun i (b,a,w) , stdout_new , jshow best ]
+ stdout <- flushStdout 
+ sendJSON $ multiCmd [ graphCmd actRun i (b,a,w) isWinner , stdout , jshow best ]
 
 
 
@@ -221,14 +234,8 @@ mkFF1 ff = FF1 ff ()
 -- Running --------------------------------------------------------------------
 
 nRunsByServer :: (Show term , Evolvable term a gOpt mOpt cOpt) => 
-                 String -> Int -> Problem term a gOpt mOpt cOpt -> IO ()
-nRunsByServer jobID numRuns problem = do
-  ret <- runEva $ setJobID (read jobID) >> multipleRuns numRuns problem
-  putList ret
-
-nRunsByServer_new :: (Show term , Evolvable term a gOpt mOpt cOpt) => 
                      OutputBuffer -> Int -> Problem term a gOpt mOpt cOpt -> IO ()
-nRunsByServer_new buff numRuns problem = do
+nRunsByServer buff numRuns problem = do
   ret <- runEva $ setOutputBuffer buff >> multipleRuns numRuns problem
   putList ret
 

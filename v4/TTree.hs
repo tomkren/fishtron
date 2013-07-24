@@ -4,7 +4,7 @@ module TTree
 ( CTT (..),
   TTree (..),
   TTPos,
-  mkCTT, -- <============== možná bug v něm!!!! 
+  --mkCTT, -- <============== možná bug v něm!!!! 
   mkCTT2,
   ttreeSubtree,
   ttreeSubtrees,
@@ -13,7 +13,8 @@ module TTree
   ttreePoses2,
 
   ttreePoses2WithTyps,
-  ttreePoses2ByTyp
+  ttreePoses2ByTyp,
+  ttreePoses2WithTyps_onlyCompatible
 ) where
 
 import Data.List
@@ -27,11 +28,20 @@ import JSONUtils
 
 import TTerm
 
+
+import qualified Data.Set as Set
+--import qualified Data.Map as Map
+import Data.Set (Set)
+--import Data.Map (Map)
+
+
 data CTT = CTT Context TTree 
 
 data TTree = TTree Symbol Typ [TTree] 
 
 type TTPos = [Int]
+
+
 
 
 mkCTT2 :: Context -> TTerm -> CTT
@@ -142,6 +152,23 @@ ttreePoses2WithTyps t =
   poses2xx pos (TTree _ typ []) = [Left (pos,typ)]
   poses2xx pos (TTree _ typ ts) = 
    (Right (pos,typ)) : (concatMap (\(i,t)-> poses2xx (i:pos) t ) (zip [1..] ts) )
+
+ 
+
+ttreePoses2WithTyps_onlyCompatible :: TTree -> TTree -> ([(TTPos,Typ)],[(TTPos,Typ)])
+ttreePoses2WithTyps_onlyCompatible prvni druhej =
+ let (ters,nonters) = ttreePoses2WithTyps prvni
+     setTypuVDruhym = ttreeTypsSet druhej
+     vyhodCoNemajTypVDruhym poziceSTypy 
+       = filter ( \(_,typ) -> Set.member typ setTypuVDruhym ) poziceSTypy
+  in ( vyhodCoNemajTypVDruhym ters , vyhodCoNemajTypVDruhym nonters  )
+
+
+ttreeTypsSet :: TTree -> Set Typ
+ttreeTypsSet (TTree _ typ ts) = Set.unions $ (Set.singleton typ) : (map ttreeTypsSet ts)    
+
+
+
 
 ttreePoses2ByTyp :: Typ -> TTree -> ([TTPos],[TTPos])
 ttreePoses2ByTyp typ t = 
