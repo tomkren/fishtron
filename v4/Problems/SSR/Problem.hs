@@ -26,7 +26,9 @@ reg = PO_CTTP_ PO_CTTP {
 
   cttp_gOpt        = CTTG_Koza2 dou1 ctx                          , 
   
-  cttp_ff          = FF6 (asType::Double->Double) ff "Problems.SSR.Funs" 
+  cttp_ff          = FF6 (asType::Double->Double) ff "Problems.SSR.Funs", 
+  
+  cttp_saveBest    = False -- True 
   
 }
 

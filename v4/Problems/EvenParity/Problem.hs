@@ -19,7 +19,7 @@ reg = PO_CTTP_ PO_CTTP {
   cttp_code        = "ep"                                     ,
   cttp_info        = "Even-parity problem." ,
   cttp_data        = jsObj [ ( "im" , imGraphInJSON prog_typ prog_ctx ) ] ,
-  cttp_numRuns     = IntSlider "Runs"            1 10    1    1   ,
+  cttp_numRuns     = IntSlider "Runs"            1 100   50   1   ,
   cttp_numGene     = IntSlider "Generations"     0 500   50   10  ,
   cttp_popSize     = IntSlider "Population size" 0 5000  500  100 ,
   
@@ -30,9 +30,11 @@ reg = PO_CTTP_ PO_CTTP {
 --cttp_gOpt        = CTTG_Koza2    prog_typ prog_ctx  , 
 --cttp_gOpt        = CTTG_AllEdges prog_typ prog_ctx  , 
 
-  cttp_ff          = FF6 prog_type ff "Problems.EvenParity.Funs" 
+  cttp_ff          = FF6 prog_type ff "Problems.EvenParity.Funs", 
   
+  cttp_saveBest    = True
 }
+
 
 
 

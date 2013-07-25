@@ -12,6 +12,8 @@ module TTerm
 , makeVarsUnique 
 , checkTyp
 , toSki, toSki'
+
+,fullEtaReduce
 ) where
 
 import Data.List ( nub, (\\) , intercalate )
@@ -43,6 +45,43 @@ data TTerm =
  TLam Symbol TTerm  Typ |
  TApp TTerm  TTerm  Typ
  deriving (Ord,Eq)
+
+-----------------------------------------------------------
+-- eta-reduction ------------------------------------------
+
+fullEtaReduce :: TTerm -> TTerm
+fullEtaReduce t = case oneEtaReduce t of
+  Nothing -> t
+  Just t' -> fullEtaReduce t'
+
+oneEtaReduce :: TTerm -> Maybe TTerm
+oneEtaReduce t = case t of
+ TLam x ( TApp m (TVar x' xPrimeTyp ) typApp ) typLam 
+  | x == x' && (not (elem x (etaFV m))) -> Just m  
+  | otherwise -> do
+      m' <- oneEtaReduce m
+      return $ TLam x ( TApp m' (TVar x' xPrimeTyp ) typApp ) typLam
+ 
+ TVar _ _     -> Nothing 
+ TVal _ _     -> Nothing 
+ TLam x m typ -> do
+  m' <- oneEtaReduce m
+  return $ TLam x m' typ
+ TApp m n typ -> case oneEtaReduce m of
+  Nothing -> do
+    n' <- oneEtaReduce n
+    return $ TApp m n' typ
+  Just m' -> Just $ TApp m' n typ
+ 
+
+
+etaFV :: TTerm -> [Symbol]
+etaFV (TVar v   _) = [v]
+etaFV (TVal v   _) = [] 
+etaFV (TApp p q _) = nub $ (fv p) ++ (fv q) -- neefektivni
+etaFV (TLam v p _) = (fv p) \\ [v]
+
+
 
 -- substitution ------------------------------------
 

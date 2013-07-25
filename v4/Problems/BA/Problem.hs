@@ -14,7 +14,8 @@ reg = PO_BLP_ PO_BLP {
   blp_numGene     = IntSlider "Generations"     0 100   10   10  ,
   blp_popSize     = IntSlider "Population size" 0 1000  500 100  , -- dřív 5000 ale začlo to s předěláním Evy dělat stackoverflow :(
   blp_length      = IntSlider "Genom length"    0 1000  200  10  ,
-  blp_ff          = ff
+  blp_ff          = ff                                           ,
+  blp_saveBest    = True
 }
 
 

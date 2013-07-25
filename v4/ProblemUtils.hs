@@ -62,7 +62,8 @@ data PO_BLP = PO_BLP {
   blp_code        :: String           ,
   blp_info        :: String           ,
   blp_data        :: JSValue          ,
-  blp_ff          :: [Bool] -> Double }
+  blp_ff          :: [Bool] -> Double ,
+  blp_saveBest    :: Bool             }
 
 
 blp2json :: PO_BLP -> JSValue
@@ -97,7 +98,8 @@ data PO_CTTP a = PO_CTTP {
   cttp_ff          :: FitFun CTT a       ,
   cttp_typ         :: Typ                ,
   cttp_ctx         :: Context            ,
-  cttp_gOpt        :: CTTGen         
+  cttp_gOpt        :: CTTGen             ,
+  cttp_saveBest    :: Bool 
  }
 
 cttp2json :: PO_CTTP a -> JSValue
@@ -164,7 +166,8 @@ runProblemOpts pOpts buff = case pOpts of
        genOps      = mkGenOps (mOpt,cOpt) (33,33,33)
        fitFun      = mkFF1 $ return . (blp_ff blp)
        problemName = blp_code blp
-    in nRunsByServer buff numRuns $ Problem problemName popSize numGene genOps gOpt mOpt cOpt fitFun
+       saveBest    = blp_saveBest blp
+    in nRunsByServer buff numRuns $ Problem problemName popSize numGene genOps gOpt mOpt cOpt fitFun saveBest
   PO_CTTP_ cttp ->
    let numRuns     = ( slider_value . cttp_numRuns $ cttp )
        numGene     = ( slider_value . cttp_numGene $ cttp )
@@ -180,7 +183,9 @@ runProblemOpts pOpts buff = case pOpts of
        genOpProbs  = (10,0,90)
        genOps      = mkGenOps (mOpt,cOpt) genOpProbs
        problemName = cttp_code cttp
-    in nRunsByServer buff numRuns $ Problem problemName popSize numGene genOps gOpt mOpt cOpt fitFun
+       saveBest    = cttp_saveBest cttp
+
+    in nRunsByServer buff numRuns $ Problem problemName popSize numGene genOps gOpt mOpt cOpt fitFun saveBest
 
 
 -- ---------------------------------------------------------------
@@ -215,7 +220,7 @@ cttProblem2 problemName ff typ ctx numGene popSize =
      gOpt       = CTTG_Koza2 typ ctx 
      mOpt       = ()
      cOpt       = CTTC_Koza
-  in Problem problemName popSize numGene (mkGenOps (mOpt,cOpt) genOpProbs) gOpt mOpt cOpt ff
+  in Problem problemName popSize numGene (mkGenOps (mOpt,cOpt) genOpProbs) gOpt mOpt cOpt ff True
 
 -- cttProblem' :: String -> (a -> (FitVal, Bool)) -> a -> Typ -> Context -> NumGene -> PopSize -> CTTProblem a
 -- cttProblem' name ff as = cttProblem name (FF3 show as (return . ff)) 
@@ -235,4 +240,4 @@ boolListProblem2 problemName genOpProbs len ff numGene popSize =
      cOpt   = LC_OnePoint () len
      genOps = mkGenOps (mOpt,cOpt) genOpProbs
      fitFun = mkFF1 $ return . ff
-  in Problem problemName popSize numGene genOps gOpt mOpt cOpt fitFun
+  in Problem problemName popSize numGene genOps gOpt mOpt cOpt fitFun True

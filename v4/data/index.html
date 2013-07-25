@@ -55,6 +55,7 @@ var Global = {
   popsize : undefined ,
 
   plotData : {} ,
+  performanceCurves :{},
 
   Problems : {},
   
@@ -69,18 +70,6 @@ var Global = {
 
 
 $(document).ready(function() {
-
-  var haf = 'Haf!';
-
-  var testObj = { 
-    haf: 'Vrrr!' }
-
-  with( testObj ){
-    var y;
-    eval(' y = haf ;' );
-    console.log('!! with test : ' + y );
-  }
-
 
   $('#go-input-row').hide(); // chtelo by to ho uplne smazat, ale čte se z něho ..
 
@@ -336,6 +325,12 @@ var go_new = function(){
 
   Global.plotData = {} ;
 
+  // initing peformance curves
+  Global.performanceCurves = [] ;
+  for( var i = 0 ; i <= Global.numgens ; i ++ ){
+    Global.performanceCurves[i] = 0;
+  }
+
 
   var sendBack = {};
 
@@ -410,191 +405,6 @@ var out_new = function(  ){
 
 };
 
-//var go_ = function(){
-//
-//  Global.startTime = new Date().getTime();
-//
-//  $('#progressbar').css('width','0%');
-//  $('#progressfutral').show('slow');
-//
-//  var problemCode = $('#problem-select_').val() ;
-//
-//
-//  var po = Global.problemsOpts[problemCode] ;
-//
-//  Global.problemName = problemCode;
-//  Global.numruns     = po.numRuns.value;
-//  Global.numgens     = po.numGene.value;
-//  Global.popsize     = po.popSize.value;
-//
-//
-//  switch( Global.problemName ){
-//    case 'ssr_old' : Global.fenotyp = ssr ; break;
-//    default        : Global.fenotyp = undefined  ;
-//  }
-//
-//
-//  var problemSegment = Global.Problems[ problemCode ] ;
-//
-//  if( problemSegment ){
-//
-//    if( problemSegment.data ){
-//      
-//      if( problemSegment.data.im ){
-//        Global.myDrawGraph( '#viewport' , problemSegment.data.im );
-//      }
-//
-//    }
-//
-//    problemSegment.onGo();
-//  }
-//
-//
-//
-//  Global.plotData = {} ;
-//
-//
-//  var sendBack = {};
-//
-//  var po = Global.problemsOpts[problemCode];
-//
-//  for( var prop in po ){
-//    
-//    for( var j in po.sliders ){
-//      var name = po.sliders[j];
-//      if( name == prop ){
-//        sendBack[prop] = po[prop];
-//      }
-//    }
-//
-//    if( prop == 'code' ){
-//      sendBack[prop] = po[prop];
-//    }
-//
-//  }
-//
-//
-//  var input = JSON.stringify( sendBack );
-//  console.log( input );
-//
-//  $.ajax({
-//    url : 'run_/' + encodeURIComponent( input  ) , 
-//    type: 'GET'  ,
-//    success: function(wid) {  
-//        console.log( wid + ' [VYTVOREN]' );
-//
-//        if( $('#opts_').attr('class').match(/.*(active)/ ) ){
-//
-//          if( Global.fenotyp !== undefined ){ // kvuli zpetny kopat..
-//            $('#special-link').tab('show');
-//          }else if( Global.Problems[problemCode] ){
-//            $('#special-link').tab('show');
-//          }else{
-//            $('#stdout-link').tab('show');
-//          }
-//        }
-//
-//        setTimeout( function(){out_new( );} , 100 );
-//    }
-//  });
-//
-//
-//
-//};
-
-//var go = function(){
-//
-//  Global.startTime = new Date().getTime();
-//
-//  $('#progressbar').css('width','0%');
-//  $('#progressfutral').show('slow');
-//
-//  var input = $('#go-input').attr('value') ;
-//
-//  var parts = input.split(' ');
-//  Global.problemName = parts[0];
-//  Global.numruns = Number( parts[1] );
-//  Global.numgens = Number( parts[2] );
-//  Global.popsize = Number( parts[3] );
-//
-//
-//  switch( Global.problemName ){
-//    case 'ssr_old' : Global.fenotyp = ssr ; break;
-//    //case 'ant_old' : Global.fenotyp = ant ; break;
-//    default        : Global.fenotyp = undefined  ;
-//  }
-//
-//
-//  var problemSegment = Global.Problems[ Global.problemName ] ;
-//
-//  if( problemSegment ){
-//
-//    if( problemSegment.data ){
-//      
-//      if( problemSegment.data.im ){
-//        Global.myDrawGraph( '#viewport' , problemSegment.data.im );
-//      }
-//
-//    }
-//
-//    problemSegment.onGo();
-//  }
-//
-//
-//
-//  Global.plotData = {} ;
-//
-//  console.log(input);
-//
-//  $.ajax({
-//    url : 'run/' + encodeURIComponent(input) , 
-//    type: 'GET'  ,
-//    success: function(wid) {  
-//        console.log( wid + ' [VYTVOREN]' );
-//
-//        if( $('#opts').attr('class').match(/.*(active)/ ) ){
-//
-//          if( Global.fenotyp !== undefined ){ // kvuli zpetny kopat..
-//            $('#special-link').tab('show');
-//          }else if( Global.Problems[Global.problemName] ){
-//            $('#special-link').tab('show');
-//          }else{
-//            $('#stdout-link').tab('show');
-//          }
-//        }
-//
-//        setTimeout( function(){out( wid , 1 )} , 100 );
-//    }
-//  });
-//
-//};
-
-
-
-
-//var out = function( wid , oid ){
-//  
-//  $.ajax({
-//    url: 'out/' + wid + '/' + oid ,
-//    type: 'GET'  ,
-//    success: function( output ) { 
-//      if( output === '' ){
-//        console.log( wid + ' [HOTOVO]' ); 
-//        $('#progressfutral').hide('slow');
-//
-//        var runTime = ( (new Date().getTime()) - Global.startTime ) * 0.001 ;
-//        runCmd({type:'stdout',msg : 'Run time was ' + runTime + ' seconds.' });
-//
-//      } else if( output === '_' ){ //working ale zatim žadnej output
-//        setTimeout( function(){out( wid , oid )} , 100 );
-//      } else {
-//        runCmd( JSON.parse(output) );
-//        setTimeout( function(){out( wid , oid+1 )} , 1 );
-//      }
-//    }
-//  });
-//
-//};
 
 
 var runCmd = function(){  
@@ -624,7 +434,14 @@ var runCmd = function(){
 
       if( cmdObj.isWinner ){
         console.log('WINNER!!!!!!!!!!!!!');
+
+        for( var i = Global.actGen ; i <= Global.numgens ; i ++ ){
+          Global.performanceCurves[i] ++ ;  
+        }
+         
       }
+
+      drawPerformanceCurves( Global.performanceCurves , Global.actRun , Global.popsize );
 
 
       var runGraphCmd = function( g , x , y ){
@@ -818,8 +635,61 @@ var drawPlot = function( graphI , plotData ){
   $.plot('#graph'+ graphI +'-div',  flattenPlotData( plotData ) );
 };
 
+var drawPerformanceCurves = function( curves_ , actRun , popsize ){
+
+  var curves = checkAllTheSame( curves_ );
+  
+  //if(  )
+
+  var probabs =  _.map( curves , function(x){ return x / actRun ; }   ) ;
+
+  var graf1 = []; 
+  //var 
+  graf2 = []; 
+
+  for( var i in probabs ){
+    graf1[i] = [i,probabs[i]];
+    graf2[i] = [i, numIndivsMustbeProcessed( probabs[i] , i , popsize )  ];
+
+  }
+
+  $.plot('#graph3-div',  [graf1] );
+
+  $.plot('#graph4-div' , [{ data: graf2 , points : { show: true }, lines : { show: true } , color: 'gray' }] );
+
+  
+  //console.log( actRun );
+  //console.log( probabs );
+  //console.log( graf );
 
 
+};
+
+var runsRequied = function( probab ){
+
+  if( probab >= 1 ){
+    return  1 ;
+  }
+
+  return Math.ceil( Math.log(1-0.99)/Math.log(1-probab) );
+}
+
+var numIndivsMustbeProcessed = function( probab , genI , popsize ){
+  return (genI+1) * popsize * runsRequied( probab );
+}
+
+var checkAllTheSame = function( xs ){
+  var allsame = true;
+  var first = xs[0];
+  for( var i in xs ){
+    if( xs[i] != first){
+      return xs;
+    }
+  }  
+  var ret = _.map(xs,function(x){return x;});
+  ret[0] = ret[0] * 0.999999999999;
+  return ret;
+}
 
 
 //---------------------------------------------------------------------------
@@ -866,6 +736,14 @@ var drawPlot = function( graphI , plotData ){
                      rel="tooltip" data-toggle="tooltip" data-placement="top" 
                      title="Best-best, average-best and worst-best in every generation through all runs.">
                      BB-AB-WB</a></li>
+              <li><a href="#graph3" data-toggle="tab" 
+                     rel="tooltip" data-toggle="tooltip" data-placement="top" 
+                     title="Koza's Performace Curves">
+                     Koza's Performace Curve 1 - probabilities</a></li>
+              <li><a href="#graph4" data-toggle="tab" 
+                     rel="tooltip" data-toggle="tooltip" data-placement="top" 
+                     title="Koza's Performace Curves">
+                     Koza's Performace Curve 2 - individuals to be processed</a></li>
             </ul>
           </li>
           <li><a href="#im" id="im-link">Inhabitation Machine</a></li>
@@ -1015,6 +893,23 @@ var drawPlot = function( graphI , plotData ){
             in every generation through all runs.
           </div> 
         </div>
+
+        <div class="tab-pane span7" id="graph3">
+          <div id="graph3-div" class="graph"></div>
+          <br>
+          <div class="alert alert-info" style="width:734px">
+            Performance curve 1 - probabilities
+          </div> 
+        </div>
+
+        <div class="tab-pane span7" id="graph4">
+          <div id="graph4-div" class="graph"></div>
+          <br>
+          <div class="alert alert-info" style="width:734px">
+            Performance curve 2 - individuals to be processed
+          </div> 
+        </div>
+
 
         <div class="tab-pane span10" id="im" >
 

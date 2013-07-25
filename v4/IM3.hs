@@ -17,7 +17,7 @@ module IM3
 
 import Debug.Trace
 
-import TTerm (Symbol,Typ(..),TTerm(..),Context,ttermTyp,toSki,toSki',checkTyp)
+import TTerm (Symbol,Typ(..),TTerm(..),Context,ttermTyp,toSki,toSki',checkTyp,fullEtaReduce)
 
 import TTree (CTT,mkCTT2)
 
@@ -50,7 +50,7 @@ prove :: SearchOptions -> [CTT]
 prove so = 
   let ( so' , problemHead ) = problemHeadPreproccess so
       trees = proveWith2 so'
-   in map ( mkCTT2 problemHead . toSki . tree2tterm ) trees   -- <============== toSki s ' je s typeCheckem ...........
+   in map ( mkCTT2 problemHead . toSki . fullEtaReduce . tree2tterm ) trees   -- <============== toSki s ' je s typeCheckem ...........
 
 problemHeadPreproccess :: SearchOptions -> ( SearchOptions , Context )
 problemHeadPreproccess so = 

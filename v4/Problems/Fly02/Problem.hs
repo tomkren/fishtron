@@ -32,7 +32,9 @@ reg = PO_CTTP_ PO_CTTP {
 
   cttp_gOpt        = CTTG_Geom     prog_typ ctx 0.75 ,  --CTTG_Koza2 prog_typ ctx    , 
   
-  cttp_ff          = FF6 prog_type ff "Problems.Fly02.Funs" 
+  cttp_ff          = FF6 prog_type ff "Problems.Fly02.Funs" , 
+  
+  cttp_saveBest    = True
   
 }
 

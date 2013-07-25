@@ -8,6 +8,9 @@ mkAll h t m f e = (h,t,m,f,e)
 mkFst3 :: h -> t -> m -> (h,t,m)
 mkFst3 h t m = (h,t,m)
 
+mkFst2 :: h -> t -> (h,t)
+mkFst2 h t = (h,t)
+
 
 s :: (a->b->c) -> (a->b) -> a -> c
 s x y z = x z (y z)

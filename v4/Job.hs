@@ -21,11 +21,11 @@ import qualified Problems.EvenParity.Problem as EvenParity
 
 
 regs = 
- [ reg Fly02.reg
+ [ reg BigCtx.reg
+ , reg Fly02.reg
  , reg Fly.reg 
  , reg BigCtx.reg_head
  , reg EvenParity.reg
- , reg BigCtx.reg
  , reg SSR.reg 
  , reg Ant.reg
  , reg (BA.reg :: POU) 

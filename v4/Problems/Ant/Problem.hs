@@ -23,7 +23,9 @@ reg = PO_CTTP_ PO_CTTP {
   
   cttp_gOpt        = CTTG_Koza2 ant ctx                           , 
 
-  cttp_ff          = FF5 "ff" "Problems.Ant.Funs" ()
+  cttp_ff          = FF5 "ff" "Problems.Ant.Funs" (), 
+  
+  cttp_saveBest    = True
   
 }
 

@@ -50,6 +50,7 @@ data Problem term a gOpt mOpt cOpt = Problem
  , mOpt        :: mOpt
  , cOpt        :: cOpt
  , fitFun      :: FitFun term a
+ , saveBest    :: Bool
  }
 
 
@@ -102,9 +103,9 @@ evolveBegin runInfo p = do
 evolveStep ::(Muta t mo,Cros t co,Typeable a,JShow t)=> RunInfo->Problem t a go mo co -> Int -> Dist t -> Eva(Dist t,Maybe(t,FitVal))
 evolveStep runInfo p i pop = do
  let best     =  getBest pop 
- terms        <- distTake_new (popSize p - 1) pop   
+ terms        <- distTake_new (popSize p - (if saveBest p then 1 else 0) ) pop   
  terms'       <- performOps (genOps p) terms 
- ret@(pop',mWin) <- evalFF (fitFun p) ( best : terms' )
+ ret@(pop',mWin) <- evalFF (fitFun p) (if saveBest p then ( best : terms' ) else terms' )
  logGeneration runInfo i (isJust mWin) pop'
  return ret
 
