@@ -26,6 +26,7 @@ regs =
  , reg Fly.reg 
  , reg BigCtx.reg_head
  , reg EvenParity.reg
+ , reg EvenParity.rege
  , reg SSR.reg 
  , reg Ant.reg
  , reg (BA.reg :: POU) 

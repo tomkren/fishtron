@@ -13,11 +13,12 @@ module IM3
  , allEdgesSearchOptions
  , geomSearchOptions 
  , prove 
+ , proveCTTerm
  ) where
 
 import Debug.Trace
 
-import TTerm (Symbol,Typ(..),TTerm(..),Context,ttermTyp,toSki,toSki',checkTyp,fullEtaReduce)
+import TTerm (Symbol,Typ(..),TTerm(..),Context,ttermTyp,toSki,toSki',checkTyp,fullEtaReduce,CTTerm(..))
 
 import TTree (CTT,mkCTT2)
 
@@ -45,6 +46,13 @@ import PolyUtils ( Substi , Table, Entry(..), TypHead , Edge, MGU
 
 
 --proveAll :: Int -> Typ -> Context -> [CTT]
+
+proveCTTerm :: SearchOptions -> [CTTerm]
+proveCTTerm so = 
+  let ( so' , problemHead ) = problemHeadPreproccess so
+      trees = proveWith2 so'
+   in map ( CTTerm problemHead . toSki . fullEtaReduce . tree2tterm ) trees   -- <============== toSki s ' je s typeCheckem ...........
+
 
 prove :: SearchOptions -> [CTT]
 prove so = 

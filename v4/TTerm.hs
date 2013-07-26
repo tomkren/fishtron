@@ -14,13 +14,22 @@ module TTerm
 , toSki, toSki'
 
 ,fullEtaReduce
+,CTTerm(..)
+,ttermSubtree,ttermChangeSubtree,ttermDepth,TTermPos
+,ttermPoses2WithTyps_onlyCompatible,ttermPoses2ByTyp
 ) where
 
 import Data.List ( nub, (\\) , intercalate )
 import Data.Typeable ( Typeable )
 import Text.ParserCombinators.Parsec ( Parser, ParseError, parse, (<|>), eof, char, many1, noneOf, skipMany1, space )
 
-import Utils ( newSymbol )
+import Data.Either(Either(..),lefts,rights)
+
+import Utils ( newSymbol , JShow(..) )
+import JSONUtils(jsStr)
+
+import qualified Data.Set as Set
+import Data.Set (Set)
 
 --import Util  ( newSymbol )
 --import Heval ( eval )
@@ -45,6 +54,133 @@ data TTerm =
  TLam Symbol TTerm  Typ |
  TApp TTerm  TTerm  Typ
  deriving (Ord,Eq)
+
+
+
+-----------------------------------------------
+-- CTTerm --------------------------------------
+
+
+data CTTerm = CTTerm Context TTerm
+
+type TTermPos = [Int]
+
+
+instance Show CTTerm where
+ show (CTTerm ctx tt) = case ctx of
+  [] -> show tt
+  _  -> let vars = intercalate " " . map fst $ ctx
+         in "\\ "++ vars ++ " -> " ++ show tt 
+
+instance JShow CTTerm where
+  jshow_js ctt = Just . jsStr . jsShow $ ctt
+
+
+jsShow :: CTTerm -> String
+jsShow (CTTerm ctx tt) =
+ let vars = intercalate "," . map fst $ ctx
+  in "function("++ vars ++ "){return " ++ jsShowBody tt ++ ";}"
+
+jsShowBody :: TTerm -> String
+jsShowBody tt = "\'fake\'"
+
+-- let symbol' = transformExceptions symbol 
+-- in case ttrees of
+--     [] -> symbol'
+--     _  ->
+--      if isBinop symbol' && length ttrees == 2
+--       then let [l,r] = ttrees
+--                op    = tail . init $ symbol'
+--             in "(" ++ jsShowBody l ++ op ++ jsShowBody r ++ ")"
+--       else let inside = intercalate "," . map jsShowBody $ ttrees 
+--             in symbol' ++ "(" ++ inside ++ ")"
+
+
+
+
+ttermPoses2WithTyps :: TTerm -> ([(TTermPos,Typ)],[(TTermPos,Typ)])
+ttermPoses2WithTyps t = 
+  let xs  = poses2xx [] t 
+      rev = map (\(pos,typ)->(reverse pos,typ))
+   in ( rev . lefts $ xs , rev . rights $ xs )
+ where
+  poses2xx :: [Int] -> TTerm -> [ Either ([Int],Typ) ([Int],Typ) ]
+  poses2xx pos tterm = case tterm of
+    TVar x typ   -> [Left (pos,typ)]
+    TVal x typ   -> [Left (pos,typ)]
+    TLam x m typ -> (Right (pos,typ)) : poses2xx (1:pos) m
+    TApp m n typ -> (Right (pos,typ)) : ( ( poses2xx (1:pos) m ) ++ ( poses2xx (2:pos) n ) )
+
+
+ttermPoses2WithTyps_onlyCompatible :: TTerm -> TTerm -> ([(TTermPos,Typ)],[(TTermPos,Typ)])
+ttermPoses2WithTyps_onlyCompatible prvni druhej =
+ let (ters,nonters) = ttermPoses2WithTyps prvni
+     setTypuVDruhym = ttermTypsSet druhej
+     vyhodCoNemajTypVDruhym poziceSTypy 
+       = filter ( \(_,typ) -> Set.member typ setTypuVDruhym ) poziceSTypy
+  in ( vyhodCoNemajTypVDruhym ters , vyhodCoNemajTypVDruhym nonters  )
+
+
+ttermTypsSet :: TTerm -> Set Typ
+ttermTypsSet tterm = case tterm of
+ TVar x   typ -> Set.singleton typ
+ TVal x   typ -> Set.singleton typ
+ TLam x m typ -> Set.insert typ (ttermTypsSet m)
+ TApp m n typ -> Set.union (ttermTypsSet m) (ttermTypsSet n)
+
+--ttermPoses2ByTyp
+ttermPoses2ByTyp :: Typ -> TTerm -> ([TTermPos],[TTermPos])
+ttermPoses2ByTyp typ t = 
+  let xs  = poses2 [] t 
+      rev = map reverse 
+   in ( rev . lefts $ xs , rev . rights $ xs )
+ where
+  poses2 :: [Int] -> TTerm -> [ Either [Int] [Int] ]
+  poses2 pos tterm = case tterm of
+    TVar x typ'   | typ == typ' -> [Left pos]
+                  | otherwise   -> []
+    TVal x typ'   | typ == typ' -> [Left pos]
+                  | otherwise   -> []
+    TLam x m typ' | typ == typ' -> (Right pos) : (poses2 (1:pos) m)
+                  | otherwise   -> poses2 (1:pos) m
+    TApp m n typ' | typ == typ' -> (Right pos) : ( ( poses2 (1:pos) m ) ++ ( poses2 (2:pos) n ) )
+                  | otherwise   -> (poses2 (1:pos) m) ++ (poses2 (2:pos) n)
+
+
+
+ttermSubtree :: TTerm -> TTermPos -> TTerm
+ttermSubtree t []     = t
+ttermSubtree t (i:is) = case t of
+ TVar x   typ -> error "in ttermSubtree; case TVar"
+ TVal x   typ -> error "in ttermSubtree; case TVal"
+ TLam x m typ -> ttermSubtree m is
+ TApp m n typ | i == 1 -> ttermSubtree m is
+              | i == 2 -> ttermSubtree n is
+
+
+ttermChangeSubtree :: TTerm -> TTermPos -> TTerm -> (TTerm,TTerm)
+ttermChangeSubtree tterm []     newSub = (newSub,tterm) 
+ttermChangeSubtree tterm (i:is) newSub = case tterm of
+ TVar x   typ -> error "in ttermSubtree; case TVar"
+ TVal x   typ -> error "in ttermSubtree; case TVal"
+ TLam x m typ -> let (m',oldSub) = ttermChangeSubtree m is newSub
+                  in ( TLam x m' typ , oldSub )
+ TApp m n typ | i == 1 -> let (m',oldSub) = ttermChangeSubtree m is newSub
+                           in ( TApp m' n typ , oldSub )
+              | i == 2 -> let (n',oldSub) = ttermChangeSubtree n is newSub
+                           in ( TApp m n' typ , oldSub ) 
+
+
+ttermDepth :: TTerm -> Int
+ttermDepth tt = case tt of
+ TVar _   _ -> 0
+ TVal _   _ -> 0
+ TLam _ m _ -> 1 + (ttermDepth m)
+ TApp m n _ -> 1 + (max (ttermDepth m) (ttermDepth n))  
+
+
+
+
 
 -----------------------------------------------------------
 -- eta-reduction ------------------------------------------

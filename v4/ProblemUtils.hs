@@ -7,19 +7,19 @@ module ProblemUtils (
   boolListProblem2,
   asType,
   casesFF,
-  ProblemOpts(..),PO_BLP(..),PO_CTTP(..),IntSlider(..),JobID,po2json,poCode,json2po,
+  ProblemOpts(..),PO_BLP(..),PO_CTTP(..),PO_CTTeP(..),IntSlider(..),JobID,po2json,poCode,json2po,
   runProblemOpts
 ) where
 
 import GP_Core (FitFun(..),Problem(..),NumGene,PopSize,mkGenOps)
 import GP_Core (GenOpProbs,FitVal,mkFF1)
 import GP_Core ( nRunsByServer )
-import GP_Data (CTTGen(..),CTTCro(..))
+import GP_Data (CTTGen(..),CTTCro(..),CTTermGen(..),CTTermCro(..))
 import GP_Data (ListGen(..),ListCro(..),ListMut(..), BoolGen(..), BoolMut(..), Len)
 
 
 import TTree (CTT)
-import TTerm (Typ,Context)
+import TTerm (Typ,Context,CTTerm)
 
 import Text.JSON (JSValue)
 import JSONUtils (jsObj,jsStr,jsProp,jsArr,jsNum,fromJsStr,fromJsInt)
@@ -32,23 +32,27 @@ import ServerInterface ( OutputBuffer )
 
 
 
-data ProblemOpts a = PO_BLP_ PO_BLP | PO_CTTP_ (PO_CTTP a) 
+data ProblemOpts a = PO_BLP_ PO_BLP | PO_CTTP_ (PO_CTTP a) | PO_CTTeP_ (PO_CTTeP a) 
 
 
 poCode :: ProblemOpts a -> String
 poCode po = case po of
-  PO_BLP_  x ->  blp_code x
-  PO_CTTP_ x -> cttp_code x
+  PO_BLP_  x  ->  blp_code x
+  PO_CTTP_ x  -> cttp_code x
+  PO_CTTeP_ x -> cttep_code x
 
 po2json :: ProblemOpts a -> JSValue
 po2json po = case po of
-  PO_BLP_  x ->  blp2json x
-  PO_CTTP_ x -> cttp2json x
+  PO_BLP_  x  ->  blp2json x
+  PO_CTTP_ x  -> cttp2json x
+  PO_CTTeP_ x -> cttep2json x
+
 
 json2po :: ProblemOpts a -> JSValue -> ProblemOpts a
 json2po po json = case po of
-  PO_BLP_  x -> PO_BLP_  $ json2blp  x json
-  PO_CTTP_ x -> PO_CTTP_ $ json2cttp x json
+  PO_BLP_  x -> PO_BLP_   $ json2blp  x json
+  PO_CTTP_ x -> PO_CTTP_  $ json2cttp x json
+  PO_CTTeP_ x-> PO_CTTeP_ $ json2cttep x json
 
 
 
@@ -119,6 +123,39 @@ json2cttp cttp json = cttp {
   cttp_popSize = json2intSlider $ jsProp json "popSize"        
  }
 
+data PO_CTTeP a = PO_CTTeP {
+  
+  cttep_numRuns     :: IntSlider          , 
+  cttep_numGene     :: IntSlider          , 
+  cttep_popSize     :: IntSlider          , 
+                                                
+  cttep_code        :: String             ,
+  cttep_info        :: String             ,
+  cttep_data        :: JSValue            ,
+  
+  cttep_ff          :: FitFun CTTerm a       ,
+  cttep_typ         :: Typ                ,
+  cttep_ctx         :: Context            ,
+  cttep_gOpt        :: CTTermGen             ,
+  cttep_saveBest    :: Bool 
+ }
+
+cttep2json :: PO_CTTeP a -> JSValue
+cttep2json cttp = jsObj [
+  ( "code"    , jsStr          $ cttep_code    cttp                      ),
+  ( "info"    , jsStr          $ cttep_info    cttp                      ),
+  ( "data"    ,                  cttep_data    cttp                      ),
+  ( "numRuns" , intSlider2json $ cttep_numRuns cttp                      ),
+  ( "numGene" , intSlider2json $ cttep_numGene cttp                      ),
+  ( "popSize" , intSlider2json $ cttep_popSize cttp                      ),
+  ( "sliders" , jsArr $ map jsStr [ "numRuns", "numGene" , "popSize"  ] )]
+
+json2cttep :: PO_CTTeP a -> JSValue -> PO_CTTeP a
+json2cttep cttep json = cttep {
+  cttep_numRuns = json2intSlider $ jsProp json "numRuns"  , 
+  cttep_numGene = json2intSlider $ jsProp json "numGene"  , 
+  cttep_popSize = json2intSlider $ jsProp json "popSize"        
+ }
 
 
 data IntSlider = IntSlider { 
@@ -186,7 +223,24 @@ runProblemOpts pOpts buff = case pOpts of
        saveBest    = cttp_saveBest cttp
 
     in nRunsByServer buff numRuns $ Problem problemName popSize numGene genOps gOpt mOpt cOpt fitFun saveBest
+  PO_CTTeP_ cttep ->
+   let numRuns     = ( slider_value . cttep_numRuns $ cttep )
+       numGene     = ( slider_value . cttep_numGene $ cttep )
+       popSize     = ( slider_value . cttep_popSize $ cttep )
 
+       typ         = cttep_typ  cttep
+       ctx         = cttep_ctx  cttep
+       fitFun      = cttep_ff   cttep
+       gOpt        = cttep_gOpt cttep 
+       mOpt        = ()
+       cOpt        = CTTermC_Koza
+
+       genOpProbs  = (10,0,90)
+       genOps      = mkGenOps (mOpt,cOpt) genOpProbs
+       problemName = cttep_code cttep
+       saveBest    = cttep_saveBest cttep
+
+    in nRunsByServer buff numRuns $ Problem problemName popSize numGene genOps gOpt mOpt cOpt fitFun saveBest
 
 -- ---------------------------------------------------------------
 
