@@ -1,0 +1,278 @@
+Total time: 2484.5771097s
+
+(\ x0 -> nand (foldr (k (k (foldr (c_ c (b_ foldr k (||)) x0) (foldr (k (c (fold
+r k) (tail_ x0))) (foldr k (foldr (c_ c (s (b_ (c_ foldr) (b_ k k) (c_ c (s (b_
+s (b_ foldr (b k)) (s (b_ c (c_ b_ nand) (||)) (c nor))) (||)) x0)) i) (tail_ x0
+)) (foldr (k (k (foldr (s (b_ b (||) (s (&&) i)) (b (s (&&)) nand)) (foldr (k (c
+ (foldr k) (tail_ x0))) (head_ (tail_ x0)) (tail_ x0)) x0))) (head_ x0) (tail_ x
+0)) x0) x0) (tail_ x0)) x0))) (nand (head_ (tail_ (tail_ (tail_ (tail_ x0))))) (
+nor (foldr (c nand) (foldr (k (c (foldr k) (tail_ x0))) (foldr (k (s (c (s_ (c_
+nand) (k (c (foldr k) x0)) (k (foldr (b_ (s (&&)) (s nor) nand) (head_ x0) x0)))
+) i)) (foldr (b_ (s nor) (s nor) nand) (foldr k (foldr (||) (head_ x0) (tail_ x0
+)) x0) x0) x0) (tail_ x0)) x0) (nor (head_ x0) (head_ x0)))) (tail_ x0)) (nand (
+foldr (b (s nand) (c_ (b k) (c_ c (b_ foldr k (||)) x0) (head_ (tail_ (tail_ x0)
+)))) (head_ (tail_ x0)) x0) (nor (head_ (tail_ (tail_ (tail_ x0)))) (nor (head_
+x0) ((&&) (head_ x0) (head_ (tail_ x0)))))),0.9375,Nothing)
+(\ x0 -> nand (nand (nand (nand (foldr k (foldr k ((||) ((&&) (head_ x0) (head_
+x0)) (foldr k (head_ x0) x0)) x0) x0) (foldr (b (c_ (||) (s nand i)) (s nand i))
+ (head_ x0) x0)) (foldr (c_ c (c (b_ (s_ foldr) (b_ k k) (s_ (c_ nor) (&&) (s no
+r ((||) ((||) (nor (head_ (tail_ x0)) (head_ x0)) ((&&) (head_ x0) (head_ x0))))
+))) i) x0) (head_ x0) (tail_ x0))) (foldr (c_ nand (s nand i)) (foldr (c (&&)) (
+foldr (c_ (s_ (&&)) (s_ (c_ (c_ (k i) (s nand i))) (b (s (||)) (c_ (||) (s (&&)
+i))) i) i) (nand (nand (head_ x0) (head_ (tail_ x0))) (foldr (b (s nand) (c_ nan
+d (s nand i))) (foldr (c_ (s_ (||)) nand i) ((||) (foldr (c_ (s_ nand) (c (b_ b
+(||) i) (s nor i)) (s (||) i)) (head_ x0) x0) (foldr nand (foldr (c_ (||) (s nan
+d i)) (nand (head_ (tail_ x0)) (foldr (s_ (c_ (||)) k (c_ (&&) (c_ nand i (head_
+ x0)) (head_ x0))) (head_ x0) x0)) x0) x0)) x0) x0)) x0) x0) x0)) (foldr (c_ c (
+c (b_ (s_ foldr) (b_ k k) (||)) i) x0) (head_ x0) x0),0.9375,Nothing)
+(\ x0 -> foldr (s (b_ (s_ nor) (c (&&)) ((&&) (nand (head_ x0) (nor (head_ x0) (
+head_ x0))))) (c nor)) (nand (head_ x0) (nor (head_ x0) (head_ x0))) x0,1.0,Just
+ 5)
+(\ x0 -> foldr (s_ (s_ nor) (s_ (s_ (||)) (c nor) (b nor i)) (c (&&))) (nand (fo
+ldr (b_ (s_ nor (s_ (||) (s nor (s nand i)) (s nor i))) (s nand) (s (b_ (s_ nand
+) (c (&&)) (s (&&) i)) (c (c (b_ (s_ (||)) (c (&&)) (c (||) (head_ x0))) (s nor
+i))))) (nand (head_ x0) (foldr (c (&&)) (head_ (tail_ x0)) (tail_ x0))) x0) (fol
+dr (b (s nor) (c nor)) ((&&) (head_ x0) (foldr (b (s nor) (c (b_ (s_ (&&)) (s_ n
+or (s_ (||) (s nor (s nand i)) i)) nand) (s_ (||) (s nor (s nand i)) (s nor i)))
+) (head_ x0) (tail_ x0))) (tail_ x0))) x0,1.0,Just 12)
+(\ x0 -> foldr (s_ b (b_ nor ((&&) (foldr (||) (head_ x0) x0)) (b_ (s (&&) i) (n
+and (head_ (tail_ x0))) (s (||) (s_ nor (c (||) (head_ x0)) i)))) (c (&&))) (fol
+dr (s (b_ (s_ (||)) (||) (s_ nand (s (||) i) i)) (k i)) (foldr (k i) (nand (head
+_ (tail_ x0)) (head_ x0)) x0) x0) (tail_ x0),0.9375,Nothing)
+(\ x0 -> foldr (c_ (s_ (||)) (b_ (s_ nor (c (foldr (||)) x0)) (b_ (s_ nor (c nan
+d ((&&) (head_ x0) (head_ x0)))) (c nor) (s nand i)) (s nand i)) (c (&&) (foldr
+nand (head_ (tail_ x0)) x0))) (head_ x0) x0,0.875,Nothing)
+(\ x0 -> foldr (s_ (s_ nor) (b nor i) (c (&&))) (nand (foldr (c nor) (head_ x0)
+x0) ((&&) (head_ x0) (foldr (c (&&)) (head_ (tail_ x0)) x0))) x0,1.0,Just 29)
+(\ x0 -> foldr (c_ (s_ (&&)) (s_ s (s_ (b_ nor) (||) (&&)) nor) i) (foldr (b nan
+d (c (s (b_ foldr (b k) (c nand)) i) (tail_ x0))) (foldr (s_ c (s_ (b_ nor) (||)
+ (s_ (s_ (&&)) (c_ c (c (b_ foldr k k)) (tail_ x0)) (s_ (c_ nand) (c nand) i)))
+(s_ (&&) i (s_ (||) (s_ nor (s (&&) i) i) i))) ((||) (head_ (tail_ x0)) (head_ x
+0)) (tail_ x0)) x0) (tail_ (tail_ x0)),0.875,Nothing)
+(\ x0 -> foldr (c_ (s_ nor) (&&) (s nor (c (foldr k) x0))) (foldr (||) (foldr (s
+_ c (s (b_ (b_ nand) nor (s (||) (s (||) (s (||) i)))) (||)) i) (foldr (s_ c (s
+(b_ (b_ nand) nor (s (||) i)) (||)) i) (foldr (c_ nor (s nor (s (||) (c (foldr k
+) x0)))) (foldr nand ((&&) (head_ x0) (foldr (s_ b nand (&&)) (foldr (||) (head_
+ x0) x0) x0)) x0) x0) (tail_ x0)) x0) x0) x0,0.875,Nothing)
+(\ x0 -> foldr (s_ (s_ nor) (s (b_ (s_ nor) (c (&&)) (s nor i)) (c nand)) (c nor
+)) (foldr (k (k (foldr (s_ (c_ (||)) (s (b_ (s_ nor) (c (&&)) (s nor ((||) (fold
+r (s_ (c_ nor) (s (b_ (s_ nor) (s_ nor (s nand i)) (c_ b (c (s_ b_ (&&) (&&)) (s
+ (||) i)) (c nand (head_ x0)))) (c_ b nand (c (s (b_ foldr k k) i) (tail_ x0))))
+ (k (head_ (tail_ (tail_ x0))))) (nor (head_ (tail_ x0)) (head_ x0)) x0)))) (c_
+(s_ nand) nor i)) (nor (head_ x0))) (head_ x0) x0))) (head_ x0) x0) (tail_ x0),1
+.0,Just 24)
+(\ x0 -> foldr (s_ s (c_ (b_ nor) (c_ (s_ nor) (b k i) (c_ nand (s_ (||) i (s_ (
+||) i (c (s (b_ foldr k k) i) x0))) (foldr (||) (foldr (s_ (s_ (c nand)) nor (c
+nand)) (head_ x0) x0) x0))) (c nand (head_ x0))) (&&)) (head_ x0) x0,0.9375,Noth
+ing)
+(\ x0 -> foldr (s_ (s_ (&&)) (||) nand) (foldr (b nand (c (s_ foldr (b_ k k (k (
+foldr (k (c nor (head_ x0))) (head_ x0) x0))) i) x0)) (head_ x0) x0) x0,1.0,Just
+ 40)
+(\ x0 -> foldr (c_ (s_ (s_ (&&)) (||) nand) (s (||) i)) (nor (head_ x0) (head_ x
+0)) (tail_ x0),1.0,Just 15)
+(\ x0 -> foldr (s_ (s_ nand) (s_ (c_ nand) nand (s (&&) i)) (b (c nand) (s nor (
+s (&&) i)))) ((||) (nor (head_ x0) (head_ x0)) ((||) (head_ x0) (head_ x0))) x0,
+1.0,Just 15)
+(\ x0 -> (||) (foldr (c (&&)) ((||) (foldr (k (s (s (b_ (s_ (&&)) (c (&&)) (c (f
+oldr k) x0)) (s (b_ (c_ (&&)) (s nand) nand) (c (foldr nand) x0))) i)) (foldr (c
+ (&&)) (head_ (tail_ x0)) x0) x0) (head_ (tail_ x0))) x0) (foldr (c_ (s_ nand) (
+k (s (||) i)) i) (foldr nor (head_ x0) (tail_ x0)) x0),0.8125,Nothing)
+(\ x0 -> foldr (b_ (s_ (&&) (s (||) i)) (b k (c (||) ((&&) ((&&) ((&&) (head_ x0
+) (foldr (s_ (s_ (||)) (c nor) (c (b_ b nand i) i)) (head_ x0) x0)) (foldr (c (b
+_ b nand (c nor (head_ x0))) (s (||) i)) (head_ x0) x0)) (foldr (c (b_ b nand (c
+ nor (head_ x0))) (s (||) i)) (head_ x0) x0)))) (s nor i)) (foldr (c (b_ b nand
+i) (c (s (b_ foldr k (c_ s (s (b_ (b_ (&&)) (||) (c (&&) (head_ x0))) nor) i)) i
+) x0)) (head_ x0) x0) (tail_ x0),0.875,Nothing)
+(\ x0 -> foldr (s_ s (c (b_ (b_ nor) nor i) (s (&&) i)) (c (&&))) (foldr (s_ (c_
+ (||)) (c_ (c_ c (s (b_ (s_ foldr) (b_ k k) nand) (s (b_ b nand (s (&&) i)) (s (
+b_ (c_ (||)) (&&) (c_ nand (s (||) i) (head_ x0))) i))) x0) i) i) (head_ x0) x0)
+ x0,1.0,Just 7)
+(\ x0 -> foldr (s_ s (c (b_ (b_ nand) (||) (s_ (||) (s (&&) i) i)) (s nor i)) (s
+ (b_ (c_ nand) (c nand) (s (||) i)) (c (s (b_ foldr k k) i) x0))) (foldr (s (s_
+b_ nand (b (&&) (nand ((&&) (head_ (tail_ x0)) (head_ x0))))) nand) ((||) (head_
+ x0) (head_ (tail_ x0))) (tail_ x0)) x0,1.0,Just 3)
+(\ x0 -> foldr (b_ (s (&&)) (b ((&&) (nand ((&&) (head_ x0) (foldr (s (b_ (s_ (&
+&)) (s (&&)) (c_ (b_ (s (&&)) (b (s (&&) i)) nor) i)) (b (s (&&)) (s_ b (c (||))
+ (&&)))) (foldr (s_ (c_ (s_ (c_ nor) nor i)) (c_ c (c (b_ foldr (c_ nor) (&&)))
+(tail_ x0)) i) (foldr (c nand) (head_ (tail_ x0)) x0) (tail_ (tail_ (tail_ (tail
+_ x0))))) (tail_ x0))) (foldr nand (foldr (c_ (&&) (c (foldr k) x0)) (nand (head
+_ x0) (head_ (tail_ x0))) x0) x0)))) (s (b_ (c_ (||)) (s (&&)) nand) (s_ (&&) (s
+ (&&) (s_ nand (c nand (head_ x0)) i)) i))) (foldr (c nand) (foldr (k i) (head_
+x0) x0) x0) x0,0.875,Nothing)
+(\ x0 -> foldr (b (s (b_ (c_ (&&)) (s_ nor (s nand i)) nand) i) (s_ nand (nand (
+head_ x0)) i)) (foldr nand (foldr (s (b_ (s_ (&&)) (s_ (||) (c (&&) (head_ (tail
+_ x0)))) (b k (c (&&) (foldr (c nand) (foldr (s_ (s_ nand) (c nand) (c nand)) (f
+oldr (c_ nor (s_ nor i i)) ((||) (head_ (tail_ x0)) (head_ (tail_ x0))) x0) x0)
+x0)))) (&&)) (foldr (b (b k (s_ (||) (k (head_ (tail_ x0))) (s (&&) (s nor i))))
+ (s nor i)) (foldr nand (foldr (s (b_ (s_ (&&)) (s_ (||) (c (&&) (head_ x0))) (b
+ k (c (&&) (foldr (b (s_ (||) (s nand i)) (k i)) (foldr (b (s_ (||) (c_ (foldr (
+k i)) (s nand i) x0)) nand) (foldr (c_ nor (s_ nor i i)) ((||) (head_ (tail_ x0)
+) (head_ (tail_ x0))) x0) x0) x0)))) (&&)) ((&&) (head_ x0) (foldr (c (&&)) (hea
+d_ x0) (tail_ (tail_ x0)))) x0) x0) (tail_ x0)) x0) x0) (tail_ x0),0.875,Nothing
+)
+(\ x0 -> foldr (k i) (foldr (c_ (s_ (&&)) (s_ (b_ ((||) (head_ x0))) (c nor) (c
+(&&))) (s (||) (s (&&) i))) (foldr (s (s_ b_ (c_ (s_ (&&)) (s_ (b_ ((||) (head_
+x0))) nand (s (s_ b_ (b k (s (||) i)) nand) (c (&&)))) (s (||) ((||) (foldr (s_
+(s_ nor) (c nor) (s_ (b_ ((||) (head_ x0))) (s_ (c_ nor) (s_ (b_ ((||) (head_ x0
+))) (c nand) (s (b_ (c_ nor) (s (||)) (c (&&))) i)) i) (c nand))) (foldr (c k) (
+nand (foldr (c_ (s_ (&&)) (c nand) i) (head_ x0) x0) ((||) (head_ x0) (head_ x0)
+)) x0) x0)))) nand) (c (&&))) ((||) (foldr (k i) ((||) (head_ x0) (foldr (k i) (
+foldr (c nand) (foldr (s (s_ b_ (c_ (s_ (&&)) (c (&&)) (s (||) (s (||) i))) nand
+) (c (&&))) (foldr (||) (head_ x0) x0) x0) x0) x0)) x0) (head_ x0)) x0) x0) (tai
+l_ x0),0.875,Nothing)
+(\ x0 -> foldr (b (s_ nand (s (||) i)) (k i)) (foldr (s_ (s_ nand) (c nand) (c (
+||))) ((||) (head_ x0) (foldr k (head_ x0) x0)) (tail_ x0)) x0,1.0,Just 15)
+(\ x0 -> foldr (s_ s (s_ (b_ nand) (||) nor) (s_ (c_ nand) nand i)) ((||) (head_
+ x0) (foldr (c_ b (s_ (s_ nand) (s_ (c_ (&&)) nand i) (||)) i) (head_ x0) x0)) x
+0,1.0,Just 23)
+(\ x0 -> foldr (s_ (s_ nor) nor (c (&&))) (foldr (s (b_ b (||) (s nor i)) (s_ (s
+_ (||)) (s (b_ (c_ nand) (s_ nand ((&&) (head_ x0))) (c (||))) i) (c (&&)))) (he
+ad_ x0) x0) x0,1.0,Just 15)
+(\ x0 -> (&&) (foldr nand (head_ (tail_ x0)) x0) ((||) (foldr (k (s nor i)) (fol
+dr (b nor (s (||) i)) (foldr nor (foldr nor (foldr (c_ c (c (b_ (b_ (foldr k)) n
+and (s nor i)) (s_ nand (c nor (foldr (c nor) (head_ x0) (tail_ x0))) (c nor (he
+ad_ x0)))) (tail_ x0)) (foldr nand (head_ x0) x0) x0) x0) x0) (tail_ x0)) x0) (h
+ead_ x0)),0.875,Nothing)
+(\ x0 -> (&&) (nand (foldr (k (s (&&) (s (b (s_ (||) (s (||) (s nor i))) (c nand
+)) (s nor i)))) (nor ((||) ((&&) (nand (head_ (tail_ x0)) (head_ (tail_ x0))) (f
+oldr (c nand) ((||) (foldr (k i) (head_ x0) (tail_ x0)) (head_ x0)) x0)) (head_
+(tail_ (tail_ x0)))) (head_ x0)) (tail_ x0)) (head_ (tail_ x0))) (foldr (c nand)
+ ((&&) (nand (foldr (k (s (&&) (s (||) i))) (nor ((||) ((&&) ((||) ((||) (head_
+(tail_ x0)) (head_ (tail_ x0))) (head_ x0)) (foldr (k i) (foldr (c (&&)) (foldr
+(c (||)) (head_ (tail_ (tail_ x0))) (tail_ x0)) x0) x0)) (head_ (tail_ (tail_ x0
+)))) (head_ x0)) (tail_ x0)) (head_ (tail_ x0))) (head_ x0)) x0),0.875,Nothing)
+(\ x0 -> foldr (c_ s (s (b_ (b_ (&&)) nand (c nand ((||) (head_ x0) (head_ x0)))
+) (c (&&))) i) (foldr (c nand) (foldr (c (b_ (c_ (foldr (c (&&)))) (s_ nand (nor
+ (foldr (s (b_ (s_ nor) nor i) nand) (head_ (tail_ x0)) x0))) (c (b_ (c_ (foldr
+(&&))) (s_ nand (nor (foldr (c (b_ c (s_ foldr (b_ k k (c nand (head_ x0)))) (s_
+ b nor (c (||)))) x0) (head_ x0) x0))) (c nand)) x0)) x0) (nand (head_ x0) (fold
+r (k i) (foldr (c nand) (foldr (c (b_ (c_ (foldr (&&))) (s_ nand (nor (foldr (k
+i) (foldr (c nand) (head_ x0) (tail_ x0)) x0))) (s_ b nor (b (&&) (s (&&) (s (&&
+) i))))) x0) (foldr (c nand) (foldr (s (b_ (s_ (||)) nor i) nand) (head_ (tail_
+x0)) x0) x0) x0) x0) x0)) x0) x0) x0,0.875,Nothing)
+(\ x0 -> foldr (s_ s (c_ (b_ (&&)) nand (s (&&) i)) (s_ b (||) (s (s_ (b_ (&&))
+nand (b_ (s (&&)) nand (s (||) i))) i))) (foldr (k (s (&&) i)) (nand (nor (head_
+ x0) (head_ x0)) (head_ x0)) (tail_ x0)) x0,1.0,Just 2)
+(\ x0 -> foldr (s_ (s_ nor) (c (b_ c (b_ (foldr (k i)) (s nor i)) (c (||))) x0)
+(&&)) ((||) (nor (head_ x0) (head_ x0)) (head_ x0)) x0,1.0,Just 9)
+(\ x0 -> nand (foldr (||) (foldr (c (||)) (head_ x0) x0) x0) (foldr nand (head_
+x0) (tail_ x0)),0.875,Nothing)
+(\ x0 -> (&&) (foldr (k (s nor i)) (foldr (s_ s (s_ (b_ nand) nor (c_ (s_ (k (na
+nd (foldr nand (foldr nand (head_ (tail_ x0)) (tail_ x0)) (tail_ x0))))) (k (s (
+&&) i)) i)) (||)) (nand (foldr (s_ s (s_ (b_ (&&)) (&&) nor) (c nand)) (foldr (k
+ i) ((&&) (foldr nand (head_ x0) x0) (foldr (s (b_ (c_ (&&)) (k (s_ nor ((&&) (n
+and (foldr (k i) (head_ (tail_ x0)) (tail_ x0)) (head_ x0))) ((&&) (head_ x0))))
+ (c (||) (head_ x0))) i) (head_ x0) x0)) x0) x0) (head_ x0)) x0) x0) (foldr (s_
+(s_ nor) (&&) (s (b_ (c_ nor) nand ((&&) (head_ x0))) (s (&&) ((&&) (foldr (k (s
+_ nor i ((&&) (foldr (k (c (foldr k) x0)) (foldr (s_ s (s_ (b_ nand) (&&) (k (c
+(foldr k) x0))) (c (&&))) (foldr k (head_ (tail_ x0)) (tail_ x0)) x0) (tail_ (ta
+il_ x0)))))) (foldr (c nand) (foldr nand (head_ x0) x0) x0) x0))))) (head_ x0) x
+0),0.875,Nothing)
+(\ x0 -> foldr (s_ c (s (b_ (b_ (||)) (&&) (c (foldr k) x0)) (c (||))) (c nor (f
+oldr (c_ s (s_ (b_ (||)) (&&) (c (b_ (s_ (||)) (c (c_ nor (s nor (c (foldr (b k
+(s nor i))) (tail_ x0))))) i) i)) i) (head_ (tail_ x0)) x0))) (foldr k (foldr (s
+_ b k (b (s (&&)) (s_ (c_ (||)) (||) i))) (foldr (c nor) (nor ((&&) (foldr k (no
+r (head_ x0) (head_ x0)) x0) (foldr (c nor) (head_ x0) (tail_ (tail_ x0)))) (fol
+dr (c_ (c_ (s (b_ foldr k k) i)) (s_ (s_ nand) nor (b (s_ (||) (s_ nand ((||) (h
+ead_ (tail_ x0))) i)) (b k i))) (tail_ x0)) (foldr (c (b_ (s_ nor) (||) (s (k i)
+ i)) (c (s (b_ foldr k k) i) x0)) (head_ x0) x0) x0)) (tail_ x0)) x0) (tail_ x0)
+) (tail_ x0),0.875,Nothing)
+(\ x0 -> foldr (s (b_ (s_ (&&)) (s (||)) (||)) nand) ((||) (head_ (tail_ x0)) (n
+and (head_ x0) (head_ (tail_ x0)))) x0,1.0,Just 13)
+(\ x0 -> nand (foldr (c nand) (head_ x0) (tail_ x0)) (foldr (c_ (s_ (s (b_ (c_ n
+and) (||) (c nand ((||) ((&&) (head_ x0) (head_ x0)) (head_ x0)))) (s (&&) (s_ (
+||) i (c nand (foldr (c_ (s_ (k i)) (c_ (s_ (s (b_ (c_ nand) (||) (c nand (foldr
+ (&&) (head_ x0) (tail_ x0)))) (s_ nor (s nor i) (k (head_ x0))))) nand i) i) (h
+ead_ x0) x0)))))) nor i) (head_ x0) (tail_ x0)),0.875,Nothing)
+(\ x0 -> foldr (s_ (c_ (&&)) (c nand) (s_ (||) (c nor (foldr (c_ c (c (b_ foldr
+k k)) (tail_ (tail_ (tail_ x0)))) (head_ (tail_ x0)) (tail_ (tail_ x0)))) i)) (f
+oldr (c_ (&&) (s (k i) (c_ (foldr (s_ (c_ (&&)) (&&) i)) (s (||) i) x0))) (foldr
+ (c_ (c_ (foldr k)) (s (b_ b (&&) (s (||) i)) nor) (tail_ x0)) (foldr (k (s (||)
+ (s_ (s_ (c_ nand) (k i) (c nor (head_ (tail_ x0)))) i i))) (head_ (tail_ x0)) (
+tail_ x0)) x0) (tail_ x0)) x0,0.875,Nothing)
+(\ x0 -> (||) (foldr (k (c (foldr (b (s_ (s_ (||)) (s (s_ b_ (&&) (&&)) (b (&&)
+i)) (c_ (s_ (&&)) (c nor) (s (&&) i))) (s nand i))) x0)) (nand (foldr (&&) (fold
+r (s_ (s_ (||)) (s (s_ b_ (&&) (&&)) (b (&&) i)) (c (&&))) (nand (nor (head_ x0)
+ (head_ x0)) (head_ x0)) x0) (tail_ x0)) (foldr (b (s nand) (c_ (k i) ((&&) (fol
+dr (k (c (foldr (b (s_ (&&) (s (&&) i)) (&&))) x0)) (head_ x0) x0)))) (nor (fold
+r (b (s (&&)) (k i)) (head_ x0) (tail_ x0)) (foldr (k i) (head_ x0) x0)) x0)) x0
+) ((&&) (head_ x0) ((||) (foldr (k (c (foldr (b (s_ (s_ (||)) (s (s_ b_ (&&) (&&
+)) (b (s_ (&&) (c (foldr (k (k (head_ x0)))) x0)) (&&))) (b k (c (foldr (b (&&)
+(s nor i))) x0))) (s nand i))) x0)) (nand (foldr (s_ (c_ (||)) (c nand) i) (fold
+r (k (s nand i)) ((||) (head_ x0) (nor (head_ (tail_ x0)) (foldr (c nor) ((&&) (
+(&&) (head_ (tail_ x0)) (head_ (tail_ x0))) (nor (head_ x0) (head_ x0))) (tail_
+x0)))) x0) (tail_ x0)) (head_ x0)) x0) ((&&) (head_ x0) (foldr nand (head_ x0) x
+0)))),0.875,Nothing)
+(\ x0 -> foldr (s_ (s_ (||)) (s_ s (c_ (b_ nor) (&&) (s (&&) i)) (c nor)) (b (s
+(&&)) (s_ b nor (c nand)))) (foldr (k (c_ nand (s (||) (s (||) (s_ nand (s nor i
+) i))) (head_ x0))) (head_ (tail_ x0)) (tail_ x0)) (tail_ x0),1.0,Just 1)
+(\ x0 -> foldr (c (b_ (s_ nand) (s nand) (c_ (s_ nand) (&&) i)) (nand (head_ x0)
+)) (foldr (s (b_ (s_ nand) (s nand) (c_ (s_ nand) (s (b_ (s_ nand) (s nor) (s (b
+_ (s_ nor) (s nand) (c_ (s_ nand) (&&) (s (&&) i))) nand)) (k i)) (c (b nor i) (
+head_ x0)))) (c (b_ (c_ (foldr (c_ (s_ nand) (&&) (s (||) i)))) (s nor) (c_ (&&)
+ (c nor (nor (nor (head_ x0) (foldr (c_ (s_ (c_ (s_ nand) (&&) i)) (k i) (s_ (&&
+) (c_ nand (s (&&) i) (head_ x0)) i)) (head_ x0) (tail_ x0))) (nor (head_ x0) ((
+||) (head_ x0) (head_ x0))))))) (tail_ x0))) (nor (head_ x0) ((||) (head_ (tail_
+ x0)) (head_ x0))) x0) x0,0.875,Nothing)
+(\ x0 -> foldr (s_ (s_ nor) (s_ (s_ (&&)) (c nor) nand) (s_ b (c_ (s_ nor) (c (&
+&)) i) (c_ nand (s (||) i)))) (foldr (||) (foldr (s (b_ (b k) (s_ (||) (s nor i)
+) (c (&&))) i) (head_ (tail_ x0)) (tail_ x0)) x0) x0,1.0,Just 22)
+(\ x0 -> (||) (nor (head_ x0) (foldr (c (||)) ((&&) (head_ x0) (head_ x0)) x0))
+((&&) (head_ x0) (foldr (c nand) (foldr (c (||)) (head_ x0) x0) x0)),0.875,Nothi
+ng)
+(\ x0 -> foldr (b (s_ (||) (s nor ((&&) (foldr (&&) (foldr (c (||)) (foldr (k (s
+ (&&) (s nand i))) (head_ x0) x0) x0) x0)))) (c_ c (s (b_ (c_ foldr) (b_ k k) (k
+ (s (&&) (s nand i)))) (nor (head_ (tail_ x0)))) x0)) (nor (foldr (s_ (s_ nand)
+(||) nand) (foldr (c (b_ c (s (b_ foldr k (s_ (s_ (&&)) (b_ (s nor) nor (s (&&)
+i)) (c (&&))))) (s_ (c_ nor) (c nor) (nor (head_ x0)))) (tail_ x0)) (head_ x0) (
+tail_ x0)) x0) (foldr (b k (c (s (b_ foldr k (s_ (s_ (&&)) (b_ (s nor) nor (s (&
+&) i)) (c (&&)))) (s_ (||) (s (||) i) (s (&&) i))) x0)) ((&&) (head_ x0) ((&&) (
+foldr (k (c_ nor (s (&&) i) (head_ x0))) (head_ (tail_ x0)) x0) (head_ x0))) (ta
+il_ x0))) (tail_ (tail_ x0)),1.0,Just 43)
+(\ x0 -> (||) ((&&) (foldr (c (||)) ((&&) ((&&) (head_ x0) (nor (head_ (tail_ x0
+)) ((&&) ((&&) (foldr (c_ (c_ (foldr k)) (c (&&)) x0) (foldr (b_ (s_ (&&) (c (fo
+ldr k) x0)) (c (||)) (s nand (k (head_ x0)))) (head_ x0) x0) x0) (nor (head_ (ta
+il_ x0)) (foldr (s (b_ b (&&) (s nand (s (&&) i))) (||)) (head_ (tail_ x0)) x0))
+) (head_ x0)))) (head_ x0)) (tail_ x0)) (foldr k (head_ x0) x0)) (nor (foldr (c
+(&&)) (head_ x0) (tail_ x0)) (foldr (c (||)) ((&&) (head_ (tail_ x0)) (head_ (ta
+il_ x0))) x0)),0.875,Nothing)
+(\ x0 -> foldr (s_ (s_ nor) nor (c (&&))) (nand (head_ x0) (nor (head_ x0) (head
+_ x0))) x0,1.0,Just 4)
+(\ x0 -> foldr (s_ (s_ nor) (&&) nor) (foldr (b k (s nor i)) (foldr (b k (s_ nor
+ (s (||) i) i)) (head_ x0) x0) x0) (tail_ x0),1.0,Just 0)
+(\ x0 -> nand (foldr (||) (head_ x0) x0) (nand (foldr (s (b_ (s_ (||)) (s (s (b_
+ (s_ (||)) (s nand) (b (||) (s (s (b_ (s_ (||)) (s nand) (c_ (s_ (||)) (c (&&))
+i)) (c (&&))) (c (&&) (head_ x0))))) (c nand))) (b (||) (s (||) (c (&&) (head_ x
+0))))) (c nand)) ((&&) (head_ x0) (head_ (tail_ x0))) x0) (head_ x0)),0.875,Noth
+ing)
+(\ x0 -> foldr (s_ (c_ (||)) (c_ s (s_ (b_ nand) nand nand) (c_ (||) (s nor i) (
+head_ (tail_ x0)))) (c_ nor (s (&&) i) (head_ x0))) (nand (head_ x0) (foldr (||)
+ (head_ x0) x0)) (tail_ x0),0.9375,Nothing)
+(\ x0 -> nand (foldr (c (||)) ((&&) (head_ x0) (head_ x0)) x0) (nand (foldr (c (
+||)) ((&&) (foldr (b k (s_ nand i (s (||) i))) (foldr k (nor (foldr nor ((&&) (f
+oldr (b (s_ (c (b_ (s_ (&&)) (k i) (s (||) (s (||) (s (||) i)))) i) (c_ (foldr k
+) i (tail_ (tail_ x0)))) (c nand)) (foldr k (head_ x0) x0) x0) (head_ x0)) x0) (
+head_ (tail_ (tail_ x0)))) x0) x0) (head_ (tail_ x0))) (tail_ x0)) (foldr (k i)
+(head_ x0) x0)),0.875,Nothing)
+(\ x0 -> foldr (s_ (s_ (&&)) (c_ (||) (s (||) i)) (c nand)) (foldr (c_ (c_ (fold
+r (k i))) (s (b_ (c_ nand) (s_ (s_ (&&)) (||) (s (b_ (s_ (&&)) (&&) (c_ (&&) (s_
+ nand (s (&&) i) (c (||) (head_ x0))) (head_ x0))) (||))) (c (||) (head_ x0))) (
+c (||) (head_ x0))) x0) (foldr (s_ (s_ (&&)) (c (s_ c_ (b_ foldr k k) (&&)) (tai
+l_ x0)) (c (&&))) ((||) (head_ x0) (head_ (tail_ (tail_ x0)))) x0) x0) x0,1.0,Ju
+st 38)
+(\ x0 -> (&&) (foldr (s_ b nand (s_ k (c_ (s_ (||)) (s_ (c_ nor) (s_ k (c_ (s_ n
+and) (c (&&)) (c (foldr (c nand)) x0)) i) i) i) i)) (head_ x0) x0) (foldr (c (b_
+ (s_ nand) (c_ (c_ (||)) nand (nand (head_ x0) (foldr (s_ b (s (s (b_ b_ nand (c
+ (s (b_ foldr k k) i) x0)) (&&)) (&&)) (&&)) (head_ x0) x0))) (c (s (b_ foldr k
+k) i) x0)) i) (nor (head_ x0) (head_ (tail_ x0))) x0),0.8125,Nothing)
+(\ x0 -> foldr (c_ (s_ nand) (c_ c (c (b_ (s_ foldr) (c_ (s_ b) (s_ (b_ nand) (|
+|) (s (s_ (b_ nand) (&&) (c nor)) i))) (c_ (c_ (&&)) nand)) i) (tail_ (tail_ x0)
+)) i) (foldr (s_ (c_ (||)) (c nor) (s_ (||) (c (&&) (foldr (c_ b (c_ c (c (b_ (s
+_ foldr) (c_ (s_ b) (s_ (b_ nand) (||) (k i))) (c_ (c_ (&&)) nand)) (s nand (c n
+or (head_ x0)))) (tail_ x0)) i) (foldr (s (b_ (s_ (&&)) (s (&&)) k) (c (b_ c (s
+(b_ foldr k k)) nand) x0)) ((||) (head_ x0) (head_ x0)) (tail_ x0)) x0)) (b (nor
+ (foldr (s_ (s_ nand) (c (k i)) nand) (foldr (k (s (&&) (s (&&) i))) (foldr (s_
+(c_ (||)) nand (s_ (||) (nor (head_ x0)) (s nor i))) (foldr (s_ k (c (||)) i) (f
+oldr (c nor) (head_ x0) x0) x0) (tail_ (tail_ x0))) x0) x0)) (nor (head_ x0)))))
+ ((||) (head_ x0) (foldr (c_ (s_ nand) (s (b_ (s_ (&&)) (s (&&)) k) (&&)) i) (he
+ad_ (tail_ (tail_ x0))) x0)) x0) x0,0.9375,Nothing)

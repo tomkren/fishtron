@@ -18,7 +18,8 @@ module IM3
 
 import Debug.Trace
 
-import TTerm (Symbol,Typ(..),TTerm(..),Context,ttermTyp,toSki,toSki',checkTyp,fullEtaReduce,CTTerm(..))
+import TTerm (Symbol,Typ(..),TTerm(..),Context,ttermTyp,toSki,toSki',checkTyp,fullEtaReduce,CTTerm(..),
+  optSki)
 
 import TTree (CTT,mkCTT2)
 
@@ -51,14 +52,14 @@ proveCTTerm :: SearchOptions -> [CTTerm]
 proveCTTerm so = 
   let ( so' , problemHead ) = problemHeadPreproccess so
       trees = proveWith2 so'
-   in map ( CTTerm problemHead . toSki . fullEtaReduce . tree2tterm ) trees   -- <============== toSki s ' je s typeCheckem ...........
+   in map ( CTTerm problemHead . optSki . fullEtaReduce . tree2tterm ) trees   -- <============== toSki s ' je s typeCheckem ...........
 
 
 prove :: SearchOptions -> [CTT]
 prove so = 
   let ( so' , problemHead ) = problemHeadPreproccess so
       trees = proveWith2 so'
-   in map ( mkCTT2 problemHead . toSki . fullEtaReduce . tree2tterm ) trees   -- <============== toSki s ' je s typeCheckem ...........
+   in map ( mkCTT2 problemHead . optSki . fullEtaReduce . tree2tterm ) trees   -- <============== toSki s ' je s typeCheckem ...........
 
 problemHeadPreproccess :: SearchOptions -> ( SearchOptions , Context )
 problemHeadPreproccess so = 
@@ -125,6 +126,7 @@ mkZTree so    = ZTree                  {
 data Tree = TreeApp  Symbol  TypHead [Tree] 
           | TreeLam [Symbol] Typ  Tree
           | TreeTyp Typ
+          deriving ( Eq , Ord )
 
 
 tree2tterm :: Tree -> TTerm
@@ -172,7 +174,7 @@ data SearchOptions = SearchOptions{
   so_stdGen             :: StdGen             ,
   so_edgeSelectionModel :: EdgeSelectionModel ,
   so_randomRunState     :: RandomRunState     ,
-  so_isPolymorphic      :: Bool
+  so_forceUnique      :: Bool
  }
 
 defaultSearchOptions :: Int -> Typ -> Context -> SearchOptions
@@ -184,7 +186,7 @@ defaultSearchOptions n typ ctx = SearchOptions {
   so_stdGen             = mkStdGen 42424242 ,
   so_edgeSelectionModel = AllEdges ,
   so_randomRunState     = NoRandomRunState ,
-  so_isPolymorphic      = False
+  so_forceUnique      = False
  }
 
 kozaSearchOptions :: Int -> Typ -> Context -> StdGen -> SearchOptions
@@ -196,7 +198,7 @@ kozaSearchOptions n typ ctx stdGen = SearchOptions {
     so_runLen             = Just 1 , 
     so_randomRunState     = KozaRandomRunState Nothing Nothing ,
     so_edgeSelectionModel = KozaESM ,
-    so_isPolymorphic      = False
+    so_forceUnique        = True
   } 
 
 allEdgesSearchOptions :: Int -> Typ -> Context -> StdGen -> SearchOptions
@@ -208,7 +210,7 @@ allEdgesSearchOptions n typ ctx stdGen = SearchOptions {
     so_runLen             = Nothing   ,
     so_randomRunState     = NoRandomRunState , 
     so_edgeSelectionModel = AllEdges ,
-    so_isPolymorphic      = False  
+    so_forceUnique      = False  
   } 
 
 geomSearchOptions :: Double -> Int -> Typ -> Context -> StdGen -> SearchOptions
@@ -220,7 +222,7 @@ geomSearchOptions p n typ ctx stdGen = SearchOptions {
     so_runLen             = Nothing   ,
     so_randomRunState     = NoRandomRunState , 
     so_edgeSelectionModel = ContinueProbGeomWithDepth p  ,
-    so_isPolymorphic      = False 
+    so_forceUnique      = False 
   } 
 
 
@@ -245,7 +247,7 @@ spinRandomRunState rrs gen0 = case rrs of
   NoRandomRunState -> ( NoRandomRunState , gen0 )
   KozaRandomRunState _ _ -> 
     let (     isFull , gen1 ) = random gen0
-        ( m_maxDepth , gen2 ) = randomL [1..6] gen1 --randomL [1..6] gen1
+        ( m_maxDepth , gen2 ) = randomL [2..6] gen1 --randomL [1..6] gen1
      in ( KozaRandomRunState (Just isFull) m_maxDepth , gen2 )     
 
 
@@ -306,7 +308,7 @@ oneRandomEdgeWithPedicat edges p gen0 =
 
 
 proveWith2 :: SearchOptions -> [Tree]
-proveWith2 so = proveWith' so (so_n so)
+proveWith2 so = proveWith' so (so_n so) Set.empty
  where
   m_runLen = so_runLen so
   
@@ -314,17 +316,28 @@ proveWith2 so = proveWith' so (so_n so)
   min' (Just x) y = min x y
   min' Nothing  y = y
 
-  proveWith' :: SearchOptions -> Int -> [Tree]
-  proveWith' so0 toMake 
+  proveWith' :: SearchOptions -> Int -> Set Tree -> [Tree]
+  proveWith' so0 toMake uniqs
    | toMake <= 0 = []
    | otherwise   = 
-     let (so1,so2)= splitSearchOptions so0  --         <=============================
-         trees    = proveN_ (min' m_runLen toMake) (spinRandomRunState_ so1)
-         numTrees = length trees
+     let (so1,so2)       = splitSearchOptions so0  --         <=============================
+         trees           = proveN_ (min' m_runLen toMake) (spinRandomRunState_ so1)
+         (trees',uniqs') = resolveUniqs (so_forceUnique so1) trees uniqs
+         numTrees        = length trees'
       in if numTrees < toMake then
-          trees ++ ( proveWith' so2 (toMake - numTrees) )  
+          trees' ++ ( proveWith' so2 (toMake - numTrees) uniqs' )  
          else
-          trees 
+          trees' 
+
+
+resolveUniqs :: Bool -> [Tree] -> Set Tree -> ([Tree],Set Tree)
+resolveUniqs forceUnique trees uniqs =
+ if not forceUnique 
+  then ( trees , uniqs )
+  else let treesSet = Set.fromList trees
+           newTrees = (Set.\\) treesSet uniqs
+           newUniqs = Set.union uniqs newTrees
+        in ( Set.toList newTrees , newUniqs )    
 
 
 proveWith :: SearchOptions -> [Tree]
@@ -706,7 +719,7 @@ test_perms = testSO $ \ stdGen -> SearchOptions {
     so_ctx                = ctx_perms ,
     so_stdGen             = stdGen    ,
     so_runLen             = Nothing   ,
-    so_isPolymorphic      = False,
+    so_forceUnique      = False,
     so_randomRunState     = NoRandomRunState , 
     so_edgeSelectionModel = AllEdges -- ContinueProbGeomWithDepth 0.75  --0.9  --AllEdges  
   }
@@ -829,9 +842,20 @@ test_ep = testSO2 $ \ stdGen -> SearchOptions {
     so_ctx                = ctx_yu          ,
     so_stdGen             = stdGen          ,
     so_runLen             = Nothing         ,
-    so_isPolymorphic      = False,
+    so_forceUnique      = False,
     so_randomRunState     = NoRandomRunState , 
     so_edgeSelectionModel = ContinueProbGeomWithDepth 0.75  --0.9  --AllEdges  
+  }
+
+test_ep2 = testSO2 $ \ stdGen -> SearchOptions {
+    so_n                  = 500            ,
+    so_typ                = l_bool :-> bool ,
+    so_ctx                = ctx_yu          ,
+    so_stdGen             = stdGen          ,
+    so_runLen             = Nothing         ,
+    so_forceUnique        = False,
+    so_randomRunState     = NoRandomRunState , 
+    so_edgeSelectionModel = AllEdges  
   }
 
 test_poly_head = testSO $ \ stdGen -> SearchOptions {
@@ -840,7 +864,7 @@ test_poly_head = testSO $ \ stdGen -> SearchOptions {
     so_ctx                = ctx_poly_head  ,
     so_stdGen             = stdGen    ,
     so_runLen             = Nothing   ,
-    so_isPolymorphic      = False,
+    so_forceUnique      = False,
     so_randomRunState     = NoRandomRunState , 
     so_edgeSelectionModel = AllEdges -- ContinueProbGeomWithDepth 0.75  --0.9  --AllEdges  
   }
@@ -851,7 +875,7 @@ test_head = testSO $ \ stdGen -> SearchOptions {
     so_ctx                = ctx_head  ,
     so_stdGen             = stdGen    ,
     so_runLen             = Nothing   ,
-    so_isPolymorphic      = False,
+    so_forceUnique      = False,
     so_randomRunState     = NoRandomRunState , 
     so_edgeSelectionModel = AllEdges -- ContinueProbGeomWithDepth 0.75  --0.9  --AllEdges  
   }
@@ -865,7 +889,7 @@ test_map = testSO2 $ \ stdGen -> SearchOptions {
     so_ctx                = ctx_map  ,
     so_stdGen             = stdGen    ,
     so_runLen             = Nothing   ,
-    so_isPolymorphic      = False,
+    so_forceUnique      = False,
     so_randomRunState     = NoRandomRunState , 
     so_edgeSelectionModel = AllEdges --ContinueProbGeomWithDepth 0.85
   }
@@ -876,7 +900,7 @@ test_ssr = testSO2 $ \ stdGen -> SearchOptions {
     so_ctx                = ctx_ttSSR  ,
     so_stdGen             = stdGen    ,
     so_runLen             = Nothing   ,
-    so_isPolymorphic      = False,
+    so_forceUnique      = False,
     so_randomRunState     = NoRandomRunState ,
     so_edgeSelectionModel = AllEdges --ContinueProbGeomWithDepth 0.6
   } 
@@ -887,7 +911,7 @@ test_big = testSO $ \ stdGen -> SearchOptions {
     so_ctx                = ctx_big  ,
     so_stdGen             = stdGen    ,
     so_runLen             = Nothing   ,
-    so_isPolymorphic      = False,
+    so_forceUnique      = False,
     so_randomRunState     = NoRandomRunState , 
     so_edgeSelectionModel = AllEdges   -- ContinueProbGeomWithDepth 0.7  --AllEdges  
   }
@@ -898,7 +922,7 @@ test_head_2 = testSO2 $ \ stdGen -> SearchOptions {
     so_ctx                = ctx_head  ,
     so_stdGen             = stdGen    ,
     so_runLen             = Just 1    ,  --Nothing   ,
-    so_isPolymorphic      = False,
+    so_forceUnique      = False,
     so_randomRunState     = NoRandomRunState,
     so_edgeSelectionModel = OneRandomEdgeWithPedicat (const True)  --AllEdges  , 
   } 
@@ -909,7 +933,7 @@ test_head_koza = testSO2 $ \ stdGen -> SearchOptions {
     so_ctx                = ctx_head  ,
     so_stdGen             = stdGen    ,
     so_runLen             = Just 1    ,  --Nothing   ,
-    so_isPolymorphic      = False,
+    so_forceUnique      = False,
     so_randomRunState     = KozaRandomRunState Nothing Nothing ,
     so_edgeSelectionModel = KozaESM
   } 
@@ -920,7 +944,7 @@ test_map_koza = testSO $ \ stdGen -> SearchOptions {
     so_ctx                = ctx_map  ,
     so_stdGen             = stdGen    ,
     so_runLen             = Just 1    ,  --Nothing   ,
-    so_isPolymorphic      = False,
+    so_forceUnique      = False,
     so_randomRunState     = KozaRandomRunState Nothing Nothing ,
     so_edgeSelectionModel = KozaESM
   }
@@ -932,7 +956,7 @@ test_ssr_koza = testSO2 $ \ stdGen -> SearchOptions {
     so_ctx                = ctx_ttSSR  ,
     so_stdGen             = stdGen    ,
     so_runLen             = Just 1    ,  --Nothing   ,
-    so_isPolymorphic      = False,
+    so_forceUnique      = not False,
     so_randomRunState     = KozaRandomRunState Nothing Nothing ,
     so_edgeSelectionModel = KozaESM
   } 
@@ -943,7 +967,7 @@ test_ssr_koza_1 = testSO3 $ \ stdGen -> SearchOptions {
     so_ctx                = ctx_ttSSR  ,
     so_stdGen             = stdGen    ,
     so_runLen             = Just 1    ,  --Nothing   ,
-    so_isPolymorphic      = False,
+    so_forceUnique      = False,
     so_randomRunState     = KozaRandomRunState Nothing Nothing ,
     so_edgeSelectionModel = KozaESM
   } 
@@ -954,7 +978,7 @@ test_ssr_koza_2 = testSO3 $ \ stdGen -> SearchOptions {
     so_ctx                = ctx_ttSSR  ,
     so_stdGen             = stdGen    ,
     so_runLen             = Nothing   ,
-    so_isPolymorphic      = False,
+    so_forceUnique      = False,
     so_randomRunState     = KozaRandomRunState Nothing Nothing ,
     so_edgeSelectionModel = KozaESM
   } 

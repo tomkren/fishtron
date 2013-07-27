@@ -16,12 +16,14 @@ import qualified Problems.BigCtx.Problem     as BigCtx
 import qualified Problems.Fly.Problem        as Fly
 import qualified Problems.Fly02.Problem      as Fly02
 import qualified Problems.Ant.Problem        as Ant
+import qualified Problems.Ant2.Problem_      as Ant2
 import qualified Problems.BA.Problem         as BA
 import qualified Problems.EvenParity.Problem as EvenParity
 
 
 regs = 
- [ reg BigCtx.reg
+ [ reg Ant2.reg
+ , reg BigCtx.reg
  , reg Fly02.reg
  , reg Fly.reg 
  , reg BigCtx.reg_head

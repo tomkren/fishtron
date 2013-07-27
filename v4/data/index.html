@@ -37,7 +37,8 @@
 
     <script src="js/Problems/Fly.js"></script>    
     <script src="js/Problems/Fly02.js"></script>
-    <script src="js/Problems/Ant.js"></script>
+    <script src="js/Problems/Ant.js"></script>    
+    <script src="js/Problems/Ant2.js"></script>
     <script src="js/Problems/SSR.js"></script>
     <script src="js/Problems/BA.js"></script>
     <script src="js/Problems/BigCtx.js"></script>
@@ -641,13 +642,13 @@ var drawPerformanceCurves = function( curves_ , actRun , popsize ){
   
   //if(  )
 
-  var probabs =  _.map( curves , function(x){ return x / actRun ; }   ) ;
+  probabs =  _.map( curves , function(x){ return x / actRun ; }   ) ;
 
   var graf1 = []; 
   //var 
   graf2 = []; 
 
-  for( var i in probabs ){
+  for( var i = 0 ; i < probabs.length ; i++ ){
     graf1[i] = [i,probabs[i]];
     graf2[i] = [i, numIndivsMustbeProcessed( probabs[i] , i , popsize )  ];
 
@@ -675,10 +676,16 @@ var runsRequied = function( probab ){
 }
 
 var numIndivsMustbeProcessed = function( probab , genI , popsize ){
-  return (genI+1) * popsize * runsRequied( probab );
+  var runs = runsRequied( probab );
+  var ret = (genI+1) * popsize * runs;
+  //console.log('genI = ' + genI + ' popsize = ' + popsize + ' runsReq = ' + runs + ' .... ' + ret );
+  return ret;
 }
 
 var checkAllTheSame = function( xs ){
+  return xs;
+
+
   var allsame = true;
   var first = xs[0];
   for( var i in xs ){

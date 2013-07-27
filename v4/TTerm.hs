@@ -17,6 +17,7 @@ module TTerm
 ,CTTerm(..)
 ,ttermSubtree,ttermChangeSubtree,ttermDepth,TTermPos
 ,ttermPoses2WithTyps_onlyCompatible,ttermPoses2ByTyp
+,optSki
 ) where
 
 import Data.List ( nub, (\\) , intercalate )
@@ -427,8 +428,98 @@ showTyp' (TypFun f ts) = "(" ++ f ++ " " ++ (intercalate " " (map show ts) ) ++ 
 ---------------------------------------------------------------------------
 
 
+-- ---------------------------- --
+-- optimalizovany prevod do SKI --
+-- ---------------------------- --
 
 
+optSki :: TTerm -> TTerm
+optSki tt =  
+ let ret = compile tt 
+  in if checkTyp ret then ret else error "error in optSKI conversion!"
+
+
+compile :: TTerm -> TTerm
+compile tt = case tt of
+ TApp m n typ -> TApp (compile m) (compile n) typ
+ TLam x m typ -> abstr x (compile m) typ   
+ TVar _ _     -> tt
+ TVal _ _     -> tt
+
+abstr :: Symbol -> TTerm -> Typ -> TTerm
+abstr x m' typ@(a:->b) = case m' of
+  TApp f1 f2 _ -> let f1t  = ttermTyp f1
+                      f2t  = ttermTyp f2
+                      lf1t = a :-> f1t
+                      lf2t = a :-> f2t
+                      lf1  = abstr x f1 lf1t
+                      lf2  = abstr x f2 lf2t
+                      expr = TApp
+                              (TApp (TVal "s" (lf1t:->lf2t:->a:->b) ) lf1 (lf2t:->a:->b))
+                              lf2 (a:->b)
+                   in optim expr
+  TVar y _ | x == y    -> TVal "i" typ
+           | otherwise -> TApp (TVal "k" (b:->a:->b) ) m' typ
+  TVal _ _             -> TApp (TVal "k" (b:->a:->b) ) m' typ
+
+
+optim :: TTerm -> TTerm
+optim tt = case tt of
+  ( TApp (TApp (TVal "s" _) (TApp (TVal "k" _) p _ ) _ ) 
+         ( TApp (TVal "k" _) q (_:->c) ) (a:->b)  ) 
+   -> TApp (TVal "k" (b:->a:->b)) ( TApp p q b ) (a:->b) 
+  ( TApp (TApp (TVal "s" _) (TApp (TVal "k" _) p _ ) _ ) 
+         (TVal "i" _) a ) 
+   -> p
+  ( TApp (TApp (TVal "s" _) (TApp (TVal "k" _) p _ ) _ ) 
+         (TApp (TApp (TVal "b" _) q _) r (_:->c) ) (a:->d) )
+   -> let (_:->b) = ttermTyp r
+       in (TApp 
+          (TApp 
+          (TApp (TVal "b_" ((c:->d):->(b:->c):->(a:->b):->(a:->d)) ) p ((b:->c):->(a:->b):->(a:->d)) )
+          q ((a:->b):->(a:->d)) )
+          r (a:->d) )
+  ( TApp ( TApp (TVal "s" _) (TApp (TVal "k" _) p _) ((_:->b):->(a:->c)) ) q _) 
+   -> TApp (TApp (TVal "b"  ((b:->c):->(a:->b):->(a:->c)) ) p ((a:->b):->(a:->c))  ) q (a:->c)
+  (TApp (TApp (TVal "s" _) (TApp (TApp (TVal "b" _) p _) q _) _) (TApp (TVal "k" _) r _) typ)
+   -> let pt = ttermTyp p
+          qt = ttermTyp q
+          rt = ttermTyp r
+       in TApp (TApp (TApp (TVal "c_"  (pt:->qt:->rt:->typ) ) p (qt:->rt:->typ)) q (rt:->typ)) r typ
+  (TApp (TApp (TVal "s" _) p _) (TApp (TVal "k" _) q _) typ) 
+    -> let pt = ttermTyp p
+           qt = ttermTyp q
+        in TApp (TApp (TVal "c" (pt:->qt:->typ) ) p (qt:->typ)) q typ
+  (TApp (TApp (TVal "s" _) (TApp (TApp (TVal "b" _) p _) q _) _ ) r typ)
+    -> let pt = ttermTyp p
+           qt = ttermTyp q
+           rt = ttermTyp r
+        in TApp (TApp (TApp (TVal "s_"  (pt:->qt:->rt:->typ) ) p (qt:->rt:->typ)) q (rt:->typ)) r typ
+  x -> x
+
+i :: a -> a
+i x = x
+
+k :: a -> b -> a
+k x y = x
+
+s :: (a->b->c) -> (a->b) -> a -> c
+s f g x = f x (g x)
+
+s_ :: (b -> c -> d) -> (a -> b) -> (a -> c) -> a -> d
+s_ c f g x = c (f x) (g x)
+
+b::(b -> c) -> (a -> b) -> a -> c
+b    f g x = f (g x)
+
+b_ :: (c -> d) -> (b -> c) -> (a -> b) -> a -> d
+b_ c f g x = c (f (g x))
+
+c :: (a->b->c)->b->a->c
+c f g x = f x g 
+
+c_ :: (b->c->d)->(a->b)->c->a->d
+c_ c f g x = c (f x) g
 
 -- ------------- --
 -- prevod do SKI --
