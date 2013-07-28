@@ -1,0 +1,19 @@
+
+reg = PO_CTTP_ PO_CTTP {
+  cttp_code        = "ant"                                        ,
+  cttp_info        = "Artifical Ant"                              ,
+  cttp_data        = jsData                                       ,
+  cttp_numRuns     = 50    ,
+  cttp_numGene     = 50    ,
+  cttp_popSize     = 500   ,
+  
+  cttp_typ         = ant                                          ,
+  cttp_ctx         = ctx                                          ,
+  
+  cttp_gOpt        = CTTG_Koza2 ant ctx                           , 
+
+  cttp_ff          = FF5 "ff" "Problems.Ant.Funs" (), 
+  
+  cttp_saveBest    = False
+  
+}

@@ -1147,6 +1147,7 @@ A normal form may be thought of as a result of a term evaluation.
 \label{tree-reps}
 
 \newcommand{\sexprTree}{sexpr-tree\xspace}
+\newcommand{\SexprTree}{Sexpr-tree\xspace}
 \newcommand{\atTree}{@-tree\xspace}
 
 
@@ -2151,6 +2152,7 @@ with desired type $\sigma$ from \textit{building blocks} context $\Gamma$.\\
 \end{todo}
 
 \subsection{Benefits of generating \lterms in \lnf}
+\label{benefits}
 
 By generating \lterms in \textit{lnf} we avoid generating 
 \lterms $M$,$N$ such that $M \not= N$, but $M =_{\beta\eta} N$.
@@ -3274,7 +3276,8 @@ And each term is generated in its own run.\\
 \textit{Geometric strategy} is simple yet fairly effective term generating 
 strategy somewhere in the middle of this spectrum.
 
-It is parameterized by parametr $q \in (0,1)$. 
+It is parameterized by parametr $q \in (0,1)$, its default well-performing 
+value is $q = 0.75$. \\
 
 For each element of $nexts$ it is probabilistically decided whether
 it will be returned or omitted. A probability $p$ of returning is
@@ -3603,15 +3606,322 @@ Předběžný náhodně uspořádaný body osnovy ..\\
 
 
 \chapter{Problems}
-	In this section will be presented usage of the system in order to solve specific problems.
+	In this section will be presented usage of the system in order to solve specific problems. Several problems will be described and some of them compared with results
+of others. 
 		
 	
-		\section{Even Parity Problem}
-		\section{Big Context}
-		\section{Fly}
-		\section{Simple Symbolic Regression}
-		\section{Artificial Ant}
-		\section{Boolean Alternate}
+\section{Even-parity problem}
+The even-parity function is a boolean function taking as inputs $N$
+boolean values and returning \textit{True} if an even number of inputs 
+are \textit{True}. For odd number it returns \textit{False}.
+
+The reason why examine this problem is that it has been used by many researchers
+as a benchmark for GP \cite{todo,yu01}.
+
+We compare our results with that obtained by Yu in \cite{yu01},
+where is presented approach to evolve recursive and modular programs
+by use of higher-order functions and $\lambda$-abstractions.
+Since the results are highly sensitive to set of \textit{building blocks}, 
+we use very similar set of \textit{building blocks} in order to make 
+the results comparable. 
+
+\begin{align*}
+\sigma = [Boo&l] \ar Bool\\
+\Gamma = \{
+  and   &: Bool \ar Bool \ar Bool                              ,\\
+  or    &: Bool \ar Bool \ar Bool                              ,\\
+  nand  &: Bool \ar Bool \ar Bool                              ,\\
+  nor   &: Bool \ar Bool \ar Bool                              ,\\
+  foldr &: (Bool \ar Bool \ar Bool) \ar Bool \ar [Bool] \ar Bool ,\\
+  head' &: [Bool] \ar Bool                                   ,\\
+  tail' &: [Bool] \ar [Bool]                              \}\\
+\end{align*}
+
+The type $[Bool]$ stands for \textit{list of $Bool$s} and for purpose of
+this problem is considered atomic.
+
+Unlike in \cite{yu01}, we use specific instance of polymorphic 
+function \texttt{foldr}. 
+And modifications of functions \texttt{head} 
+(returning the first element of the list) 
+and \texttt{tail} (returning the list without the first element) are used; 
+making them total by returning default value \textit{False}
+and \texttt{[]}, respectively.
+
+The \texttt{fold} function is higher order function widely used in \textit{Haskell}
+programming language, recursively defined as follows.
+
+\texttt{~\\
+foldr :: (a -> b -> b) -> b -> [a] -> b \\
+foldr f z []     = z \\
+foldr f z (x:xs) = f x (foldr f z xs)  
+}\\
+
+\Lets demonstrate \texttt{foldr}'s behavior on the following simple example.
+
+\texttt{~\\
+foldr xor False [True,False,True] \\
+= xor True (foldr False [False,True]) \\
+= xor True ( xor False ( foldr False [True] ) )\\
+= xor True ( xor False ( xor True (foldr False [] ) )\\
+= xor True ( xor False ( xor True False) )\\
+= False
+}\\
+
+The reasons why is this difficult problem 
+for GP to solve are following \cite{todo}:
+
+\begin{itemize}
+ \item Since a single change of one input generates a different output,
+       the output is highly sensitive to all inputs.
+ \item The building blocks set does not contain functions \textit{xor}
+       or \textit{eq}, which are keys to solving the problem.
+       But those two functions may be discover by GP.  
+\end{itemize}
+
+We use the same fitness function as in \cite{yu01}. 
+The fitness function examines the individual by giving
+it all possible boolean lists of length 2 and 3.
+Thus resulting in $2^2 + 2^3 = 12$ test cases.
+For each correct response it receives $1/12$, 
+therefore correct solution receives fitness value $1$.\\
+
+\begin{todo}
+ & zmínit tu, že to při týhle building block stačí na general solution...
+\end{todo}
+
+\subsection{Experiments}
+
+Series of five experiments have been performed to test properties of our system.
+Each experiment consisted of 50 independent runs of GP algorithm.
+Each run had maximally 50 generations
+(50 + 1 for generation 0) and 500 individuals as population size.\\
+ 
+In those experiments we examined influences of the following factors:
+
+\begin{itemize}
+ \item Option of preserving the best individual into the next population.
+ \item Option of performing $\eta$-normalization of generated individuals 
+      (conversion from \lnf to \benf, see \ref{benefits}).
+ \item Representation of individuals: \sexprTree vs \atTree.
+ \item Option of performing optimized abstraction elimination
+       (see \ref{toSKI}) instead of the simple one.
+\end{itemize} 
+ 
+We analyze the ability of the system to produce a correct solution.
+We are interested in percentage of runs that led to discovery of
+correct solution. And we also use the popular measurement  
+method within GP field --- the \textit{performance curves}
+described in \cite{koza92}.
+
+First performance curve is the cumulative \textit{probability of success}
+$P(M,i)$, where $i$ is generation number ($i = 0$ for initial population) 
+and $M$ is the size of the population. 
+$P(M,i)$ is probability that a correct solution will
+be find in one run of GP with maximal number of generations $i$ and 
+population size $M$. $P(M,i)$ is computed as percentage of 
+runs yielding a correct solution in generation $i$ or earlier.
+
+From values of $P(M,i)$ are computed values of the second performance curve
+$I(M,i,z)$
+--- the total number of individuals that must be processed to yield a correct
+solution with probability $z$ by multiple runs of GP with maximal 
+number of generations $i$ and population size $M$ (usually $z = 0.99$).
+
+As is described in \cite{koza92},
+The number $R(M,i,z)$ of independent runs required to yield a correct solution 
+is computed as
+ 
+$$ R(M,i,z) = \lceil\frac{\log(1-z)}{\log(1-P(M,i))}\rceil ,$$
+
+thus $I(M,i,z)$ is computed as
+
+$$I(M,i,z) = (i+1) \cdot M \cdot R(M,i,z) .$$\\
+
+
+The setup of the first experiment was following:\\ 
+
+\begin{enum}
+ & \textit{Geometric} search strategy for generating individuals with default $q=0.75$.
+   This option is unchanged for all five experiments.
+ & No best individual preservation.
+ & $\eta$-normalization was not performed.
+ & Individuals represented as \sexprTree{}s. 
+ & Simple abstraction elimination.
+\end{enum}~
+
+Thus the simplest one setup; all extra features are off. 
+In each following experiment one extra feature will be turned on,
+in hope that it will enhance the performance.
+
+The correct individual was yield 
+in 17 out of 50 runs, i.e., 34\% success rate.
+The performance curve for $P(M,i)$ is following.
+
+\includegraphics[scale=0.65]{reports/ep/report1/probabs.png}
+
+Interestingly, in 2 runs out of 50, a correct solution was present in the initial population.
+
+The performance curve for $I(M,i,z)$ is following.
+
+\includegraphics[scale=0.65]{reports/ep/report1/indivs.png}
+
+The smallest value in this graph is used to indicate the minimum effort
+(i.e. number of individuals to be processed) for GP to yield a correct solution.
+
+Thus for this experiment this analysis suggest
+to perform only term generating and no evolution at all, 
+because the smallest value 56500 is in generation 0.
+
+This experiment took 59 minutes (on average desktop computer).\\
+
+Second experiment was different from the first one in that it 
+preserved the best individual to the next generation.
+
+It scored 22/50, i.e., 40\% success rate. A correct solution was
+created once in the initial generation and again it was
+sufficient to make the value in generation 0
+be the smallest value in the $I(M,i,z)$ curve; now 114000
+ individuals to be processed.
+This experiment also took 59 minutes.\\
+
+
+Third experiment was different from the second one in that 
+$\eta$-normalization of generated individuals was performed.
+
+It scored 27/50, i.e., 54\% success rate. 
+Two runs contained a correct solution in the initial population.
+But now the $I(M,i,z)$ was best for generation 1 with 56000
+ individuals to be processed.
+This experiment took 53 minutes.\\
+
+
+Fourth experiment was different from the third one in that
+\atTree representation was used instead of \sexprTree.
+
+It scored 34/50, i.e., 68\% success rate. Again two runs
+contained a correct solution in the initial population.
+The $I(M,i,z)$ was best for generation 0 with 56500 
+individuals to be processed.
+This experiment took 64 minutes.
+
+As we will see, this setup was the most successful one,
+thus we again show the performance curves.
+
+\includegraphics[scale=0.65]{reports/ep/report4/probabs.png}
+
+\includegraphics[scale=0.65]{reports/ep/report4/indivs.png}
+
+Fifth, last experiment was different from the fourth one in that
+optimized abstraction elimination was used instead of the simple one.
+
+It scored 33/50, i.e., 66\% success rate. One run
+contained a correct solution in the initial population.
+The $I(M,i,z)$ was best for generation 6 with 59500 
+individuals to be processed.
+This experiment took only 30 minutes. \\
+
+\subsection{Comparison with other results}
+
+Results presented by Yu \cite{yu01} are better then our results;
+they scored 40/50, i.e., 80\% success rate.  
+Her $I(M,i,z)$ was best for generation 4 with 17500 
+individuals to be processed.
+Yu also uses crossover as the only genetic operator, thus we
+can narrow the discussion to discussion of generating method and 
+crossover method. 
+
+When we observe results of our experiments, it seems
+that our system is pretty good in term generation, but not so good 
+in crossover. Since the main focus point of this thesis is
+the term generation, it is positive rather then negative observation.
+
+Design of our crossover comes from that we wanted it to be
+very simple generalization of standard tree-swapping crossover.
+Whereas the crossover used by Yu is more structure oriented
+--- as is stated in \cite{yu01} the crossover \textit{can only operate 
+between nodes in two main programs or between nodes in the same
+kind of $\lambda$ abstraction (i.e., $\lambda$ abstractions that 
+represent the same function arguments to the same higher order function).}
+%This seems to be great advantage for optimizing the 
+
+Since our method has better success rate for generation 0, it would 
+be interesting to try combination of our generating 
+method with crossover used by Yu.\\
+
+Positive observation is that our result at least outperforms 
+other results mentioned in \cite{yu01} with which her method is compared.
+
+
+\textit{Generic genetic programming} scored 17/60, i.e. 28\%; 
+minimum $I(M,i,z) = 220,000$.
+
+\textit{GP with ADFs} scored 10/29, i.e. 34\%; 
+minimum $I(M,i,z) = 1,440,000$.
+
+
+\begin{todo}
+& napsat tam jak vypadaj nějaký nalezeneý řešení
+\end{todo} 
+
+\section{Flies and Apples}
+
+\textit{Flies and Apples} is problem consisting in breeding 
+control programs for a fly agent in a simple world. 
+
+Fly world is a square grid. 
+Each cell is ether empty or contains precisely one object.
+There are three kinds of objects:
+
+~\begin{enum}
+ & Wall
+ & Apple
+ & Fly
+\end{enum}~
+
+Apples and flies have \textit{energy}.
+
+Moreover, each fly has its control program and inner state, 
+so called \textit{registers}.   
+
+There is a queue of all flies in the fly world determining which 
+fly is next to make an action.
+After the fly in the front of the queue performs its action, 
+it is put to the back. In other words, flies are cyclically
+taking turns similarly like in common card games.\\
+
+
+Fly can perform two kinds of action:
+
+~\begin{enum}
+ & \textit{Trave.} Moves the fly to one of four adjacent cells determined by 
+   direction specified in the action.  
+   Result of the travel action depends on the content of the target cell.    
+   && If it is empty, then the fly simply moves to that cell.
+   && If it contains wall, then no movement is performed.
+   && If it contains an apple, then the fly moves to that cell, the apple 
+      is eaten and its energy is added to energy of the fly.  
+   && If it contains another fly, then the fly moves to that cell, the fly with bigger 
+      energy stays alive and the weaker one is eaten
+      and its energy is added to energy of the stronger fly.  
+ & \textit{Split.} Puts a daughter fly to one of four adjacent cells.
+    Together with the direction, amount of energy and new registers 
+    for the fly are specified by this action. The mother gives this energy to 
+    its child. In order to be successful, the target cell must be empty
+    and the mother fly must have energy greater then 1. 
+\end{enum}~
+
+
+
+
+\section{Simple Symbolic Regression}
+
+\section{Artificial Ant}
+
+
+\section{Big Context}
+
+\section{Boolean Alternate}
 		
 \chapter{Comparison with others}
 
