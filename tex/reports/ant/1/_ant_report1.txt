@@ -1,0 +1,96 @@
+
+reg = PO_CTTP_ PO_CTTP {
+  cttp_code        = "ant"                                        ,
+  cttp_info        = "Artifical Ant"                              ,
+  cttp_data        = jsData                                       ,
+  cttp_numRuns     = 50    ,
+  cttp_numGene     = 50    ,
+  cttp_popSize     = 500   ,
+  
+  cttp_typ         = ant                                          ,
+  cttp_ctx         = ctx                                          ,
+  
+  cttp_gOpt        = CTTG_Geom  ant ctx 0.75                      , 
+
+  cttp_ff          = FF5 "ff" "Problems.Ant.Funs" (), 
+  
+  cttp_saveBest    = True
+  
+}
+
+19/50 = 38 %
+
+nej = 10,115500
+
+[0, 0, 0, 0, 2, 3, 5, 7, 7, 9, 10, 10, 10, 11, 12, 12, 13, 13, 13, 13, 13, 13, 14, 15, 15, 15, 15, 15, 15, 16, 16, 16, 17, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 18, 19, 19, 19, 19]
+
+"[[0,null],[1,null],[2,null],[3,null],[4,282500],[5,225000],[6,154000],[7,124000],[8,139500],[9,120000],[10,115500],[11,126000],[12,136500],[13,133000],[14,127500],[15,136000],[16,136000],[17,144000],[18,152000],[19,160000],[20,168000],[21,176000],[22,172500],[23,156000],[24,162500],[25,169000],[26,175500],[27,182000],[28,188500],[29,180000],[30,186000],[31,192000],[32,198000],[33,187000],[34,192500],[35,198000],[36,203500],[37,209000],[38,214500],[39,220000],[40,225500],[41,231000],[42,236500],[43,242000],[44,247500],[45,253000],[46,258500],[47,240000],[48,245000],[49,250000],[50,255000]]"
+
+
+Total time: 6429.405741s
+
+
+(ifa m (p3 r (ifa (ifa m (ifa m (p3 r (ifa m r) m))) (ifa m (p2 (p2 m (ifa m (if
+a m (ifa m (p3 r (ifa m r) m))))) (ifa m r)))) m),89.0,Just 47)
+
+
+(p3 (ifa m l) (p3 m l (ifa (p2 m (ifa l (p2 (p2 (p2 m (ifa m m)) (ifa (ifa m l)
+r)) (ifa m l)))) r)) r,89.0,Just 32)
+
+(ifa l (ifa (p3 (p2 (p2 r (ifa r m)) (p3 l (ifa m (ifa m l)) r)) l m) (p2 r (ifa
+ m (p2 l (p2 (p2 l (ifa m r)) m))))),89.0,Just 33)
+
+(p3 m (p3 r (ifa m l) l) (ifa (p2 (p3 m m r) (ifa m l)) r),89.0,Just 7)
+
+(p3 (ifa m (ifa (ifa m m) (ifa m r))) m (p3 r (ifa (p3 (ifa m r) m (p3 r (ifa m
+l) m)) l) l),89.0,Just 10)
+
+(p3 (ifa m l) (p2 m l) (ifa (p3 (ifa m (ifa m l)) m r) (p2 (ifa m (ifa r l)) l))
+,89.0,Just 5)
+
+(p3 (p3 r (ifa (p2 (ifa m (ifa (ifa m r) m)) m) l) m) l (ifa m r),89.0,Just 23)
+
+(ifa (p3 m (ifa (ifa r m) r) l) (p3 (p3 l (ifa m r) r) (ifa m (ifa m l)) m),89.0
+,Just 4)
+
+
+(p3 m (p3 l (ifa (p3 m (ifa m m) m) r) r) (ifa m (ifa m l)),89.0,Just 29)
+
+
+(p2 (ifa (ifa m (p3 l (p2 (p2 (ifa (ifa m l) l) m) (ifa m r)) (p2 (ifa (ifa (ifa
+ (ifa (p3 r l m) r) l) l) (p3 l (ifa m r) (ifa m r))) m))) r) (p2 (p3 r (ifa (if
+a (p2 (ifa m (ifa (ifa (ifa (p3 m r (ifa l l)) l) l) l)) m) (p3 l (p2 (ifa m (p2
+ l m)) (ifa m r)) m)) l) m) l),89.0,Just 16)
+
+
+
+(ifa (ifa m (ifa m r)) (ifa (ifa (ifa m l) r) (p3 (p3 l (ifa m r) (p3 r l r)) (i
+fa m l) m)),89.0,Just 9)
+
+
+(ifa (p2 m r) (ifa (p2 (ifa (p2 l m) r) m) (p3 l m (ifa r (p3 l (ifa m r) r)))),
+89.0,Just 9)
+
+(p3 (p3 l (ifa m r) r) (ifa (p3 m m (p2 r (ifa (p3 r (ifa m l) (ifa m l)) l))) l
+) m,89.0,Just 7)
+
+
+(p3 r (ifa m (p3 l l (ifa (ifa m m) r))) m,89.0,Just 4)
+(ifa (p3 (ifa m l) r (ifa m l)) (ifa m (p3 (p3 l (ifa m r) m) r (ifa m l))),89.0
+,Just 6)
+
+
+(ifa m (p3 (ifa l (p3 r (ifa (ifa l l) (ifa (ifa r r) r)) (ifa r r))) (ifa (ifa
+m r) r) m),89.0,Just 6)
+
+
+
+(p3 (ifa (ifa (ifa m l) l) l) (p3 m (ifa (ifa (ifa (p2 m l) l) (ifa r r)) l) (if
+a m (ifa m r))) r,89.0,Just 14)
+
+(ifa (ifa (ifa m r) r) (p3 r (ifa (ifa m (p3 (ifa m (ifa m r)) (ifa (ifa r l) r)
+ (ifa m l))) (ifa l (p3 (ifa m l) (ifa m l) (ifa m (ifa m r))))) m),89.0,Just 22
+)
+
+
+(p3 (p3 m r (ifa (p2 m m) l)) l (ifa m r),89.0,Just 13)

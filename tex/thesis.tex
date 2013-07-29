@@ -395,9 +395,9 @@ Notable highlights are:
    classical GP individual generation.     
  \item \textit{Abstraction elimination} is utilized
    to enable use of simple \textit{mutation operator}.
- \item \textit{Polymorphic} generalization of inhabitation tree,
-   enabling use of polymorphic functions as building blocks, 
-   is presented. 
+% \item \textit{Polymorphic} generalization of inhabitation tree,
+%   enabling use of polymorphic functions as building blocks, 
+%   is presented. 
 
 \end{itemize}
 
@@ -3539,13 +3539,7 @@ jako source of further reading on this subject.
 \end{todo}
 
 
-\chapter{Polymorphic variant}
 
-\begin{todo}
- & poznamky o čem se mimojiné zmínit:
-   && $(\$) : (\alpha \ar \beta) \ar \alpha \ar \beta$ 
-      jako alternativa k ADF ! Myslim že hodně zajimavý
-\end{todo}
 
 \chapter{ Implementation }	
 
@@ -3823,10 +3817,13 @@ This experiment took only 30 minutes. \\
 
 \subsection{Comparison with other results}
 
-Results presented by Yu \cite{yu01} are better then our results;
+Our results are less successful then those 
+presented by Yu \cite{yu01};
 they scored 40/50, i.e., 80\% success rate.  
 Her $I(M,i,z)$ was best for generation 4 with 17500 
 individuals to be processed.
+(We scored 34/50 (68\%); min $I(M,i,z) = 56,500$.)
+
 Yu also uses crossover as the only genetic operator, thus we
 can narrow the discussion to discussion of generating method and 
 crossover method. 
@@ -3847,17 +3844,23 @@ represent the same function arguments to the same higher order function).}
 
 Since our method has better success rate for generation 0, it would 
 be interesting to try combination of our generating 
-method with crossover used by Yu.\\
+method with crossover used by Yu.
+
+From an optimist's point of view 34/50 versus 40/50 
+is not such a huge difference when we take to account that
+our general tree-swapping crossover is competing with specialized one.   
 
 Positive observation is that our result at least outperforms 
-other results mentioned in \cite{yu01} with which her method is compared.
+other results mentioned in \cite{yu01} with which Yu's method is compared.
 
 
-\textit{Generic genetic programming} scored 17/60, i.e. 28\%; 
-minimum $I(M,i,z) = 220,000$.
+\textit{Generic genetic programming} scored 17/60 (28\%); 
+min $I(M,i,z) = 220,000$.
 
-\textit{GP with ADFs} scored 10/29, i.e. 34\%; 
-minimum $I(M,i,z) = 1,440,000$.
+\textit{GP with ADFs} scored 10/29 (34\%); 
+min $I(M,i,z) = 1,440,000$.
+
+
 
 
 \begin{todo}
@@ -3867,7 +3870,39 @@ minimum $I(M,i,z) = 1,440,000$.
 \section{Flies and Apples}
 
 \textit{Flies and Apples} is problem consisting in breeding 
-control programs for a fly agent in a simple world. 
+control programs for a fly agent in a simple world.\\ 
+
+Whereas previous problem is a kind of problem where we know precisely
+what problem we are solving and where we are more interested in 
+performance statistics than in the solutions since we know the correct solution in 
+advance, problem we are going to present now is of more playful nature.
+In this problem we are not interested in numerical results, instead 
+we are hoping for interesting \textit{behavior} to emerge.
+
+We start with defining a simple simulation and goal for agents.
+Then we prepare first testing simulation world. 
+After that we write some agent programs by hand. After that we 
+identify some useful recurring 
+themes occurring in those programs and pack them into functions
+which will become building blocks. During this process are also identified
+useful sensory data to be prepared for the agent program.
+After that we run the evolution and
+iteratively continue in this process  --- we may add more testing worlds,
+add more functions or change them, etc.
+      
+Since we do not need to satisfy the \textit{closure} constraint, 
+it is much easier to perform such a "human-computer jam" than it
+would be in standard GP. And it is further simplified by use of
+functional language (such as \textit{Haskell}) where almost
+every construct can be expressed as function (or value).
+
+Another advantage of typed GP over standard GP is that 
+it is more capable of handling huge set of building blocks,
+since the search space can be significantly smaller due to 
+fact that types must match.
+\\
+
+
 
 Fly world is a square grid. 
 Each cell is ether empty or contains precisely one object.
@@ -3885,18 +3920,20 @@ Moreover, each fly has its control program and inner state,
 so called \textit{registers}.   
 
 There is a queue of all flies in the fly world determining which 
-fly is next to make an action.
-After the fly in the front of the queue performs its action, 
+fly is next to make a move.
+After the fly in the front of the queue performs its move, 
 it is put to the back. In other words, flies are cyclically
 taking turns similarly like in common card games.\\
 
+A control program of a fly has as input a collection of various sensory information
+and returns as output agents move and agents registers for the next turn.
 
-Fly can perform two kinds of action:
+Fly can perform two kinds of moves:
 
 ~\begin{enum}
  & \textit{Trave.} Moves the fly to one of four adjacent cells determined by 
-   direction specified in the action.  
-   Result of the travel action depends on the content of the target cell.    
+   direction specified in the move.  
+   Result of the travel move depends on the content of the target cell.    
    && If it is empty, then the fly simply moves to that cell.
    && If it contains wall, then no movement is performed.
    && If it contains an apple, then the fly moves to that cell, the apple 
@@ -3906,27 +3943,344 @@ Fly can perform two kinds of action:
       and its energy is added to energy of the stronger fly.  
  & \textit{Split.} Puts a daughter fly to one of four adjacent cells.
     Together with the direction, amount of energy and new registers 
-    for the fly are specified by this action. The mother gives this energy to 
+    for the fly are specified by this move. The mother gives this energy to 
     its child. In order to be successful, the target cell must be empty
     and the mother fly must have energy greater then 1. 
 \end{enum}~
 
+Agent's fitness is computed as sum of fitness cases; each 
+fitness case consists of one fly world and fitness in a
+fly world is computed as sum of agent's energy and of energy of all his descendants
+(daughters, granddaughter, ...) after predefined number of rounds. 
+
+\Lets look in more detail on input for fly. It is collection of 
+various useful information. Its components are:
+
+~\begin{enum}
+ & Current value of fly's Registers. 
+ & Energy of the fly.
+ & Direction of the last successful travel move.
+ & Boolean value indicating whether the last move was successful.
+ & Direction of the nearest apple.
+ & Distance to the nearest apple.
+ & Energy of the nearest apple.
+ & Direction of the nearest fly.
+ & Distance to the nearest fly.
+ & Energy of the nearest fly.
+ & Direction of the "center of gravity" of all apples.
+ & Distance to the "center of gravity" of all apples.
+\end{enum} ~  
+
+Set of building blocks is following.
+
+\begin{align*}
+\sigma = Input &\ar Output\\
+\Gamma = \{
+dUp              &: Direction                                       ,\\              
+dDown            &: Direction                                       ,\\              
+dLeft            &: Direction                                       ,\\              
+dRight           &: Direction                                       ,\\            
+output           &: Move \ar Registers \ar Output                   ,\\            
+travel           &: Direction \ar Move                              ,\\          
+split            &: Direction \ar Int \ar Registers \ar Move        ,\\       
+easySplit        &: Input \ar Move                                  ,\\     
+myEnergy         &: Input \ar Int                                   ,\\     
+myLastTravel     &: Input \ar Direction                             ,\\                
+myWasSuccess     &: Input \ar Bool                                  ,\\      
+nAppleDir        &: Input \ar Direction                             ,\\          
+nAppleDir        &: Input \ar Direction                             ,\\                    
+nAppleDist       &: Input \ar Distance                              ,\\                   
+nAppleEnergy     &: Input \ar Int                                   ,\\              
+nFlyDir          &: Input \ar Direction                             ,\\                      
+nFlyDist         &: Input \ar Distance                              ,\\                    
+nFlyEnergy       &: Input \ar Int                                   ,\\              
+cAppleDir        &: Input \ar Direction                             ,\\          
+cAppleDist       &: Input \ar Distance                              ,\\        
+myRegs           &: Input \ar Registers                             ,\\         
+\end{align*}
+\begin{align*}
+xGet             &: Input \ar Int                                   ,\\     
+yGet             &: Input \ar Int                                   ,\\     
+zGet             &: Input \ar Int                                   ,\\     
+dGet             &: Input \ar Direction                             ,\\          
+xSet             &: Int \ar Registers \ar Registers                 ,\\          
+ySet             &: Int \ar Registers \ar Registers                 ,\\          
+zSet             &: Int \ar Registers \ar Registers                 ,\\          
+dSet             &: Direction \ar Registers \ar Registers           ,\\                
+xInc             &: Registers \ar Registers                         ,\\              
+yInc             &: Registers \ar Registers                         ,\\              
+zInc             &: Registers \ar Registers                         ,\\              
+rotCW            &: Direction \ar Direction                         ,\\                                                             
+(==)             &: Int \ar Int \ar Bool                            ,\\                                      
+(<=)             &: Int \ar Int \ar Bool                            ,\\               
+if'              &: Bool \ar Output \ar Output \ar Output           ,\\                                  
+if'              &: Bool \ar Move \ar Move \ar Move                 ,\\                                  
+if'              &: Bool \ar Direction \ar Direction \ar Direction  ,\\              
+if'              &: Bool \ar Int \ar Int \ar Int                    ,\\     
+if'              &: Bool \ar Distance \ar Distance \ar Distance     ,\\        
+if'              &: Bool \ar Registers \ar Registers \ar Registers  ,\\                           
+0                &: Int                                             ,\\                                     
+1                &: Int                                             ,\\                                    
+2                &: Int                                             \}\\
+\end{align*}
+
+We will not discuss it in great detail, only briefly: First four 
+elements are four direction values. Next four functions are
+constructors for $Output$ and $Move$ type. Next thirteen functions
+are for accessing components of $Input$. Next eleven functions are 
+related to $Registers$. The $rotCW$ performs clock-wise rotation of a direction.
+Next two functions are comparison functions. Next six are various \textit{if}s. And last 
+three are integer constants. 
+
+Tedy celkem 44 prvků množiny stavebních bloků, tedy poměrně obrovská množina
+na GP poměry.
+
+Takže množina atomických typů je následující:
+Move Bool Registers Input Direction Int Output Distance
+
+Používáme tři levely. První level vypadá takle
+
+[obrázek]
+
+Další dva levely jsou reakce na typické chování mouchy 
+která používala pro předchozí level triviální strategii
+jdi furt za nejbližšim jablkemn. roto jsou následující dva levely 
+léčka na tuto strategii.
+
+V druhém levelu se zmíněná moucha nachytá a vleze do 
+chodby kde je mnohem mín jablek než v v tom mega jablku z jakblek.
+
+[obrázek]
+
+Třetí dovádí předchozí myšlenku do extrému. 
+Moucha se zasekne a nesebere žádné jablko.
 
 
+V počátečních pokusech byl problém s tím, že mochy s počáteční energii 1
+neměli moc tendenci se množit. Proto byla simulace předělána tak, aby
+že nyní je počáteční energie 100. To mělo na Mouchy blahodárný vliv.
+Ale i pro mouchy sw počátečni energii 1 vznikli některé zajímavé strategie
+
+[povídání o zajímavých strategiích pro poč en 1]
+
+Po navíšení poč energie vznikli tyto zajímavá chování
+
+[povídání o zajímavých strat por poč en 100]\\
+
+Aplikace: například v oboru počítačových her, kde nám často jde o
+zajímavé nelineární chování by se tento přístup k využití typovaného funkcionálního
+programování dal využít.
+
+Předvedený postup by taky ohlo být možné použít na 
 
 \section{Simple Symbolic Regression}
 
+\textit{Simple Symbolic Regression} is a problem described
+in \cite{koza92}. Objective of this problem is to 
+find a function $f(x)$ that fits a sample
+of twenty given points. The target function is 
+function $f_{t}(x) = x^4 + x^3 + x^2 + x$.  
+
+Desired type of generated programs $\sigma$ and 
+building blocks context $\Gamma$ are following.
+\newcommand{\Real}{\mathbb{R}}
+\begin{align*}
+\sigma = \Real \ar &\Real\\
+\Gamma = \{
+  (+)  &: \Real \ar \Real \ar \Real    ,\\
+  (-)  &: \Real \ar \Real \ar \Real    ,\\
+  (*)  &: \Real \ar \Real \ar \Real    ,\\
+  rdiv &: \Real \ar \Real \ar \Real    ,\\
+  sin  &: \Real \ar \Real              ,\\
+  cos  &: \Real \ar \Real              ,\\
+  exp  &: \Real \ar \Real              ,\\ 
+  rlog &: \Real \ar \Real              \}\\
+\end{align*}
+
+Fitness function is computed as follows
+
+$$ fitness(f) =  \sum\limits_{i=1}^{20}{ \vert f(x_i)-y_i }\vert   $$
+
+where $(x_i,y_i)$ are 20 data samples from $[-1,1]$, such that $y_i = f_t(x_i)$.\\
+
+An individual $f$ such that $\vert f(x_i)-y_i \vert < 0.01 $ for all data samples is 
+considered as a correct individual.\\
+
+On this problem we demonstrate that if control parameters are set to be
+compatible with standard GP, then the results obtained fit the results
+presented in \cite{koza92} relatively well. 
+
+Those control parameters are following two:
+
+~\begin{enum}
+ & \textit{Ramped half-and-half strategy} is used as search strategy.
+ & Option of preserving the best individual into the next population is set \textbf{off}.
+\end{enum}~
+
+The experiment consisted of 50 independent runs of GP algorithm.
+Each run had maximally 50 generations and 500 individuals as population size.\\
+
+It scored 17/50 (34\%) success rate. 
+Minimal $I(M,i,z)$ was in generation 23 
+with 192,000 individuals to be processed.
+The experiment took 46 minutes.
+
+\Lets compare it with results from \cite{koza92} (based on 113 runs):
+
+Success rate 35\%; minimal $I(M,i,z)$ in generation 24 
+with 162,500 individuals to be processed.\\
+
+Performance curves are following.
+
+\includegraphics[scale=0.65]{reports/SSR/1/probabs.png}
+
+\includegraphics[scale=0.65]{reports/SSR/1/indivs.png}
+
+Second experiment was performed to compare 
+\textit{ramped half-and-half strategy} with our
+\textit{geometric strategy} (with default parameter $q=0.75$). 
+Thus all control parameters stay same except for the 
+search strategy for generating algorithm.
+
+It scored 21/50 (42\%) success rate. 
+Minimal $I(M,i,z)$ was in generation 29 
+with 150,000 individuals to be processed.
+The experiment took 26 minutes.\\
+
+[todo OBRAZKY GRAFů]
+
+So our geometric strategy is slightly more successful then 
+ramped half-and-half strategy. But more interesting is that
+it made the whole experiment almost twice as fast.
+
+
+
 \section{Artificial Ant}
 
+\textit{Artificial Ant} is another problem described
+in \cite{koza92}. Objective of this problem is to 
+find a control program for an artificial ant so
+that it can find all food located on "Santa Fe" trail.
 
-\section{Big Context}
+The Santa Fe trail has following layout.
 
-\section{Boolean Alternate}
+~\\~[ TODO OBRAZEK Santa Fe]\\
+
+
+
+The ant is able to move forward, turn left, and sense if a food 
+piece is ahead of him.\\
+
+Desired type of generated programs $\sigma$ and 
+building blocks context $\Gamma$ are following.
+\begin{align*}
+\sigma = An&tAction\\
+\Gamma = \{~~
+  l    &: AntAction                              ,\\
+  r    &: AntAction                              ,\\
+  m    &: AntAction                              ,\\
+  ifa  &: AntAction \ar AntAction \ar AntAction  ,\\
+  p2   &: AntAction \ar AntAction \ar AntAction  ,\\
+  p3   &: AntAction \ar AntAction \ar AntAction \ar AntAction  \}
+\end{align*}
+
+Action $l$ turns the ant left.
+
+Action $r$ turns the ant right.
+
+Action $m$ moves the ant forward.
+
+Action $ifa x y$ performs action $x$ if a food piece is ahead of the ant,
+otherwise it performs action $y$.
+
+Action $p2 x y$ first performs action $x$ and after it action $y$.
+
+Action $p3 x y z$ first performs action $x$, after that action $y$ and finally $z$.\\
+
+
+
+Actions $l, r$ and $m$ each take one time step to execute.
+
+
+
+
+
+Tento problém je také převzatý z \cite{koza92}. 
+
+Jde v něm o to [podivat ze do kozy a převypravet to]
+
+sigma a gama jsou
+
+fitnes je následující
+
+koza uvádí že jedinec [ten jedinec] je jedinec který mu vznikl
+při vyšlechtění. Na našem systému ale trvá mu to nakejch tech 500něco
+krků přičemž by to mělo trvat 400 max. 
+
+Nevíme zda je chyba na mé straně (nepřesná implementace) nebo
+se jedná o nepřesnost v koza92. Díky tomuto rozporu však nepoužijeme
+tuto ulohu pro dokladování toho že se to chová jako 
+standard GP. My jsme tedy oproti knize použili max počet kroků 600
+tak aby popsaný jedinec v koza92 byl korektní i vnašem systému.
+
+Uvádíme pokus o 50 behach s (geom strategie default q, best preservation on)
+...
+
+
+\section{Results summary}
+
+
 		
-\chapter{Comparison with others}
+\chapter{Previous related work}
+
+\section{Evolution of Constrained Syntactic Structures }
+by Koza
+
+\section{STGP}
+by Montana
+
+\section{Higher-Order Functions and Lambda Abstractions} 
+by Yu
+Požívá dvou levelovou hierarchii (najít tu pasaž)
+
+oproti nám umí i polymorfní typy
+
+K  lambda abstrakcím přistupuje jako k jedinému bodu který se dělí až 
+vevnitř.
+
+Používá na to speciálně přichystaný křížení
+
+Generování počáteční generace je v zásadě to samí co koza, když příde na vygenerování 
+abstrakce tak se to zase generuje klasicky s tim že proměný jsou \#1 \#2 atd
+
+klade velkej důraz na foldr jakožto na implicitní rekurzi
+
+v even parity scoruje o něco lépe než my.
+
+\section{Genetic Programming with Polymorphic Types and Higher-Order Functions}
+by Franck Binard and Amy Felty
 
 %\chapter{Ideas yet not implemented}
 \chapter{Future work}
+
+\section{Polymorphic variant}
+
+\begin{todo}
+ & poznamky o čem se mimojiné zmínit:
+   && $(\$) : (\alpha \ar \beta) \ar \alpha \ar \beta$ 
+      jako alternativa k ADF ! Myslim že hodně zajimavý
+\end{todo}
+
+\section{Big Context}
+
+TODO asi přenda do future work
+
+Tento problém je napůl rozpracovaný, hlavně protože by se na něj o dost více
+hodilo použít polymorfní typy, které jsou také ne uplně dodělané a véto thesis
+se o nich zminujeme jen velmi okrajově. Přestose myslím jedná o zajímavou myšlanku
+a proto ho popíšeme.
+
+
 
 \section{Roadmap}
 \section{Tree ants}

@@ -17,14 +17,14 @@ reg = PO_CTTP_ PO_CTTP {
   cttp_code        = "ssr"                                        ,
   cttp_info        = "Simple Symbolic Regression - new IM !"      ,
   cttp_data        = jsData                                       ,
-  cttp_numRuns     = IntSlider "Runs"            1 10    1    1   ,
-  cttp_numGene     = IntSlider "Generations"     0 100   10   10  ,
+  cttp_numRuns     = IntSlider "Runs"            1 10    50   1   ,
+  cttp_numGene     = IntSlider "Generations"     0 100   50   10  ,
   cttp_popSize     = IntSlider "Population size" 0 5000  500  100 ,
   
   cttp_typ         = dou1                                         ,
   cttp_ctx         = ctx                                          ,
 
-  cttp_gOpt        = CTTG_Koza2 dou1 ctx                          , 
+  cttp_gOpt        = CTTG_Geom  dou1 ctx 0.75  , --CTTG_Koza2 dou1 ctx , 
   
   cttp_ff          = FF6 (asType::Double->Double) ff "Problems.SSR.Funs", 
   
