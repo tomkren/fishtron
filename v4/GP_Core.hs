@@ -24,7 +24,8 @@ import Data.Maybe    ( fromJust,isJust )
 
 import Eva   ( Eva, runEva, evalsWith, evals, setOutputBuffer, sendJSON, flushStdout )
 import Dist  ( Dist , mkDist, distTake_new, distGet, distMax, distMin, distAvg )
-import Utils ( logIt, boxIt , JShow, jshow, putList)
+import Dist  ( distToList )
+import Utils ( logIt, boxIt , JShow, jshow, putList, jss_size)
 import ServerInterface ( graphCmd, multiCmd, OutputBuffer ) 
 
 
@@ -207,9 +208,16 @@ logGeneration (actRun,allRuns) i isWinner pop = do
  logIt  $ " │ Worst   " ++ p2 w ++ " │"
  logIt  $ " └────────────────────────┘" 
  if isWinner then logIt "WINNER!!!!!!!" else return ()
+ let m_averageTermSize = if True 
+                          then let popList = map fst $ distToList 32 pop
+                                   sizeOf  = fromIntegral . fromJust . jss_size
+                                   len     = fromIntegral $ length popList
+                                   isOK    = isJust . jss_size . head $ popList
+                                in if isOK then Just (  ( sum $ map sizeOf popList  ) / len ) else Nothing 
+                          else Nothing 
  boxIt  $ show best 
  stdout <- flushStdout 
- sendJSON $ multiCmd [ graphCmd actRun i (b,a,w) isWinner , stdout , jshow best ]
+ sendJSON $ multiCmd [ graphCmd actRun i (b,a,w) isWinner m_averageTermSize , stdout , jshow best ]
 
 
 

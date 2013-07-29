@@ -18,15 +18,55 @@ reg = PO_CTTP_ PO_CTTP {
   
 }
 
-/ =  %
+7/50 = 14 %
 
-nej = ,
+nej = [28,449500],
 
-[]
+[0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 2, 3, 3, 3, 3, 4, 4, 4, 4, 5, 5, 5, 5, 5, 5, 6, 6, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7]
 
-"[]"
+"[[0,null],[1,null],[2,null],[3,null],[4,null],[5,684000],[6,798000],[7,912000],[8,1026000],[9,1140000],[10,1254000],[11,678000],[12,487500],[13,525000],[14,562500],[15,600000],[16,476000],[17,504000],[18,532000],[19,560000],[20,462000],[21,484000],[22,506000],[23,528000],[24,550000],[25,572000],[26,499500],[27,518000],[28,449500],[29,465000],[30,480500],[31,496000],[32,511500],[33,527000],[34,542500],[35,558000],[36,573500],[37,589000],[38,604500],[39,620000],[40,635500],[41,651000],[42,666500],[43,682000],[44,697500],[45,713000],[46,728500],[47,744000],[48,759500],[49,775000],[50,790500]]"
 
 
-Total time: 
+Total time: 15911.0520601s = 265 minutes
+
+
+(p2 (ifa (p2 l r) (ifa (ifa (p2 m m) (p2 m l)) (p2 (ifa l r) (p2 m r)))) (ifa (i
+fa (p3 m (ifa m m) l) (p2 r r)) (ifa (ifa (p3 (p2 m l) (ifa (p3 (p2 m (ifa l m))
+ (p3 (ifa r (p2 (ifa (p2 m r) (p3 l r m)) (p2 m r))) m l) (p2 m l)) (ifa (p3 r l
+ l) (p3 m m r))) (ifa (p3 l l r) (p2 (ifa l r) (p2 m r)))) (p2 l r)) (ifa (p3 m
+l l) (p2 r r)))),89.0,Just 16)
+
+(p3 (ifa (p3 (p3 m m r) (p3 (ifa (p3 (p3 m m r) (p3 r l l) (ifa m l)) (ifa (p3 l
+ r (ifa (ifa m m) (p3 r l (p2 (ifa m l) (ifa (p3 (p2 l (p3 (ifa m m) (p2 l m) (p
+2 l r))) (p2 (ifa (ifa m r) (p3 r m l)) (p3 (ifa l l) (p3 l r l) (p2 l l))) (p2
+(ifa (ifa m l) (p2 l r)) (p2 (p2 l m) (p3 l r m)))) (ifa (ifa (p3 (p3 r m m) (p3
+ (p2 l m) (p2 l m) (ifa m m)) (ifa l m)) (ifa (p3 l r m) (ifa (ifa r r) (p2 m l)
+))) l)))))) (ifa l l))) m (p2 (p2 (ifa l l) (ifa m r)) r)) (ifa m l)) (ifa (p3 l
+ r (ifa (ifa m m) (p3 r l (p2 (ifa m l) (ifa (p3 (p2 l (p3 (ifa m m) (p2 l m) (p
+2 l r))) (p2 (ifa (ifa m r) (p3 r m l)) (p3 (ifa l l) (p3 l r l) (p2 l l))) (p2
+(ifa r (p2 l r)) (p2 (p2 l m) (p3 l r m)))) (ifa (ifa (p3 (p3 r m m) (p3 (p2 l m
+) (p2 l m) (p2 l r)) (ifa l m)) (ifa (p3 l r m) (ifa (ifa r r) (p2 m l)))) l))))
+)) (ifa l l))) m (p2 (p2 (ifa l l) (ifa m r)) r),89.0,Just 26)
+
+(p2 (ifa (p3 m m m) (p2 r m)) (p3 (ifa l r) (ifa (ifa l (p3 (p3 r r l) (ifa l m)
+ (ifa m (ifa (p2 (p3 (p3 (p3 (ifa m l) (p2 r r) (ifa m m)) (p3 (p3 r r r) (ifa r
+ r) (p2 m l)) (p3 (p2 m m) (p3 r m r) (ifa m r))) (p2 (p2 (p3 r l m) (p2 m m)) (
+p3 (ifa r l) (p2 m l) (p2 r m))) (p3 (ifa (ifa r l) (p3 m m r)) (p3 (ifa r m) (p
+3 l l r) (p2 r r)) l)) (p2 (p2 (p2 (p2 r r) (p2 r l)) (p3 (ifa r r) (p2 l l) (p2
+ m l))) (p3 m r l))) (p2 (ifa (ifa (p3 (ifa m r) (p2 (p3 (p3 r r l) (ifa l m) (p
+3 m l r)) (p2 m r)) (p3 l l l)) (ifa (p3 l l m) (ifa l r))) (ifa (ifa (ifa m r)
+(ifa l l)) (p2 (ifa l m) (p2 l m)))) (p3 (ifa (p2 (p2 r m) (p3 m l m)) (ifa (p2
+r l) (p3 r m r))) (p2 (p2 (p2 r r) (ifa l r)) (p3 (p3 m m m) (ifa m r) (ifa l m)
+)) (p2 m l))))))) r) (ifa l r)),89.0,Just 20)
+
+(p2 (p3 (p2 m l) (ifa r l) (ifa m l)) (ifa (p2 m m) (ifa r l)),89.0,Just 12)
+
+(p2 (p2 m r) (ifa m (p2 (p2 r r) (ifa (ifa (ifa m r) (p3 m m l)) r))),89.0,Just
+11)
+
+(ifa (p2 (p2 m m) (p2 m l)) (p3 (p2 r r) (ifa m l) (p2 m l)),89.0,Just 5)
+
+(p2 (ifa (p2 (ifa r m) (p2 (p2 (p2 l m) (p3 m m r)) (ifa l l))) (p3 (p2 l l) (if
+a m l) m)) l,89.0,Just 28)
 
 

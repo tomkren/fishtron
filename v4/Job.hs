@@ -22,16 +22,16 @@ import qualified Problems.EvenParity.Problem as EvenParity
 
 
 regs = 
- [ reg Ant2.reg
- , reg BigCtx.reg
- , reg Fly02.reg
- , reg Fly.reg 
- , reg BigCtx.reg_head
+ [ reg SSR.reg 
+ , reg Ant.reg
  , reg EvenParity.reg
  , reg EvenParity.rege
- , reg SSR.reg 
- , reg Ant.reg
+ , reg Fly02.reg
+ , reg BigCtx.reg
  , reg (BA.reg :: POU) 
+ --, reg BigCtx.reg_head
+ -- , reg Fly.reg 
+ -- ,  reg Ant2.reg
  ]
 
 type Code  = String

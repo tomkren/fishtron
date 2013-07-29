@@ -31,8 +31,13 @@ stdoutCmd str = jsObj [
   ("type" , jsStr "stdout" ) ,
   ("msg"  , jsStr str      ) ]
 
-graphCmd :: Int -> Int -> (Double,Double,Double) -> Bool -> JSValue
-graphCmd runI genI (best,avg,worst) isWinner = jsObj [ 
+graphCmd :: Int -> Int -> (Double,Double,Double) -> Bool -> Maybe Double -> JSValue
+graphCmd runI genI (best,avg,worst) isWinner m_averageTermSize = jsObj $ 
+ ( case m_averageTermSize of
+     Nothing -> []
+     Just x  -> [("averageTermSize" , jsNum x )]
+ ) ++
+ [ 
   ("type"   , jsStr "generationInfo" ) ,
   ("i"      , jsNum genI ) ,
   ("run"    , jsNum runI ) ,

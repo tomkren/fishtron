@@ -57,6 +57,7 @@ var Global = {
 
   plotData : {} ,
   performanceCurves :{},
+  averageSizesOfTerms : { sums : [] , ns : [] },
 
   Problems : {},
   
@@ -328,9 +329,14 @@ var go_new = function(){
 
   // initing peformance curves
   Global.performanceCurves = [] ;
+  Global.averageSizesOfTerms.sums = [];
+  Global.averageSizesOfTerms.ns   = [];
   for( var i = 0 ; i <= Global.numgens ; i ++ ){
     Global.performanceCurves[i] = 0;
+    Global.averageSizesOfTerms.sums[i] = 0;
+    Global.averageSizesOfTerms.ns[i]   = 0;
   }
+
 
 
   var sendBack = {};
@@ -442,7 +448,14 @@ var runCmd = function(){
          
       }
 
-      drawPerformanceCurves( Global.performanceCurves , Global.actRun , Global.popsize );
+      if( cmdObj.averageTermSize !== undefined ){
+        Global.averageSizesOfTerms.sums[Global.actGen] += cmdObj.averageTermSize ;
+        Global.averageSizesOfTerms.ns[Global.actGen]   ++ ;
+      }
+
+
+
+      drawPerformanceCurves( Global.performanceCurves , Global.actRun , Global.popsize , cmdObj.averageTermSize );
 
 
       var runGraphCmd = function( g , x , y ){
@@ -636,7 +649,8 @@ var drawPlot = function( graphI , plotData ){
   $.plot('#graph'+ graphI +'-div',  flattenPlotData( plotData ) );
 };
 
-var drawPerformanceCurves = function( curves_ , actRun , popsize ){
+var drawPerformanceCurves = function( curves_ , actRun , popsize , averageTermSize ){
+
 
   var curves = checkAllTheSame( curves_ );
   
@@ -657,6 +671,20 @@ var drawPerformanceCurves = function( curves_ , actRun , popsize ){
   $.plot('#graph3-div',  [graf1] );
 
   $.plot('#graph4-div' , [{ data: graf2 , points : { show: true }, lines : { show: true } , color: 'gray' }] );
+
+  if( averageTermSize !== undefined ){
+    //console.log('averageTermSize = ' + averageTermSize );
+
+    graf3 = []; 
+    for( var i = 0 ; i < Global.averageSizesOfTerms.sums.length ; i++ ){
+      if( Global.averageSizesOfTerms.ns[i] > 0 ){
+        graf3[i] = [i, Global.averageSizesOfTerms.sums[i] / Global.averageSizesOfTerms.ns[i] ];
+      }
+    } 
+
+    $.plot('#graph5-div' , [{ data: graf3 , points : { show: false }, lines : { show: true } , color: 'black' }] );   
+    
+  }
 
   
   //console.log( actRun );
@@ -751,6 +779,10 @@ var checkAllTheSame = function( xs ){
                      rel="tooltip" data-toggle="tooltip" data-placement="top" 
                      title="Koza's Performace Curves">
                      Koza's Performace Curve 2 - individuals to be processed</a></li>
+              <li><a href="#graph5" data-toggle="tab" 
+                     rel="tooltip" data-toggle="tooltip" data-placement="top" 
+                     title="Average sizes of terms">
+                     Average sizes of terms</a></li>
             </ul>
           </li>
           <li><a href="#im" id="im-link">Inhabitation Machine</a></li>
@@ -917,6 +949,13 @@ var checkAllTheSame = function( xs ){
           </div> 
         </div>
 
+        <div class="tab-pane span7" id="graph5">
+          <div id="graph5-div" class="graph"></div>
+          <br>
+          <div class="alert alert-info" style="width:734px">
+            Average term sizes
+          </div> 
+        </div>
 
         <div class="tab-pane span10" id="im" >
 

@@ -4123,18 +4123,20 @@ Each run had maximally 50 generations and 500 individuals as population size.\\
 It scored 17/50 (34\%) success rate. 
 Minimal $I(M,i,z)$ was in generation 23 
 with 192,000 individuals to be processed.
-The experiment took 46 minutes.
+The experiment took 46 minutes.\\
+
+Performance curves are following.
+
+\includegraphics[scale=0.65]{reports/SSR/1/probabs.png}
+
+\includegraphics[scale=0.65]{reports/SSR/1/indivs.png}\\
 
 \Lets compare it with results from \cite{koza92} (based on 113 runs):
 
 Success rate 35\%; minimal $I(M,i,z)$ in generation 24 
 with 162,500 individuals to be processed.\\
 
-Performance curves are following.
 
-\includegraphics[scale=0.65]{reports/SSR/1/probabs.png}
-
-\includegraphics[scale=0.65]{reports/SSR/1/indivs.png}
 
 Second experiment was performed to compare 
 \textit{ramped half-and-half strategy} with our
@@ -4147,13 +4149,16 @@ Minimal $I(M,i,z)$ was in generation 29
 with 150,000 individuals to be processed.
 The experiment took 26 minutes.\\
 
-[todo OBRAZKY GRAFů]
+
+\includegraphics[scale=0.65]{reports/SSR/2/probabs.png}
+
+\includegraphics[scale=0.65]{reports/SSR/2/indivs.png}\\
 
 So our geometric strategy is slightly more successful then 
 ramped half-and-half strategy. But more interesting is that
 it made the whole experiment almost twice as fast.
 
-
+~\\TODO dát sem ty grafy průměrný term size 
 
 \section{Artificial Ant}
 
@@ -4162,7 +4167,7 @@ in \cite{koza92}. Objective of this problem is to
 find a control program for an artificial ant so
 that it can find all food located on "Santa Fe" trail.
 
-The Santa Fe trail has following layout.
+The Santa Fe trail lies on toroidal square grid and has following layout.
 
 ~\\~[ TODO OBRAZEK Santa Fe]\\
 
@@ -4190,42 +4195,105 @@ Action $r$ turns the ant right.
 
 Action $m$ moves the ant forward.
 
-Action $ifa x y$ performs action $x$ if a food piece is ahead of the ant,
+Action $ifa x y$ (if-food-ahead) performs action $x$ if a food piece is ahead of the ant,
 otherwise it performs action $y$.
 
 Action $p2 x y$ first performs action $x$ and after it action $y$.
 
 Action $p3 x y z$ first performs action $x$, after that action $y$ and finally $z$.\\
 
-
-
 Actions $l, r$ and $m$ each take one time step to execute.
 
+Ants action is performed over and over again until it reaches predefined
+maximal number of steps. In \cite{koza92} this limit is set to be 400 time steps.
+
+Fitness value is equal to number of eaten food pieces.
+
+An individual such that eats all 89 pieces of food is 
+considered as a correct solution.\\
+
+There is also mentioned following ant program which is described as correct solution.
+
+\texttt{~\\
+(ifa m (p3 l (p2 (ifa m r) (p2 r (p2 l r)))(p2 (ifa m l) m)))\\
+} 
+
+But here arises a problem: In our implementation this program needs 545
+time steps; if it is given only 400 time steps, then it eats only 79 pieces
+of food. It is uncertain whether it is caused by my mistake in implementation
+or by inaccuracy in \cite{koza92}. Since everything else seems working just 
+fine, I have decided to set the limit to 600 in my experiments.
+
+Due to those uncertainties, we will not perform comparing experiments 
+as we did in the problem of simple symbolic regression.\\
+
+In the following experiments, the option of preserving the best individual 
+into the next generation is active (since we are not trying to compare 
+with results in \cite{koza92}).
 
 
 
 
-Tento problém je také převzatý z \cite{koza92}. 
 
-Jde v něm o to [podivat ze do kozy a převypravet to]
+As usually, first experiment consisted of 50 independent runs of GP algorithm.
+Each run had maximally 50 generations and 500 individuals as population size.
+\textit{Ramped half-and-half strategy} is used as search strategy for the first 
+experiment.\\
 
-sigma a gama jsou
 
-fitnes je následující
+It scored 7/50 (14\%) success rate. 
+Minimal $I(M,i,z)$ was in generation 28 
+with 449,500 individuals to be processed.
+The experiment took 265 minutes.
 
-koza uvádí že jedinec [ten jedinec] je jedinec který mu vznikl
-při vyšlechtění. Na našem systému ale trvá mu to nakejch tech 500něco
-krků přičemž by to mělo trvat 400 max. 
+Performance curves are following.
 
-Nevíme zda je chyba na mé straně (nepřesná implementace) nebo
-se jedná o nepřesnost v koza92. Díky tomuto rozporu však nepoužijeme
-tuto ulohu pro dokladování toho že se to chová jako 
-standard GP. My jsme tedy oproti knize použili max počet kroků 600
-tak aby popsaný jedinec v koza92 byl korektní i vnašem systému.
+Similarly as in previous problem, second experiment was performed to compare 
+\textit{ramped half-and-half strategy} with our
+\textit{geometric strategy} (with default parameter $q=0.75$). 
+Thus all control parameters stay same except for the 
+search strategy for generating algorithm.
 
-Uvádíme pokus o 50 behach s (geom strategie default q, best preservation on)
-...
+It scored 19/50 (38\%) success rate. 
+Minimal $I(M,i,z)$ was in generation 10 
+with 115,500 individuals to be processed.
+The experiment took 107 minutes.\\
 
+\includegraphics[scale=0.65]{reports/Ant/1/probabs.png}
+
+\includegraphics[scale=0.65]{reports/Ant/1/indivs.png}\\
+
+This is big improvement in all three watched factors:
+
+\begin{enumerate}
+ \item 38\% vs 14\% success rate.
+ \item 115,500 vs 449,500 individuals needed to be processed.
+ \item 107 vs 265 minutes.  
+\end{enumerate}
+
+Third factor, the time difference might give us clue about what is going on.
+
+Those two experiments differs only in used term generating method.
+During one run the vast majority of the time is spend by evolution,
+the generation process only slightly prolongs the time spend in generation 0.
+The run time of the evolution is influenced by two important factors:
+Number of generations and time that crossover takes.
+
+The number of generations of more successful method is surly smaller,
+but it seems improbable that it would have such a big impact 
+(this is idea is supported by results of experiments with
+even-parity problem, where times are almost the same but success 
+rates differs significantly). 
+
+Time of crossover is proportionate to number of nodes that 
+an individual has. Thus it seems that observed slowdown is
+due to terms being too big. \\
+
+In order to test this hypothesis, we run additional experiments
+to get statistics about dynamics of individuals' sizes. 
+
+
+~\\TODO dát sem ty grafy průměrný term size 
 
 \section{Results summary}
 

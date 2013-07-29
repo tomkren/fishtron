@@ -22,7 +22,7 @@ import Data.Either
 import Data.Maybe
 
 import Text.JSON (JSValue (..) , toJSObject , toJSString )
-import Utils ( JShow , jshow_js )
+import Utils ( JShow , jshow_js, jss_size )
 
 import JSONUtils
 
@@ -55,6 +55,7 @@ instance Show CTT where
          in "\\ "++ vars ++ " -> " ++ show ttree 
 
 instance JShow CTT where
+  jss_size (CTT _ ttree) = Just $ ttreeSize ttree 
   jshow_js ctt = Just . jsStr . jsShow $ ctt
 --  jshow ctt = JSObject $ toJSObject [ 
 --   ("type"     , JSString . toJSString $ "jsonout"     ) ,
@@ -115,6 +116,8 @@ ttreeDepth (TTree _ _ ts) = case ts of
  [] -> 0
  _  -> (1+) . maximum $ map ttreeDepth ts
 
+ttreeSize :: TTree -> Int
+ttreeSize (TTree _ _ ts) = 1 + ( sum $ map ttreeSize ts )
 
 ttreeSubtree :: TTree -> TTPos -> TTree
 ttreeSubtree t [] = t
