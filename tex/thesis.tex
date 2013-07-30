@@ -4096,6 +4096,13 @@ building blocks context $\Gamma$ are following.
   exp  &: \Real \ar \Real              ,\\ 
   rlog &: \Real \ar \Real              \}\\
 \end{align*}
+where
+\begin{align*}
+rdiv(p,q) &= \begin{cases} 1 &\mbox{if } q = 0 \\
+p/q & \mbox{otherwise } \end{cases}  \\
+rlog(x) &= \begin{cases} 0 &\mbox{if } x = 0 \\
+log(\vert x\vert) & \mbox{otherwise}. \end{cases}
+\end{align*}
 
 Fitness function is computed as follows
 
@@ -4160,6 +4167,7 @@ it made the whole experiment almost twice as fast.
 
 ~\\TODO dát sem ty grafy průměrný term size 
 
+\newpage
 \section{Artificial Ant}
 
 \textit{Artificial Ant} is another problem described
@@ -4167,9 +4175,11 @@ in \cite{koza92}. Objective of this problem is to
 find a control program for an artificial ant so
 that it can find all food located on "Santa Fe" trail.
 
-The Santa Fe trail lies on toroidal square grid and has following layout.
+The Santa Fe trail lies on toroidal square grid.
+The ant is in the upper left corner, facing right.
+It has following layout.
 
-~\\~[ TODO OBRAZEK Santa Fe]\\
+\includegraphics[scale=1]{santafe.png}
 
 
 
@@ -4341,14 +4351,10 @@ by Franck Binard and Amy Felty
 
 \section{Big Context}
 
-TODO asi přenda do future work
-
 Tento problém je napůl rozpracovaný, hlavně protože by se na něj o dost více
 hodilo použít polymorfní typy, které jsou také ne uplně dodělané a véto thesis
 se o nich zminujeme jen velmi okrajově. Přestose myslím jedná o zajímavou myšlanku
 a proto ho popíšeme.
-
-
 
 \section{Roadmap}
 \section{Tree ants}
