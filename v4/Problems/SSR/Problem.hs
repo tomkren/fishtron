@@ -15,10 +15,10 @@ import GP_Data (CTTGen(..))
 
 reg = PO_CTTP_ PO_CTTP {
   cttp_code        = "ssr"                                        ,
-  cttp_info        = "Simple Symbolic Regression - new IM !"      ,
+  cttp_info        = "Simple Symbolic Regression."                ,
   cttp_data        = jsData                                       ,
-  cttp_numRuns     = IntSlider "Runs"            1 10    50   1   ,
-  cttp_numGene     = IntSlider "Generations"     0 100   50   10  ,
+  cttp_numRuns     = IntSlider "Runs"            1 100   1    1   ,
+  cttp_numGene     = IntSlider "Generations"     0 200   50   10  ,
   cttp_popSize     = IntSlider "Population size" 0 5000  500  100 ,
   
   cttp_typ         = dou1                                         ,

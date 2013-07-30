@@ -27,14 +27,18 @@ Global.Problems.ssr = {
   },
 
 
-  fenotyp : function( solution , ffVal ){
+  fenotyp : function( solution , ffVal , actGen ){
 
     ffVal = Math.round(ffVal*100)/100 ;
 
     this.plotIt(solution);
 
+    if( actGen == 0 ){
+      $('#ssr-links').append('<hr>');  
+    }
+
     this.solutions[this.i] = solution ;
-    $('#ssr-links').append( '<a href="#" title="'+ solution +'" '+
+    $('#ssr-links').append( '<a style="cursor:pointer" title="'+ solution +'" '+
       'onclick="Global.Problems.ssr.ssrLink('+this.i+')">' +ffVal + '</a> ' );
 
     this.i ++ ;

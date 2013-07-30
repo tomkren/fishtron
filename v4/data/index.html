@@ -62,7 +62,7 @@ var Global = {
   Problems : {},
   
   startTime : undefined ,
-  isLoggingOn : true ,
+  isLoggingOn : false ,
   bests : [],
   actRun : undefined ,
   actGen : undefined,
@@ -79,7 +79,7 @@ $(document).ready(function() {
 
  
   $('#progressfutral').hide();
-  $('#stdout-on').button('toggle');
+  $('#stdout-off').button('toggle');
   $("[rel=tooltip]").tooltip();
 
   $('#'+ Global.defaultTab +'-link').tab('show');
@@ -526,7 +526,7 @@ var runCmd = function(){
       }
 
       if( Global.Problems[Global.problemName] ){ 
-        Global.Problems[Global.problemName].fenotyp( solution , cmdObj.bestFFVal );
+        Global.Problems[Global.problemName].fenotyp( solution , cmdObj.bestFFVal , Global.actGen );
       }
 
     },
@@ -759,7 +759,7 @@ var checkAllTheSame = function( xs ){
         <ul class="nav nav-tabs" id="myTab">
           <li class="active"><a href="#opts_" id="opts-link">Params</a></li>
           <!--<li><a href="#opts" id="opts-link">Params</a></li>-->
-          <li><a href="#stdout" id="stdout-link">stdout</a></li>
+          <li><a href="#special"  id="special-link">Phenotype</a></li>
           <li class="dropdown">
             <a href="#" class="dropdown-toggle" data-toggle="dropdown">Graphs<b class="caret"></b></a>
             <ul class="dropdown-menu">
@@ -785,8 +785,9 @@ var checkAllTheSame = function( xs ){
                      Average sizes of terms</a></li>
             </ul>
           </li>
-          <li><a href="#im" id="im-link">Inhabitation Machine</a></li>
-          <li><a href="#special"  id="special-link">Phenotype</a></li>
+          <li><a href="#stdout" id="stdout-link">stdout</a></li>
+          <li><a href="#im" id="im-link">IM</a></li>
+          
         </ul>
 
       </div>
@@ -822,98 +823,33 @@ var checkAllTheSame = function( xs ){
 
             <div id="po-container"></div>
 
-          </div>
-        </div>
-
-
-
-<!--
-        <div class="tab-pane span7" id="opts">
-          <div class="form-horizontal">
-
-            <div class="control-group">
-              <label class="control-label" for="problem-select">
-                <span class="label label-info">Problem</span>
-              </label>
-              <div class="controls">
-                  
-                  
-                  <table>
-                    <tr>
-                      <td><select id="problem-select" class="span4" ></select></td>
-                      <td><button onclick="go()" class="btn btn-primary span2">Start</button></td>
-                    </tr>
-                  </table>
-              </div>
-            </div>
-
-            <div class="control-group">
-              <label class="control-label" for="numruns-input">
-                <span class="label label-info">Runs</span>
-              </label>
-              <div class="controls">
-                <table>
-                  <tr>
-                    <td><input id="numruns-input" type="text" class="input-for-slider"></td>
-                    <td><div id="numruns-slider" class="slider"></div></td>
-                  </tr>
-                </table>
-              </div>
-            </div>
-
-            <div class="control-group">
-              <label class="control-label" for="numgens-input">
-                <span class="label label-info">Generations</span>
-              </label>
-              <div class="controls">
-                <table>
-                  <tr>
-                    <td><input id="numgens-input" type="text" class="input-for-slider"></td>
-                    <td><div id="numgens-slider" class="slider"></div></td>
-                  </tr>
-                </table>
-              </div>
-            </div>
-
-            <div class="control-group">
-              <label class="control-label" for="popsize-input">
-                <span class="label label-info">Population size</span>
-              </label>
-              <div class="controls">
-                <table>
-                  <tr>
-                    <td><input id="popsize-input" type="text" class="input-for-slider"></td>
-                    <td><div id="popsize-slider" class="slider"></div></td>
-                  </tr>
-                </table>
-              </div>
-            </div>
-
-            
-            <div class="row" id="go-input-row">
-              <div class="span0"></div>
-              <div class="input-append span10">
-                <input class="span9" id="go-input" type="text">
-                <a onclick="go()" class="btn" style="width:55px">Go!</a>
-              </div>
-            </div>
-
-          
+            <img src="files/logo2.png" style="display: block;margin-left: 200px; margin-top:80px;">
 
           </div>
         </div>
--->
+
+
+
+
 
         <div class="tab-pane span7" id="stdout">
           <textarea rows="23" class="stdout" id="texta"></textarea>
+
+          <div class="alert alert-info" >
+            <b>stdout</b> is by default <b>off</b> (because You can see it in 
+            the server console), to see it here You must turn it on.
+          </div> 
 
           <div class="btn-group" data-toggle="buttons-radio">
             <button id="stdout-on" type="button" class="btn">On</button>
             <button id="stdout-off" type="button" class="btn">Off</button>
           </div>
 
-          <a class="btn" onclick="clrscr()">clrscr</a>
+          <a class="btn" onclick="clrscr()">clear</a>
           <a class="btn" onclick="scrollDown()">down</a>
+
+
+
         </div>
 
         <div class="tab-pane span7" id="graph1">

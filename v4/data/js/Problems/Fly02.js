@@ -18,7 +18,7 @@ var log = function(x){ return console.log(x); };
 //---------------------------------------------------------------------
 
 var onLoadedProblemData = function( data ){ 
-  log(data);
+  //log(data);
   problemData = data; 
 
 };
