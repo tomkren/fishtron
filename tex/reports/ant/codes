@@ -1,0 +1,102 @@
+
+geom
+
+ifa m (p3 r (ifa (ifa m (ifa m (p3 r (ifa m r) m))) (ifa m (p2 (p2 m (ifa m (ifa
+m (ifa m (p3 r (ifa m r) m))))) (ifa m r)))) m)
+
+
+p3 (ifa m l) (p3 m l (ifa (p2 m (ifa l (p2 (p2 (p2 m (ifa m m)) (ifa (ifa m l)
+r)) (ifa m l)))) r)) r
+
+ifa l (ifa (p3 (p2 (p2 r (ifa r m)) (p3 l (ifa m (ifa m l)) r)) l m) (p2 r (ifa
+ m (p2 l (p2 (p2 l (ifa m r)) m)))))
+
+p3 m (p3 r (ifa m l) l) (ifa (p2 (p3 m m r) (ifa m l)) r)
+
+p3 (ifa m (ifa (ifa m m) (ifa m r))) m (p3 r (ifa (p3 (ifa m r) m (p3 r (ifa m
+l) m)) l) l)
+
+p3 (ifa m l) (p2 m l) (ifa (p3 (ifa m (ifa m l)) m r) (p2 (ifa m (ifa r l)) l))
+
+p3 (p3 r (ifa (p2 (ifa m (ifa (ifa m r) m)) m) l) m) l (ifa m r)
+
+ifa (p3 m (ifa (ifa r m) r) l) (p3 (p3 l (ifa m r) r) (ifa m (ifa m l)) m)
+
+
+p3 m (p3 l (ifa (p3 m (ifa m m) m) r) r) (ifa m (ifa m l))
+
+
+p2 (ifa (ifa m (p3 l (p2 (p2 (ifa (ifa m l) l) m) (ifa m r)) (p2 (ifa (ifa (ifa
+ (ifa (p3 r l m) r) l) l) (p3 l (ifa m r) (ifa m r))) m))) r) (p2 (p3 r (ifa (if
+a (p2 (ifa m (ifa (ifa (ifa (p3 m r (ifa l l)) l) l) l)) m) (p3 l (p2 (ifa m (p2
+ l m)) (ifa m r)) m)) l) m) l)
+
+
+ifa (ifa m (ifa m r)) (ifa (ifa (ifa m l) r) (p3 (p3 l (ifa m r) (p3 r l r)) (i
+fa m l) m))
+
+ifa (p2 m r) (ifa (p2 (ifa (p2 l m) r) m) (p3 l m (ifa r (p3 l (ifa m r) r)))),
+89.0
+
+p3 (p3 l (ifa m r) r) (ifa (p3 m m (p2 r (ifa (p3 r (ifa m l) (ifa m l)) l))) l
+) m
+
+
+p3 r (ifa m (p3 l l (ifa (ifa m m) r))) m,89.0,Just 4)
+(ifa (p3 (ifa m l) r (ifa m l)) (ifa m (p3 (p3 l (ifa m r) m) r (ifa m l)))
+
+
+ifa m (p3 (ifa l (p3 r (ifa (ifa l l) (ifa (ifa r r) r)) (ifa r r))) (ifa (ifa
+m r) r) m)
+
+
+
+p3 (ifa (ifa (ifa m l) l) l) (p3 m (ifa (ifa (ifa (p2 m l) l) (ifa r r)) l) (if
+a m (ifa m r))) r
+
+ifa (ifa (ifa m r) r) (p3 r (ifa (ifa m (p3 (ifa m (ifa m r)) (ifa (ifa r l) r)
+ (ifa m l))) (ifa l (p3 (ifa m l) (ifa m l) (ifa m (ifa m r))))) m)
+
+
+p3 (p3 m r (ifa (p2 m m) l)) l (ifa m r)
+
+ramped
+
+
+p2 (ifa (p2 l r) (ifa (ifa (p2 m m) (p2 m l)) (p2 (ifa l r) (p2 m r)))) (ifa (i
+fa (p3 m (ifa m m) l) (p2 r r)) (ifa (ifa (p3 (p2 m l) (ifa (p3 (p2 m (ifa l m))
+ (p3 (ifa r (p2 (ifa (p2 m r) (p3 l r m)) (p2 m r))) m l) (p2 m l)) (ifa (p3 r l
+ l) (p3 m m r))) (ifa (p3 l l r) (p2 (ifa l r) (p2 m r)))) (p2 l r)) (ifa (p3 m
+l l) (p2 r r))))
+
+p3 (ifa (p3 (p3 m m r) (p3 (ifa (p3 (p3 m m r) (p3 r l l) (ifa m l)) (ifa (p3 l
+ r (ifa (ifa m m) (p3 r l (p2 (ifa m l) (ifa (p3 (p2 l (p3 (ifa m m) (p2 l m) (p
+2 l r))) (p2 (ifa (ifa m r) (p3 r m l)) (p3 (ifa l l) (p3 l r l) (p2 l l))) (p2
+(ifa (ifa m l) (p2 l r)) (p2 (p2 l m) (p3 l r m)))) (ifa (ifa (p3 (p3 r m m) (p3
+ (p2 l m) (p2 l m) (ifa m m)) (ifa l m)) (ifa (p3 l r m) (ifa (ifa r r) (p2 m l)
+))) l)))))) (ifa l l))) m (p2 (p2 (ifa l l) (ifa m r)) r)) (ifa m l)) (ifa (p3 l
+ r (ifa (ifa m m) (p3 r l (p2 (ifa m l) (ifa (p3 (p2 l (p3 (ifa m m) (p2 l m) (p
+2 l r))) (p2 (ifa (ifa m r) (p3 r m l)) (p3 (ifa l l) (p3 l r l) (p2 l l))) (p2
+(ifa r (p2 l r)) (p2 (p2 l m) (p3 l r m)))) (ifa (ifa (p3 (p3 r m m) (p3 (p2 l m
+) (p2 l m) (p2 l r)) (ifa l m)) (ifa (p3 l r m) (ifa (ifa r r) (p2 m l)))) l))))
+)) (ifa l l))) m (p2 (p2 (ifa l l) (ifa m r)) r)
+
+p2 (ifa (p3 m m m) (p2 r m)) (p3 (ifa l r) (ifa (ifa l (p3 (p3 r r l) (ifa l m)
+ (ifa m (ifa (p2 (p3 (p3 (p3 (ifa m l) (p2 r r) (ifa m m)) (p3 (p3 r r r) (ifa r
+ r) (p2 m l)) (p3 (p2 m m) (p3 r m r) (ifa m r))) (p2 (p2 (p3 r l m) (p2 m m)) (
+p3 (ifa r l) (p2 m l) (p2 r m))) (p3 (ifa (ifa r l) (p3 m m r)) (p3 (ifa r m) (p
+3 l l r) (p2 r r)) l)) (p2 (p2 (p2 (p2 r r) (p2 r l)) (p3 (ifa r r) (p2 l l) (p2
+ m l))) (p3 m r l))) (p2 (ifa (ifa (p3 (ifa m r) (p2 (p3 (p3 r r l) (ifa l m) (p
+3 m l r)) (p2 m r)) (p3 l l l)) (ifa (p3 l l m) (ifa l r))) (ifa (ifa (ifa m r)
+(ifa l l)) (p2 (ifa l m) (p2 l m)))) (p3 (ifa (p2 (p2 r m) (p3 m l m)) (ifa (p2
+r l) (p3 r m r))) (p2 (p2 (p2 r r) (ifa l r)) (p3 (p3 m m m) (ifa m r) (ifa l m)
+)) (p2 m l))))))) r) (ifa l r))
+
+p2 (p3 (p2 m l) (ifa r l) (ifa m l)) (ifa (p2 m m) (ifa r l))
+
+p2 (p2 m r) (ifa m (p2 (p2 r r) (ifa (ifa (ifa m r) (p3 m m l)) r)))
+
+ifa (p2 (p2 m m) (p2 m l)) (p3 (p2 r r) (ifa m l) (p2 m l))
+
+p2 (ifa (p2 (ifa r m) (p2 (p2 (p2 l m) (p3 m m r)) (ifa l l))) (p3 (p2 l l) (if
+a m l) m)) l

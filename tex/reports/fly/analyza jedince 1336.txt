@@ -1,0 +1,40 @@
+┌────────────────────────┐
+ │ Run                2/5 │
+ │ Genration           20 │
+ ├────────────────────────┤
+ │ Best        1336.00000 │
+ │ Average      612.33000 │
+ │ Worst        300.00000 │
+ └────────────────────────┘
+ ┌────────────────────────────────────────────────────────────────────────────┐
+ │                          │
+ └────────────────────────────────────────────────────────────────────────────┘
+<a href="#" title="function (x0){return if_(myWasSuccess_(x0),output_(easySplit(x0),zInc_(myRegs_(x0))),output_(travel_(if_(lte(yGet_(x0),1),dLeft,if_(lte(yGet_(x0),1),dLeft,nAppleDir_(x0)))),xSet_(2,xInc_(xInc_(yInc_(zInc_(xSet_(yGet_(x0),xInc_(dSet_(dLeft,myRegs_(x0)))))))))));}">1336</a>
+-----------------------------------------------------------
+
+
+
+
+\ x0 -> if' (myWasSuccess_ x0) 
+  (output_ (easySplit x0) (myRegs_ x0) ) 
+
+  (output_ (travel_ 
+             (if' ((<=) (yGet_ x0) 1) 
+                  dLeft 
+                  nAppleDir_ x0))
+           ) 
+           (yInc_ (myRegs_ x0)))
+
+
+
+
+
+
+
+
+
+
+
+
+
+

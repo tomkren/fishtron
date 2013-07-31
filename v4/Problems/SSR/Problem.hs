@@ -10,7 +10,7 @@ import Problems.SSR.Funs (ff)
 
 import ProblemUtils 
 import GP_Core (FitFun(FF6))
-import GP_Data (CTTGen(..))
+import GP_Data (CTTGen(..),CTTermGen(..))
 
 
 reg = PO_CTTP_ PO_CTTP {
@@ -29,6 +29,25 @@ reg = PO_CTTP_ PO_CTTP {
   cttp_ff          = FF6 (asType::Double->Double) ff "Problems.SSR.Funs", 
   
   cttp_saveBest    = False -- True 
+  
+}
+
+rege = PO_CTTeP_ PO_CTTeP {
+  cttep_code        = "ssr2"                                        ,
+  cttep_info        = "Simple Symbolic Regression. With @-tree."   ,
+  cttep_data        = jsData                                       ,
+  cttep_numRuns     = IntSlider "Runs"            1 100   1    1   ,
+  cttep_numGene     = IntSlider "Generations"     0 200   50   10  ,
+  cttep_popSize     = IntSlider "Population size" 0 5000  500  100 ,
+  
+  cttep_typ         = dou1                                         ,
+  cttep_ctx         = ctx                                          ,
+
+  cttep_gOpt        = CTTermG_Geom  dou1 ctx 0.75 , --CTTG_Geom  dou1 ctx 0.75  , --CTTG_Koza2 dou1 ctx , 
+  
+  cttep_ff          = FF6 (asType::Double->Double) ff "Problems.SSR.Funs", 
+  
+  cttep_saveBest    = False -- True 
   
 }
 

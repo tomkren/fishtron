@@ -15,7 +15,7 @@ import TTerm (Typ,Context,CTTerm(..),
 import TTree (CTT(..),ttreeDepth,ttreeChangeSubtree,ttreeSubtree,TTree,ttreePoses2, 
               TTPos,ttreePoses2WithTyps,ttreePoses2ByTyp, ttreePoses2WithTyps_onlyCompatible)
 
-import IM3 ( SearchOptions , prove ,proveCTTerm , kozaSearchOptions , allEdgesSearchOptions , geomSearchOptions )
+import InhabTree ( SearchOptions , prove ,proveCTTerm , kozaSearchOptions , allEdgesSearchOptions , geomSearchOptions )
 --import IM2 ( SearchOptions , prove , kozaSearchOptions , allEdgesSearchOptions , geomSearchOptions )
 
 --import IM ( SearchOptions , prove , kozaSearchOptions , allEdgesSearchOptions , geomSearchOptions )

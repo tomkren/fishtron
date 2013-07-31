@@ -40,7 +40,8 @@ var onGo = function(){
   container
    .html('')
    .append( infoText )
-   .append( linksDiv ) 
+   .append( linksDiv )
+   .append( '<hr>' ) 
    .append( flySimContainer ); 
 
   flySim = FlySim.init( '_fly-sim' , function(sim){
@@ -61,15 +62,20 @@ var onGo = function(){
 
 };
 
-var fenotyp = function( solution , ffVal ){ 
+var fenotyp = function( solution , ffVal , actGen ){ 
 
   var currSolutionID = nextSolutionID ;
   nextSolutionID ++ ;
 
   solutions[ currSolutionID ] = solution ;
 
+  if( actGen == 0 ){
+    linksDiv.append('<hr>');  
+  }
+
   var newLink = $('<a>')
-   .attr('href','#')
+   //.attr('href','#')
+   .css('cursor','pointer')
    .attr('title', solution.toString() )
    .html( ffVal )
    .click( function(){ onLinkClick(currSolutionID); } );

@@ -17,7 +17,7 @@ import Data.ByteString.Lazy.UTF8 (fromString)
 import Text.JSON ( encode )
 
 import Utils ( unescape )
-import Job (problemList,job)
+import Register (problemList,job)
 import ServerInterface( OutputBuffer , OutRecord(..) )
 
 

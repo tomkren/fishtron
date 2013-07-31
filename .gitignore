@@ -5,8 +5,8 @@
 *.swp
 *.out
 
-fin_data/
-fin_data2/
+_other/fin_data/
+_other/fin_data2/
 graph.txt
 
 v2/RUNS

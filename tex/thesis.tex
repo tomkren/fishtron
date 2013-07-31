@@ -25,7 +25,7 @@
 % The general rule you can use is “that" is for restricting the meaning of the subject, whereas "which" is for decorating the subject without adding to the meaning. 
 %http://www.wikihow.com/Use-%22That%22-and-%22Which%22-Correctly
 
-% možná místo classical GP řikat standard GP jako montana95
+
 
 \setlength\textwidth{145mm}
 \setlength\textheight{247mm}
@@ -73,8 +73,10 @@
 \newcommand{\turst}[3]{$#1\vdash{}#2:#3$\xspace}
 \newcommand{\GMS}{\turst{\Gamma}{M}{\sigma}}
 
+\newcommand{\atTree}{@-tree\xspace}
 
-\newcommand{\EA}{EA\xspace} % TODO nahradit správnym "evoluťionar algorithms"
+
+%\newcommand{\EA}{EA\xspace} % TODO nahradit správnym "evoluťionar algorithms"
 
 \newcommand{\setDots}[2]{ 
 	\lbrace #1 , \dots , #2 \rbrace
@@ -213,13 +215,14 @@ Department of Theoretical Computer Science and Mathematical Logic}
 
 Supervisor of the master thesis: & RNDr. Petr Pudlák, Ph.D. \\
 \noalign{\vspace{2mm}}
-Study programme: & Theoretical Computer Science \\ %Teoretická informatika \\
+Study programme: & Computer Science \\ %Teoretická informatika \\
 \noalign{\vspace{2mm}}
-Specialization: & 
+Specialization: & Theoretical Computer Science
 %Neprocedurální programování a umělá inteligence \\
-{\fontsize{0.3cm}{1em}\selectfont 
+%{\fontsize{0.36cm}{1em}\selectfont 
 %Neprocedurální programování a umělá inteligence} \\
-Non-Procedural Programming and Artificial Intelligence} \\
+%Non-procedural Programming and Artificial Intelligence} \\
+%}\\
 \end{tabular}
 
 \vfill
@@ -240,7 +243,11 @@ Prague 2013
 %% on tam měl %% \openright %!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 \noindent
-$<$dedication$>$
+%$<$dedication$>$
+I would like to express my gratitude to my supervisor RNDr. Petr Pudlák, Ph.D.
+for the useful comments, remarks and help with this master thesis.
+I would also like to thank my parents, who have supported me throughout
+my studies. 
 
 \newpage
 
@@ -277,24 +284,27 @@ signature of the author
 \setlength\parskip{5mm}
 
 Název práce:
-Název práce
+Typed Functional Genetic Programming
 % přesně dle zadání
 
 Autor:
-Jméno a příjmení autora
+Tomáš Křen
 
 Katedra:  % Případně Ústav:
-Název katedry či ústavu, kde byla práce oficiálně zadána
+Katedra teoretické informatiky a matematické logiky
 % dle Organizační struktury MFF UK
 
 Vedoucí diplomové práce:
-Jméno a příjmení s tituly, pracoviště
+RNDr. Petr Pudlák, Ph.D., 
+Katedra teoretické informatiky a matematické logiky
+%Jméno a příjmení s tituly, pracoviště
 % dle Organizační struktury MFF UK, případně plný název pracoviště mimo MFF UK
 
 Abstrakt:
 % abstrakt v rozsahu 80-200 slov; nejedná se však o opis zadání diplomové práce
 
 Klíčová slova:
+geneticke programovani, funkcionalni programovani
 % 3 až 5 klíčových slov
 
 \vss}\nobreak\vbox to 0.49\vsize{
@@ -302,17 +312,20 @@ Klíčová slova:
 \setlength\parskip{5mm}
 
 Title:
+Typed Functional Genetic Programming
 % přesný překlad názvu práce v angličtině
 
 Author:
-Jméno a příjmení autora
+Tomáš Křen
 
 Department:
-Název katedry či ústavu, kde byla práce oficiálně zadána
+Department of Theoretical Computer Science and Mathematical Logic
 % dle Organizační struktury MFF UK v angličtině
 
 Supervisor:
-Jméno a příjmení s tituly, pracoviště
+RNDr. Petr Pudlák, Ph.D., 
+Department of Theoretical Computer Science and Mathematical Logic
+%Jméno a příjmení s tituly, pracoviště
 % dle Organizační struktury MFF UK, případně plný název pracoviště
 % mimo MFF UK v angličtině
 
@@ -321,6 +334,7 @@ Abstract:
 % zadání diplomové práce
 
 Keywords:
+genetic programming, functional programming
 % 3 až 5 klíčových slov v angličtině
 
 \vss}
@@ -363,36 +377,59 @@ And perhaps that is why GP has become very popular.
 GP constructs the population of solution programs from 
 two sets of building blocks; set $F$ of functions 
 and set $T$ of constants and variables. 
-In classical GP \textit{closure} of those 
+In standard GP \textit{closure} of those 
 building blocks is required.
 This means that all functions in $F$ must accept all 
 constants and variables from $T$ as their arguments and produce 
 such values that are also acceptable by all functions in $F$ as arguments.
 Main motivation behind this thesis is to design and implement a system that
 eliminates this constraint. 
-This can be achieved by utilization of \textit{types}.\\
-
+This can be achieved by utilization of \textit{types}.
 Utilization of types in GP is not a new idea; 
 it was dealt with in various previous works 
-\cite{yu01,montana95,haynes96,olsson94}.
+\cite{yu01,montana95,haynes96,olsson94}.\\
+
 The contribution of this thesis can be seen 
 in that it deals with this task using concepts from
 theory of typed $\lambda$-calculus and combinatory logic
-and shows how to use them in GP.
+and shows how to use them in GP. 
 Hopefully, it is also shown that those two fields are
-nicely linked together, e.g., the concept of \textit{building blocks}
-corresponds to concept of \textit{context}. \\
+nicely linked together.
+%, e.g., the concept of \textit{building blocks}
+%corresponds to concept of \textit{context}.
+Several enhancements are derived from this theoretical background
+and shown to have positive effect on performance of our system.  
+Our main focus lies in the process of generating the initial population.
  
-Notable highlights are: 
+Design of a GP system utilizing these methods is presented.
+This design aims to be generalization of standard GP 
+developed by Koza\cite{koza92}, rather than being 
+specialized variant of GP using more recent techniques.
+This decision is based on belief
+that simplicity of design of standard GP plays nicely
+with testing those $\lambda$-calculus concepts in 
+the evolutionary context and on belief that modern specialized 
+techniques can be incorporated later.\\
+  
+Notable highlights of the thesis are: 
 \begin{itemize}
  \item \textit{Inhabitation tree} (a slight modification 
-   of \textit{inhabitation machine} presented in \cite{barendregt10}
+   of \textit{inhabitation machine}\cite{barendregt10}
    suited better for reasoning about implementation details) 
    is presented and used for \textit{generation of individuals}.
    This generation process is parameterized by simple 
    \textit{search strategy}. Several search strategies are presented,
-   such as \textit{systematic} strategy and strategy performing
-   classical GP individual generation.     
+   such as \textit{systematic} strategy performing exhaustive enumeration
+   of individuals and strategy performing same individual generation 
+   as standard GP method \textit{ramped half-and-half}.  
+ \item One of those search strategies, the \textit{geometric} strategy, is
+   examined in a couple of experiments and shown to have 
+   several desirable properties.
+ \item The \textit{$\eta$-normalization} of generated individuals
+       and \textit{\atTree} representation of individuals, 
+       two enhancements of the system inspired from the theoretical
+       background of the system are examined and shown to have 
+       improving effect on performance of the system.     
  \item \textit{Abstraction elimination} is utilized
    to enable use of simple \textit{mutation operator}.
 % \item \textit{Polymorphic} generalization of inhabitation tree,
@@ -401,16 +438,6 @@ Notable highlights are:
 
 \end{itemize}
 
-Design of a GP system utilizing these methods is presented.
-This design aims to be generalization of classical GP 
-developed by Koza \cite{koza92}, rather than being 
-specialized variant of GP using more recent techniques.
-This decision is based on belief
-that simplicity of design of classical GP plays nicely
-with testing those $\lambda$-calculus concepts in 
-the evolutionary context and on belief that modern specialized 
-techniques can be incorporated later.
- 
 %The implementation of our system aims 
 Described system is implemented in purely functional language 
 \textit{Haskell}. Evaluation of individual \lterms is 
@@ -423,28 +450,15 @@ to \textit{JavaScript} expressions, which enables
 an interactive solution presentation.
 This approach helps us with demonstrating 
 that \lterms can be easily translated to a 
-widely used programming language.
+widely used programming language.\\
 
 Several example problems for the designed system are presented 
 and examined. Those examples are not intended to 
 bring breakthrough results; they are intended to 
-serve as demonstration of that the system is working properly
-and as demonstration of several directions in which the system
+serve as demonstration of that the system is working properly,
+as instrument for examining presented techniques and 
+as demonstration of several directions in which the system
 can be used.      
-
-
-\begin{todo}
- & možná přidat ještě něco z poznámek co jsou teď v Conclusion
- & vlastně i koza hrotí evolution of constrained syntactic structures !!!
- & my tu řikáme že to závadíme kuli typum, ale my děláme v víc! -dáváme tam
-   i abstrakce atd - ale mužeme říct, že tim že se to pak převede zase na 
-   to bez abstrakcí tak setrváváme dal v krasnym bez-lambda abstrakčí ale
-   s tou výhodou že naše metoda gerneruje všechny struktury pro ten danej typ ...
-   nebo tak něco - asi to dát spíš do design of our system nebo někam
-   ale někde to asi zmínit
-\end{todo}
-
-	
 
 
 \chapter{Genetic Programming}
@@ -468,14 +482,16 @@ Basically those trees are rooted trees with a function symbol in each internal n
 and with constant symbol or variable symbol in each leaf node. 
 Number of child nodes for each internal node corresponds to the number of arguments of a function whose symbol is in that node.
 
-Another crucial input besides fitness function is a collection of \textit{building blocks}.
-It is collection of symbols (accompanied with an information about number of arguments).
+Another crucial input besides fitness function is a collection of 
+\textit{building blocks}\footnote{Throughout this thesis, 
+we use the term \textit{building blocks} 
+differently than it is sometimes used in GP context. 
+Hopefully it will not confuse the reader.}.
+It is a collection of symbols (accompanied with an information about number of arguments).
 Those symbols are used to construct trees representing individuals.\\
 
-\Lets describe GP algorithm briefly:
-
-At the beginning initial population is generated from building blocks randomly.
-
+\Lets describe GP algorithm briefly.
+At the beginning, initial population is generated from building blocks randomly.
 A step of GP algorithm is stochastic transformation of the current population into 	
 the next population.
 
@@ -491,9 +507,9 @@ This step consists of two sub steps:
 This transformation is repeatedly applied for a predefined number of steps (which is called 
 number of \textit{generations}) or until some predefined criterion is met.	
 \\\\
-\Lets now look on GP at more detail. 
+\Lets now look on GP in greater detail. 
 
-
+\newpage
 \section{Program trees}
 \label{GP-prog-trees}
 
@@ -501,7 +517,7 @@ In GP programs are represented as \textit{S-expressions}.
 \Lets define S-expression inductively:
 
 \begin{samepage}
-\begin{itemize}
+\begin{enumerate}
 	\item Constant or variable symbol $s$ is S-expression.\footnote{
 	      By constants we also mean procedures with zero arguments.}
 	\item Let there be a function with symbol $f$ which has $n$ arguments.
@@ -511,28 +527,24 @@ In GP programs are represented as \textit{S-expressions}.
 	      Then ( $f$ $e_{1}$ ... $e_{n}$ ) is expression.\footnote{
 	      This notation comes from Lisp programming language, 
 	      a more standard notation would be $f(e_{1}, ... ,e_{n})$.}   
-\end{itemize}
-\end{samepage}
-
+\end{enumerate}
+\end{samepage}~\\
 There is straightforward tree representation corresponding to these two cases:
 
-\begin{itemize}
+\begin{enumerate}
 	\item One node tree $s$.
-    \item \Tree
+    \item \mbox{\Tree
 			[.$f$	
 		 		\text{$t_{1}$}
 		 		\text{...}
-		 		\text{$t_{n}$} ]\\\\
-		 Where $t_{1}, ..., t_{n}$ are trees corresponding 
+		 		\text{$t_{n}$} ]}\\\\
+		 where $t_{1}, ..., t_{n}$ are trees corresponding 
 		 to S-expressions $e_{1}, ..., e_{n}$.	   
-\end{itemize}
+\end{enumerate}
 
 Computer program with inputs $x_{1}, ..., x_{n}$ is realized as expression in which 
 may occur variables $x_{1}, ..., x_{n}$.
 
-\begin{todo}
- & nějak to tu přepsat aby to bylo ve stejnym stylu jako v \ref{tree-reps}
-\end{todo}
 
 
 \section{Building blocks}
@@ -565,13 +577,13 @@ Satisfying this constrain ensures that every program tree build
 from \TuF will be total. We will refer to this constrain as to \textit{closure}.\\
 
 We can say that the motivation behind this thesis is to construct system,
-where we eliminate this constraint. 
+where building blocks may be of any type. 
 
 \section{Generating individuals}
 \label{GPgene}
 
-We will describe tree generating method described by Koza 
-called \textit{ramped half-and-half}  \cite{koza92}. \\
+We will describe tree generating method described by Koza \cite{koza92}
+called \textit{ramped half-and-half}. \\
 
 An individual tree is constructed by random (uniform) selection of symbol from 
 subset of \TuF for the root node and after that by generation of its 
@@ -608,9 +620,14 @@ selects from whole \TuF.
 In nodes with \textit{depth} $= d$ both methods select from the
 set $T$.
 
-\begin{todo}
- & Dozjistit a dopsat jak to Koza má s vyžadovánim unikátnosti při generování.
-\end{todo}
+Generated individual is added into the initial population only if 
+the initial population does not yet contain this individual.
+This way it is guaranteed that every individual is unique 
+in the initial population.
+  
+ 
+
+
 
 \section{Selection}
 
@@ -619,7 +636,7 @@ options for selection mechanisms
 for us to choose from. Again we will describe mechanism Koza
 used in his first book on GP. It is the \textit{Roulette selection}.
 It uses fitness value of each individual in straightforward way to determine probability of selecting this individual.\\
-
+\newpage
 Let there be $popSize$ individuals in the population.\\
 And let $f_{i}$ be fitness value for individual i 
 where $i \in \setDots{1}{popSize}$. 
@@ -640,6 +657,13 @@ two possibly new (offspring) individuals.
 
 In GP the most common crossover is \textit{Subtree swapping crossover}.
 This crossover randomly selects one node in each parent tree.
+
+With probability $p_{ip}$ (e.g. $p_{ip} = 90\%$) the crossover node
+is randomly (uniformly) selected from internal nodes (i.e. function nodes) and
+with probability $1 - p_{ip}$ (e.g 10\%) from leaf nodes.
+This is done for both parents.
+   
+
 Two new child individuals are constructed by swapping subtrees 
 that have roots in those selected nodes.\\
 
@@ -653,7 +677,7 @@ selected nodes in bold:
 \Tree [.$\%$ \text{$x$}
          	 [.\textbf{ifeq} \text{$1$} \text{$x$} \text{$x$} \text{$0$} ] ]\\
 
-And here are two child trees with swapped subtrees:
+And here are two child trees with swapped subtrees:\\
 
 \Tree [.$ifneq$ $1$
 		 	   [.\textbf{ifeq} \textbf{1} \textbf{x} \textbf{x} 
@@ -672,10 +696,7 @@ this offspring is replaced by the first parent in the result of
 the crossover operator. If both offspring exceeds this limit, than 
 both are replaced by both parents.  
 
-\begin{todo}
- & POZOR POZOR !!!!! zapoměl jsem tam že je 90\% procent šance 
-   že se vybere internal node a jen 10\% šance že terminal node
-\end{todo}
+
 
 \section{Reproduction}
 
@@ -701,7 +722,7 @@ Similarly as for crossover, a maximum permissible depth for mutant individual
 is defined.
 
 
-\section{Construction of a next population}
+\section{Construction of next population}
 
 Let $pop_{t}$ be the current population that we want to 
 transform into the next population $pop_{t+1}$. 
@@ -734,23 +755,28 @@ Koza in \cite{koza92} uses as default probabilities those values:
 
 \section{Evaluation}
 
-\begin{todo}
- & !!!
- & zmínit tu terminate bool
-\end{todo}
+Evaluation is process of assigning fitness value to all 
+individuals in the population. It is also usual to check
+individuals for being correct solution.
+If such a correct solution is find, the algorithm terminates. 
+In our implementation fitness function returns
+pair of real number (fitness value) and boolean value (indicating
+whether tested individual is correct solution). 
 
 
 \newpage
 \section{GP algorithm in pseudocode}
 
-Bellow is described GP algorithm in pseudocode.
+Bellow is described GP algorithm in pseudocode. 
+It is slight modification of the standard GP algorithm, 
+because the best individual of the 
+generation is preserved unchanged into the next generation.
 
 \Pseudokod{GP( fitness, \TuF, popSize, numGens, probabs )}{
-  $gen \leftarrow$ 0 \;\;
-  
+  $gen \leftarrow$ 0 \;
   $pop \leftarrow generateInitialPopuletion( $ \TuF$ ) $ \;
-  ($popWithF,terminate,best) \leftarrow$ 
-  evaluate($fitness$, \TuF, $pop$)\;\; 	
+  ($popWithFitness,terminate,best) \leftarrow$ 
+  evaluate($fitness$, $pop$)\;\; 	
 	
   \While{ $gen < numGens$ $\wedge$ $\neg terminate$  }{  	
 	$newPop \leftarrow$ empty population \;
@@ -763,8 +789,8 @@ Bellow is described GP algorithm in pseudocode.
 		\Switch{op}{
 		
 			\Case{Crossover}{
-				$parent1 \leftarrow$ selection( $popWithF$ ) \;
-				$parent2 \leftarrow$ selection( $popWithF$ ) \;\;
+				$parent1 \leftarrow$ selection( $popWithFitness$ ) \;
+				$parent2 \leftarrow$ selection( $popWithFitness$ ) \;\;
 				
 				($child1$,$child2$) = crossover( $parent1$ , $parent2$ )\;\;
 				
@@ -773,12 +799,12 @@ Bellow is described GP algorithm in pseudocode.
 				$i \leftarrow i + 2$ \;
 			}
 			\Case{Reproduction}{
-				$indiv \leftarrow$ selection( $popWithF$ ) \;
+				$indiv \leftarrow$ selection( $popWithFitness$ ) \;
 				$newPop$.insert( $indiv$ ) \;
 				$i \leftarrow i + 1$ \;
 			}
 			\Case{Mutation}{
-				$indiv \leftarrow$ selection( $popWithF$ ) \;
+				$indiv \leftarrow$ selection( $popWithFitness$ ) \;
 				$mutant \leftarrow$ mutate( $indiv$ , \TuF ) \;
 				$newPop$.insert( $mutant$ ) \;
 				$i \leftarrow i + 1$ \;	
@@ -787,12 +813,12 @@ Bellow is described GP algorithm in pseudocode.
 	}\;
 	
 	$pop \leftarrow newPop$  \;
-	($popWithF,terminate,best) \leftarrow$ 
-	evaluate($fitness$, $TuF$, $pop$)\;
+	($popWithFitness,terminate,best) \leftarrow$ 
+	evaluate($fitness$, $pop$)\;
 	$gen \leftarrow gen + 1$ \; 
  }\;
  
- \Return pop \;
+ \Return $popWithFitness$ \;
 }
 
 \begin{samepage}
@@ -809,22 +835,12 @@ Bellow is described GP algorithm in pseudocode.
 
 %In order to clarify the code let us describe in greater detail inputs and
 
-Behaviors of contained procedures
-generateInitialPopuletion(),
-evaluate(),
-probabilisticallySelectOperation(),
-selection(),
-crossover() 
-and mutation() are hopefully clear from verbal description.
+Behaviors of contained procedures are hopefully clear from verbal description.
+\\[2em]
 
-
-\begin{todo}
- & mention best preservation and same popSize checking.
- & popsat co je to popWithF
- & popsat co je to terminate 
- & ten algoritmus v kozovi dělá "Designate Result" já tam vracim 
-   poslední populaci
-\end{todo}
+For more detailed information on subject of GP and its many variants
+see \cite{fg} containing many references to other works. 
+  
 
 
 
@@ -842,6 +858,20 @@ and mutation() are hopefully clear from verbal description.
 \newcommand{\Scomb }{\mathbf{S}}
 \newcommand{\Kcomb }{\mathbf{K}}
 \newcommand{\Icomb }{\mathbf{I}}
+
+
+\newcommand{\bbarr}{\twoheadrightarrow_\beta}
+\newcommand{\barr}{\rightarrow_\beta}
+\newcommand{\beq}{=_\beta}
+
+\newcommand{\eearr}{\twoheadrightarrow_\eta}
+\newcommand{\earr}{\rightarrow_\eta}
+\newcommand{\eeq}{=_\eta}
+
+\newcommand{\bearr}{\rightarrow_{\beta\eta}}
+\newcommand{\bbeearr}{\twoheadrightarrow_{\beta\eta}}
+\newcommand{\beeq}{=_{\beta\eta}}
+
 
 \newcommand{\etar}{\twoheadrightarrow_\eta}
 \newcommand{\ered}{$\eta$-reduction\xspace}
@@ -871,6 +901,7 @@ an implementation friendly refinement of
 \textit{lnf} term generating grammar.
 
 \begin{todo}
+ & všude nahradit ty množinový za $\Gamma , x:\sigma$ a taky $(x,\Sigma)$ kde se to nehodí.
  & Až to bude dostatečně sepsáno, tak do této kapitoly taky přidat
    část o abstraction elimination a o polymorfním zobecnění inhabitation tree.
    Nezapomenout to pak zmínit i v tomhle úvodu.
@@ -978,8 +1009,8 @@ clear from the context.
 
 We use bold upper case symbols such as 
 $\Scomb, \Kcomb, \Icomb$ as abbreviation
-for specific terms, e.i. 
-$\Icomb = \lamb{x}{x}$.  
+for specific fixed terms, e.g. 
+$\Icomb$ always means $\lamb{x}{x}$.  
 \\[1em]
 
 We use following notation
@@ -1056,20 +1087,15 @@ $M[x:=N]$ the substitution of a term $N$ for the free occurrences of
 a variable $x$ in a term $M$ is defined inductively as follows.
 \begin{align*}
 x[x:=N]           &= N \\
-y[x:=N]           &= y \text{ ~~~~where } x \not= y  \\
+y[x:=N]           &= y &\text{ where } x \not= y  \\
 (P~Q)[x:=N]       &= ( P[x:=N]  ~ Q[x:=N] ) \\
 \lamb{x}{P}[x:=N] &= \lam{x}{P}\\
-\lamb{y}{P}[x:=N] &= \lam{y}{( P[x:=N] )} \text{ ~~~~where } x \not= y
+\lamb{y}{P}[x:=N] &= \lam{y}{( P[x:=N] )} &\text{ where } x \not= y, y\not\in \FV(N)\\
 \end{align*}
 
+In order to satisfy the $y\not\in \FV(N)$ condition, names of bound variables
+are chosen such that they differ from the free ones in the term.
 
-
-
-\begin{todo}
-& možná zmínit že y nesmí být v N volně v připadě\\
-  $\lamb{y}{P}[x:=N] = \lam{y}{( P[x:=N] )}$ , 
-  ale řekl bych že zbytečnej detail
-\end{todo}
 
 
 \subsection{$\beta$-reduction}
@@ -1101,17 +1127,37 @@ P \bArrow Q &\then \lam{x}{P} \bArrow \lam{x}{Q}
 
 In other words, $\beta$-reduction is the process 
 of insertion of arguments supplied to a function into 
-its body. 
+its body. \\
+
+Another useful relations are $\bbarr$ and $\beq$ defined as follows. 
+
+\begin{enumerate}
+ \item \begin{enumerate}
+ 	\item $M \bbarr M$
+ 	\item $M \barr N \then M \bbarr N$
+ 	\item $M \bbarr N , N \bbarr L \then M \bbarr L$ 	
+ \end{enumerate}
+ \item \begin{enumerate}
+ 	\item $M \bbarr N \then M \beq N$
+ 	\item $M \beq N \then N \beq M$
+ 	\item $M \beq N , N \beq L \then M \beq L$
+ \end{enumerate}
+
+\end{enumerate}
+
+We read those relations as follows.
+\begin{enumerate}
+ 	\item $M \bbarr N$ --- "$M$ $\beta$-reduces to $N$."  
+ 	\item $M \barr N$  --- "$M$ $\beta$-reduces to $N$
+ 	      in one step."
+ 	\item $M \beq N$ --- "$M$ is $\beta$-convertible to $N$."	
+ \end{enumerate}
+
 
 \begin{todo}
-& asi to přepsat nějak obecně pro redukci R a pak zadat beta,eta,eta-1 
-  jako specialni připady
-& !!!!!!! zmínit $=_\beta$ a $\twoheadrightarrow_\beta$  a i pro ostatní redukce!!!!!
 & definovat \textbf{CR} a říct o tom lemátku, že má CR redukce má unikátní nf.
-&& V \cite{barendregt84} (ta nová kniha s žlutejma deskama) je ukázano že je 
-	 eta CR (Church Rosserovská)
+&& V \cite{barendregt84} (ta nová kniha s žlutejma deskama) je ukázano že je eta CR (Church Rosserovská)
 & zmínit Theorem 2B.4 z \cite{barendregt10}
-& co to znamená mít nf
 \end{todo}
 
 
@@ -1120,7 +1166,17 @@ its body.
 Similarly as for $\beta$-reduction we can define $\eta$-reduction 
 except that instead of \ref{eq:bRed} we use:  
 
-$$\lamb{x}{(M~x)} \eArrow M \text{ ~~~~where } x \not\in FV(M) $$
+$$\lamb{x}{(M~x)} \eArrow M \textbf{ ~~~~if } x \not\in FV(M) $$~
+
+Analogically, a term of a form $\lamb{x}{(M~x)}$ is called 
+\textit{$\eta$-redex}.
+
+Relation $\bearr\;=\;\barr \cup \earr$. 
+(Relation $R = \{\;(a,b)\;|\;a\;R\;b\;\}$.)
+
+Similarly as for $\bbarr$ and $\beq$ we can define relations 
+$\eearr$, $\eeq$,$\bbeearr$ and $\beeq$.
+
 
 \subsection{$\eta^{-1}$-reduction}
 
@@ -1128,27 +1184,29 @@ $\eta^{-1}$-reduction (also called $\eta$-expansion) is
 the reduction converse to $\eta$-reduction.
 Again it may be obtained by replacing \ref{eq:bRed}, now with:  
 
-$$M \eeArrow \lamb{x}{(M~x)} \text{ ~~~~where } x \not\in FV(M) $$
+$$M \eeArrow \lamb{x}{(M~x)} \textbf{ ~~~~if } x \not\in FV(M) $$
 
 
 
-%\subsection{Reductions for $c \in C$}
-%\textbf{TODO možná vynechat...}
 
 \subsection{$\beta$-normal form}
 
-A \lterm is a \textit{$\beta$-normal form} if it does not have a $\beta$-redex as
-subterm.
-\\\\
+~\begin{easylist}[enumerate]
+& A \lterm is a \textit{$\beta$-normal form} (\bnf) 
+if it does not have a $\beta$-redex as subterm.
+& A \lterm M \textit{has} a \bnf if $M \beq N$
+and $N$ is a \bnf.\\
+\end{easylist}
 A normal form may be thought of as a result of a term evaluation. 
 
+Similarly we can define \enf and \benf.
 
 \subsection{Tree representations of \lterms}
 \label{tree-reps}
 
 \newcommand{\sexprTree}{sexpr-tree\xspace}
 \newcommand{\SexprTree}{Sexpr-tree\xspace}
-\newcommand{\atTree}{@-tree\xspace}
+
 
 
 From the definition of \lterm we can straightforwardly derive 
@@ -1216,19 +1274,6 @@ Term M is translated into \sexprTree $T_S[M]$ by following rules.
 
 
 
-\begin{todo}
- & napsat transformace mezi \atTree a \sexprTree
-%& ujistit se že je v části o tree reprezentacích 
-%  je napsaný co to znamená že podstrom má nějakej typ,
-%  že podstromy odpovídaj podvýrazum atd
-% & EXAMPLES of tree representations of \lterms  
-% & nějak to sjednotit s tim uplně na začátku v popisu GP kde se popisuje
-%   přímo \sexprTree a říct proč se tomu tak řiká 
-%   (na tom místě co je v textu dřív) 
-% & zkontrolovat že reference tree-reps se odkazuje na dobrý místo,
-%   mohlo by se to rozbít tim že tree reprezentations - typovany/netypovany 
-%   jsou od sebe oddelený
-\end{todo}
 
 \newpage
 \section{Types}
@@ -1356,22 +1401,6 @@ We can look on this relation in tree different ways.
 	
 \subsection{Context}
 
-%\begin{definition}
-%Let $\Gamma \in \mathfrak P \left({\Lambda \times  \mathbb{T}}\right)$. 
-%($\Gamma$ is a set of statements of a form $M : \sigma$.)	
-%Then $\Gamma$ is {\it context} if it obeys following 
-%conditions.
-%%\footnote{The $\pi_1$ corresponds to the projection of the 
-%%first component of the Cartesian product.}
-%\begin{align*}
-%\forall (x,\sigma) \in \Gamma &: x \in V \cup C  
-%&\textit{(x is variable or constant)}\\
-%\forall (x_1,\sigma_1),(x_2,\sigma_2) \in \Gamma &: 
-%x_1,x_2 \in V , x_1 \neq x_2 \then \sigma_1 \neq \sigma_2
-%&\textit{(variables are distinct)}
-%\end{align*}~
-%Ten druhej je navíc blbě, má tam bejt celej stejtment se nerovná pak...
-%\end{definition}
 
 \begin{definition}
 ~
@@ -1394,22 +1423,19 @@ confusing to me to state these definitions as they are later
 used in the implementation.   \\
 
 In our system, the set of \textit{building blocks} 
-(the equivalent of the set $T \cup F$ in classical GP)
+(the equivalent of the set $T \cup F$ in standard GP)
 will be a context with all declarations having \textit{constants}
 as subjects, i.e., a set of constants together with their types.
 
 In the process of term generation, 
 this initial context is being further extend with variables
- --- by "entering inner scopes of bodies of lambda functions".   
+ --- by "entering inner scopes of bodies of lambda functions".\\   
 	
-%\subsection{Statements of the form \GMS}
 
+Notation $\Gamma,x:\sigma $ denotes $ \Gamma\cup\{(x:\sigma)\}$ 
+such that $\Gamma$ does not contain any declaration with $x$ as subject.
 
-\begin{todo}
- & zapsat sem notaci s $\Gamma,x:\sigma $ denotes $ \Gamma\cup\{(x:\sigma)\}$ 
-\end{todo}
 		
-%\subsection{Inference rules}
 \subsection{Simply typed $\lambda$-calculus}
 
 \begin{definition}
@@ -1606,8 +1632,6 @@ Then we are allowed to use the inference rule to derive statement
 %     && řekl bych že eta redukce je SN vždycky (tzn i untyped lk)
 %        pač plati (CR+terminující pak SN) a je CR vzhledem k barendrecht-stará-žlutá
 %        a terminující je rpotože zmenšuje term s nemuže zmenšovat donekonečna    
-   & možná zmínit že se jedná o \textit{gentzen style proof}
-   & říct že jsou to modus ponens a jeden směr věty o dedukci  
 \end{todo}
 
 
@@ -1689,12 +1713,8 @@ We silently suppose here that type information about every subterm is available.
 
 
 
-
-\begin{todo}
- & možná konec týhle subsekce trochu přeformulovat, je to takový kostrbatý...
-\end{todo}
-
 \section{Term generating grammar}
+\label{Term-generating-grammar}
 
 \newcommand{\gar}{\longmapsto}
 
@@ -1764,14 +1784,9 @@ $$
 $$
 
 For every non-terminal $(\sigma \ar \tau,\Gamma)$
-and for every variable $x$
-there is following grammar rule.\footnote{
-\textbf{TODO !!!!} nějak okomentovat že by měla být freš,
-pokudmožno v celym termu ale to že byse dělalo blě aby to
-zůstala bezkontextová gramatika, ale je to celkem nepodtatnej detail
-protože tyhle term generating gramatiky sou tu spíš
-pro zajímavost a pro pevnější kramfleky, než pro praktický 
-generování}
+and for every variable $x$ such that $\Gamma$ does not contain any 
+declaration with $x$ as subject
+there is following grammar rule.
  
 
 %and let $x$ be variable name that is
@@ -1780,7 +1795,7 @@ generování}
 
 $$ 
 	( \sigma \rightarrow \tau , \Gamma )  \gar
-	\bigg( \mbox{ {\Large $\lambda$ x . }}( \tau , \Gamma \cup \{ (x,\sigma) \} ) \quad \bigg)
+	\bigg( \mbox{ {\Large $\lambda$ x . }}( \tau ; \Gamma ,x:\sigma ) \quad \bigg)
 $$\\
 
 We will demonstrate \lterm generation on example. 
@@ -1861,15 +1876,6 @@ $$
 $$
 
 
-\begin{todo}
-   & buď dokázat ty převody na grammar rules explicitně
-     nebo říct že se to dokáže podobnym stylem jako v dukazu 
-     v sekci \ref{barlike}
-   & možná ocitovat toho van Wijngaarden [1981] s těma 2-level grammar
-     jak je to v Barendregtovi \cite{barendregt10} 
-   & vyřešit jak to tu popsat s tou freš proměnnou x v introdukci...
-     && stejně tak v tom obecnym případě to dělá neplechu
-\end{todo}
 
 	
 
@@ -1913,13 +1919,6 @@ $L$ such that $L \twoheadrightarrow_{\eta} B$.
 \end{proposition}
 
 
-\begin{todo}
- & potřebuju eště nějaký \textbf{propositions} z \cite{barendregt10} tu uvíst ?
- & ta definice je tam daná pro $\tur{}{M}{\sigma}$,
-   ukazat ze ta naše je ok, že tam má navíc to $\Gamma$.
-   Stačí udělat tríček že beru funkci co má lambda hlavu odpovídající 
-   tomu kontextu.
-\end{todo}
 
 
 
@@ -2144,12 +2143,7 @@ $.
 This means that we can use this grammar to generate all \lterms $M$ in \lnf
 with desired type $\sigma$ from \textit{building blocks} context $\Gamma$.\\
 
-\begin{todo}
- & možná zmínit že podobně jako mužeme transformovat inference rules
-   na grammar rules, mužeme i obráceně grammar rules
-   převést na inference rules - to bylo ostatně uděláno v tom dukazu ale
-   je to podle mě hezký říct ty pravidla explicitně.
-\end{todo}
+
 
 \subsection{Benefits of generating \lterms in \lnf}
 \label{benefits}
@@ -2293,15 +2287,6 @@ we may transform it to systematic method for generating terms in \benf
 by simply reducing each generated term to its \enf.  
 
 
-\begin{todo}
-& možná eště zmínit něco jako : \\
-Jedna drobná nevýhoda je, že pokud chceme generovat termy od nejmenšího do největšího
-a pokud lnf generujeme od nejmenšího po největší tak pak generovaní \benf
-timhle trikem nemusí bejt od nejmenšího po nějvětší. V naší aplikaci (tzn GP)
-ale nijak nebazírtujeme na týhle vlastnosti a nakonec budeme spíš stejně používat
-nějaký nedeterminizmy aby to fungovalo líp, takže to vubec nevadí, že budou trochu přeházený. 
-\end{todo}
-   
 
 
 \newpage
@@ -2490,9 +2475,10 @@ Which results in following tree:
 \subsection{And-or tree and searching in Inhabitation tree}
 
 \Lets consider following definition of 
-\textit{and-or tree}\footnote{
-\textbf{TODO}: Mention that on [WIKI] there is more general definition, but 
-for our purposes is this one sufficient.}.
+\textit{and-or tree}.
+%\footnote{
+%\textbf{TODO}: Mention that on [WIKI] there is more general definition, but 
+%for our purposes is this one sufficient.}
 
 \begin{definition}
 ~
@@ -2511,8 +2497,9 @@ for our purposes is this one sufficient.}.
 		  \item The root of $T'$ is the root of $T$.
 		  \item Each \textit{and-node} in $T'$ has all the child nodes as in $T$.
 		  \item Each \textit{or-node}  in $T'$ has precisely one child 
-		      node.\footnote{\textbf{TODO}: MENTION why precisely one 
-		      and not at least one ..or CHANGE the def. }   
+		      node.
+		      %\footnote{\textbf{TODO}: MENTION why precisely one 
+		      %and not at least one ..or CHANGE the def. }   
 	    \end{enumerate}
 	
 	\end{enumerate}
@@ -2539,7 +2526,7 @@ Or put in different words, it corresponds to filling all the slots
 for arguments with values.\\  
 
 \newpage
-\section{ Generating terms in \lnf by solving inhabitation tree }
+\subsection{ Generating terms in \lnf by solving inhabitation tree }
 
 The motivation for defining \textit{solving} and-or tree the way we did is that
 solution trees of $\IT(\sigma,\Gamma)$ are  
@@ -2681,13 +2668,62 @@ we have only one possibility:
 
 \end{proof}
 
-
 \begin{todo}
 & skontrolovat ty dukazy pořádně sepsal sem 
   je dost rychle a mužou bejt divný. 
-& A možná to ještě to nějak okomentovat
 \end{todo}
 
+
+\newpage
+\subsection{In defense of inhabitation trees}
+
+It may seem that we are overthinking the problem by introduction
+of this new structure, whereas it would be sufficient to
+use the term generating grammars instead.\\
+
+I see two reasons why inhabitation tree is useful concept.
+
+\begin{enumerate}
+\item The first reason is rather subjective.
+      In my opinion, it simplifies the problem to be
+      better graspable. My arguments are following: 
+      \begin{enumerate}
+      \item
+      It reduces the unpleasant fact
+      that term generating grammars are not grammars in
+      the standard sense. 
+      \item
+      It brings the problem to 
+      its more natural domain, 
+      from (textual) grammars 
+      to (syntactical) trees.
+      \item
+      We may think about the whole structure of generating 
+      at once since the whole tree, although infinite, is
+      fairly simple structure of alternating layers of \textit{and} 
+      and \textit{or} nodes. 
+      \item
+      It enables us to ask such questions
+      as: What would be usage of inhabitation trees with 
+      number labeled edges coming from \textit{or}-nodes? Et cetera.
+      \end{enumerate}   
+\item We can think about the inhabitation tree as about 
+      some kind of search space. But another view is also 
+      possible: We can think about it as about collection
+      of typed lambda terms that are generable by that inhabitation
+      tree. 
+      
+      This is even more visible when we introduce
+      concept of an \textit{incomplete inhabitation tree}
+        
+\end{enumerate}
+
+In the next chapter we will use A*-algorithm together with
+inhabitation tree ideas to perform systematic generation and other
+kinds of generation of lambda terms;
+but maybe even more interesting application of inhabitation trees
+involving some above mentioned ideas will be revealed in the 
+chapter about future work, since those ideas are not yet implemented.
 
 \section{ Inhabitation machine }
 
@@ -2723,13 +2759,13 @@ the system for Genetic programming with types
 by its main design goals:\\ 
 
 \begin{enum}
- & It should eliminate the \textit{closure} constrain of classical GP
+ & It should eliminate the \textit{closure} constrain of standard GP
    (see \ref{building-blocks}). 
- & It should be generalization of the classical GP described in \ref{GP},
+ & It should be generalization of the standard GP described in \ref{GP},
    by which is meant that for \textit{building blocks} satisfying 
-   constrains of classical GP there should be simple setup of control parameters
+   constrains of standard GP there should be simple setup of control parameters
    of the system which will make the system behave in precisely the same way
-   as the classical GP behaves. 
+   as the standard GP behaves. 
  & It should utilize the theory around typed $\lambda$-calculus.  
 \end{enum}
 
@@ -2771,12 +2807,12 @@ This trick has two reasons:
        prolongs size of \lterms it is beneficial to lessen 
        the effect of abstraction elimination in this way. 
         
- \item It also makes our method compatible with classical GP, where
+ \item It also makes our method compatible with standard GP, where
        variables are treated as ordinary element of the set $T$
        and no $\lambda$-abstraction is used.
        
        This ensures that S-expressions will be generated for
-       $\Gamma$ satisfying constrains of classical GP and that
+       $\Gamma$ satisfying constrains of standard GP and that
        abstraction elimination will have no effect on such individuals.
 \end{enumerate}
 
@@ -3106,10 +3142,17 @@ of steps needed to get to a final state by the shortest possible path.
 
 Our heuristic function is a simple one: The number of unfinished leafs in the state tree.
 
+This heuristic function is admissible because every unfinished
+leaf must be at least once expanded to become final. 
+
+
+\subsection{Future improvements}
 
 \begin{todo}
-& rozebrat to, ukázat že je optimistická atd...
+& !!!
 \end{todo}
+
+
 
 \subsection{Search strategy}
 
@@ -3198,6 +3241,12 @@ their $filter(nexts,depth)$
 and $init()$ methods. Again, in order to avoid confusion, 
 \lets stress that $depth$ is really $\lfloor depth/2 \rfloor$ since
 our formal states contain above each symbol node a type node.
+
+\begin{todo}
+ & Přidat že pak mužeme čekovat unikátnost při generování, protože už neni zajištěna 
+   jako u systematickýho. Nebo říct že musíme ale pak asi změnit implementaci tý geometrický což znevalidní experimenty
+\end{todo}
+
 
 \subsubsection{Systematic strategy}
 
@@ -3357,16 +3406,25 @@ jen z těch přidávanejch podstromu ale že tim nechcem komplikovat popis
 \newpage
 \section{Crossover}
 
-The crossover operation in classical GP is performed 
+Design goal behind our approach to crossover operation is
+to try to generalize standard tree swapping mutation.
+This is not because of dislike of more specialized crossovers;
+it comes from systematic approach for exploring the domain of
+typed functional GP --- thus I would like to start with the most common one.\\
+
+%In the future, after finding sufficiently nice generalization of the standard tree %swapping crossover I plan to move my attention to more 
+%specialized crossovers, like the one presented in \cite{yu01}.  \\
+
+The crossover operation in standard GP is performed 
 by swapping randomly selected subtrees in each parent 
-\sexprTree (see \ref{GPxover}).
+S-expression (see \ref{GPxover}).
 
-For typed lambda terms two difficulties arise: Types and variables.
+For typed lambda terms two difficulties arise: Types and variables.\\
 
-We will show how to crossover typed \lterm trees in both 
+We will show how to crossover \textit{typed \lterm trees} in both 
 \atTree and \sexprTree notation.\\
 
-As in classical GP our crossover will be performed by swapping
+As in standard GP our crossover will be performed by swapping
 two subtrees. But now with constraint that both subtrees have
 the same type. This is discussed in grater detail in \ref{typed-swapping}.\\
 
@@ -3395,8 +3453,19 @@ it is not element of $\Gamma$, the second tree is not well-typed \lterm.
 % - Resolve problems with free variables or avoid variables completely. 
 
 
-In \ref{repairing-method} is presented more detailed discussion of problems with
-variables and method which repairs such "broken" terms. 
+%In \ref{repairing-method} is presented more detailed discussion of problems with
+%variables and method which repairs such "broken" terms. 
+
+First approach tried at this problem was to repair the broken term,
+but since this method is not currently implemented we will describe it
+in just a few words. If the moved free variable ends in the scope 
+where is defined variable with the same name and type, then it
+is OK. If it is not this case, we may rename this variable to some 
+other variable "visible" in its new scope if such a variable has the same 
+type. If there is no such a suitable variable we may generate new value 
+to replace the variable by term generating method. 
+
+As you can see, this is not much elegant solution. 
 
 But we can avoid dealing with this problem by avoiding use of variables.
 This can be achieved by process called abstraction elimination.
@@ -3407,7 +3476,7 @@ This can be achieved by process called abstraction elimination.
 %... Conversion to SKI combinators
 
 \textit{Abstraction elimination} is a process of transforming 
-an arbitrary \lterm into \lterm witch contains no lambda abstractions
+an arbitrary \lterm into \lterm that contains no lambda abstractions
 and no bound variables.
 The newly produced \lterm may contain function applications, 
 free symbols from former \lterm and some new symbols standing for 
@@ -3422,7 +3491,12 @@ Those combinators are defined as:
 
 \newcommand{\Ae}{\mathop{\mathrm{\AE}}}
 
-\Lets describe transformation $\Ae$ performing this process.
+\Lets describe transformation $\Ae$ performing this 
+process.\footnote{In our implementation we must also deal with types, because 
+our individuals are annotated with types. But since this process
+is fairly straightforward but cumbersome to describe, we will 
+skip explaining it here. Reader interested in seeing it can see 
+the source code of our implementation. }
 \begin{align*}
 \Ae[x]           &= x &\\[0.4em]
 \Ae[\,(M\,N)\,]  &= (\Ae[M]\;\;\Ae[N]) &\\[0.4em]
@@ -3434,176 +3508,677 @@ Those combinators are defined as:
 &\textbf{if } x \in \FV(M) \vee x \in \FV(N)\\
 \end{align*}
 
+\newcommand{\Bcomb }{\mathbf{B}}   
+\newcommand{\BBcomb }{\mathbf{B*}}
+\newcommand{\Ccomb }{\mathbf{C}}   
+\newcommand{\CCcomb }{\mathbf{C'}}
+\newcommand{\SScomb }{\mathbf{S'}}
 
-\begin{todo}
-& přidat (ale i do kódu) B a C
-& říct že my musíme řešit i typy 
-& říct o složitosti , a že je to docela
-disadventič vzhledem k bloatu
-& citovat Simon Peyton Jones implementaition of FP languages
-jako source of further reading on this subject.
-\end{todo}
+This is simple version of this process. More optimized version,
+in the means of the size of resulting term and its performance
+is following one, presented in \cite{jones87}.\\
+
+This version operates with more combinators:\\
+
+\begin{align*}
+\Bcomb  &= \lam{f\,g\,x}{f\,(g\,x)} \\
+\Ccomb  &= \lam{f\,g\,x}{f\,x\,g} \\
+\SScomb &= \lam{c\,f\,g\,x}{c\,(f\,x)\,(g\,x)} \\
+\BBcomb &= \lam{c\,f\,g\,x}{c\,(f\,(g\,x))} \\
+\CCcomb &= \lam{c\,f\,g\,x}{c\,(f\,x)\,g} \\
+\end{align*}
+
+\newpage
+And the transformation can be written as follows.
+
+\begin{align*}
+\Ae[x]           &= x &\\
+\Ae[\,(M\,N)\,]  &= (\Ae[M]\;\;\Ae[N]) &\\
+\Ae[\lam{x}{M}]  &= A[ x ; \Ae[M] ] &
+\\[1em]
+A[x;x]           &= \Icomb &\\
+A[x;y]           &= (\Kcomb~y)\\
+A[x;\,(M\,N)\,]  &= Opt[~\Scomb~(A[x;M])~(A[x;N])~]
+\\[1em]
+Opt[~\Scomb~(\Kcomb~M)~(\Kcomb~N)~]   &= \Kcomb~(M~N)\\
+Opt[~\Scomb~(\Kcomb~M)~\Icomb~]       &= M\\
+Opt[~\Scomb~(\Kcomb~M)~(\Bcomb~N~L)~] &= \BBcomb~M~N~L\\
+Opt[~\Scomb~(\Kcomb~M)~N~]            &= \Bcomb~M~N\\
+Opt[~\Scomb~(\Bcomb~M~N)~(\Kcomb~L)~] &= \CCcomb~M~N~L\\
+Opt[~\Scomb~M~(\Kcomb~N)~]            &= \Ccomb~M~N\\
+Opt[~\Scomb~(\Bcomb~M~N)~L~]          &= \SScomb~M~N~L
+\end{align*}
+\\
+
+As is stated in \cite{jones87},
+the biggest disadvantage of this technique is that the translated
+term is often much larger than in its lambda form --- the size of
+the translated term can be proportional to the
+square of the size of the original term. 
+
+But the advantage is also tempting --- no need to deal with variables
+and lambda heads.
 
 
 \subsection{Typed subtree swapping}
 \label{typed-swapping}
 
-\begin{todo}
-   & rozdíli při křížení ruznejch reprezentací 
-      && \atTree umožňuje víc křížení než \sexprTree
-          &&& každý co de v \sexprTree umí i \atTree ale obráceně to neplatí
-      && \atTree je zase ekvivalentní tomu kozovskýmu  
-\end{todo}
+First thing to do in standard subtree swapping is to select random node
+in the first parent. 
+
+We modify this procedure so that we allow
+selection only of those nodes with such a type that there exists  
+a node in the second parent with the same type.
+
+Standard subtree swapping crossover as a first thing selects 
+whether the selected node will be inner node (usually with probability 
+$p_{ip} = 90\%$) or leaf node (with probability 10\%).
+
+We are in a more complicated situation, because one of those 
+sets may be empty, because of allowing only nodes with possible "partner"
+in the second parent. Thus we do this step only if both sets are
+nonempty. 
+
+After selecting a node in the first parent we select node in the
+second parent such that type of that node must by the same as the type 
+of the first node. Again, this may eliminate the "90-10" step of
+first deciding whether the selected node will be internal node 
+or leaf node.
+
+When both nodes are selected we may swap the trees. \\
+
+If the abstraction elimination was performed, then 
+since the trees are of the same type and there are no variables to be 
+moved from their scope, the offspring trees are well typed.\\
 
 
-\subsection{ Repairing method }
-\label{repairing-method}
+Both \sexprTree and \atTree are able to be crossed by this 
+mechanism. But \atTree has more possibilities then \atTree.
+This comes from the fact that every subtree of the \sexprTree
+corresponds to a subtree of \atTree, but there are subtrees
+of \atTree that do not correspond to a subtree of a \sexprTree.\\
 
-\begin{todo}
-& !!!
-\end{todo}
+Following example should clarify this.
 
+\Tree[.@	
+   [.@ \textbf{f} x ]
+   [.y ]  		 			
+]
+\Tree[.\textbf{f} x y ]~\\
 
-\subsection{ Comparison of the two methods }
-\label{comarison-ski-repairing}
+In \atTree, \textbf{f} is leaf thus subtree, 
+whereas in \sexprTree it is internal node thus not a subtree.\\ 
 
-\begin{todo}
-& !!!
-& říct že nakonec sme přilnuli k zbavit se proměnejch
-\end{todo}
-
-\newpage
-\section{Mutation}
-
-\begin{todo}
-& říct že na tu sme se moc nesoustředili ze dvou duvodu
-  ktery to ospravedlňujou 
-	&& koza taky
-	&& ta s vygereovanim podstromu je v zásadě použití
-	   algoritmu na generovaní jedince a tak nám přišlo
-	   lepší pořádně se soustředit na generování jedince a
-	   začít do toho mutaci tahat až bude generování pořádně
-	   prozkoumáno.
-& To ale neznamená že jí nemáme radi, naopak se těšíme
-  že její vhodný zavedení celou metodu ještě zlepší.
-  
-& Nápad na to jak to dělat:
-  && nutno ošetřit - co všechno do gammy alemyslim že v phodě když je uplne 
-     stejná jako ta generujicí, pač ve vy SKI-ovanym termu stejne nejsou zadny 
-     proměný 
-  && mít nějakej předem danej počet pohybu na frontě, abych mohl efektivně
-     kontrolovat že to přidání mutací moc nespomalý
-  && Po tom počtu pohybu končim generování
-  && mam nějakej počet vygenerovanejch termu
-  && pro chytrou mutaci mužu chtít třeba 10 termu
-     &&& pokud se mi jich vygenerovalo míň, tak beru míň
-     &&& pokud se mi jich vygenerovalo víc, tak vemu 10 náhodně
-     &&& těch 10 vyhodnotim (jakože dosazenejch na jejich místo)
-     &&& nejlepší si vezmu
-     &&& dobrý udělat to zase najednou pro všechny v tý generaci mutovaný
-         pánčto je nákladný spouštět Hint
-& Další mutace - beta eta redukce (?? asi moc naroční viz dale) 
-  && zmenšující mutace
-  && udělaná že převedem SKIBC do lambda termu a to redukujem? to asi ne pač
-     pak převod to spíš prodlouží, spíš asi mít redukční pravidla pro SKIBC
-     a těma redukovat, ale je otázka jak moc tam budou vznikat SKIBC-redexi
-     - ty mohou vznikat jen při @-tree reprezentaci
-  && to otevírá otázku toho, že by elementy gammy mohla mít k sobě redukční pravidla
-& Další mutace - jednoduše náhrada podstromu/uzlu za nějakej z gammy
-  && nezvětšující mutace
-& Další mutace - mutace číselnejch-like konstant
-& To mě přivádí k myšlence sice pro generování ale myslim podstatný:
-  jakmile jsou v problému číselný-like konstanty tak mužu udělat pro 
-  jeden tvar hodně jedincu - což šetří jak čas na generování, tak to prozkomává 
-  víc danej tvar
-
-
-  
-\end{todo}
+Another nice property of \sexprTree{}s with no lambdas 
+is that they are the same representation as S-expressions
+used by standard GP.
 
 
 
-%\subsection{Using term generation}
+%\subsection{ Repairing method }
+%\label{repairing-method}
+%
+% 
+%
+%\begin{todo}
+%& !!!
+%\end{todo}
+%
+%
+%\subsection{ Comparison of the two methods }
+%\label{comarison-ski-repairing}
+%
+%\begin{todo}
+%& !!!
+%& říct že nakonec sme přilnuli k zbavit se proměnejch
+%\end{todo}
 
 
-
-
-\section{ Complexity discussion }
-
-\begin{todo}
-& !!!
-& zmínit že mi moc neřešíme formální/asymptotický složitosti
-  && de nám hlavně o realný časy
-& vyjít z komplexnosti A* asi
-  && složitost výrazně ovlivněná kvalitou heuristický funkce
-\end{todo}
 
 
 
 
 \chapter{ Implementation }	
 
-Předběžný náhodně uspořádaný body osnovy ..\\
+In this chapter we will briefly discus some parts of the implementation
+of our system. Some previous knowledge of Haskell is assumed, but one can
+freely skip this chapter since it is not crucial for the 
+overall message of this thesis. \\
+
+Our system is implemented in functional language \textit{Haskell}.
+Program implementing it is called \textit{Fishtron}.
+It runs as a simple server application and its GUI is
+accessible through web browser.\\
+
+
+
+Evaluation of individuals is performed by translating them
+from \lterms into Haskell programs which are evaluated
+in the Haskell interpreter \textit{Hint} accessible 
+in the code as \texttt{Interpreter} monad.  \\
+
+Each problem definition typically consists of two Haskell 
+source code files. First file (usually called \texttt{Problem.hs}) 
+contains problem definition involving such things as desired 
+type of individual, context of building blocks, 
+fitness function implementation and various control parameters 
+like term generating method, crossover,
+default number of runs, generations, population size etc. 
+
+Those functions or constants of building block context
+that are not part of the standard Haskell \textit{Prelude}\footnote{
+A standard module imported by default into all Haskell modules.}
+need to be defined in the second file (usually called \texttt{Funs.hs}).\\
+
+After start of the program one can access the interface
+by pointing a browser to \texttt{http://localhost:3000}. Here is simple 
+form where registered problems are listed. Beside problem selection
+one can also change some control parameters. After hitting the "start"
+button evolution begins. From that point until the end of the running
+experiment, the front-end JavaScript program periodically asks
+server for new run information. Server makes this information available 
+at the end of each generation. This information contains various
+data: Haskell and JavaScript source codes of the best individual,
+some statistical data about the just evaluated generation,  
+standard output of the server program, etc.
+
+These data are immediately available in the form of
+continuously updated graphs and if 
+the \textit{fenotype} JavaScript file is present 
+for the problem, then is also available immediate 
+presentation of the best individual from each generation.\\  
+  
+Now \lets move our attention to the architecture of the evolution engine.
+Various dirty parts of the outside world (such as textual output,
+communication with front-end, access to random number generator) are  
+packed into \texttt{Eva} state monad defined in \texttt{Eva.hs}.\\
+  
+Core of the evolution engine (defined in \texttt{GP\_{}Core.hs})
+is done so it enables various structures
+to be evolved - such as \sexprTree{}s, \atTree{}s or even boolean lists
+of fixed length as to support beside GP also Genetic Algorithms.\\[1em]
+
+This is possible due to following type classes. 
+ 
+~\\\texttt{
+class Gene term opt where\\
+$~\;\;$generateIt :: Int -> opt -> Eva [term]\\[1em]
+class Muta term opt where\\
+$~\;\;$mutateIt :: opt -> term -> Eva term \\[1em]
+class Cros term opt where\\
+$~\;\;$crossIt :: opt -> term -> term -> Eva (term,term) \\[1em]
+class Evolvable term a gOpt mOpt cOpt where\\
+$~\;\;$evolveIt :: RunInfo -> Problem term a gOpt mOpt cOpt  \\
+$~~~~~~~~~~~~~~~~~~~~~~$
+-> Eva (term,FitVal,Maybe Int)
+} ~\\
+
+
+Put simply, if we define instances for 
+\texttt{Gene}, \texttt{Muta} and \texttt{Cros}, then we get
+instance of \texttt{Evolvable}. 
+
+\texttt{Gene} correspond to individual generating method for
+structure \texttt{term} parametrized by option \texttt{opt}.
+Analogically for mutation and crossover.
+
+Instances of those three type classes are located in the file
+\texttt{GP\_{}Data.hs}.
+
+We will skip deeper explanation of this topic now.\\
+
+One technical detail that I think is worth mentioning here
+is a trick involved in evaluation of Haskell programs 
+corresponding to individuals. Straightforward evaluation 
+technique would be to simply call evaluation function on every
+string corresponding to individual expression. 
+
+But since most time consuming activity
+of evaluating using \textit{Hint} is its initialization,
+it is much more effective to collect all the individuals  
+to be evaluated in the current generation and create huge
+string representing list of expressions
+and evaluate this string of all individual. \\
+
+Another notable comment about implementation comes
+from fact that \textit{Hint} needs to know type of the expression
+being evaluated. This particular thing had enormous enlarging effect
+on pain produced by need to fight the type system in order to
+make it reasonably working piece of software. This may be caused
+by the fact that I am still pretty inexperienced Haskell programmer,
+since this is my first bigger program done in this language.
+
+Moral of this remark is the following one: 
+If you plan to use the \textit{Hint}
+in your Haskell program on place where it will be used to eval 
+expressions of various types, think through the integration of the
+evaluator into the whole system in advance.\\ 
+
+
+\newpage
+\Lets finish this brief chapter about implementation of our system
+by listing other not yet mentioned source files with a little information 
+about them.   \\[1em]
+
 
 \begin{easylist}[itemize]
-& že je to v haskellu
-&& Jak moc hrotit vysvětlení haskellu?
-& že je to servrově řešený
-& architektura evolučního algoritmu 
-&& ty tři typový třídy a ta čtvrtá typová třída
-& evaluace
-&& vychytavka s vyhodnocenim celýho seznamu aby s eto nemuselo furt inicializovat - inicializace vyhodnocovače jednou za generaci 
-& hlavní soubory
-&& Eva.hs     - Eva monada
-&& GP-Core.hs - Evoluční algoritmus
-&& GP-Data.hs - Instance tříd z GP-Core
-&& IMx.hs - Term generating
-&& TTerm.hs   - typed lambda term
-&& TTree.hs   - CTT
-&& Server.hs  - main serveru
-&& Job.hs     - Registrace problemu
-&& Heval.hs   - Evaluator 
-&& složka Problems
-&&& pro každej problém složka 
-&&& ta typicky strukturu
-&&&& Problem.hs
-&&&& Funs.hs
-&& Slozka server
-&&& index.html
-&&& slozka js/Problems
-&&& .js pro kazdej problem
+& \texttt{Server.hs}    --- File containing main of the server.
+& \texttt{Register.hs}  --- Place for registering the problem to make it appear 
+                            in the list of problems in GUI.
+& \texttt{InhabTree.hs} --- Core of the term generating method.
+& \texttt{TTerm.hs}     --- Code related to typed \lterms 
+                            represented as \atTree{}s. 
+& \texttt{TTree.hs}     --- Code related to typed \lterms 
+                            represented as \sexprTree{}s.
+& \texttt{Heval.hs}     --- Evaluator wrapper code.
+& \texttt{Dist.hs}      --- Implementation of "probability distribution" data 
+                            structure used as container for population.
 \end{easylist}
 
 
 
-
-\section{Top level view}
-\section{Comments about main source files}
- \subsubsection{ Eva.hs }
- \subsubsection{ GP\_{}Core.hs }
-\section{Term generating}
-\section{Crossover}
-\section{Mutation}
-
-\section{Brief history of the project}
-\begin{todo}
- & zmínit třeba tyhle fáze:
-  && že sem si delal evaluator sám co sem pak s performenc duvodu opustil
-  && že sem hledal intuicionistickej dokazovač ale že nejsem nenarazil na vhodnej
-     pač nejsou delany na to plivat hodně dukazu  
-  && že sem nejdriv pouzival ten vypsychlej dokazovač co tam měl nějaký ty 
-     spešl rozhodovací stromy
-  && pak sem to přepsal tak aby to nebylo jen na GP šitý ale obecně na jakoukoliv 
-     evoluci
-  && ...
-\end{todo}
-
-
-\chapter{Problems}
+\chapter{Results}
 	In this section will be presented usage of the system in order to solve specific problems. Several problems will be described and some of them compared with results
 of others. 
-		
-	
+
+\section{Simple Symbolic Regression}
+
+\textit{Simple Symbolic Regression} is a problem described
+in \cite{koza92}. Objective of this problem is to 
+find a function $f(x)$ that fits a sample
+of twenty given points. The target function is 
+function $f_{t}(x) = x^4 + x^3 + x^2 + x$.  
+
+Desired type of generated programs $\sigma$ and 
+building blocks context $\Gamma$ are following.
+\newcommand{\Real}{\mathbb{R}}
+\begin{align*}
+\sigma = \Real \ar &\Real\\
+\Gamma = \{
+  (+)  &: \Real \ar \Real \ar \Real    ,\\
+  (-)  &: \Real \ar \Real \ar \Real    ,\\
+  (*)  &: \Real \ar \Real \ar \Real    ,\\
+  rdiv &: \Real \ar \Real \ar \Real    ,\\
+  sin  &: \Real \ar \Real              ,\\
+  cos  &: \Real \ar \Real              ,\\
+  exp  &: \Real \ar \Real              ,\\ 
+  rlog &: \Real \ar \Real              \}\\
+\end{align*}
+where
+\begin{align*}
+rdiv(p,q) &= \begin{cases} 1 &\mbox{if } q = 0 \\
+p/q & \mbox{otherwise } \end{cases}  \\
+rlog(x) &= \begin{cases} 0 &\mbox{if } x = 0 \\
+log(\vert x\vert) & \mbox{otherwise}. \end{cases}
+\end{align*}
+
+Fitness function is computed as follows
+
+$$ fitness(f) =  \sum\limits_{i=1}^{20}{ \vert f(x_i)-y_i }\vert   $$
+
+where $(x_i,y_i)$ are 20 data samples from $[-1,1]$, such that $y_i = f_t(x_i)$.\\
+
+An individual $f$ such that $\vert f(x_i)-y_i \vert < 0.01 $ for all data samples is 
+considered as a correct individual.\\
+
+\newpage
+\subsection{Experiments}
+
+On this problem we demonstrate that if control parameters are set to be
+compatible with standard GP, then the results obtained fit the results
+presented in \cite{koza92} relatively well. \\
+
+Those control parameters are following two:
+
+~\begin{enum}
+ & \textit{Ramped half-and-half strategy} is used as search strategy.
+ & Option of preserving the best individual into the next population is set \textbf{off}.
+\end{enum}~
+
+The experiment consisted of 50 independent runs of GP algorithm.
+Each run had maximally 50 generations (50 + 1 for generation 0)
+and 500 individuals as population size.\\
+
+We analyze the ability of the system to produce a correct solution.
+We are interested in percentage of runs that led to discovery of
+correct solution. And we also use the popular measurement  
+method within GP field --- the \textit{performance curves}
+described in \cite{koza92}.
+
+First performance curve is the cumulative \textit{probability of success}
+$P(M,i)$, where $i$ is generation number ($i = 0$ for initial population) 
+and $M$ is the size of the population. 
+$P(M,i)$ is probability that a correct solution will
+be find in one run of GP with maximal number of generations $i$ and 
+population size $M$. $P(M,i)$ is computed as percentage of 
+runs yielding a correct solution in generation $i$ or earlier.
+
+From values of $P(M,i)$ are computed values of the second performance curve
+$I(M,i,z)$
+--- the total number of individuals that must be processed to yield a correct
+solution with probability $z$ by multiple runs of GP with maximal 
+number of generations $i$ and population size $M$ (usually $z = 0.99$).
+
+As is described in \cite{koza92},
+The number $R(M,i,z)$ of independent runs required to yield a correct solution 
+is computed as
+ 
+$$ R(M,i,z) = \lceil\frac{\log(1-z)}{\log(1-P(M,i))}\rceil ,$$
+
+thus $I(M,i,z)$ is computed as
+
+$$I(M,i,z) = (i+1) \cdot M \cdot R(M,i,z) .$$\\
+
+It scored 17/50 (34\%) success rate. 
+Minimal $I(M,i,z)$ was in generation 23 
+with 192,000 individuals to be processed.
+The experiment took 46 minutes.\\
+
+Performance curves are following.
+
+\includegraphics[scale=0.65]{reports/SSR/1/probabs.png}
+
+\includegraphics[scale=0.65]{reports/SSR/1/indivs.png}\\
+
+\Lets compare it with results from \cite{koza92} (based on 113 runs):
+
+Success rate 35\%; minimal $I(M,i,z)$ in generation 24 
+with 162,500 individuals to be processed.
+
+We have 34\%; minimal $I(M,i,z)$ in generation 23 
+with 192,000. This seems like a pretty good match.
+\\
+
+
+
+Second experiment was performed to compare 
+\textit{ramped half-and-half strategy} with our
+\textit{geometric strategy} (with default parameter $q=0.75$). 
+Thus all control parameters stay same except for the 
+search strategy for generating algorithm.
+
+It scored 21/50 (42\%) success rate. 
+Minimal $I(M,i,z)$ was in generation 29 
+with 150,000 individuals to be processed.
+The experiment took 26 minutes.\\
+
+
+\includegraphics[scale=0.65]{reports/SSR/2/probabs.png}
+
+\includegraphics[scale=0.65]{reports/SSR/2/indivs.png}\\
+
+So our geometric strategy is slightly more successful then 
+ramped half-and-half strategy. But more interesting is that
+it made the whole experiment almost twice as fast; 
+reason of this will be discussed in more detail in the next problem. 
+
+\newpage
+\section{Artificial Ant}
+
+\textit{Artificial Ant} is another problem described
+in \cite{koza92}. Objective of this problem is to 
+find a control program for an artificial ant so
+that it can find all food located on "Santa Fe" trail.
+
+The Santa Fe trail lies on toroidal square grid.
+The ant is in the upper left corner, facing right.
+It has following layout.
+
+\includegraphics[scale=1]{santafe.png}
+
+
+
+The ant is able to move forward, turn left, and sense if a food 
+piece is ahead of him.\\
+
+Desired type of generated programs $\sigma$ and 
+building blocks context $\Gamma$ are following.
+\begin{align*}
+\sigma = An&tAction\\
+\Gamma = \{~~
+  l    &: AntAction                              ,\\
+  r    &: AntAction                              ,\\
+  m    &: AntAction                              ,\\
+  ifa  &: AntAction \ar AntAction \ar AntAction  ,\\
+  p2   &: AntAction \ar AntAction \ar AntAction  ,\\
+  p3   &: AntAction \ar AntAction \ar AntAction \ar AntAction  \}
+\end{align*}
+
+Action $l$ turns the ant left.
+
+Action $r$ turns the ant right.
+
+Action $m$ moves the ant forward.
+
+Action $ifa x y$ (if-food-ahead) performs action $x$ if a food piece is ahead of the ant,
+otherwise it performs action $y$.
+
+Action $p2 x y$ first performs action $x$ and after it action $y$.
+
+Action $p3 x y z$ first performs action $x$, after that action $y$ and finally $z$.\\
+
+Actions $l, r$ and $m$ each take one time step to execute.
+
+Ants action is performed over and over again until it reaches predefined
+maximal number of steps. In \cite{koza92} this limit is set to be 400 time steps.
+
+Fitness value is equal to number of eaten food pieces.
+
+An individual such that eats all 89 pieces of food is 
+considered as a correct solution.\\
+
+There is also mentioned following ant program which is described as correct solution.
+
+\texttt{~\\
+(ifa m (p3 l (p2 (ifa m r) (p2 r (p2 l r)))(p2 (ifa m l) m)))\\
+} 
+
+But here arises a problem: In our implementation this program needs 545
+time steps; if it is given only 400 time steps, then it eats only 79 pieces
+of food. It is uncertain whether it is caused by my mistake in implementation
+or by inaccuracy in \cite{koza92}. Since everything else seems working just 
+fine, I have decided to set the limit to 600 in my experiments.
+
+
+\subsection{Experiments}
+
+
+Due to those uncertainties, we will not perform comparing experiments 
+as we did in the problem of simple symbolic regression.\\
+
+In the following experiments, the option of preserving the best individual 
+into the next generation is active (since we are not trying to compare 
+with results in \cite{koza92}).
+
+
+
+
+
+As usually, first experiment consisted of 50 independent runs of GP algorithm.
+Each run had maximally 50 generations and 500 individuals as population size.
+\textit{Ramped half-and-half strategy} is used as search strategy for the first 
+experiment.\\
+
+
+It scored 7/50 (14\%) success rate. 
+Minimal $I(M,i,z)$ was in generation 28 
+with 449,500 individuals to be processed.
+The experiment took 265 minutes.
+
+Performance curves are following.
+
+\includegraphics[scale=0.65]{reports/Ant/2/probabs.png}
+
+\includegraphics[scale=0.65]{reports/Ant/2/indivs.png}\\
+
+Similarly as in previous problem, second experiment was performed to compare 
+\textit{ramped half-and-half strategy} with our
+\textit{geometric strategy} (with default parameter $q=0.75$). 
+Thus all control parameters stay same except for the 
+search strategy for generating algorithm.
+
+It scored 19/50 (38\%) success rate. 
+Minimal $I(M,i,z)$ was in generation 10 
+with 115,500 individuals to be processed.
+The experiment took 107 minutes.\\
+
+\includegraphics[scale=0.65]{reports/Ant/1/probabs.png}
+
+\includegraphics[scale=0.65]{reports/Ant/1/indivs.png}\\
+
+This is big improvement in all three watched factors:
+
+\begin{enumerate}
+ \item 38\% vs 14\% success rate.
+ \item 115,500 vs 449,500 individuals needed to be processed.
+ \item 107 vs 265 minutes.  
+\end{enumerate}
+
+Third factor, the time difference might give us clue about what is going on.
+
+Those two experiments differs only in used term generating method.
+During one run the vast majority of the time is spend by evolution,
+the generation process only slightly prolongs the time spend in generation 0.
+The run time of the evolution is influenced by two important factors:
+Number of generations and time that crossover takes.
+
+The number of generations of more successful method is surly smaller,
+but it seems improbable that it would have such a big impact 
+(this is idea is supported by results of experiments with
+even-parity problem, where times are almost the same but success 
+rates differs significantly). 
+
+Time of crossover is proportionate to number of nodes that 
+an individual has. Thus it seems that observed slowdown is
+due to terms being too big. \\
+
+In order to test this hypothesis, we run additional experiments
+to get statistics about dynamics of individuals' sizes. 
+
+Following graphs are base upon 10 run experiments.\\ 
+
+Ramped half-and-half strategy:
+
+\includegraphics[scale=0.65]{reports/Ant/term-sizes-ANT-10behu-ramped.png}
+
+Our geometric strategy:
+
+\includegraphics[scale=0.65]{reports/Ant/term-sizes-ANT-10behu-geom.png}
+
+Those graphs show enormous differences. 
+The graph of Ramped half-and-half strategy evidences
+occurence of well known problem of GP called \textit{bloat}.
+Bloat is defined as \textit{program growth without (significant) return in
+terms of fitness} \cite{fg}.
+
+As is further stated in \cite{fg}, bloat has significant practical effects.
+
+~\begin{enum}
+ & Large programs are computationally expensive to evolve and run.
+ & Large programs can be hard to interpret.
+ & Large programs may exhibit poor generalisation. 
+\end{enum}~
+ 
+For these reasons bloat has been a subject of intense study in GP. 
+
+On the contrary, our strategy seems to
+be successfully fighting with bloat  in this particular problem.
+
+It is also noticeable from the correct solutions that have been found.
+
+Here follow all 7 correct solutions found using ramped half-and-half strategy.\\
+
+\begin{easylist}[enumerate]
+& \texttt{p2 (ifa (p2 l r) (ifa (ifa (p2 m m) (p2 m l)) (p2 (ifa l r) (p2 m r)))) (ifa (i
+fa (p3 m (ifa m m) l) (p2 r r)) (ifa (ifa (p3 (p2 m l) (ifa (p3 (p2 m (ifa l m))
+ (p3 (ifa r (p2 (ifa (p2 m r) (p3 l r m)) (p2 m r))) m l) (p2 m l)) (ifa (p3 r l
+ l) (p3 m m r))) (ifa (p3 l l r) (p2 (ifa l r) (p2 m r)))) (p2 l r)) (ifa (p3 m
+l l) (p2 r r))))}
+& \texttt{p3 (ifa (p3 (p3 m m r) (p3 (ifa (p3 (p3 m m r) (p3 r l l) (ifa m l)) (ifa (p3 l
+ r (ifa (ifa m m) (p3 r l (p2 (ifa m l) (ifa (p3 (p2 l (p3 (ifa m m) (p2 l m) (p2 l r)))
+  (p2 (ifa (ifa m r) (p3 r m l)) (p3 (ifa l l) (p3 l r l) (p2 l l))) (p2
+(ifa (ifa m l) (p2 l r)) (p2 (p2 l m) (p3 l r m)))) (ifa (ifa (p3 (p3 r m m) (p3
+ (p2 l m) (p2 l m) (ifa m m)) (ifa l m)) (ifa (p3 l r m) (ifa (ifa r r) (p2 m l)
+))) l)))))) (ifa l l))) m (p2 (p2 (ifa l l) (ifa m r)) r)) (ifa m l)) (ifa (p3 l
+ r (ifa (ifa m m) (p3 r l (p2 (ifa m l) (ifa (p3 (p2 l (p3 (ifa m m) (p2 l m) (p2 l r)))
+  (p2 (ifa (ifa m r) (p3 r m l)) (p3 (ifa l l) (p3 l r l) (p2 l l))) (p2
+(ifa r (p2 l r)) (p2 (p2 l m) (p3 l r m)))) (ifa (ifa (p3 (p3 r m m) (p3 (p2 l m
+) (p2 l m) (p2 l r)) (ifa l m)) (ifa (p3 l r m) (ifa (ifa r r) (p2 m l)))) l))))
+)) (ifa l l))) m (p2 (p2 (ifa l l) (ifa m r)) r)}
+& \texttt{p2 (ifa (p3 m m m) (p2 r m)) (p3 (ifa l r) (ifa (ifa l (p3 (p3 r r l) (ifa l m)
+ (ifa m (ifa (p2 (p3 (p3 (p3 (ifa m l) (p2 r r) (ifa m m)) (p3 (p3 r r r) (ifa r
+ r) (p2 m l)) (p3 (p2 m m) (p3 r m r) (ifa m r))) (p2 (p2 (p3 r l m) (p2 m m)) (
+p3 (ifa r l) (p2 m l) (p2 r m))) (p3 (ifa (ifa r l) (p3 m m r)) (p3 (ifa r m) (p3 l l r)
+ (p2 r r)) l)) (p2 (p2 (p2 (p2 r r) (p2 r l)) (p3 (ifa r r) (p2 l l) (p2
+ m l))) (p3 m r l))) (p2 (ifa (ifa (p3 (ifa m r) (p2 (p3 (p3 r r l) (ifa l m) (p3
+  m l r)) (p2 m r)) (p3 l l l)) (ifa (p3 l l m) (ifa l r))) (ifa (ifa (ifa m r)
+(ifa l l)) (p2 (ifa l m) (p2 l m)))) (p3 (ifa (p2 (p2 r m) (p3 m l m)) (ifa (p2
+r l) (p3 r m r))) (p2 (p2 (p2 r r) (ifa l r)) (p3 (p3 m m m) (ifa m r) (ifa l m)
+)) (p2 m l))))))) r) (ifa l r))}
+& \texttt{p2 (p3 (p2 m l) (ifa r l) (ifa m l)) (ifa (p2 m m) (ifa r l))}
+& \texttt{p2 (p2 m r) (ifa m (p2 (p2 r r) (ifa (ifa (ifa m r) (p3 m m l)) r)))}
+& \texttt{ifa (p2 (p2 m m) (p2 m l)) (p3 (p2 r r) (ifa m l) (p2 m l))}
+& \texttt{p2 (ifa (p2 (ifa r m) (p2 (p2 (p2 l m) (p3 m m r)) (ifa l l))) (p3 (p2 l l) 
+(ifa m l) m)) l}
+\end{easylist}	
+
+
+\newpage	
+Compare it with 18 solutions obtained by using geometric strategy 
+(I accidentally lost one solution).\\
+
+\begin{easylist}[enumerate]
+& \texttt{ifa m (p3 r (ifa (ifa m (ifa m (p3 r (ifa m r) m))) (ifa m (p2 (p2 m (ifa m (ifa
+m (ifa m (p3 r (ifa m r) m))))) (ifa m r)))) m)}
+& \texttt{p3 (ifa m l) (p3 m l (ifa (p2 m (ifa l (p2 (p2 (p2 m (ifa m m)) (ifa (ifa m l)
+r)) (ifa m l)))) r)) r}
+& \texttt{ifa l (ifa (p3 (p2 (p2 r (ifa r m)) (p3 l (ifa m (ifa m l)) r)) l m) (p2 r (ifa
+ m (p2 l (p2 (p2 l (ifa m r)) m)))))}
+& \texttt{p3 m (p3 r (ifa m l) l) (ifa (p2 (p3 m m r) (ifa m l)) r)}
+& \texttt{p3 (ifa m (ifa (ifa m m) (ifa m r))) m (p3 r (ifa (p3 (ifa m r) m (p3 r (ifa m
+l) m)) l) l)}
+& \texttt{p3 (ifa m l) (p2 m l) (ifa (p3 (ifa m (ifa m l)) m r) (p2 (ifa m (ifa r l)) l))}
+& \texttt{p3 (p3 r (ifa (p2 (ifa m (ifa (ifa m r) m)) m) l) m) l (ifa m r)}
+& \texttt{ifa (p3 m (ifa (ifa r m) r) l) (p3 (p3 l (ifa m r) r) (ifa m (ifa m l)) m)}
+& \texttt{p3 m (p3 l (ifa (p3 m (ifa m m) m) r) r) (ifa m (ifa m l))}
+& \texttt{p2 (ifa (ifa m (p3 l (p2 (p2 (ifa (ifa m l) l) m) (ifa m r)) (p2 (ifa (ifa (ifa
+ (ifa (p3 r l m) r) l) l) (p3 l (ifa m r) (ifa m r))) m))) r) (p2 (p3 r (ifa (if
+a (p2 (ifa m (ifa (ifa (ifa (p3 m r (ifa l l)) l) l) l)) m) (p3 l (p2 (ifa m (p2
+ l m)) (ifa m r)) m)) l) m) l)}
+& \texttt{ifa (ifa m (ifa m r)) (ifa (ifa (ifa m l) r) (p3 (p3 l (ifa m r) (p3 r l r)) (
+ifa m l) m))}
+& \texttt{ifa (p2 m r) (ifa (p2 (ifa (p2 l m) r) m) (p3 l m (ifa r (p3 l (ifa m r) r))))}
+& \texttt{p3 (p3 l (ifa m r) r) (ifa (p3 m m (p2 r (ifa (p3 r (ifa m l) (ifa m l)) l))) l
+) m}
+& \texttt{p3 r (ifa m (p3 l l (ifa (ifa m m) r))) m,89.0,Just 4)
+(ifa (p3 (ifa m l) r (ifa m l)) (ifa m (p3 (p3 l (ifa m r) m) r (ifa m l)))}
+& \texttt{ifa m (p3 (ifa l (p3 r (ifa (ifa l l) (ifa (ifa r r) r)) (ifa r r))) (ifa (ifa
+m r) r) m)}
+& \texttt{p3 (ifa (ifa (ifa m l) l) l) (p3 m (ifa (ifa (ifa (p2 m l) l) (ifa r r)) l) (
+ifa m (ifa m r))) r}
+& \texttt{ifa (ifa (ifa m r) r) (p3 r (ifa (ifa m (p3 (ifa m (ifa m r)) (ifa (ifa r l) r)
+ (ifa m l))) (ifa l (p3 (ifa m l) (ifa m l) (ifa m (ifa m r))))) m)}
+& \texttt{p3 (p3 m r (ifa (p2 m m) l)) l (ifa m r)}
+\end{easylist}~
+
+\newpage
+
+\Lets also examine average term sizes of the Simple Simbolic Regression problem,
+again based on 10 runs.\\
+
+Ramped half-and-half strategy:
+
+\includegraphics[scale=0.65]{reports/SSR/term-sizes-SSR-10behu-ramped.png}
+
+Our geometric strategy:
+
+\includegraphics[scale=0.65]{reports/SSR/term-sizes-SSR-10behu-geom.png}
+
+In this case the difference is not that radical, but still we can see
+that runs of SSR using ramped half-and-half tend to have terms approximately twice
+as big as runs using geometric strategy.
+
+\newpage	
 \section{Even-parity problem}
 The even-parity function is a boolean function taking as inputs $N$
 boolean values and returning \textit{True} if an even number of inputs 
@@ -3681,7 +4256,7 @@ For each correct response it receives $1/12$,
 therefore correct solution receives fitness value $1$.\\
 
 \begin{todo}
- & zmínit tu, že to při týhle building block stačí na general solution...
+ & zmínit tu, že to pri týyle building block stačí na general solution...
 \end{todo}
 
 \subsection{Experiments}
@@ -3689,7 +4264,7 @@ therefore correct solution receives fitness value $1$.\\
 Series of five experiments have been performed to test properties of our system.
 Each experiment consisted of 50 independent runs of GP algorithm.
 Each run had maximally 50 generations
-(50 + 1 for generation 0) and 500 individuals as population size.\\
+and 500 individuals as population size.\\
  
 In those experiments we examined influences of the following factors:
 
@@ -3702,35 +4277,7 @@ In those experiments we examined influences of the following factors:
        (see \ref{toSKI}) instead of the simple one.
 \end{itemize} 
  
-We analyze the ability of the system to produce a correct solution.
-We are interested in percentage of runs that led to discovery of
-correct solution. And we also use the popular measurement  
-method within GP field --- the \textit{performance curves}
-described in \cite{koza92}.
 
-First performance curve is the cumulative \textit{probability of success}
-$P(M,i)$, where $i$ is generation number ($i = 0$ for initial population) 
-and $M$ is the size of the population. 
-$P(M,i)$ is probability that a correct solution will
-be find in one run of GP with maximal number of generations $i$ and 
-population size $M$. $P(M,i)$ is computed as percentage of 
-runs yielding a correct solution in generation $i$ or earlier.
-
-From values of $P(M,i)$ are computed values of the second performance curve
-$I(M,i,z)$
---- the total number of individuals that must be processed to yield a correct
-solution with probability $z$ by multiple runs of GP with maximal 
-number of generations $i$ and population size $M$ (usually $z = 0.99$).
-
-As is described in \cite{koza92},
-The number $R(M,i,z)$ of independent runs required to yield a correct solution 
-is computed as
- 
-$$ R(M,i,z) = \lceil\frac{\log(1-z)}{\log(1-P(M,i))}\rceil ,$$
-
-thus $I(M,i,z)$ is computed as
-
-$$I(M,i,z) = (i+1) \cdot M \cdot R(M,i,z) .$$\\
 
 
 The setup of the first experiment was following:\\ 
@@ -3994,11 +4541,11 @@ nAppleEnergy     &: Input \ar Int                                   ,\\
 nFlyDir          &: Input \ar Direction                             ,\\                      
 nFlyDist         &: Input \ar Distance                              ,\\                    
 nFlyEnergy       &: Input \ar Int                                   ,\\              
+\end{align*}
+\begin{align*}
 cAppleDir        &: Input \ar Direction                             ,\\          
 cAppleDist       &: Input \ar Distance                              ,\\        
 myRegs           &: Input \ar Registers                             ,\\         
-\end{align*}
-\begin{align*}
 xGet             &: Input \ar Int                                   ,\\     
 yGet             &: Input \ar Int                                   ,\\     
 zGet             &: Input \ar Int                                   ,\\     
@@ -4031,6 +4578,9 @@ are for accessing components of $Input$. Next eleven functions are
 related to $Registers$. The $rotCW$ performs clock-wise rotation of a direction.
 Next two functions are comparison functions. Next six are various \textit{if}s. And last 
 three are integer constants. 
+
+
+~\\\\\textbf{todo DODĚLAT ASI AŽ POTOM, AŤ SE S TIM MOC NEZDRŽUJU}\\\\
 
 Tedy celkem 44 prvků množiny stavebních bloků, tedy poměrně obrovská množina
 na GP poměry.
@@ -4073,237 +4623,7 @@ programování dal využít.
 
 Předvedený postup by taky ohlo být možné použít na 
 
-\section{Simple Symbolic Regression}
 
-\textit{Simple Symbolic Regression} is a problem described
-in \cite{koza92}. Objective of this problem is to 
-find a function $f(x)$ that fits a sample
-of twenty given points. The target function is 
-function $f_{t}(x) = x^4 + x^3 + x^2 + x$.  
-
-Desired type of generated programs $\sigma$ and 
-building blocks context $\Gamma$ are following.
-\newcommand{\Real}{\mathbb{R}}
-\begin{align*}
-\sigma = \Real \ar &\Real\\
-\Gamma = \{
-  (+)  &: \Real \ar \Real \ar \Real    ,\\
-  (-)  &: \Real \ar \Real \ar \Real    ,\\
-  (*)  &: \Real \ar \Real \ar \Real    ,\\
-  rdiv &: \Real \ar \Real \ar \Real    ,\\
-  sin  &: \Real \ar \Real              ,\\
-  cos  &: \Real \ar \Real              ,\\
-  exp  &: \Real \ar \Real              ,\\ 
-  rlog &: \Real \ar \Real              \}\\
-\end{align*}
-where
-\begin{align*}
-rdiv(p,q) &= \begin{cases} 1 &\mbox{if } q = 0 \\
-p/q & \mbox{otherwise } \end{cases}  \\
-rlog(x) &= \begin{cases} 0 &\mbox{if } x = 0 \\
-log(\vert x\vert) & \mbox{otherwise}. \end{cases}
-\end{align*}
-
-Fitness function is computed as follows
-
-$$ fitness(f) =  \sum\limits_{i=1}^{20}{ \vert f(x_i)-y_i }\vert   $$
-
-where $(x_i,y_i)$ are 20 data samples from $[-1,1]$, such that $y_i = f_t(x_i)$.\\
-
-An individual $f$ such that $\vert f(x_i)-y_i \vert < 0.01 $ for all data samples is 
-considered as a correct individual.\\
-
-On this problem we demonstrate that if control parameters are set to be
-compatible with standard GP, then the results obtained fit the results
-presented in \cite{koza92} relatively well. 
-
-Those control parameters are following two:
-
-~\begin{enum}
- & \textit{Ramped half-and-half strategy} is used as search strategy.
- & Option of preserving the best individual into the next population is set \textbf{off}.
-\end{enum}~
-
-The experiment consisted of 50 independent runs of GP algorithm.
-Each run had maximally 50 generations and 500 individuals as population size.\\
-
-It scored 17/50 (34\%) success rate. 
-Minimal $I(M,i,z)$ was in generation 23 
-with 192,000 individuals to be processed.
-The experiment took 46 minutes.\\
-
-Performance curves are following.
-
-\includegraphics[scale=0.65]{reports/SSR/1/probabs.png}
-
-\includegraphics[scale=0.65]{reports/SSR/1/indivs.png}\\
-
-\Lets compare it with results from \cite{koza92} (based on 113 runs):
-
-Success rate 35\%; minimal $I(M,i,z)$ in generation 24 
-with 162,500 individuals to be processed.\\
-
-
-
-Second experiment was performed to compare 
-\textit{ramped half-and-half strategy} with our
-\textit{geometric strategy} (with default parameter $q=0.75$). 
-Thus all control parameters stay same except for the 
-search strategy for generating algorithm.
-
-It scored 21/50 (42\%) success rate. 
-Minimal $I(M,i,z)$ was in generation 29 
-with 150,000 individuals to be processed.
-The experiment took 26 minutes.\\
-
-
-\includegraphics[scale=0.65]{reports/SSR/2/probabs.png}
-
-\includegraphics[scale=0.65]{reports/SSR/2/indivs.png}\\
-
-So our geometric strategy is slightly more successful then 
-ramped half-and-half strategy. But more interesting is that
-it made the whole experiment almost twice as fast.
-
-~\\TODO dát sem ty grafy průměrný term size 
-
-\newpage
-\section{Artificial Ant}
-
-\textit{Artificial Ant} is another problem described
-in \cite{koza92}. Objective of this problem is to 
-find a control program for an artificial ant so
-that it can find all food located on "Santa Fe" trail.
-
-The Santa Fe trail lies on toroidal square grid.
-The ant is in the upper left corner, facing right.
-It has following layout.
-
-\includegraphics[scale=1]{santafe.png}
-
-
-
-The ant is able to move forward, turn left, and sense if a food 
-piece is ahead of him.\\
-
-Desired type of generated programs $\sigma$ and 
-building blocks context $\Gamma$ are following.
-\begin{align*}
-\sigma = An&tAction\\
-\Gamma = \{~~
-  l    &: AntAction                              ,\\
-  r    &: AntAction                              ,\\
-  m    &: AntAction                              ,\\
-  ifa  &: AntAction \ar AntAction \ar AntAction  ,\\
-  p2   &: AntAction \ar AntAction \ar AntAction  ,\\
-  p3   &: AntAction \ar AntAction \ar AntAction \ar AntAction  \}
-\end{align*}
-
-Action $l$ turns the ant left.
-
-Action $r$ turns the ant right.
-
-Action $m$ moves the ant forward.
-
-Action $ifa x y$ (if-food-ahead) performs action $x$ if a food piece is ahead of the ant,
-otherwise it performs action $y$.
-
-Action $p2 x y$ first performs action $x$ and after it action $y$.
-
-Action $p3 x y z$ first performs action $x$, after that action $y$ and finally $z$.\\
-
-Actions $l, r$ and $m$ each take one time step to execute.
-
-Ants action is performed over and over again until it reaches predefined
-maximal number of steps. In \cite{koza92} this limit is set to be 400 time steps.
-
-Fitness value is equal to number of eaten food pieces.
-
-An individual such that eats all 89 pieces of food is 
-considered as a correct solution.\\
-
-There is also mentioned following ant program which is described as correct solution.
-
-\texttt{~\\
-(ifa m (p3 l (p2 (ifa m r) (p2 r (p2 l r)))(p2 (ifa m l) m)))\\
-} 
-
-But here arises a problem: In our implementation this program needs 545
-time steps; if it is given only 400 time steps, then it eats only 79 pieces
-of food. It is uncertain whether it is caused by my mistake in implementation
-or by inaccuracy in \cite{koza92}. Since everything else seems working just 
-fine, I have decided to set the limit to 600 in my experiments.
-
-Due to those uncertainties, we will not perform comparing experiments 
-as we did in the problem of simple symbolic regression.\\
-
-In the following experiments, the option of preserving the best individual 
-into the next generation is active (since we are not trying to compare 
-with results in \cite{koza92}).
-
-
-
-
-
-As usually, first experiment consisted of 50 independent runs of GP algorithm.
-Each run had maximally 50 generations and 500 individuals as population size.
-\textit{Ramped half-and-half strategy} is used as search strategy for the first 
-experiment.\\
-
-
-It scored 7/50 (14\%) success rate. 
-Minimal $I(M,i,z)$ was in generation 28 
-with 449,500 individuals to be processed.
-The experiment took 265 minutes.
-
-Performance curves are following.
-
-Similarly as in previous problem, second experiment was performed to compare 
-\textit{ramped half-and-half strategy} with our
-\textit{geometric strategy} (with default parameter $q=0.75$). 
-Thus all control parameters stay same except for the 
-search strategy for generating algorithm.
-
-It scored 19/50 (38\%) success rate. 
-Minimal $I(M,i,z)$ was in generation 10 
-with 115,500 individuals to be processed.
-The experiment took 107 minutes.\\
-
-\includegraphics[scale=0.65]{reports/Ant/1/probabs.png}
-
-\includegraphics[scale=0.65]{reports/Ant/1/indivs.png}\\
-
-This is big improvement in all three watched factors:
-
-\begin{enumerate}
- \item 38\% vs 14\% success rate.
- \item 115,500 vs 449,500 individuals needed to be processed.
- \item 107 vs 265 minutes.  
-\end{enumerate}
-
-Third factor, the time difference might give us clue about what is going on.
-
-Those two experiments differs only in used term generating method.
-During one run the vast majority of the time is spend by evolution,
-the generation process only slightly prolongs the time spend in generation 0.
-The run time of the evolution is influenced by two important factors:
-Number of generations and time that crossover takes.
-
-The number of generations of more successful method is surly smaller,
-but it seems improbable that it would have such a big impact 
-(this is idea is supported by results of experiments with
-even-parity problem, where times are almost the same but success 
-rates differs significantly). 
-
-Time of crossover is proportionate to number of nodes that 
-an individual has. Thus it seems that observed slowdown is
-due to terms being too big. \\
-
-In order to test this hypothesis, we run additional experiments
-to get statistics about dynamics of individuals' sizes. 
-
-
-~\\TODO dát sem ty grafy průměrný term size 
 
 \section{Results summary}
 
@@ -4312,31 +4632,144 @@ to get statistics about dynamics of individuals' sizes.
 \chapter{Previous related work}
 
 \section{Evolution of Constrained Syntactic Structures }
-by Koza
+\textit{Evolution of Constrained Syntactic Structures}
+is mechanism proposed by Koza in \cite{koza92} for relaxing 
+the \textit{closure} requirement.
 
-\section{STGP}
-by Montana
+Problem specific \textit{rules of construction}
+are used to constrain which function node
+can have which child node.
+
+Those rules are used in generating method similar to the standard one.
+
+For purposes of crossover types of symbols are listed - 
+e.g. in the problem of \textit{symbolic multiple regression} 
+(and various other problems)
+those types are 
+
+~\begin{easylist}[itemize]
+& the root, and
+& non root points.
+\end{easylist}~
+
+Crossover is performed by first selecting any node in the first
+parent and after that by selecting node of the same type as the first node.\\
+
+System based on types do this task more indirectly and in a
+simple systematic manner.
+
+\section{Strongly Typed Genetic Programming}
+One of first such type based systems was that described by Montana
+in \cite{montana95}. This system is called 
+Strongly Typed Genetic Programming (STGP).
+Beside simple types he also uses kind of polymorphism 
+called \textit{generic functions} based on table lookup.
+
+Used generating method is generalization of the standard one
+dealing with type restrictions and . Moreover, checking preventing
+selection of node which makes it impossible to complete the subtree 
+is performed.
+
+The crossover works in similar manner as that Koza used
+in his Constrained Syntactic Structures. Such a crossover
+is less cautious then that used in our system
+since it may fail to find a node with desired type in the second parent.
+If the crossover fails, then the crossover returns either parents or nothing.
+
+We were briefly measuring fail rates for such a crossover and
+it was somewhere around 15\% for even-parity problem. Thus we prefer
+to perform the more cautious version described in \ref{typed-swapping}.  \\
+
+This system does not involve use of lambda abstractions or
+higher-order functions.
 
 \section{Higher-Order Functions and Lambda Abstractions} 
-by Yu
-Požívá dvou levelovou hierarchii (najít tu pasaž)
+In \cite{yu01} Yu presents a GP system utilizing
+polymorphic higher-order functions 
+\footnote{Higher-order function is a function taking another function as 
+input parameter.} and lambda abstractions.
 
-oproti nám umí i polymorfní typy
+Important point of interest in this work is use of
+\texttt{foldr} function as a tool for \textit{implicit recursion},
+i.e. recursion without explicit recursive calls. 
 
-K  lambda abstrakcím přistupuje jako k jedinému bodu který se dělí až 
-vevnitř.
+Approach described in this work is more specialized then our approach
+in the following ways.
 
-Používá na to speciálně přichystaný křížení
+\begin{itemize}
+\item The terminal set for constructing lambda abstraction subtrees 
+      is limited to use only constants and variables of that particular
+      lambda abstraction, i.e., outer variables are not allowed to be used
+      as terminals in this work.
+\item  Whereas we see lambda head of lambda function as 
+another kind of node (as parent node of the body of the function), 
+in this work whole lambda function is considered more as single
+point with internal structure. Higher-order functions
+and its lambda abstractions are said to form \textit{two-layer-hierarchy}
+called in this work \textit{structure abstraction}.
+\item The crossover used in this work \textit{can only operate 
+between nodes in the two main programs or 
+between nodes in two lambda abstractions that represent 
+the same function arguments to the same higher order function. }
+\end{itemize}
 
-Generování počáteční generace je v zásadě to samí co koza, když příde na vygenerování 
-abstrakce tak se to zase generuje klasicky s tim že proměný jsou \#1 \#2 atd
+The difference between approach presented in this work and our approach 
+may be stated in the following way. Approach presented in \cite{yo01}
+tries to adopt some useful constructs from domain
+of functional programming and use them for a benefit in problem solving by GP.
+Whereas our approach is to perform genetic programming directly in the
+simply typed lambda calculus.
+  
 
-klade velkej důraz na foldr jakožto na implicitní rekurzi
+% v even parity scoruje o něco lépe než my.
 
-v even parity scoruje o něco lépe než my.
+
+\section{Functional Genetic Programming with Combinators}
+In \cite{kes} by Briggs and O’Neill is presented technique 
+utilizing GP with combinators in similar way as we do.
+
+The difference between approach presented in this work
+and our approach is that in this work terms are generated
+straight from \textit{library} (their term used for context) 
+of combinators, whereas we first generate $\lambda$-terms which are
+subsequently translated into combinator terms.
+
+Thus we can in our system see the combinator representation
+as option which can be turned off, whereas their system has this
+feature "hard-wired". On the other hand, their advantage is
+that direct generation of terms generates 
+shorter combinator terms than indirect generation.   
+
+They are using more general type system then us
+--- the Hindley–Milner type system. So the system
+is polymorphic.
+
+They also discuss the properties of exhaustive enumeration
+of terms and compare it with GP search.  
+Since our successful term generating \textit{geometric} strategy
+is based on undisciplined exhaustive enumeration, this
+is another interesting thing that connects our two systems.   
+
+Another really interesting concept is their \textit{Generalized
+genetic operator} based on term generation. Suppose we have
+some terms we want to operate on 
+(for one term it corresponds to mutation, for two (parent) 
+terms it is crossover, etc.). In order to do that we construct 
+\textit{library} of all subterms of all terms we want to operate
+on and from this library we generate new individuals by supplying
+it with desired type.
+
+It would be nice to use some ideas inspired from this work in
+the future improvements of our system. 
+
 
 \section{Genetic Programming with Polymorphic Types and Higher-Order Functions}
 by Franck Binard and Amy Felty
+
+\begin{todo}
+ & dopsat nebo vyhodit
+\end{todo}
+
 
 %\chapter{Ideas yet not implemented}
 \chapter{Future work}
@@ -4348,6 +4781,56 @@ by Franck Binard and Amy Felty
    && $(\$) : (\alpha \ar \beta) \ar \alpha \ar \beta$ 
       jako alternativa k ADF ! Myslim že hodně zajimavý
 \end{todo}
+
+\section{Mutation}
+
+\begin{todo}
+& říct že na tu sme se moc nesoustředili ze dvou duvodu
+  ktery to ospravedlňujou 
+	&& koza taky
+	&& ta s vygereovanim podstromu je v zásadě použití
+	   algoritmu na generovaní jedince a tak nám přišlo
+	   lepší pořádně se soustředit na generování jedince a
+	   začít do toho mutaci tahat až bude generování pořádně
+	   prozkoumáno.
+& To ale neznamená že jí nemáme radi, naopak se těšíme
+  že její vhodný zavedení celou metodu ještě zlepší.
+  
+& Nápad na to jak to dělat:
+  && nutno ošetřit - co všechno do gammy alemyslim že v phodě když je uplne 
+     stejná jako ta generujicí, pač ve vy SKI-ovanym termu stejne nejsou zadny 
+     proměný 
+  && mít nějakej předem danej počet pohybu na frontě, abych mohl efektivně
+     kontrolovat že to přidání mutací moc nespomalý
+  && Po tom počtu pohybu končim generování
+  && mam nějakej počet vygenerovanejch termu
+  && pro chytrou mutaci mužu chtít třeba 10 termu
+     &&& pokud se mi jich vygenerovalo míň, tak beru míň
+     &&& pokud se mi jich vygenerovalo víc, tak vemu 10 náhodně
+     &&& těch 10 vyhodnotim (jakože dosazenejch na jejich místo)
+     &&& nejlepší si vezmu
+     &&& dobrý udělat to zase najednou pro všechny v tý generaci mutovaný
+         pánčto je nákladný spouštět Hint
+& Další mutace - beta eta redukce (?? asi moc naroční viz dale) 
+  && zmenšující mutace
+  && udělaná že převedem SKIBC do lambda termu a to redukujem? to asi ne pač
+     pak převod to spíš prodlouží, spíš asi mít redukční pravidla pro SKIBC
+     a těma redukovat, ale je otázka jak moc tam budou vznikat SKIBC-redexi
+     - ty mohou vznikat jen při @-tree reprezentaci
+  && to otevírá otázku toho, že by elementy gammy mohla mít k sobě redukční pravidla
+& Další mutace - jednoduše náhrada podstromu/uzlu za nějakej z gammy
+  && nezvětšující mutace
+& Další mutace - mutace číselnejch-like konstant
+& To mě přivádí k myšlence sice pro generování ale myslim podstatný:
+  jakmile jsou v problému číselný-like konstanty tak mužu udělat pro 
+  jeden tvar hodně jedincu - což šetří jak čas na generování, tak to prozkomává 
+  víc danej tvar
+
+
+  
+\end{todo}
+
+
 
 \section{Big Context}
 
@@ -4372,15 +4855,56 @@ a proto ho popíšeme.
 %\chapter{Conclusion}
 \chapter*{Conclusion}
 
+The goal of this thesis was to design and implement a system
+performing Genetic Programming over some typed functional programming language.
+As this typed functional programming language we have chosen the 
+\textit{simply typed lambda calculus}.
+We have also obligated ourselves to do it in a such way that 
+generalizes the standard Genetic Programming, rather than
+crates completely new system.
 
+We may say that we have chosen the simplest possible
+options in both areas --- the simply typed calculus and the standard GP.
+We see this decision as fortunate one --- since it enables us add more
+complex features after sufficient exploration of those simplest cases.
+   
+We have started the journey toward this goal by study 
+of subject that intersects both those areas:
+Method which for desired type and context generates lambda terms.  
+
+The way to obtain this method started with inference rules 
+(the defining concepts of the typed lambda calculus),
+it proceeded through term generating grammars and finished 
+with inhabitation trees.
+
+A* algorithm has been utilized to drive systematic enumeration
+of terms in \lnf.
+
+
+
+
+
+
+
+
+
+\newpage
 \begin{todo}
- & !!!!!!!!!!!!!!!!!
+ & my tu řikáme že to závadíme kuli typum, ale my děláme v víc! -dáváme tam
+   i abstrakce atd - ale mužeme říct, že tim že se to pak převede zase na 
+   to bez abstrakcí tak setrváváme dal v krasnym bez-lambda abstrakčí ale
+   s tou výhodou že naše metoda gerneruje všechny struktury pro ten danej typ ...
+   nebo tak něco - asi to dát spíš do design of our system nebo někam
+   ale někde to asi zmínit
 \end{todo}
 
 
 Další témata co zmínit v úvodu nebo v závěru :\\
 
+
+
 \begin{easylist}[itemize]
+
 
  
 & zmínit že existuje i jinej pohled na to proč tam zavádět typy:
@@ -4470,6 +4994,77 @@ a tady to jen tak líznout.
 \end{easylist}
 
 
+\textbf{Jen když zbude čas:}
+
+\begin{todo}
+
+& Complexity discussion 
+&& !!!
+&& zmínit že mi moc neřešíme formální/asymptotický složitosti
+  &&& de nám hlavně o realný časy
+&& vyjít z komplexnosti A* asi
+  &&& složitost výrazně ovlivněná kvalitou heuristický funkce
+
+
+ & Brief history of the project\\
+  zmínit třeba tyhle fáze:
+  && že sem si delal evaluator sám co sem pak s performenc duvodu opustil
+  && že sem hledal intuicionistickej dokazovač ale že nejsem nenarazil na vhodnej
+     pač nejsou delany na to plivat hodně dukazu  
+  && že sem nejdriv pouzival ten vypsychlej dokazovač co tam měl nějaký ty 
+     spešl rozhodovací stromy
+  && pak sem to přepsal tak aby to nebylo jen na GP šitý ale obecně na jakoukoliv 
+     evoluci
+  && ...
+
+& pro \ref{benefits}
+&& možná eště zmínit něco jako : \\
+Jedna drobná nevýhoda je, že pokud chceme generovat termy od nejmenšího do největšího
+a pokud lnf generujeme od nejmenšího po největší tak pak generovaní \benf
+timhle trikem nemusí bejt od nejmenšího po nějvětší. V naší aplikaci (tzn GP)
+ale nijak nebazírtujeme na týhle vlastnosti a nakonec budeme spíš stejně používat
+nějaký nedeterminizmy aby to fungovalo líp, takže to vubec nevadí, že budou trochu přeházený. 
+
+ & pro \ref{barlike}
+ && možná zmínit že podobně jako mužeme transformovat inference rules
+   na grammar rules, mužeme i obráceně grammar rules
+   převést na inference rules - to bylo ostatně uděláno v tom dukazu ale
+   je to podle mě hezký říct ty pravidla explicitně.
+ & pro \ref{lnf}
+ && potřebuju eště nějaký \textbf{propositions} z \cite{barendregt10} tu uvíst ?
+ && ta definice je tam daná pro $\tur{}{M}{\sigma}$,
+   ukazat ze ta naše je ok, že tam má navíc to $\Gamma$.
+   Stačí udělat tríček že beru funkci co má lambda hlavu odpovídající 
+   tomu kontextu.
+   
+   & k \ref{Term-generating-grammar}
+    &&  buď dokázat ty převody na grammar rules explicitně
+     nebo říct že se to dokáže podobnym stylem jako v dukazu 
+     v sekci \ref{barlike}
+    && možná ocitovat toho van Wijngaarden [1981] s těma 2-level grammar
+     jak je to v Barendregtovi \cite{barendregt10} 
+ & možná konec (tree reprez of typed terms) subsekce trochu přeformulovat, je to takový   
+   kostrbatý...
+ & o odvoz pravidlech říct
+   && možná zmínit že se jedná o \textit{gentzen style proof}
+   && říct že jsou to modus ponens a jeden směr věty o dedukci  
+ & nějak přepsat \ref{GP-prog-trees} aby to bylo ve stejnym stylu jako v \ref{tree-reps}
+ & napsat transformace mezi \atTree a \sexprTree
+%& ujistit se že je v části o tree reprezentacích 
+%  je napsaný co to znamená že podstrom má nějakej typ,
+%  že podstromy odpovídaj podvýrazum atd
+% & EXAMPLES of tree representations of \lterms  
+% & nějak to sjednotit s tim uplně na začátku v popisu GP kde se popisuje
+%   přímo \sexprTree a říct proč se tomu tak řiká 
+%   (na tom místě co je v textu dřív) 
+% & zkontrolovat že reference tree-reps se odkazuje na dobrý místo,
+%   mohlo by se to rozbít tim že tree reprezentations - typovany/netypovany 
+%   jsou od sebe oddelený
+\end{todo}
+
+
+
+
 
 \addcontentsline{toc}{chapter}{Conclusion}	
 	
@@ -4489,6 +5084,11 @@ a tady to jen tak líznout.
   Koza, J.R., Keane, M., Streeter, M., Mydlowec, W.,Yu, J., Lanza, G. 
   \emph{Genetic Programming IV: Routine Human-Competitive Machine Intelligence.} 
   Springer, 2005. ISBN 978-0-387-26417-2 
+
+\bibitem{fg}
+ Riccardo Poli, William B. Langdon, Nicholas F. McPhee
+ \emph{A Field Guide to Genetic Programming}.
+ Lulu Enterprises, UK Ltd, 2008.
 
 \bibitem{yu01}
   T. Yu. 
@@ -4520,6 +5120,14 @@ J. R. Olsson.
 transformation and Execution of logic programs by 
 iterative-deepening A* SLD-tree search.} 
 Dr scient thesis, University of Oslo, Norway, 1994.
+
+\bibitem{kes}
+Forrest Briggs, Melissa O’Neill.
+\emph{Functional Genetic Programming and Exhaustive
+Program Search with Combinator Expressions.}
+International Journal of Knowledge-based and Intelligent Engineering Systems,
+Volume 12 Issue 1, Pages 47-68, January 2008. 
+
 
 \bibitem{barendregt84}
 H. P. Barendregt,

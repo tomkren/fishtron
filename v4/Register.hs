@@ -1,4 +1,4 @@
-module Job ( job, problemList ) where
+module Register ( job, problemList ) where
 
 import Text.JSON (decode, Result(..), JSValue )
 import JSONUtils (fromJsStr,jsProp,jsArr)
@@ -23,6 +23,7 @@ import qualified Problems.EvenParity.Problem as EvenParity
 
 regs = 
  [ reg SSR.reg 
+ , reg SSR.rege 
  , reg Ant.reg
  , reg EvenParity.reg
  , reg EvenParity.rege
