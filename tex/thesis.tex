@@ -244,10 +244,11 @@ Prague 2013
 
 \noindent
 %$<$dedication$>$
-I would like to express my gratitude to my supervisor RNDr. Petr Pudlák, Ph.D.
-for the useful comments, remarks and help with this master thesis.
+I would like to express my sincere gratitude to my supervisor RNDr. Petr Pudlák, Ph.D.
+for the useful comments, remarks and willingness to help me with 
+this thesis.
 I would also like to thank my parents, who have supported me throughout
-my studies. 
+my studies and whole life. 
 
 \newpage
 
@@ -302,9 +303,32 @@ Katedra teoretické informatiky a matematické logiky
 
 Abstrakt:
 % abstrakt v rozsahu 80-200 slov; nejedná se však o opis zadání diplomové práce
+{\fontsize{0.35cm}{1em}\selectfont 
+V této práci je představen design a implementace
+systému řešícího úlohu genetického programování v
+simply typed lambda kalkulu. Je zde představena
+metoda inicializace počáteční populace založená 
+na technice produkující typované lambda termy 
+v dlouhé normální formě. Tato metoda je parametrizována
+jednoduchou prohledávací strategií. Několik takových
+prohledávacích strategií je představeno, jako například
+strategie pro systematické generování nebo strategie
+odpovídající standardní ramped half-and-half metodě.
+Další z představených strategií, strategie jménem 
+geometrická strategie je blíže podrobena experimentům,
+které ukáží že má několik žádoucích efektů na průběh evoluce, 
+jakými jsou zlepšení míry úspěšnosti, nižší časové nároky 
+a menší průměrnou velikost termů v porovnání se standardní
+ramped half-and-half metodou generování jedinců. Další výkonnostní
+zlepšení jsou navržena a podpořena experimenty, jedná se o
+$\eta$-normalizaci vygenerovaných jedinců a @-tree
+reprezentaci jedinců. Použitý proces eliminace abstrakcí
+umožňuje použití jednoduchého podstromy měnícího 
+křížení.}
+
 
 Klíčová slova:
-geneticke programovani, funkcionalni programovani
+genetické programovaní, funkcionalní programovaní
 % 3 až 5 klíčových slov
 
 \vss}\nobreak\vbox to 0.49\vsize{
@@ -330,8 +354,31 @@ Department of Theoretical Computer Science and Mathematical Logic
 % mimo MFF UK v angličtině
 
 Abstract:
+{\fontsize{0.35cm}{1em}\selectfont 
+In this thesis is presented design and implementation
+of a system performing genetic programming in simply
+typed lambda calculus. Population initialization
+method based on term generating technique producing
+typed lambda terms in long normal form is introduced. 
+This method is parameterized by simple search strategy.
+Several search strategies are presented, such as
+strategy for systematic generation or strategy
+corresponding to standard ramped half-and-half method.
+Another such a strategies called \textit{geometric} strategy
+is further examined in experiments and shown
+to have various desirable effects such as
+improved success rate, lesser time consumption and 
+smaller average term size in comparison with standard 
+ramped half-and-half generating method. Other performance
+enhancements are proposed and supported by experiments
+such as $\eta$-normalization of generated individuals and 
+@-tree representation of individuals. Abstraction elimination
+is utilized to enable use of simple tree-swapping crossover.
+}
+  
 % abstrakt v rozsahu 80-200 slov v angličtině; nejedná se však o překlad
 % zadání diplomové práce
+
 
 Keywords:
 genetic programming, functional programming
@@ -389,8 +436,8 @@ Utilization of types in GP is not a new idea;
 it was dealt with in various previous works 
 \cite{yu01,montana95,haynes96,olsson94}.\\
 
-The contribution of this thesis can be seen 
-in that it deals with this task using concepts from
+%The contribution of this thesis can be seen 
+This thesis deals with this task using concepts from
 theory of typed $\lambda$-calculus and combinatory logic
 and shows how to use them in GP. 
 Hopefully, it is also shown that those two fields are
@@ -413,25 +460,27 @@ techniques can be incorporated later.\\
   
 Notable highlights of the thesis are: 
 \begin{itemize}
- \item \textit{Inhabitation tree} (a slight modification 
-   of \textit{inhabitation machine}\cite{barendregt10}
-   suited better for reasoning about implementation details) 
+ \item \textit{Inhabitation tree} 
+ %(a slight modification 
+ %  of \textit{inhabitation machine}\cite{barendregt10}
+ %  suited better for reasoning about implementation details) 
    is presented and used for \textit{generation of individuals}.
    This generation process is parameterized by simple 
    \textit{search strategy}. Several search strategies are presented,
    such as \textit{systematic} strategy performing exhaustive enumeration
-   of individuals and strategy performing same individual generation 
-   as standard GP method \textit{ramped half-and-half}.  
- \item One of those search strategies, the \textit{geometric} strategy, is
+   of individuals and strategy performing generalization of 
+   standard GP term generating method \textit{ramped half-and-half}.  
+ \item One of proposed search strategies, the \textit{geometric} strategy, is
    examined in a couple of experiments and shown to have 
    several desirable properties.
  \item The \textit{$\eta$-normalization} of generated individuals
        and \textit{\atTree} representation of individuals, 
        two enhancements of the system inspired from the theoretical
-       background of the system are examined and shown to have 
+       background are examined and shown to have 
        improving effect on performance of the system.     
  \item \textit{Abstraction elimination} is utilized
    to enable use of simple \textit{mutation operator}.
+   Both simple and optimize versions of this transformation are examined.
 % \item \textit{Polymorphic} generalization of inhabitation tree,
 %   enabling use of polymorphic functions as building blocks, 
 %   is presented. 
@@ -625,9 +674,18 @@ the initial population does not yet contain this individual.
 This way it is guaranteed that every individual is unique 
 in the initial population.
   
+\section{Evaluation}
+
+Evaluation is process of assigning fitness value to all 
+individuals in the population. It is also usual to check
+individuals for being correct solution.
+If such a correct solution is find, the algorithm terminates. 
+In our implementation fitness function returns
+pair of real number (fitness value) and boolean value (indicating
+whether tested individual is correct solution). 
+
  
-
-
+\newpage
 
 \section{Selection}
 
@@ -636,7 +694,6 @@ options for selection mechanisms
 for us to choose from. Again we will describe mechanism Koza
 used in his first book on GP. It is the \textit{Roulette selection}.
 It uses fitness value of each individual in straightforward way to determine probability of selecting this individual.\\
-\newpage
 Let there be $popSize$ individuals in the population.\\
 And let $f_{i}$ be fitness value for individual i 
 where $i \in \setDots{1}{popSize}$. 
@@ -718,9 +775,12 @@ subtree with root in the selected node by new generated
 tree. This new tree is generated by mechanism for generating 
 individuals.
 
-Similarly as for crossover, a maximum permissible depth for mutant individual 
+Analogically as for crossover, a maximum permissible depth for mutant individual 
 is defined.
 
+Similarly as Koza in \cite{koza92}, we do not use the mutation operator
+in this thesis. This does not mean that I do not like it. 
+Conversely, I am looking forward too its enhancing effect in the future work.
 
 \section{Construction of next population}
 
@@ -745,7 +805,7 @@ $popSize$ individuals.
 Selection of genetic operation in each operation is 
 controlled by probabilities for each genetic operator.\\
 
-Koza in \cite{koza92} uses as default probabilities those values:
+Koza\cite{koza92} uses as default probabilities those values:
 
 \begin{itemize}
 	\item \textit{Crossover}    : $90\%$
@@ -753,15 +813,6 @@ Koza in \cite{koza92} uses as default probabilities those values:
 	\item \textit{Mutation}     :  $0\%$
 \end{itemize}
 
-\section{Evaluation}
-
-Evaluation is process of assigning fitness value to all 
-individuals in the population. It is also usual to check
-individuals for being correct solution.
-If such a correct solution is find, the algorithm terminates. 
-In our implementation fitness function returns
-pair of real number (fitness value) and boolean value (indicating
-whether tested individual is correct solution). 
 
 
 \newpage
@@ -900,12 +951,6 @@ then \textit{inhabitation tree} is presented ---
 an implementation friendly refinement of 
 \textit{lnf} term generating grammar.
 
-\begin{todo}
- & všude nahradit ty množinový za $\Gamma , x:\sigma$ a taky $(x,\Sigma)$ kde se to nehodí.
- & Až to bude dostatečně sepsáno, tak do této kapitoly taky přidat
-   část o abstraction elimination a o polymorfním zobecnění inhabitation tree.
-   Nezapomenout to pak zmínit i v tomhle úvodu.
-\end{todo}
 	
 \theoremstyle{plain} 
 \newtheorem{theorem}{Theorem} 
@@ -2691,7 +2736,7 @@ I see two reasons why inhabitation tree is useful concept.
       \item
       It reduces the unpleasant fact
       that term generating grammars are not grammars in
-      the standard sense. 
+      the standard sense (but instead \textit{2-level-grammars}). 
       \item
       It brings the problem to 
       its more natural domain, 
@@ -2699,13 +2744,13 @@ I see two reasons why inhabitation tree is useful concept.
       to (syntactical) trees.
       \item
       We may think about the whole structure of generating 
-      at once since the whole tree, although infinite, is
+      at once since the whole tree, although usually infinite, is
       fairly simple structure of alternating layers of \textit{and} 
       and \textit{or} nodes. 
       \item
       It enables us to ask such questions
-      as: What would be usage of inhabitation trees with 
-      number labeled edges coming from \textit{or}-nodes? Et cetera.
+      as: \textit{What would be usage of inhabitation trees with 
+      number labeled edges coming from \textit{or}-nodes?.}
       \end{enumerate}   
 \item We can think about the inhabitation tree as about 
       some kind of search space. But another view is also 
@@ -2714,17 +2759,34 @@ I see two reasons why inhabitation tree is useful concept.
       tree. 
       
       This is even more visible when we introduce
-      concept of an \textit{incomplete inhabitation tree}
-        
+      concept of an \textit{incomplete inhabitation tree};
+      such a tree is created by omission of some subtrees
+      with and-node roots (i.e., those accessible by \textit{or} edge).
+      \textit{Finite incomplete inhabitation tree} corresponds
+      to finite collection of typed \lterms. In very natural 
+      sense we can call it a \textit{typed multiterm} --- a collection
+      of typed terms forming one tree where those terms share
+      the common parts.
+      
+      Thus the process of term generation is bidirectional ---
+      from (incomplete) inhabitation tree (seen as collection) 
+      we may obtain its element by solving it. But we may also 
+      take collection of typed trees and compress them
+      into one tree by sharing their common parts, which
+      happens to be the (incomplete) inhabitation tree 
+      that can be solved precisely by those terms which 
+      constructed it.   
+             
 \end{enumerate}
 
 In the next chapter we will use A*-algorithm together with
 inhabitation tree ideas to perform systematic generation and other
-kinds of generation of lambda terms;
+kinds of generation of \lterms;
 but maybe even more interesting application of inhabitation trees
 involving some above mentioned ideas will be revealed in the 
 chapter about future work, since those ideas are not yet implemented.
 
+\newpage
 \section{ Inhabitation machine }
 
 \begin{todo}
@@ -3684,9 +3746,12 @@ standard output of the server program, etc.
 
 These data are immediately available in the form of
 continuously updated graphs and if 
-the \textit{fenotype} JavaScript file is present 
+the \textit{phenotype} JavaScript file is present 
 for the problem, then is also available immediate 
-presentation of the best individual from each generation.\\  
+presentation of the best individual from each generation.
+JavaScript functions standing for best individuals are 
+also immediately accessible through JavaScript console,
+e.g. for debugging purposes.\\  
   
 Now \lets move our attention to the architecture of the evolution engine.
 Various dirty parts of the outside world (such as textual output,
@@ -3775,7 +3840,9 @@ about them.   \\[1em]
                             structure used as container for population.
 \end{easylist}
 
+~\\[6em]
 
+\includegraphics[scale=0.4]{skryn.png}
 
 \chapter{Results}
 	In this section will be presented usage of the system in order to solve specific problems. Several problems will be described and some of them compared with results
@@ -4414,6 +4481,7 @@ min $I(M,i,z) = 1,440,000$.
 & napsat tam jak vypadaj nějaký nalezeneý řešení
 \end{todo} 
 
+\newpage
 \section{Flies and Apples}
 
 \textit{Flies and Apples} is problem consisting in breeding 
@@ -4528,21 +4596,20 @@ dDown            &: Direction                                       ,\\
 dLeft            &: Direction                                       ,\\              
 dRight           &: Direction                                       ,\\            
 output           &: Move \ar Registers \ar Output                   ,\\            
+\end{align*}
+\begin{align*}
 travel           &: Direction \ar Move                              ,\\          
 split            &: Direction \ar Int \ar Registers \ar Move        ,\\       
 easySplit        &: Input \ar Move                                  ,\\     
 myEnergy         &: Input \ar Int                                   ,\\     
 myLastTravel     &: Input \ar Direction                             ,\\                
 myWasSuccess     &: Input \ar Bool                                  ,\\      
-nAppleDir        &: Input \ar Direction                             ,\\          
 nAppleDir        &: Input \ar Direction                             ,\\                    
 nAppleDist       &: Input \ar Distance                              ,\\                   
 nAppleEnergy     &: Input \ar Int                                   ,\\              
 nFlyDir          &: Input \ar Direction                             ,\\                      
 nFlyDist         &: Input \ar Distance                              ,\\                    
 nFlyEnergy       &: Input \ar Int                                   ,\\              
-\end{align*}
-\begin{align*}
 cAppleDir        &: Input \ar Direction                             ,\\          
 cAppleDist       &: Input \ar Distance                              ,\\        
 myRegs           &: Input \ar Registers                             ,\\         
@@ -4571,51 +4638,60 @@ if'              &: Bool \ar Registers \ar Registers \ar Registers  ,\\
 2                &: Int                                             \}\\
 \end{align*}
 
+\newpage
 We will not discuss it in great detail, only briefly: First four 
 elements are four direction values. Next four functions are
-constructors for $Output$ and $Move$ type. Next thirteen functions
+constructors for $Output$ and $Move$ type. Next twelve functions
 are for accessing components of $Input$. Next eleven functions are 
 related to $Registers$. The $rotCW$ performs clock-wise rotation of a direction.
 Next two functions are comparison functions. Next six are various \textit{if}s. And last 
 three are integer constants. 
 
+This gives 44 elements of building block context. It is quiet huge 
+context, especially if it was a standard GP \TuF.\\
 
-~\\\\\textbf{todo DODĚLAT ASI AŽ POTOM, AŤ SE S TIM MOC NEZDRŽUJU}\\\\
-
-Tedy celkem 44 prvků množiny stavebních bloků, tedy poměrně obrovská množina
-na GP poměry.
-
-Takže množina atomických typů je následující:
-Move Bool Registers Input Direction Int Output Distance
-
-Používáme tři levely. První level vypadá takle
-
-[obrázek]
-
-Další dva levely jsou reakce na typické chování mouchy 
-která používala pro předchozí level triviální strategii
-jdi furt za nejbližšim jablkemn. roto jsou následující dva levely 
-léčka na tuto strategii.
-
-V druhém levelu se zmíněná moucha nachytá a vleze do 
-chodby kde je mnohem mín jablek než v v tom mega jablku z jakblek.
-
-[obrázek]
-
-Třetí dovádí předchozí myšlenku do extrému. 
-Moucha se zasekne a nesebere žádné jablko.
+So the set of atomic types is following =\\
+$\{Move, Bool, Registers, Input,
+Direction, Int, Output, Distance\}$.\\
 
 
-V počátečních pokusech byl problém s tím, že mochy s počáteční energii 1
-neměli moc tendenci se množit. Proto byla simulace předělána tak, aby
-že nyní je počáteční energie 100. To mělo na Mouchy blahodárný vliv.
-Ale i pro mouchy sw počátečni energii 1 vznikli některé zajímavé strategie
+We currently use three worlds.
+First one looks like this:\\
 
-[povídání o zajímavých strategiích pro poč en 1]
+~\\[2em]
 
-Po navíšení poč energie vznikli tyto zajímavá chování
+\includegraphics[scale=0.8]{fly/1.png}
 
-[povídání o zajímavých strat por poč en 100]\\
+
+Other two worlds are reaction on typical behavior 
+of a trivial and boring fly which was successful
+enough to prevent further evolution.
+This boring strategy was just following the path 
+of the nearest apple. 
+
+\newpage
+
+Following two worlds are therefore "Devil's gift" for this fly.\\
+
+\includegraphics[scale=0.4]{fly/2.png}
+\includegraphics[scale=0.4]{fly/3.png}\\
+
+In the second world the boring fly enters the corridor
+and misses the mega apple.
+The third world escalates previous idea into absurdity.
+The boring fly eats nothing since it dumbly tries to eat the
+apple behind the wall.
+
+By introduction of those two new worlds new kinds of behavior emerged,
+but not interesting enough to be worth explaining here. One can,
+however, check those behaviors out in the gallery of interesting fly 
+behaviors, included on the enclosed CD.\\
+
+In the initial experiments there was problem with that flies did not
+want to split. This was due to that they were given default energy 1.
+Since this problem is not tied by some unchangeable definition,
+we changed this default value to 100 and aded a siplified version of split constructor. That had aftermath in new kinds of behavior.
+
 
 Aplikace: například v oboru počítačových her, kde nám často jde o
 zajímavé nelineární chování by se tento přístup k využití typovaného funkcionálního
@@ -4625,7 +4701,7 @@ Předvedený postup by taky ohlo být možné použít na
 
 
 
-\section{Results summary}
+%\section{Results summary}
 
 
 		
@@ -4856,15 +4932,15 @@ a proto ho popíšeme.
 \chapter*{Conclusion}
 
 The goal of this thesis was to design and implement a system
-performing Genetic Programming over some typed functional programming language.
+performing GP over some typed functional programming language.
 As this typed functional programming language we have chosen the 
 \textit{simply typed lambda calculus}.
 We have also obligated ourselves to do it in a such way that 
-generalizes the standard Genetic Programming, rather than
+generalizes the standard GP, rather than
 crates completely new system.
 
 We may say that we have chosen the simplest possible
-options in both areas --- the simply typed calculus and the standard GP.
+option in both areas --- the simply typed calculus and the standard GP.
 We see this decision as fortunate one --- since it enables us add more
 complex features after sufficient exploration of those simplest cases.
    
@@ -4877,16 +4953,67 @@ The way to obtain this method started with inference rules
 it proceeded through term generating grammars and finished 
 with inhabitation trees.
 
-A* algorithm has been utilized to drive systematic enumeration
-of terms in \lnf.
+A* algorithm in combination with inhabitation trees
+has been utilized to drive systematic enumeration
+of typed \lterms in their \lnf. This enumeration was further 
+parameterized by simple search strategy in order to enable
+such different approaches as \textit{systematic} generation 
+and \textit{ramped half-and-half} generation to be definable
+in the means of simple search strategy.\\
+
+With this apparatus in hands we introduced novel approach
+to term generation by defining the \textit{geometric} search 
+strategy. This strategy is further parameterized by parameter
+$q$,  but since we wanted to avoid suspicion that success
+of this generating method depends on fine-tuning of this
+parameter, we used its default value $q = 0.75$ in every experiment.
+
+After being generated all terms undergo process of \textit{abstraction
+elimination}, which enables our simple tree swapping crossover operation
+which is only genetic operator that we have used in all experiments.
+
+We examined it in three different experiments, which all 
+supported the idea that it has very desirable qualities.
+
+First two experiments, \textit{Simple Symbolic Regression} and 
+\textit{Artificial Ant}, were performed in order to compare
+the \textit{geometric} strategy with the standard GP term 
+generating method \textit{ramped half-and-half}. 
+
+In both experiments were observed improvements in the following aspects.
+
+\begin{enumerate}
+ \item Success rate was improved.
+ \item Minimal number of individuals needed to be processed in order to yield 
+       correct solution with probability 99\% was lowered.
+ \item Run time was significantly reduced. 
+ \item Average size of a term was decreased.
+\end{enumerate}
+
+In the case of Artificial Ant problem, all improvements were significant.
+
+These results make me believe that \textit{geometric} strategy might
+be welcomed reinforcements in the fight against the bogey of 
+the GP community --- the \textit{bloat}.
+Or at least, it seems to work for those two experiments in a such way.\\
 
 
+In the third experiment, the \textit{even-parity} problem, geometric strategy 
+showed ability to yield correct solution in the initial generation
+8 times out of 200 runs (throughout 5 experiments), which is interesting
+result since it is uninformed search. 
 
+Five consecutive experiments with even-parity problem supported 
+hypothesis that $\eta$-normalization of generated terms enhances performance.
+We have also seen that use \atTree{}s instead of more traditional \sexprTree{}s
+as tree representation of individuals is able to enhanced performance.
 
+Use of optimized abstraction elimination instead of its basic variant 
+showed significant improvements in time consumption with little or 
+non effects on performance rates.
 
-
-
-
+Implemented system was designed with importance of interactivity in mind,
+resulting in server/client architecture for core/GUI components.
 
 \newpage
 \begin{todo}
