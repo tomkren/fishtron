@@ -1199,12 +1199,6 @@ We read those relations as follows.
  \end{enumerate}
 
 
-\begin{todo}
-& definovat \textbf{CR} a říct o tom lemátku, že má CR redukce má unikátní nf.
-&& V \cite{barendregt84} (ta nová kniha s žlutejma deskama) je ukázano že je eta CR (Church Rosserovská)
-& zmínit Theorem 2B.4 z \cite{barendregt10}
-\end{todo}
-
 
 \subsection{$\eta$-reduction}
 
@@ -1664,20 +1658,27 @@ Then we are allowed to use the inference rule to derive statement
 %\end{equation*}	
 
 
+Nice thing about \textit{simply typed lambda calculus} is that
+program $M$ such that \GMS always terminates 
+(provided that implementations of function symbols in $\Gamma$ 
+also always terminate). This fact is particularly handy for
+GP --- we can evaluate bred programs without worrying about hanging
+in the infinite loop forever.
+ 
 
 
 
-\begin{todo}
-   & říct že se vždycky zastavěj (strong normalization)
-     && a jaký to má výhody pro nás v GP (duležitý),
-     && potřebný definice pro to uvést v \lterms sekci
-     && musí se říct co je strongly normalizing, 
-        tzn simpli typed $lambda$-kalkulus termy a $\beta$-redukce /
-        $\beta\eta$-redukce
-%     && řekl bych že eta redukce je SN vždycky (tzn i untyped lk)
-%        pač plati (CR+terminující pak SN) a je CR vzhledem k barendrecht-stará-žlutá
-%        a terminující je rpotože zmenšuje term s nemuže zmenšovat donekonečna    
-\end{todo}
+%\begin{todo}
+%   & říct že se vždycky zastavěj (strong normalization)
+%     && a jaký to má výhody pro nás v GP (duležitý),
+%     && potřebný definice pro to uvést v \lterms sekci
+%     && musí se říct co je strongly normalizing, 
+%        tzn simpli typed $lambda$-kalkulus termy a $\beta$-redukce /
+%        $\beta\eta$-redukce
+%%     && řekl bych že eta redukce je SN vždycky (tzn i untyped lk)
+%%        pač plati (CR+terminující pak SN) a je CR vzhledem k barendrecht-stará-žlutá
+%%        a terminující je rpotože zmenšuje term s nemuže zmenšovat donekonečna    
+%\end{todo}
 
 
 \subsection{Tree representations of typed \lterms}
@@ -2251,7 +2252,7 @@ leads to unique \enf $N$.
  \item Every application of \ered shortens the term.
        Since every term has finite size, this process must 
        end at some point. Thus every \lterm has \enf.
- \item Since \ered is \textbf{CR}, \enf is unique (see \ref{todo}). 
+ \item Since \ered is \textit{Church–Rosser}, \enf is unique (see \cite{barendregt84}). 
 \end{enumerate}
 
 So we can take every generated \lterm $M$ in 
@@ -3673,8 +3674,20 @@ whereas in \sexprTree it is internal node thus not a subtree.\\
 
 Another nice property of \sexprTree{}s with no lambdas 
 is that they are the same representation as S-expressions
-used by standard GP.
+used by standard GP.\\
 
+Again, similarly as for standard version, 
+a maximum permissible depth $D_{created}$ 
+for offspring individuals is defined (e.g. $D_{created} = 17$).
+If one of the offspring has greater depth than this limit, then 
+this offspring is replaced by the first parent in the result of 
+the crossover operator. If both offspring exceeds this limit, than 
+both are replaced by both parents.  
+
+For \atTree the $D_{created}$ must be larger since
+\atTree (without lambdas) is a binary tree. This 
+enlargement is approximately proportionate to average number of 
+function arguments. We use generous $D_{created} = 17\times3$. 
 
 
 %\subsection{ Repairing method }
@@ -4072,7 +4085,7 @@ Minimal $I(M,i,z)$ was in generation 28
 with 449,500 individuals to be processed.
 The experiment took 265 minutes.
 
-Performance curves are following.
+%Performance curves are following.
 
 \includegraphics[scale=0.65]{reports/Ant/2/probabs.png}
 
@@ -4088,6 +4101,9 @@ It scored 19/50 (38\%) success rate.
 Minimal $I(M,i,z)$ was in generation 10 
 with 115,500 individuals to be processed.
 The experiment took 107 minutes.\\
+
+\includegraphics[scale=0.5]{reports/Ant/p.png}
+
 
 \includegraphics[scale=0.65]{reports/Ant/1/probabs.png}
 
@@ -5297,9 +5313,12 @@ Prentice Hall, 1987.
 
 
 \appendix
-\chapter{First Appendix}
+\chapter{Enclosed CD}
 
-abc
+The enclosed CD contains implementation source codes,
+installation instructions and some other material, 
+all described in a greater detail in the \texttt{readme.txt}
+file.
 	
 	
 \end{document}
