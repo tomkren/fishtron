@@ -618,8 +618,8 @@ And for every function symbol from $F$ there must be specified
 number of arguments.\\
 
 There is one important constrain on function implementations for functions from F:
-There should be type $A$ that for every function symbol $f \in F$ the corresponding function implementation standing behind this symbol should be of a type 
-$A \times ... \times A \rightarrow A$ and should be total (defined on all
+There must be type $A$ that for every function symbol $f \in F$ the corresponding function implementation standing behind this symbol must be of a type 
+$A \times ... \times A \rightarrow A$ and must be total (defined on all
 combinations of inputs). And analogically for $t \in T$ being of a type A.  
 
 Satisfying this constrain ensures that every program tree build 
@@ -662,7 +662,7 @@ depth $d$ from $\setDots{2}{D_{initial}}$ randomly (uniformly).\\
 In the root (\textit{depth} = 0) both \textit{full} and \textit{grow}
 select the symbol from the set $F$.
 
-In nodes with \textit{depth} $\leq d$ the \textit{full}
+In nodes with \textit{depth} $< d$ the \textit{full}
 method selects from the set $F$, whereas the \textit{grow} method 
 selects from whole \TuF.
 
@@ -1010,7 +1010,7 @@ with an argument and
 the $\lambda$-abstraction is equivalent to 
 \textit{anonymous function}. \\
 
-It is usual to not distinguish between $V$ and $U$ and just use
+It is usual to not distinguish between $V$ and $C$ and just use
 one set of variable names. But because this distinction is quite convenient
 for us in the implementation, we use it even here. 
 Hopefully, it will not confuse the reader.
@@ -1372,7 +1372,12 @@ $\sigma = \tau_0 \ar \tau_1 \ar \dots \ar \tau_n \ar \alpha$.}
 
 Technically speaking, we have types only for functions with one argument, but
 this property suggests how we can "simulate" function which takes $n$ arguments.
-  
+
+This technique (or trick) is called \textit{Currying}.\footnote{More formally,
+currying is process of transforming a
+function which takes multiple inputs
+into function that takes one argument and
+returns function with one less argument.}   
 
 	
 \subsection{Statements of the form $M : \sigma$}
@@ -1397,7 +1402,11 @@ We can look on this relation in tree different ways.
    an instance of data type
    $\sigma$. So statement $M : \sigma$ is
    somehow analogous to \textit{Java}
-   expression \texttt{$M$ instanceof $\sigma$}.    
+   expression \texttt{$M$ instanceof $\sigma$}.\footnote{
+   This analogy is inadequate in that instanceof is
+   construct of the language, whereas : is symbol
+   out of the language, it enables us to talk about
+   terms from outside perspective.  }    
    
    Type \textit{constrains} the value 
    and gives \textit{information} about it, 
@@ -1775,7 +1784,7 @@ With the appropriate term generating grammar
 in hands it is just a simple step to \textit{inhabitation trees}.\\
 
 It is not a grammar in classical sense, because we will be operating with infinite sets of nonterminal symbols and rules. Technically it it
-2-level grammer \cite{todo}.\\
+2-level grammer \cite{barendregt10}.\\
 
 Our terminals are symbols used for writing \lterms 
 .%,i.e., parentheses,  . 
@@ -2714,10 +2723,10 @@ we have only one possibility:
 
 \end{proof}
 
-\begin{todo}
-& skontrolovat ty dukazy pořádně sepsal sem 
-  je dost rychle a mužou bejt divný. 
-\end{todo}
+%\begin{todo}
+%& skontrolovat ty dukazy pořádně sepsal sem 
+%  je dost rychle a mužou bejt divný. 
+%\end{todo}
 
 
 \newpage
@@ -2782,26 +2791,27 @@ I see two reasons why inhabitation tree is useful concept.
 
 In the next chapter we will use A*-algorithm together with
 inhabitation tree ideas to perform systematic generation and other
-kinds of generation of \lterms;
-but maybe even more interesting application of inhabitation trees
-involving some above mentioned ideas will be revealed in the 
-chapter about future work, since those ideas are not yet implemented.
+kinds of generation of \lterms.
+%;
+%but maybe even more interesting application of inhabitation trees
+%involving some above mentioned ideas will be revealed in the 
+%chapter about future work, since those ideas are not yet implemented.
 
-\newpage
-\section{ Inhabitation machine }
-
-\begin{todo}
-  & Když na to zbude čas, tak popsat Inhabitation Machine...
-   && něco jako na závěr ještě ve stručnosti popišme 
-      IM, strukturu ze který je odvozenej IT. 
-  & říct, že je to hezkej konstrukt vzhledem k tomu že je konečnej
-  & ale je popsanej velmi zrychla (v tý knize) a implementační
-     detaily jsou celkem vynechaný
-  & na stromový verzi jsou implementační detaily hezky vidět
-  & a navíc pro polymorfní verzi jsou už i IM nekonečný takže
-     se strácí i ta konečnostní výhoda
-  & dát tam obrázek 
-\end{todo}
+%\newpage
+%\section{ Inhabitation machine }
+%
+%\begin{todo}
+%  & Když na to zbude čas, tak popsat Inhabitation Machine...
+%   && něco jako na závěr ještě ve stručnosti popišme 
+%      IM, strukturu ze který je odvozenej IT. 
+%  & říct, že je to hezkej konstrukt vzhledem k tomu že je konečnej
+%  & ale je popsanej velmi zrychla (v tý knize) a implementační
+%     detaily jsou celkem vynechaný
+%  & na stromový verzi jsou implementační detaily hezky vidět
+%  & a navíc pro polymorfní verzi jsou už i IM nekonečný takže
+%     se strácí i ta konečnostní výhoda
+%  & dát tam obrázek 
+%\end{todo}
 
 
 		
@@ -2908,7 +2918,7 @@ Input for term generating algorithm is pair $(\sigma,\Gamma)$ where:\\
  & $\Gamma$ is \textit{building blocks} context. 
 \end{enum}~
  
-Each generated \lterms $M$ should  satisfy \GMS. \\
+Each generated \lterms $M$ must  satisfy \GMS. \\
 
 We generate terms in long normal form.
 This is achieved by \textit{solving} inhabitation tree for $(\sigma,\Gamma)$.  
@@ -3099,8 +3109,8 @@ In order to describe our state space to search in \lets introduce
 extended version of our tree representation for typed \lterms from \ref{typed-tree-reps}.
 This extension consists in adding a new kind of leaf node $(\sigma,\Gamma)$ 
 standing for unfinished tree of a type $\sigma$ with context $\Gamma$ to use
-as set of building blocks
-\footnote{\textbf{TODO}: Tady to napsat nějak líp s tim gamma }.\\
+as set of building blocks.\\
+%\footnote{\textbf{TODO}: Tady to napsat nějak líp s tim gamma }
 
 Initial start states are all of a form "one node tree $(\sigma,\Gamma)$" since we
 are trying to generate a typed \lterm of a type $\sigma$ from building blocks $\Gamma$.\\
@@ -3209,11 +3219,19 @@ This heuristic function is admissible because every unfinished
 leaf must be at least once expanded to become final. 
 
 
-\subsection{Future improvements}
+\subsection{Further improvements}
 
-\begin{todo}
-& !!!
-\end{todo}
+We may easily put all deterministic expansion steps into one step 
+--- by which we mean the lambda head expansion. This could be
+done when expanding atomic type by also expanding its 
+non-atomic arguments. This would result in that only atomic types
+wold by in unfinished leafs. It is important to accordingly change
+the \textit{dist} in A* which is now 1 generally. 
+
+It is also worth mentioning that \textit{dist} 1 is also for
+lambda heads with long list of variable names in the current specification --- we do not bother ourselves with this detail.
+But when it is not the desirable behavior it is very easy to change
+by using mor complicated \textit{dist} than 1.
 
 
 
@@ -3301,14 +3319,16 @@ Hopefully those changes will be clarified by the following pseudocode:
 \Lets show examples of search strategies. 
 They are described by describing 
 their $filter(nexts,depth)$ 
-and $init()$ methods. Again, in order to avoid confusion, 
+and $init()$ methods\footnote{It is also needed to 
+add forceUniqueness() boolean predicate to the strategy
+since Koza's ramped half and half requires uniqueness.
+Let us skip this step here in this explanation,since it can be easily implemented but adds lot of unnecessary distraction. May the reader forgive.}
+. Again, in order to avoid confusion, 
 \lets stress that $depth$ is really $\lfloor depth/2 \rfloor$ since
 our formal states contain above each symbol node a type node.
 
-\begin{todo}
- & Přidat že pak mužeme čekovat unikátnost při generování, protože už neni zajištěna 
-   jako u systematickýho. Nebo říct že musíme ale pak asi změnit implementaci tý geometrický což znevalidní experimenty
-\end{todo}
+
+
 
 
 \subsubsection{Systematic strategy}
@@ -3360,14 +3380,14 @@ set of all \textit{non-terminals} of $nexts$.
 If $isFull = false$, then the subset to select from is 
 whole $nexts$ set.
 
-\begin{todo}
-& eště se musí nějak prohrotit to, že tam je navíc ta lambda hlava
-kerá ještě o něco kazí tu $depth$  - to už uplně neplatí tim že je v
-uvodu popsaný to že se ta hlava ukousne ale stejně to ještě pořádně zkontrolovat
-& ukázat že je to fakt to samý co kozovský klasický generování
-& zavést tam pojem run pro ten jeden vnější while cyklus 
- (i když to je asi jasný z kontextu)
-\end{todo}
+%\begin{todo}
+%& eště se musí nějak prohrotit to, že tam je navíc ta lambda hlava
+%kerá ještě o něco kazí tu $depth$  - to už uplně neplatí tim že je v
+%uvodu popsaný to že se ta hlava ukousne ale stejně to ještě pořádně zkontrolovat
+%& ukázat že je to fakt to samý co kozovský klasický generování
+%& zavést tam pojem run pro ten jeden vnější while cyklus 
+% (i když to je asi jasný z kontextu)
+%\end{todo}
 
 
 
@@ -3422,47 +3442,66 @@ It also plays nicely with the idea that "too big trees should be killed".\\
 Systematic strategy does not have an internal state, thus $init$ does nothing.
 
 
+\subsection{Final remarks}
+We should mention that since simply typed lambda calculus
+is equivalent to implicational fragment of intuitionistic logic
+it wold be possible to do term generation by prover for this logic. But logic prover is concerned with finding one proof of a difficult
+proposition, whereas types usually tend to be easy propositions
+but we need enormous amount of them. So this two fields, although 
+equivalent in theory do not have equivalent goals in practice.\\
 
-\begin{todo}
- 
-& sjednotit terminologii nexts successors atd
- 
-& Odiskutovat nějak tohle:
-přirozeně chceme při produkci velkýho množství termu obhospodařovávat nějaký
-velký množství rozdělanejch termu v nějaký struktuře a postuipně je dodělávat.
-Proto přichází jako tahle struktura na mysl nějaká prioritní fronta,
-otázka je kde vzít ty priority a A* je jednoduchá ale přitom optimum hledající 
-odpověď na tuhle otázku, dostatečně volná skrz tu heuristiku.  
+We have also tried generation directly from grammar rules
+corresponding to basic inference rules -- we did it before
+encountering the work of \cite{barendregt10}, but since this has two
+drawbacks we have not supported the implementation of the former
+term generator to the actual state of source code. 
 
-& určitě někde zmínit ospravedlnění proč si napsat dokazovač sám
-a né požít nějakej už hotovej - de o to, že dokazovače jsou delaný na to aby
-udělali jeden dukaz typicky složitýho tvrzení, my sme v situaci kdy
-chceme co nejvíc (a co možná co nejvíc rozmanitejch) dukazu jednoduchýho problému. 
+Those drawbacks are that it is not in normal form and that
+it is not obvious which type shoud by added in the grammar 
+rule corresponding to the \textit{$\ar$-elimination}.
 
-& nekde zmínit že s těma nexts nezacházíme takle dementně, že samozřejmě vybíráme 
-jen z těch přidávanejch podstromu ale že tim nechcem komplikovat popis 
- 
-\end{todo}
+%\begin{todo}
+% 
+%& sjednotit terminologii nexts successors atd
+% 
+%& Odiskutovat nějak tohle:
+%přirozeně chceme při produkci velkýho množství termu obhospodařovávat nějaký
+%velký množství rozdělanejch termu v nějaký struktuře a postuipně je dodělávat.
+%Proto přichází jako tahle struktura na mysl nějaká prioritní fronta,
+%otázka je kde vzít ty priority a A* je jednoduchá ale přitom optimum hledající 
+%odpověď na tuhle otázku, dostatečně volná skrz tu heuristiku.  
+%
+%& určitě někde zmínit ospravedlnění proč si napsat dokazovač sám
+%a né požít nějakej už hotovej - de o to, že dokazovače jsou delaný na to aby
+%udělali jeden dukaz typicky složitýho tvrzení, my sme v situaci kdy
+%chceme co nejvíc (a co možná co nejvíc rozmanitejch) dukazu jednoduchýho problému. 
+%
+%& nekde zmínit že s těma nexts nezacházíme takle dementně, že samozřejmě vybíráme 
+%jen z těch přidávanejch podstromu ale že tim nechcem komplikovat popis 
+% 
+%\end{todo}
 
 
-\subsection{Other tried approach to generating individuals}
+%\subsection{Other tried approach to generating individuals}
+%
+%\begin{todo}
+% & popsat tu ten puvodní přístup, kde se bralo přímo 
+%   zavedení a eliminace pro každej typovej konstrukt 
+%   a podle toho se pak udělali příslušný term generating grammar pravidla
+%   kerý odpovídaj manipulacímse strommem
+% & ale má nevýhody
+%   && hlavně to neni v normální formě, takže generujeme spoustu 
+%      ruzně dopočítanejch beta-rovnáse-ekvivalentních termu
+%   && u pravidla zavedení implikace neni uplně zřejmý
+%      co tam použít za typ
+%   && takže sice to na to ze začátku běhalo ale nakonec to bylo vyměněno
+%      za IM metodu since ta je jednoduší, líp se přemejšlí o ní,
+%      konstrukty jako and a or nemusíme zavádět na urovni pravidel
+%      ale stačí tam dat vhodný polymorfní konstruktory/destruktory 
+% & nějak tu metodu pomenovat a přemenovat podle toho nadpis
+%\end{todo}
 
-\begin{todo}
- & popsat tu ten puvodní přístup, kde se bralo přímo 
-   zavedení a eliminace pro každej typovej konstrukt 
-   a podle toho se pak udělali příslušný term generating grammar pravidla
-   kerý odpovídaj manipulacímse strommem
- & ale má nevýhody
-   && hlavně to neni v normální formě, takže generujeme spoustu 
-      ruzně dopočítanejch beta-rovnáse-ekvivalentních termu
-   && u pravidla zavedení implikace neni uplně zřejmý
-      co tam použít za typ
-   && takže sice to na to ze začátku běhalo ale nakonec to bylo vyměněno
-      za IM metodu since ta je jednoduší, líp se přemejšlí o ní,
-      konstrukty jako and a or nemusíme zavádět na urovni pravidel
-      ale stačí tam dat vhodný polymorfní konstruktory/destruktory 
- & nějak tu metodu pomenovat a přemenovat podle toho nadpis
-\end{todo}
+
 
 
 
@@ -3954,19 +3993,15 @@ Minimal $I(M,i,z)$ was in generation 23
 with 192,000 individuals to be processed.
 The experiment took 46 minutes.\\
 
-Performance curves are following.
-
-\includegraphics[scale=0.65]{reports/SSR/1/probabs.png}
-
-\includegraphics[scale=0.65]{reports/SSR/1/indivs.png}\\
+%Performance curves are following.
+%\includegraphics[scale=0.65]{reports/SSR/1/probabs.png}
+%\includegraphics[scale=0.65]{reports/SSR/1/indivs.png}\\
 
 \Lets compare it with results from \cite{koza92} (based on 113 runs):
 
 Success rate 35\%; minimal $I(M,i,z)$ in generation 24 
 with 162,500 individuals to be processed.
-
-We have 34\%; minimal $I(M,i,z)$ in generation 23 
-with 192,000. This seems like a pretty good match.
+ This seems like a pretty good match.
 \\
 
 
@@ -3982,15 +4017,19 @@ Minimal $I(M,i,z)$ was in generation 29
 with 150,000 individuals to be processed.
 The experiment took 26 minutes.\\
 
-
-\includegraphics[scale=0.65]{reports/SSR/2/probabs.png}
-
-\includegraphics[scale=0.65]{reports/SSR/2/indivs.png}\\
-
 So our geometric strategy is slightly more successful then 
 ramped half-and-half strategy. But more interesting is that
 it made the whole experiment almost twice as fast; 
 reason of this will be discussed in more detail in the next problem. 
+
+\includegraphics[scale=0.45]{reports/SSR/p.png}
+
+\includegraphics[scale=0.45]{reports/SSR/i.png}
+
+%\includegraphics[scale=0.65]{reports/SSR/2/probabs.png}
+%\includegraphics[scale=0.65]{reports/SSR/2/indivs.png}\\
+
+
 
 \newpage
 \section{Artificial Ant}
@@ -4009,7 +4048,9 @@ It has following layout.
 
 
 The ant is able to move forward, turn left, and sense if a food 
-piece is ahead of him.\\
+piece is ahead of him.
+
+\newpage
 
 Desired type of generated programs $\sigma$ and 
 building blocks context $\Gamma$ are following.
@@ -4086,10 +4127,8 @@ with 449,500 individuals to be processed.
 The experiment took 265 minutes.
 
 %Performance curves are following.
-
-\includegraphics[scale=0.65]{reports/Ant/2/probabs.png}
-
-\includegraphics[scale=0.65]{reports/Ant/2/indivs.png}\\
+%\includegraphics[scale=0.65]{reports/Ant/2/probabs.png}
+%\includegraphics[scale=0.65]{reports/Ant/2/indivs.png}\\
 
 Similarly as in previous problem, second experiment was performed to compare 
 \textit{ramped half-and-half strategy} with our
@@ -4102,12 +4141,14 @@ Minimal $I(M,i,z)$ was in generation 10
 with 115,500 individuals to be processed.
 The experiment took 107 minutes.\\
 
-\includegraphics[scale=0.5]{reports/Ant/p.png}
+\includegraphics[scale=0.45]{reports/Ant/p.png}
 
+\includegraphics[scale=0.45]{reports/Ant/i.png}
 
-\includegraphics[scale=0.65]{reports/Ant/1/probabs.png}
+\newpage
 
-\includegraphics[scale=0.65]{reports/Ant/1/indivs.png}\\
+%\includegraphics[scale=0.65]{reports/Ant/1/probabs.png}
+%\includegraphics[scale=0.65]{reports/Ant/1/indivs.png}\\
 
 This is big improvement in all three watched factors:
 
@@ -4140,13 +4181,15 @@ to get statistics about dynamics of individuals' sizes.
 
 Following graphs are base upon 10 run experiments.\\ 
 
-Ramped half-and-half strategy:
+\includegraphics[scale=0.45]{reports/Ant/ts.png}
 
-\includegraphics[scale=0.65]{reports/Ant/term-sizes-ANT-10behu-ramped.png}
+%Ramped half-and-half strategy:
 
-Our geometric strategy:
+%\includegraphics[scale=0.65]{reports/Ant/term-sizes-ANT-10behu-ramped.png}
 
-\includegraphics[scale=0.65]{reports/Ant/term-sizes-ANT-10behu-geom.png}
+%Our geometric strategy:
+
+%\includegraphics[scale=0.65]{reports/Ant/term-sizes-ANT-10behu-geom.png}
 
 Those graphs show enormous differences. 
 The graph of Ramped half-and-half strategy evidences
@@ -4249,13 +4292,8 @@ ifa m (ifa m r))) r}
 \Lets also examine average term sizes of the Simple Simbolic Regression problem,
 again based on 10 runs.\\
 
-Ramped half-and-half strategy:
+\includegraphics[scale=0.5]{reports/SSR/ts.png}
 
-\includegraphics[scale=0.65]{reports/SSR/term-sizes-SSR-10behu-ramped.png}
-
-Our geometric strategy:
-
-\includegraphics[scale=0.65]{reports/SSR/term-sizes-SSR-10behu-geom.png}
 
 In this case the difference is not that radical, but still we can see
 that runs of SSR using ramped half-and-half tend to have terms approximately twice
@@ -4268,7 +4306,7 @@ boolean values and returning \textit{True} if an even number of inputs
 are \textit{True}. For odd number it returns \textit{False}.
 
 The reason why examine this problem is that it has been used by many researchers
-as a benchmark for GP \cite{todo,yu01}.
+as a benchmark for GP \cite{yu01}.
 
 We compare our results with that obtained by Yu in \cite{yu01},
 where is presented approach to evolve recursive and modular programs
@@ -4321,7 +4359,7 @@ foldr xor False [True,False,True] \\
 }\\
 
 The reasons why is this difficult problem 
-for GP to solve are following \cite{todo}:
+for GP to solve are following \cite{yu01}:
 
 \begin{itemize}
  \item Since a single change of one input generates a different output,
@@ -4338,9 +4376,15 @@ Thus resulting in $2^2 + 2^3 = 12$ test cases.
 For each correct response it receives $1/12$, 
 therefore correct solution receives fitness value $1$.\\
 
-\begin{todo}
- & zmínit tu, že to pri týyle building block stačí na general solution...
-\end{todo}
+It is interesting that such a few fitness cases are
+sufficient to find general solution (it was so for every
+solution I tried). It comes from the $\Gamma$, the solution tends 
+always be \texttt{foldr} with \textit{xor} defined by the lambda
+abstraction. 
+
+%\begin{todo}
+% & zmínit tu, že to pri týyle building block stačí na general solution...
+%\end{todo}
 
 \subsection{Experiments}
 
@@ -4380,15 +4424,14 @@ in hope that it will enhance the performance.
 
 The correct individual was yield 
 in 17 out of 50 runs, i.e., 34\% success rate.
-The performance curve for $P(M,i)$ is following.
 
-\includegraphics[scale=0.65]{reports/ep/report1/probabs.png}
+%The performance curve for $P(M,i)$ is following.
+%\includegraphics[scale=0.65]{reports/ep/report1/probabs.png}
 
 Interestingly, in 2 runs out of 50, a correct solution was present in the initial population.
 
-The performance curve for $I(M,i,z)$ is following.
-
-\includegraphics[scale=0.65]{reports/ep/report1/indivs.png}
+%The performance curve for $I(M,i,z)$ is following.
+%\includegraphics[scale=0.65]{reports/ep/report1/indivs.png}
 
 The smallest value in this graph is used to indicate the minimum effort
 (i.e. number of individuals to be processed) for GP to yield a correct solution.
@@ -4429,12 +4472,11 @@ The $I(M,i,z)$ was best for generation 0 with 56500
 individuals to be processed.
 This experiment took 64 minutes.
 
-As we will see, this setup was the most successful one,
-thus we again show the performance curves.
+As we will see, this setup was the most successful one.
+%,thus we again show the performance curves.
 
-\includegraphics[scale=0.65]{reports/ep/report4/probabs.png}
-
-\includegraphics[scale=0.65]{reports/ep/report4/indivs.png}
+%\includegraphics[scale=0.65]{reports/ep/report4/probabs.png}
+%\includegraphics[scale=0.65]{reports/ep/report4/indivs.png}
 
 Fifth, last experiment was different from the fourth one in that
 optimized abstraction elimination was used instead of the simple one.
@@ -4444,6 +4486,14 @@ contained a correct solution in the initial population.
 The $I(M,i,z)$ was best for generation 6 with 59500 
 individuals to be processed.
 This experiment took only 30 minutes. \\
+
+
+
+\includegraphics[scale=0.5]{reports/ep/p.png}
+
+\includegraphics[scale=0.5]{reports/ep/i.png}
+
+
 
 \subsection{Comparison with other results}
 
@@ -4458,10 +4508,6 @@ Yu also uses crossover as the only genetic operator, thus we
 can narrow the discussion to discussion of generating method and 
 crossover method. 
 
-When we observe results of our experiments, it seems
-that our system is pretty good in term generation, but not so good 
-in crossover. Since the main focus point of this thesis is
-the term generation, it is positive rather then negative observation.
 
 Design of our crossover comes from that we wanted it to be
 very simple generalization of standard tree-swapping crossover.
@@ -4469,18 +4515,20 @@ Whereas the crossover used by Yu is more structure oriented
 --- as is stated in \cite{yu01} the crossover \textit{can only operate 
 between nodes in two main programs or between nodes in the same
 kind of $\lambda$ abstraction (i.e., $\lambda$ abstractions that 
-represent the same function arguments to the same higher order function).}
+represent the same function arguments to the same higher order function).} And also variable terminals of Yu's lambda functions
+are constrained to be only the variables of that lambda function, not from some outer scope. This may be advantage for this particular problem because xor does not need any outer variable
+(recall that most common solution is combination of xor and foldr in some similar way as foldr exaple above).
+From an optimist's point of view 34/50 versus 40/50 
+is not such a huge difference when we take to account that
+our general tree-swapping crossover is competing with specialized one.   
 %This seems to be great advantage for optimizing the 
 
 Since our method has better success rate for generation 0, it would 
 be interesting to try combination of our generating 
 method with crossover used by Yu.
 
-From an optimist's point of view 34/50 versus 40/50 
-is not such a huge difference when we take to account that
-our general tree-swapping crossover is competing with specialized one.   
 
-Positive observation is that our result at least outperforms 
+Another optimistic observation is that our result at least outperforms 
 other results mentioned in \cite{yu01} with which Yu's method is compared.
 
 
@@ -4490,12 +4538,12 @@ min $I(M,i,z) = 220,000$.
 \textit{GP with ADFs} scored 10/29 (34\%); 
 min $I(M,i,z) = 1,440,000$.
 
-
-
-
-\begin{todo}
-& napsat tam jak vypadaj nějaký nalezeneý řešení
-\end{todo} 
+%
+%
+%
+%\begin{todo}
+%& napsat tam jak vypadaj nějaký nalezeneý řešení
+%\end{todo} 
 
 \newpage
 \section{Flies and Apples}
@@ -4875,79 +4923,152 @@ the future improvements of our system.
 
 \section{Polymorphic variant}
 
-\begin{todo}
- & poznamky o čem se mimojiné zmínit:
-   && $(\$) : (\alpha \ar \beta) \ar \alpha \ar \beta$ 
-      jako alternativa k ADF ! Myslim že hodně zajimavý
-\end{todo}
+At this point I have almost complete implementation
+of polymorphic generalization of the system.
+
+This involves extending the type system so that we
+also have type variables.
+
+Lets very briefly sketch the key phases.
+
+Then instead of simple equality checking of the
+current type with return type of the function, we 
+try to fined \textit{most general unification}
+of those two type terms. If it succeeds, than 
+we may use this function symbol (or constant).
+Important part is to deal in the right way wit obtained 
+substitution. 
+
+%\begin{todo}
+% & poznamky o čem se mimojiné zmínit:
+%   && $(\$) : (\alpha \ar \beta) \ar \alpha \ar \beta$ 
+%      jako alternativa k ADF ! Myslim že hodně zajimavý
+%\end{todo}
 
 \section{Mutation}
 
-\begin{todo}
-& říct že na tu sme se moc nesoustředili ze dvou duvodu
-  ktery to ospravedlňujou 
-	&& koza taky
-	&& ta s vygereovanim podstromu je v zásadě použití
-	   algoritmu na generovaní jedince a tak nám přišlo
-	   lepší pořádně se soustředit na generování jedince a
-	   začít do toho mutaci tahat až bude generování pořádně
-	   prozkoumáno.
-& To ale neznamená že jí nemáme radi, naopak se těšíme
-  že její vhodný zavedení celou metodu ještě zlepší.
-  
-& Nápad na to jak to dělat:
-  && nutno ošetřit - co všechno do gammy alemyslim že v phodě když je uplne 
-     stejná jako ta generujicí, pač ve vy SKI-ovanym termu stejne nejsou zadny 
-     proměný 
-  && mít nějakej předem danej počet pohybu na frontě, abych mohl efektivně
-     kontrolovat že to přidání mutací moc nespomalý
-  && Po tom počtu pohybu končim generování
-  && mam nějakej počet vygenerovanejch termu
-  && pro chytrou mutaci mužu chtít třeba 10 termu
-     &&& pokud se mi jich vygenerovalo míň, tak beru míň
-     &&& pokud se mi jich vygenerovalo víc, tak vemu 10 náhodně
-     &&& těch 10 vyhodnotim (jakože dosazenejch na jejich místo)
-     &&& nejlepší si vezmu
-     &&& dobrý udělat to zase najednou pro všechny v tý generaci mutovaný
-         pánčto je nákladný spouštět Hint
-& Další mutace - beta eta redukce (?? asi moc naroční viz dale) 
-  && zmenšující mutace
-  && udělaná že převedem SKIBC do lambda termu a to redukujem? to asi ne pač
-     pak převod to spíš prodlouží, spíš asi mít redukční pravidla pro SKIBC
-     a těma redukovat, ale je otázka jak moc tam budou vznikat SKIBC-redexi
-     - ty mohou vznikat jen při @-tree reprezentaci
-  && to otevírá otázku toho, že by elementy gammy mohla mít k sobě redukční pravidla
-& Další mutace - jednoduše náhrada podstromu/uzlu za nějakej z gammy
-  && nezvětšující mutace
-& Další mutace - mutace číselnejch-like konstant
-& To mě přivádí k myšlence sice pro generování ale myslim podstatný:
-  jakmile jsou v problému číselný-like konstanty tak mužu udělat pro 
-  jeden tvar hodně jedincu - což šetří jak čas na generování, tak to prozkomává 
-  víc danej tvar
+Since we have term generating method, it is easy to 
+define subtree changing mutation. 
+
+Also node changing mutations are easy.
+
+It would be also nice to perform some kind of informed
+(or clever) mutation  - that is mutation that tries more possibilities 
+and selects the best one (i.e. performs a local search).
+
+In the lambda calculus context, it would be interesting to try 
+some reduction based mutations --- simplifying the term
+by bringing it to normal form form which it was dragged 
+away by crossovers and other mutations.
+
+Also mutations of number-like constants would be useful. 
+
+%\begin{todo}
+%& říct že na tu sme se moc nesoustředili ze dvou duvodu
+%  ktery to ospravedlňujou 
+%	&& koza taky
+%	&& ta s vygereovanim podstromu je v zásadě použití
+%	   algoritmu na generovaní jedince a tak nám přišlo
+%	   lepší pořádně se soustředit na generování jedince a
+%	   začít do toho mutaci tahat až bude generování pořádně
+%	   prozkoumáno.
+%& To ale neznamená že jí nemáme radi, naopak se těšíme
+%  že její vhodný zavedení celou metodu ještě zlepší.
+%  
+%& Nápad na to jak to dělat:
+%  && nutno ošetřit - co všechno do gammy alemyslim že v phodě když je uplne 
+%     stejná jako ta generujicí, pač ve vy SKI-ovanym termu stejne nejsou zadny 
+%     proměný 
+%  && mít nějakej předem danej počet pohybu na frontě, abych mohl efektivně
+%     kontrolovat že to přidání mutací moc nespomalý
+%  && Po tom počtu pohybu končim generování
+%  && mam nějakej počet vygenerovanejch termu
+%  && pro chytrou mutaci mužu chtít třeba 10 termu
+%     &&& pokud se mi jich vygenerovalo míň, tak beru míň
+%     &&& pokud se mi jich vygenerovalo víc, tak vemu 10 náhodně
+%     &&& těch 10 vyhodnotim (jakože dosazenejch na jejich místo)
+%     &&& nejlepší si vezmu
+%     &&& dobrý udělat to zase najednou pro všechny v tý generaci mutovaný
+%         pánčto je nákladný spouštět Hint
+%& Další mutace - beta eta redukce (?? asi moc naroční viz dale) 
+%  && zmenšující mutace
+%  && udělaná že převedem SKIBC do lambda termu a to redukujem? to asi ne pač
+%     pak převod to spíš prodlouží, spíš asi mít redukční pravidla pro SKIBC
+%     a těma redukovat, ale je otázka jak moc tam budou vznikat SKIBC-redexi
+%     - ty mohou vznikat jen při @-tree reprezentaci
+%  && to otevírá otázku toho, že by elementy gammy mohla mít k sobě redukční pravidla
+%& Další mutace - jednoduše náhrada podstromu/uzlu za nějakej z gammy
+%  && nezvětšující mutace
+%& Další mutace - mutace číselnejch-like konstant
+%& To mě přivádí k myšlence sice pro generování ale myslim podstatný:
+%  jakmile jsou v problému číselný-like konstanty tak mužu udělat pro 
+%  jeden tvar hodně jedincu - což šetří jak čas na generování, tak to prozkomává 
+%  víc danej tvar
+
+%\end{todo}
 
 
-  
-\end{todo}
 
 
 
 \section{Big Context}
 
-Tento problém je napůl rozpracovaný, hlavně protože by se na něj o dost více
-hodilo použít polymorfní typy, které jsou také ne uplně dodělané a véto thesis
-se o nich zminujeme jen velmi okrajově. Přestose myslím jedná o zajímavou myšlanku
-a proto ho popíšeme.
+\textit{Big Context} is an unfinished problem 
+involving breeding of clasical functional functions
+as \texttt{head,tail,map,elem,filter}. We first take
+small sufficient $\Gamma$ for each function to be evolved.
+After that we  fuse those contexts into one big context and check whether the functions are still evolvable. Or we may try to 
+evolve several functions at once by evolving tuples of them.
 
-\section{Roadmap}
-\section{Tree ants}
-\section{[Propojení těch dvou barandrechtskejch odvozovacích pravidel do jedinýho]}
-\section{[Chytřejší heuristika pro A* která si to předpočítá na $\overline{\Gamma}$ ]}
-\section{[šlechtění těch strategií na generování termů]}
-\section{[šlechtění fitness funkcí a nápad s "turnajem olympioniků"]}
-\section{[šlechtění search strategií pro prohledávání]}
-\section{[šlechtění alternative family trees]}
+We have postponed this problem since it is much more suitable
+for polymorphic system.
 
-\section{vypisování jedinců tak že nahradíme kombinátory \lterm{}ama a redukujem }
+\section{Parallelisation}
+Since Haskell is very good at Parallelisation 
+and GP is easily parallelised, it comes naturally to 
+connect the two.
+
+
+
+%Tento problém je napůl rozpracovaný, hlavně protože by se na něj o dost více
+%hodilo použít polymorfní typy, které jsou také ne uplně dodělané a véto thesis
+%se o nich zminujeme jen velmi okrajově. Přestose myslím jedná o zajímavou myšlanku
+%a proto ho popíšeme.
+
+
+\section{Future ideas with Inhabitation trees}
+
+I have lot of ideas involving inhabitation trees and 
+informed term generation. Number labeled 
+inhabitation tree may be used as more informed
+version of geometric strategy. 
+Variation of ant colony optimization
+could be used as vehicle for this informed
+term generation. This ACO would differ
+from classical one in that
+it would use trees instead of paths.
+Ant may select one edge (or-node)
+or clone himself (and-node). The global criterion 
+determining the pheromone trail intensity 
+are based upon fitness and local heuristic
+would be some term shortening factor.  \footnote{
+Unfortunately I have run out of time for writing this
+thesis so I must let this favorite theme of mine mostly unexplained.}
+
+
+%\section{Roadmap}
+%This is idea based on
+%\section{Tree ants}
+
+
+%\section{[Propojení těch dvou barandrechtskejch odvozovacích pravidel do jedinýho]}
+%\section{[Chytřejší heuristika pro A* která si to předpočítá na $\overline{\Gamma}$ ]}
+%\section{[šlechtění těch strategií na generování termů]}
+%\section{[šlechtění fitness funkcí a nápad s "turnajem olympioniků"]}
+%\section{[šlechtění search strategií pro prohledávání]}
+%\section{[šlechtění alternative family trees]}
+%
+%\section{vypisování jedinců tak že nahradíme kombinátory \lterm{}ama a redukujem }
 
 
 
@@ -5038,179 +5159,179 @@ non effects on performance rates.
 Implemented system was designed with importance of interactivity in mind,
 resulting in server/client architecture for core/GUI components.
 
-\newpage
-\begin{todo}
- & my tu řikáme že to závadíme kuli typum, ale my děláme v víc! -dáváme tam
-   i abstrakce atd - ale mužeme říct, že tim že se to pak převede zase na 
-   to bez abstrakcí tak setrváváme dal v krasnym bez-lambda abstrakčí ale
-   s tou výhodou že naše metoda gerneruje všechny struktury pro ten danej typ ...
-   nebo tak něco - asi to dát spíš do design of our system nebo někam
-   ale někde to asi zmínit
-\end{todo}
-
-
-Další témata co zmínit v úvodu nebo v závěru :\\
-
-
-
-\begin{easylist}[itemize]
-
-
- 
-& zmínit že existuje i jinej pohled na to proč tam zavádět typy:
-  && mužem koukat na to tak že konstrejnt je naše TuF tim, že 
-     v ní nemužou bejt libovolný funkce
-  && ale tuhle constrain mužeme omezit tim že konstrjnujeme 
-     právě použití tech bilding bloku, kde constrains jsou daný těma typama
-     - jakoby výměna global constrain za localní konstrejny na tech bilding  
-       blockách
-  && druhá možná ješte silnější motivace je že pomocí typu pak mohou vznikat 
-     smysluplnější programy, tím že dostavají vstupy které přesně čekají
-     a dávají výstupy které mají nějaké očekávané vlastnosti    
-
-& Možná se zmínit o tý představě dvou pólu
-  induktivním a deduktivním -
-  klasickym GP a Dokazovačem, čim složitější
-  typovej sytem tim víc se jedná o deduktivní   
-  systém a blíží se to dokazovači.
-   && Ve světle toho, je pak hezky vidět, že
-      je chytrý exhaustivně systematicky prohledávat od nejmenšího
-      po největší- jak budeme zesložiťovat typovej systém, tak
-      čim dál víc bude už stačit najít vubec nějaký řešení a bude čim dál těžší
-      jich generovat kvanta
-
-
-& že imlementace je delana těma vtipnejamtajpklasama umožnujicima libovolný
-  evoluční struktury na evolvovani
-
-& říct že vnekterejch aspektech je videt, že to je work in progress
-  ale že si myaslime že i tak to ukazuje pěkný výsledky 
-  a že doufame že ty nedodělky budou další prací odstraněny
-
-
-& Říct jak jde text:
-  && Začnem popsanim klasickýho GP podle Kozy
-  && Vyslovíme definice okolo lambda termu a typu
-  && Vyslovíme definici inhabitačního stromu
-     kterej je stromovou verzí IM od Barendrechta.
-  && Matematicky popíšem jak na to dem my.
-  && Popíšem rozšíření zakladního systému na 
-     polymorfní.
-  && Popíšem to z programátorskýho hlediska
-  && Popíšem příklady na kterejch to demonstrujem
-  && Srovnáme to s nějakejma přístupama co už 
-     existujou 
-
-& Nějak naťuknout už tady v úvodu jak se to má při
-  srovnání s tim jak na to dou jiný (Yu atd)
-  
-& Výkřiky co zmínit:
-  && Na co zaměřený:
-     &&& Proof of a concept
-     &&& Spíš jednoduchost
-         &&&& Ve většině aspektú to sleduje
-              Kozu - tzn i v málo řídících
-              parametru
-     &&& Duraz na generování termu (!)              
-
-  && Na co nezaměřený (ale snad taky ok v tom):
-     &&& Performance   
-     &&& Mature knihovna co by šla použít robustně
-         v cizim kódu - spíš to počítá že to 
-         bude dál rozvíjeno a tohle je mezizastávka
-
- & TALK ABOUT GP is part of EA etc. and maybe define the GP by 
-   defining EA and then specifying the differences or something 
-   like that...   
-
-& bylo by asi mimojiný dobrý 
-ospravedlnit/okomentovat tak fancy (=javascript frontend) 
-implementaci při 
-dost nedodělanejch jinejch věcech (heuristika by 
-mohla být lepší, mutace by mohli bejt, atd)
-ale věřil sem, že je to proces iterativní
-a že je po celou dobu dobrý mít na čem to testovat.
-Javascript byl vybranej pač HTML je nejpromáklejší
-UI jaký vubec je na zemi teď (state of dzí art)
-a tak to snad nebyla stráta času.
-navíc se naskitla díky tomu další pěkná příležitost
-k ukázání toho, že to neni omezený na haskell
-ale že se kombinatorový konstrukty daj 
-v zásadě přeložit do libovolnýho jazyka celkem bez problému
-nebo minimalně do JS. Ale todle možná nepsat tolik do závěru
-spíš nějaky podrobnosti přehodit do implementačních detailu
-a tady to jen tak líznout.
-   
-\end{easylist}
-
-
-\textbf{Jen když zbude čas:}
-
-\begin{todo}
-
-& Complexity discussion 
-&& !!!
-&& zmínit že mi moc neřešíme formální/asymptotický složitosti
-  &&& de nám hlavně o realný časy
-&& vyjít z komplexnosti A* asi
-  &&& složitost výrazně ovlivněná kvalitou heuristický funkce
-
-
- & Brief history of the project\\
-  zmínit třeba tyhle fáze:
-  && že sem si delal evaluator sám co sem pak s performenc duvodu opustil
-  && že sem hledal intuicionistickej dokazovač ale že nejsem nenarazil na vhodnej
-     pač nejsou delany na to plivat hodně dukazu  
-  && že sem nejdriv pouzival ten vypsychlej dokazovač co tam měl nějaký ty 
-     spešl rozhodovací stromy
-  && pak sem to přepsal tak aby to nebylo jen na GP šitý ale obecně na jakoukoliv 
-     evoluci
-  && ...
-
-& pro \ref{benefits}
-&& možná eště zmínit něco jako : \\
-Jedna drobná nevýhoda je, že pokud chceme generovat termy od nejmenšího do největšího
-a pokud lnf generujeme od nejmenšího po největší tak pak generovaní \benf
-timhle trikem nemusí bejt od nejmenšího po nějvětší. V naší aplikaci (tzn GP)
-ale nijak nebazírtujeme na týhle vlastnosti a nakonec budeme spíš stejně používat
-nějaký nedeterminizmy aby to fungovalo líp, takže to vubec nevadí, že budou trochu přeházený. 
-
- & pro \ref{barlike}
- && možná zmínit že podobně jako mužeme transformovat inference rules
-   na grammar rules, mužeme i obráceně grammar rules
-   převést na inference rules - to bylo ostatně uděláno v tom dukazu ale
-   je to podle mě hezký říct ty pravidla explicitně.
- & pro \ref{lnf}
- && potřebuju eště nějaký \textbf{propositions} z \cite{barendregt10} tu uvíst ?
- && ta definice je tam daná pro $\tur{}{M}{\sigma}$,
-   ukazat ze ta naše je ok, že tam má navíc to $\Gamma$.
-   Stačí udělat tríček že beru funkci co má lambda hlavu odpovídající 
-   tomu kontextu.
-   
-   & k \ref{Term-generating-grammar}
-    &&  buď dokázat ty převody na grammar rules explicitně
-     nebo říct že se to dokáže podobnym stylem jako v dukazu 
-     v sekci \ref{barlike}
-    && možná ocitovat toho van Wijngaarden [1981] s těma 2-level grammar
-     jak je to v Barendregtovi \cite{barendregt10} 
- & možná konec (tree reprez of typed terms) subsekce trochu přeformulovat, je to takový   
-   kostrbatý...
- & o odvoz pravidlech říct
-   && možná zmínit že se jedná o \textit{gentzen style proof}
-   && říct že jsou to modus ponens a jeden směr věty o dedukci  
- & nějak přepsat \ref{GP-prog-trees} aby to bylo ve stejnym stylu jako v \ref{tree-reps}
- & napsat transformace mezi \atTree a \sexprTree
-%& ujistit se že je v části o tree reprezentacích 
-%  je napsaný co to znamená že podstrom má nějakej typ,
-%  že podstromy odpovídaj podvýrazum atd
-% & EXAMPLES of tree representations of \lterms  
-% & nějak to sjednotit s tim uplně na začátku v popisu GP kde se popisuje
-%   přímo \sexprTree a říct proč se tomu tak řiká 
-%   (na tom místě co je v textu dřív) 
-% & zkontrolovat že reference tree-reps se odkazuje na dobrý místo,
-%   mohlo by se to rozbít tim že tree reprezentations - typovany/netypovany 
-%   jsou od sebe oddelený
-\end{todo}
+%\newpage
+%\begin{todo}
+% & my tu řikáme že to závadíme kuli typum, ale my děláme v víc! -dáváme tam
+%   i abstrakce atd - ale mužeme říct, že tim že se to pak převede zase na 
+%   to bez abstrakcí tak setrváváme dal v krasnym bez-lambda abstrakčí ale
+%   s tou výhodou že naše metoda gerneruje všechny struktury pro ten danej typ ...
+%   nebo tak něco - asi to dát spíš do design of our system nebo někam
+%   ale někde to asi zmínit
+%\end{todo}
+%
+%
+%Další témata co zmínit v úvodu nebo v závěru :\\
+%
+%
+%
+%\begin{easylist}[itemize]
+%
+%
+% 
+%& zmínit že existuje i jinej pohled na to proč tam zavádět typy:
+%  && mužem koukat na to tak že konstrejnt je naše TuF tim, že 
+%     v ní nemužou bejt libovolný funkce
+%  && ale tuhle constrain mužeme omezit tim že konstrjnujeme 
+%     právě použití tech bilding bloku, kde constrains jsou daný těma typama
+%     - jakoby výměna global constrain za localní konstrejny na tech bilding  
+%       blockách
+%  && druhá možná ješte silnější motivace je že pomocí typu pak mohou vznikat 
+%     smysluplnější programy, tím že dostavají vstupy které přesně čekají
+%     a dávají výstupy které mají nějaké očekávané vlastnosti    
+%
+%& Možná se zmínit o tý představě dvou pólu
+%  induktivním a deduktivním -
+%  klasickym GP a Dokazovačem, čim složitější
+%  typovej sytem tim víc se jedná o deduktivní   
+%  systém a blíží se to dokazovači.
+%   && Ve světle toho, je pak hezky vidět, že
+%      je chytrý exhaustivně systematicky prohledávat od nejmenšího
+%      po největší- jak budeme zesložiťovat typovej systém, tak
+%      čim dál víc bude už stačit najít vubec nějaký řešení a bude čim dál těžší
+%      jich generovat kvanta
+%
+%
+%& že imlementace je delana těma vtipnejamtajpklasama umožnujicima libovolný
+%  evoluční struktury na evolvovani
+%
+%& říct že vnekterejch aspektech je videt, že to je work in progress
+%  ale že si myaslime že i tak to ukazuje pěkný výsledky 
+%  a že doufame že ty nedodělky budou další prací odstraněny
+%
+%
+%& Říct jak jde text:
+%  && Začnem popsanim klasickýho GP podle Kozy
+%  && Vyslovíme definice okolo lambda termu a typu
+%  && Vyslovíme definici inhabitačního stromu
+%     kterej je stromovou verzí IM od Barendrechta.
+%  && Matematicky popíšem jak na to dem my.
+%  && Popíšem rozšíření zakladního systému na 
+%     polymorfní.
+%  && Popíšem to z programátorskýho hlediska
+%  && Popíšem příklady na kterejch to demonstrujem
+%  && Srovnáme to s nějakejma přístupama co už 
+%     existujou 
+%
+%& Nějak naťuknout už tady v úvodu jak se to má při
+%  srovnání s tim jak na to dou jiný (Yu atd)
+%  
+%& Výkřiky co zmínit:
+%  && Na co zaměřený:
+%     &&& Proof of a concept
+%     &&& Spíš jednoduchost
+%         &&&& Ve většině aspektú to sleduje
+%              Kozu - tzn i v málo řídících
+%              parametru
+%     &&& Duraz na generování termu (!)              
+%
+%  && Na co nezaměřený (ale snad taky ok v tom):
+%     &&& Performance   
+%     &&& Mature knihovna co by šla použít robustně
+%         v cizim kódu - spíš to počítá že to 
+%         bude dál rozvíjeno a tohle je mezizastávka
+%
+% & TALK ABOUT GP is part of EA etc. and maybe define the GP by 
+%   defining EA and then specifying the differences or something 
+%   like that...   
+%
+%& bylo by asi mimojiný dobrý 
+%ospravedlnit/okomentovat tak fancy (=javascript frontend) 
+%implementaci při 
+%dost nedodělanejch jinejch věcech (heuristika by 
+%mohla být lepší, mutace by mohli bejt, atd)
+%ale věřil sem, že je to proces iterativní
+%a že je po celou dobu dobrý mít na čem to testovat.
+%Javascript byl vybranej pač HTML je nejpromáklejší
+%UI jaký vubec je na zemi teď (state of dzí art)
+%a tak to snad nebyla stráta času.
+%navíc se naskitla díky tomu další pěkná příležitost
+%k ukázání toho, že to neni omezený na haskell
+%ale že se kombinatorový konstrukty daj 
+%v zásadě přeložit do libovolnýho jazyka celkem bez problému
+%nebo minimalně do JS. Ale todle možná nepsat tolik do závěru
+%spíš nějaky podrobnosti přehodit do implementačních detailu
+%a tady to jen tak líznout.
+%   
+%\end{easylist}
+%
+%
+%\textbf{Jen když zbude čas:}
+%
+%\begin{todo}
+%
+%& Complexity discussion 
+%&& !!!
+%&& zmínit že mi moc neřešíme formální/asymptotický složitosti
+%  &&& de nám hlavně o realný časy
+%&& vyjít z komplexnosti A* asi
+%  &&& složitost výrazně ovlivněná kvalitou heuristický funkce
+%
+%
+% & Brief history of the project\\
+%  zmínit třeba tyhle fáze:
+%  && že sem si delal evaluator sám co sem pak s performenc duvodu opustil
+%  && že sem hledal intuicionistickej dokazovač ale že nejsem nenarazil na vhodnej
+%     pač nejsou delany na to plivat hodně dukazu  
+%  && že sem nejdriv pouzival ten vypsychlej dokazovač co tam měl nějaký ty 
+%     spešl rozhodovací stromy
+%  && pak sem to přepsal tak aby to nebylo jen na GP šitý ale obecně na jakoukoliv 
+%     evoluci
+%  && ...
+%
+%& pro \ref{benefits}
+%&& možná eště zmínit něco jako : \\
+%Jedna drobná nevýhoda je, že pokud chceme generovat termy od nejmenšího do největšího
+%a pokud lnf generujeme od nejmenšího po největší tak pak generovaní \benf
+%timhle trikem nemusí bejt od nejmenšího po nějvětší. V naší aplikaci (tzn GP)
+%ale nijak nebazírtujeme na týhle vlastnosti a nakonec budeme spíš stejně používat
+%nějaký nedeterminizmy aby to fungovalo líp, takže to vubec nevadí, že budou trochu přeházený. 
+%
+% & pro \ref{barlike}
+% && možná zmínit že podobně jako mužeme transformovat inference rules
+%   na grammar rules, mužeme i obráceně grammar rules
+%   převést na inference rules - to bylo ostatně uděláno v tom dukazu ale
+%   je to podle mě hezký říct ty pravidla explicitně.
+% & pro \ref{lnf}
+% && potřebuju eště nějaký \textbf{propositions} z \cite{barendregt10} tu uvíst ?
+% && ta definice je tam daná pro $\tur{}{M}{\sigma}$,
+%   ukazat ze ta naše je ok, že tam má navíc to $\Gamma$.
+%   Stačí udělat tríček že beru funkci co má lambda hlavu odpovídající 
+%   tomu kontextu.
+%   
+%   & k \ref{Term-generating-grammar}
+%    &&  buď dokázat ty převody na grammar rules explicitně
+%     nebo říct že se to dokáže podobnym stylem jako v dukazu 
+%     v sekci \ref{barlike}
+%    && možná ocitovat toho van Wijngaarden [1981] s těma 2-level grammar
+%     jak je to v Barendregtovi \cite{barendregt10} 
+% & možná konec (tree reprez of typed terms) subsekce trochu přeformulovat, je to takový   
+%   kostrbatý...
+% & o odvoz pravidlech říct
+%   && možná zmínit že se jedná o \textit{gentzen style proof}
+%   && říct že jsou to modus ponens a jeden směr věty o dedukci  
+% & nějak přepsat \ref{GP-prog-trees} aby to bylo ve stejnym stylu jako v \ref{tree-reps}
+% & napsat transformace mezi \atTree a \sexprTree
+%%& ujistit se že je v části o tree reprezentacích 
+%%  je napsaný co to znamená že podstrom má nějakej typ,
+%%  že podstromy odpovídaj podvýrazum atd
+%% & EXAMPLES of tree representations of \lterms  
+%% & nějak to sjednotit s tim uplně na začátku v popisu GP kde se popisuje
+%%   přímo \sexprTree a říct proč se tomu tak řiká 
+%%   (na tom místě co je v textu dřív) 
+%% & zkontrolovat že reference tree-reps se odkazuje na dobrý místo,
+%%   mohlo by se to rozbít tim že tree reprezentations - typovany/netypovany 
+%%   jsou od sebe oddelený
+%\end{todo}
 
 
 

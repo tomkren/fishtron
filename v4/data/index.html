@@ -676,10 +676,12 @@ var drawPerformanceCurves = function( curves_ , actRun , popsize , averageTermSi
   if( averageTermSize !== undefined ){
     //console.log('averageTermSize = ' + averageTermSize );
 
+    prum = [];
     graf3 = []; 
     for( var i = 0 ; i < Global.averageSizesOfTerms.sums.length ; i++ ){
       if( Global.averageSizesOfTerms.ns[i] > 0 ){
         graf3[i] = [i, Global.averageSizesOfTerms.sums[i] / Global.averageSizesOfTerms.ns[i] ];
+        prum[i] = Global.averageSizesOfTerms.sums[i] / Global.averageSizesOfTerms.ns[i];
       }
     } 
 
