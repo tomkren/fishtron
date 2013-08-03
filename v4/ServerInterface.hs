@@ -1,27 +1,57 @@
 module ServerInterface 
 ( OutputBuffer
 , OutRecord(..) 
+, ProcessData(..)
 , writeNextOutput
 , jsEmptyObj
 , stdoutCmd 
 , graphCmd 
-, multiCmd ) where
+, multiCmd 
+, emptyProcessData
+, isKilled
+, resetProcessData
+) where
 
 
 import Text.JSON (JSValue)
 import JSONUtils (jsArr,jsObj,jsStr,jsNum)
 
 import Control.Monad.STM (atomically)
-import Control.Concurrent.STM.TVar (TVar,modifyTVar)
+import Control.Concurrent.STM.TVar (TVar,modifyTVar,readTVarIO, writeTVar)
 
-type OutputBuffer = TVar [OutRecord]
+
+
+
+type OutputBuffer = TVar ProcessData --[OutRecord]
+
+data ProcessData = ProcessData {
+  processBuff :: [OutRecord] ,
+  kill        :: Bool        ,
+  processRuns :: Bool
+}
+
 data OutRecord = OutStr String | OutEnd
 
 
+emptyProcessData :: ProcessData
+emptyProcessData = ProcessData {
+   processBuff = [] ,
+   kill        = False ,
+   processRuns = False
+ }
+
 writeNextOutput :: OutputBuffer -> String -> IO ()
 writeNextOutput buff output 
-  = atomically $ modifyTVar buff (\b->(OutStr output):b)
+  = atomically $ modifyTVar buff (\b-> b{ processBuff = (OutStr output):(processBuff b) }   ) --(\b->(OutStr output):b)
 
+resetProcessData :: OutputBuffer -> IO ()
+resetProcessData buff = atomically $ writeTVar buff emptyProcessData
+
+
+isKilled :: OutputBuffer -> IO Bool
+isKilled buff = do
+  pd <- readTVarIO buff
+  return $ kill pd
 
 jsEmptyObj :: JSValue
 jsEmptyObj = jsObj []

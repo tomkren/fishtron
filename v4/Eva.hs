@@ -9,6 +9,8 @@ module Eva
 , sendJSON
 , flushStdout
 , evaSplitStdGen
+, amIStillAlive
+, resetAfterStop
 ) where
 
 
@@ -19,7 +21,7 @@ import Data.Time.Clock     ( getCurrentTime, diffUTCTime )
 
 import Text.JSON ( encode , JSValue )
 
-import ServerInterface (jsEmptyObj, stdoutCmd, writeNextOutput ,OutputBuffer) 
+import ServerInterface (jsEmptyObj, stdoutCmd, writeNextOutput ,OutputBuffer,ProcessData(..),isKilled,resetProcessData) 
 import Heval (hevalsWith, hevals)
 import Utils (Randable(..),Logable(..))
 
@@ -54,6 +56,24 @@ initEvaState gen = EvaState {
   evaOutputBuffer = Nothing,
   evaStdout       = "" 
  }
+
+
+resetAfterStop :: Eva ()
+resetAfterStop = do
+   evaState <- get
+   case evaOutputBuffer evaState of
+    Nothing   -> return ()
+    Just buff -> liftIO . resetProcessData $ buff
+  
+
+amIStillAlive :: Eva Bool
+amIStillAlive = do
+   evaState <- get
+   case evaOutputBuffer evaState of
+    Nothing   -> return True
+    Just buff -> do
+      isDead <- liftIO $ isKilled buff
+      return . not $ isDead
 
 
 setOutputBuffer :: OutputBuffer -> Eva ()

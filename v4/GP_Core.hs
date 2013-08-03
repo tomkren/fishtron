@@ -22,11 +22,11 @@ import Text.Printf   ( printf )
 import Data.Maybe    ( fromJust,isJust )
 
 
-import Eva   ( Eva, runEva, evalsWith, evals, setOutputBuffer, sendJSON, flushStdout )
+import Eva   ( Eva, runEva, evalsWith, evals, setOutputBuffer, sendJSON, flushStdout , amIStillAlive, resetAfterStop )
 import Dist  ( Dist , mkDist, distTake_new, distGet, distMax, distMin, distAvg )
 import Dist  ( distToList )
 import Utils ( logIt, boxIt , JShow, jshow, putList, jss_size)
-import ServerInterface ( graphCmd, multiCmd, OutputBuffer ) 
+import ServerInterface ( graphCmd, multiCmd, OutputBuffer  ) 
 
 
 class Gene term opt where
@@ -88,10 +88,14 @@ instance (Gene term gOpt, Muta term mOpt, Cros term cOpt,Typeable a,JShow term) 
    chain 0 _ r x = let (b,c) = r x in return ( b ,c , Nothing )
    chain n f r x = do 
     (a,mbc) <- f (numGens - n + 1) x 
-    case mbc of
-     Nothing  -> chain (n-1) f r a 
-     Just (b,c) -> return (b,c,Just (numGens-n+1) ) 
- 
+    isAlive <- amIStillAlive 
+    if isAlive 
+      then case mbc of
+            Nothing  -> chain (n-1) f r a 
+            Just (b,c) -> return (b,c,Just (numGens-n+1) ) 
+      else do
+       logIt "Umrel!"   
+       let (b,c) = r x in return ( b ,c , Nothing ) 
 
 evolveBegin :: ( Gene t go, Typeable a,JShow t) => RunInfo -> Problem t a go mo co -> Eva (Dist t , Maybe (t,FitVal) )
 evolveBegin runInfo p = do
@@ -223,6 +227,7 @@ logGeneration (actRun,allRuns) i isWinner pop = do
 
 
 
+
 -- Creating problem structure --------------------------------------------------
 
 mkGenOps :: (Muta term mOpt , Cros term cOpt ) => (mOpt,cOpt) -> GenOpProbs -> Dist (GenOp term)
@@ -253,7 +258,13 @@ multipleRuns numRuns problem = multipleRuns' numRuns problem
  where
   multipleRuns' :: Evolvable t a go mo co => Int -> Problem t a go mo co -> Eva [(t,FitVal,Maybe Int)]
   multipleRuns' 0 _ = return [] 
-  multipleRuns' n p = do 
-   x  <- evolveIt ( numRuns-n+1 , numRuns ) p
-   xs <- multipleRuns' (n-1) p
-   return (x:xs)
+  multipleRuns' n p = do
+     x  <- evolveIt ( numRuns-n+1 , numRuns ) p
+     isAlive <- amIStillAlive
+     if isAlive then do
+      logIt "BULL"
+      xs <- multipleRuns' (n-1) p
+      return (x:xs)
+     else do
+      resetAfterStop
+      return [x]

@@ -18,7 +18,7 @@ import Text.JSON ( encode )
 
 import Utils ( unescape )
 import Register (problemList,job)
-import ServerInterface( OutputBuffer , OutRecord(..) )
+import ServerInterface( OutputBuffer , OutRecord(..),emptyProcessData,ProcessData(..) )
 
 
 
@@ -30,7 +30,7 @@ data ServerState = ServerState{
 
 newServerState :: IO ServerState
 newServerState = do
-  buff <- atomically $ newTVar []
+  buff <- atomically $ newTVar emptyProcessData
   return ServerState{
     ssBuff = buff   
    }
@@ -63,14 +63,26 @@ app tvarSS req = case pathInfo req of
    let cmdStr = myUnpack $ cmd 
    ss <- liftIO . readTVarIO $ tvarSS
    liftIO . forkIO $ do
+     atomically $ modifyTVar (ssBuff ss) (\b-> b {  processRuns = True } )
      job (ssBuff ss) (unescape cmdStr) 
-     atomically $ modifyTVar (ssBuff ss) (\b->OutEnd:b)
+     atomically $ modifyTVar (ssBuff ss) (\b-> b {  processBuff = OutEnd:(processBuff b) , processRuns = False } )
    return $ myTextPlain "OK"
 
  ["out"] -> do
    ss <- liftIO . readTVarIO $ tvarSS
    outStr <- liftIO . resolveOutRequest $ ssBuff ss
-   return $ myTextPlain (fromString outStr)   
+   return $ myTextPlain (fromString outStr)  
+ 
+ ["stop"] -> do
+  ss <- liftIO . readTVarIO $ tvarSS
+
+  buff <- liftIO . readTVarIO $ (ssBuff ss) 
+
+  if processRuns buff then do
+    liftIO . atomically $ modifyTVar (ssBuff ss) (\b-> b{ kill = True } )
+    return $ myTextPlain "OK"
+  else
+    return $  myTextPlain "Nic nebezi."
 
  x -> do 
   liftIO $ putStrLn $ "404: " ++ show x
@@ -79,11 +91,12 @@ app tvarSS req = case pathInfo req of
 resolveOutRequest :: OutputBuffer -> IO String
 resolveOutRequest buff = do
   m_x <- atomically $ do 
-          xs <- readTVar buff
+          x <- readTVar buff
+          let xs = processBuff x
           case xs of
            [] -> return Nothing
            _  -> do
-             writeTVar buff (init xs)
+             writeTVar buff (x{ processBuff = init xs })
              return $ Just (last xs)
   return $ case m_x of
    Nothing           -> "_"

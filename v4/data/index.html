@@ -19,6 +19,10 @@
       .slider     { width:400px; position: relative; top:0px;left:10px; }
       .input-for-slider { width:32px; }
 
+      #stop { position:absolute;
+              top:47px;
+              left: 720px; }
+
     </style>
 
     <script src="js/libs/jquery.js"></script>
@@ -61,7 +65,8 @@ var Global = {
   averageSizesOfTerms : { sums : [] , ns : [] },
 
   Problems : {},
-  
+
+ 
   startTime : undefined ,
   isLoggingOn : false ,
   bests : [],
@@ -74,12 +79,16 @@ var Global = {
 
 $(document).ready(function() {
 
+  stop();
+
   $('#go-input-row').hide(); // chtelo by to ho uplne smazat, ale čte se z něho ..
 
   Global.myDrawGraph = arborFUN($);
 
  
   $('#progressfutral').hide();
+  $('#stop').hide();
+
   $('#stdout-off').button('toggle');
   $("[rel=tooltip]").tooltip();
 
@@ -285,12 +294,43 @@ var drawProblemOpts = function( po ){
 };
 
 
+var stop = function(  ){
+
+  $.ajax({
+    url : 'stop' , 
+    type: 'GET'  ,
+    success: function(){
+
+      setTimeout( 
+        function(){
+
+          $.ajax({
+            url: 'out' ,
+            type: 'GET'  ,
+            success: function( output ) {
+
+              if( output === '' ){ console.log('abc!')}
+            } 
+
+          });
+
+        } , 1000 );
+
+    }
+  });
+
+};
+
+
+
 var go_new = function(){
 
   Global.startTime = new Date().getTime();
 
   $('#progressbar').css('width','0%');
   $('#progressfutral').show('slow');
+  $('#stop').show('slow');
+
 
   var problemCode = $('#problem-select_').val() ;
 
@@ -387,6 +427,9 @@ var go_new = function(){
 };
 
 var out_new = function(  ){
+
+
+
   
   $.ajax({
     url: 'out' ,
@@ -398,6 +441,7 @@ var out_new = function(  ){
       if( output === '' ){
         console.log( ' [HOTOVO]' ); 
         $('#progressfutral').hide('slow');
+        $('#stop').hide('slow');
 
         var runTime = ( (new Date().getTime()) - Global.startTime ) * 0.001 ;
         runCmd({type:'stdout',msg : 'Run time was ' + runTime + ' seconds.' });
@@ -730,11 +774,15 @@ var checkAllTheSame = function( xs ){
 }
 
 
+
+
 //---------------------------------------------------------------------------
 </script>
 
   </head>
   <body>
+
+    <button onclick="stop()" id="stop" class="btn btn-danger span1">STOP</button>
 
 
     <div class="row">&nbsp;</div>
