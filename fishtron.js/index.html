@@ -170,59 +170,17 @@ var mkCtx = function(obj){
   return ctx;
 };
 
-$(function(){
 
 
-  int = mkAtm('int');
-
-  x = mkVar('x',int);
-
-
-  s = mkVal('s', mkTyp([int,int]) );
-
-  f = mkLam(x, mkApp(s,x)  );
-
-  one = mkVal(1,int);
-
-  plus = mkVal( 'plus' , mkTyp([int,int,int])  );
-
-  m = mkApp( f , one );
-
-  log( 'm = ' + code(m,'lc') );
-  log( 'm = ' + code(m,'jsstr') );
-
-
-  g = mkVal( function(x){return x+1;} , mkArr(int,int) );
-
-  ctx_ = {
-   'plus' : { t : mkArr(int,mkArr(int,int))  
-            , f : function(x){return function(y){return x+y;}; } },
-   's'    : { t : mkArr(int,int)
-            , f : function(x){return x+1;} }
-  };
-
-  ctx = mkCtx({
-    'plus' : [ [int,int,int]
-           , function(x){return function(y){return x+y;}; }  ],
-    's'    : [ [int,int]
-           , function(x){return x+1;} ]
-  });
-
-  startUnf = mkUnf(int,ctx);
-
-  nextsIT = function(m){
-
-  };
-
-
-});
-
-
-var showCtx = function(ctx){
-  var ret = '\n';
+var showCtx = function(ctx,opt){
+  var isShort = opt === 'short';
+  var ret = isShort ? '' : '\n';
   for(var i in ctx){
-     ret += i + ' : ' + code(ctx[i].t) + '\n' ;
+     ret += i ; 
+     ret += isShort ? ',' : 
+            ' : '+code(ctx[i].t)+'\n' ;
   }
+  ret = isShort ? ret.substr(0,ret.length-1) : ret ;
   return ret;
 };
 
@@ -292,7 +250,7 @@ var toJSstr = function(m){
       }
       str += m.ms[m.ms.length-1] + ')';
       return str;
-    default    : throw 'Unsupported term structure.'
+    default    : throw 'Unsupported term structure (toJSstr).'
   }
 };
 
@@ -301,9 +259,10 @@ var toLCstr = function(m){
   switch(m.c){
     case 'val' : return m.x; 
     case 'var' : return m.x;
-    case 'app' : return '( ' + toLCstr(m.m) + ' '   + toLCstr(m.n) + ' )';
-    case 'lam' : return '( ' + m.x          + ' . ' + toLCstr(m.m) + ' )';
-    default    : throw 'Unsupported term structure.'
+    case 'app' : return '( '+ toLCstr(m.m) +' '+ toLCstr(m.n) +' )';
+    case 'lam' : return '( '+ m.x +' . '+ toLCstr(m.m) +' )';
+    case 'unf' : return '[' + code(m.t) +';'+ showCtx(m.ctx,'short')+']';
+    default    : throw 'Unsupported term structure (toLCstr).'
   }
 };
 
@@ -352,6 +311,54 @@ var mkSexpr = function(f,ms){
   return acc;
 };
 
+$(function(){
+
+
+  int = mkAtm('int');
+
+  x = mkVar('x',int);
+
+
+  s = mkVal('s', mkTyp([int,int]) );
+
+  f = mkLam(x, mkApp(s,x)  );
+
+  one = mkVal(1,int);
+
+  plus = mkVal( 'plus' , mkTyp([int,int,int])  );
+
+  m = mkApp( f , one );
+
+  log( 'm = ' + code(m,'lc') );
+  log( 'm = ' + code(m,'jsstr') );
+
+
+  g = mkVal( function(x){return x+1;} , mkArr(int,int) );
+
+  ctx_ = {
+   'plus' : { t : mkArr(int,mkArr(int,int))  
+            , f : function(x){return function(y){return x+y;}; } },
+   's'    : { t : mkArr(int,int)
+            , f : function(x){return x+1;} }
+  };
+
+  ctx = mkCtx({
+    'plus' : [ [int,int,int]
+           , function(x){return function(y){return x+y;}; }  ],
+    's'    : [ [int,int]
+           , function(x){return x+1;} ]
+  });
+
+  startUnf = mkUnf(int,ctx);
+
+  nextsIT = function(m){
+
+  };
+
+
+  start = mkStartZipper(mkTyp([int,int]),ctx);
+
+});
 
 
 var mkAppLZ = function(m){
@@ -384,17 +391,19 @@ var mkLamZ = function(m){
 
 
 
-var empty = undefined;
+var empty = null;
 var cons = function(x,xs){
   return { head : x  , 
            tail : xs };
 };
 
 
+
+
 var showZipper = function(zipper){
   assert(zipper.c = 'zipper');
   var show = function( zips , str ){
-    if( ! zips.head ){ return str; }
+    if( !zips || !zips.head ){ return str; }
     switch( zips.head.c ){
       case 'lamZ'  :
         return show( zips.tail , 
@@ -420,6 +429,43 @@ var mkZipper = function(obj){
 };
 
 
+
+
+
+var expand = function( zipper ){
+  //TODO
+};
+
+var expandLam = function( zipper ){
+  assert( zipper.act.c === 'unf' , 
+          'act must be unf to be lam-expanded' );
+
+  var newZipper = zipper;
+  var t         = zipper.act.t;
+  var ctx       = _.clone(zipper.act.ctx);
+  
+  assert( isArr(t), 'Lam-expanded can be only arrow type.' );
+
+  var i = 0 ; //TODO predelat na nacteni ze zipperu
+
+  while( isArr(t) ){
+
+
+
+    newZipper = mkZipper({
+      act  :  undefined, 
+      zips : zipper.zips
+    });
+
+  }
+
+
+  
+
+
+};
+
+
 var dfsStep = function( zipper ){
   switch( zipper.act.c ){
     case 'app' :
@@ -437,6 +483,7 @@ var dfsStep = function( zipper ){
 };
 
 var stepToNextBigger = function( zipper ){
+  if( !zipper.zips ){ return null; }
   var headZip = zipper.zips.head ;
   if( ! headZip ){ return null; }
 
@@ -473,8 +520,10 @@ var mkZip = function(f,ls,rs,t){
 };
 
 var mkStartZipper = function(t,ctx){
-  return { act  : mkUnf(t,ctx)
-         , zips : [] };
+  return mkZipper({ 
+        act  : mkUnf(t,ctx) ,
+        zips : empty  
+  });
 };
 
 /*var dfsStep = function(zipper){
