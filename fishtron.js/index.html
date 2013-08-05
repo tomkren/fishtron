@@ -1,0 +1,581 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>fishtron.js</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+
+    <style>
+    </style>
+
+    <script src="js/libs/jquery.js"></script>
+    <script src="js/libs/jquery.ui.js"></script>
+    <script src="js/libs/underscore.js"></script>
+    <script src="js/libs/priority_queue.js"></script>
+
+
+<script>
+
+
+var same = function(x,y){
+  if( ! x.c || ! y.c ){return false;}
+  if(   x.c !==  y.c ){return false;}
+
+
+  switch( x.c ){
+    case 'atm' : return x.a === y.a ;
+    case 'arr' : return (  same(x.a,y.a) 
+                        && same(x.b,y.b) );
+  }
+
+  return null;
+};
+
+var mkAtm = function(a){
+  return {
+    c : 'atm' ,
+    a : a
+  };
+};
+
+var mkArr = function(a,b){
+  return {
+    c : 'arr',
+    a : a,
+    b : b
+  };
+};
+
+var mkTyp = function( x ){
+  if( _.isArray(x) ){
+    var ts  = _.map( x , mkTyp );
+    var acc = ts[ts.length-1];
+    for( var i = ts.length-2 ; i >= 0 ; i-- ){
+      acc = mkArr(ts[i],acc);
+    }
+    return acc;
+  }else{
+    if(_.isString(x)){
+      return mkAtm(x);  
+    }else{
+      return x;
+    }
+  }
+};
+
+var tParts = function(t){
+  assert( isTyp(t) , 'tParts: t must be typ.' );
+
+  var ts = [];
+  while( isArr(t) ){
+    ts.push( t.a );
+    t = t.b; 
+  }
+
+  return [ ts , t ];
+};
+
+
+var mkVar = function(x,t){
+  return { 
+    c : 'var',
+    x : x    ,
+    t : t
+  };
+};
+
+var mkVal = function(x,t){
+  return { 
+    c : 'val',
+    x : x    ,
+    t : t
+  };
+};
+
+
+
+
+var mkApp = function(m,n){
+
+  assert( isArr( m.t ) );
+
+  return { 
+    c : 'app',
+    m : m    ,
+    n : n    ,
+    t : m.t.b
+  };
+};
+
+
+var mkLam_ = function(x,m,t){
+  assert( same( m.t , t.b )  );
+  return { 
+    c : 'lam',
+    x : x    ,
+    m : m    ,
+    t : t
+  };
+};
+
+
+var mkLam = function(x,y,z){
+  return ( z ? mkLam_fromStr(x,y,z) 
+             : mkLam_fromVar(x,y)   ) ;
+};
+
+var mkLam_fromStr = function(x,tx,m){
+  return {
+    c : 'lam', 
+    x : x,
+    m : m,
+    t : mkArr( tx , m.t )
+  };
+};
+
+var mkLam_fromVar = function(x,m){
+  return {
+    c : 'lam', 
+    x : x.x,
+    m : m,
+    t : mkArr( x.t , m.t )
+  };
+};
+
+
+
+
+
+
+var isArr = function( t ){
+  return t.c === 'arr' ;
+};
+
+var isTyp = function( x ){
+  return (  x.c === 'arr' 
+         || x.c === 'atm') ;
+};
+
+
+var mkCtx = function(obj){
+  var ctx = {};
+  for( var i in obj ){
+    var name = i;
+    var typ  = mkTyp(obj[i][0]);
+    var fun  = obj[i][1];
+
+    ctx[name] = { t : typ
+                , f : fun };
+  }
+  return ctx;
+};
+
+$(function(){
+
+
+  int = mkAtm('int');
+
+  x = mkVar('x',int);
+
+
+  s = mkVal('s', mkTyp([int,int]) );
+
+  f = mkLam(x, mkApp(s,x)  );
+
+  one = mkVal(1,int);
+
+  plus = mkVal( 'plus' , mkTyp([int,int,int])  );
+
+  m = mkApp( f , one );
+
+  log( 'm = ' + code(m,'lc') );
+  log( 'm = ' + code(m,'jsstr') );
+
+
+  g = mkVal( function(x){return x+1;} , mkArr(int,int) );
+
+  ctx_ = {
+   'plus' : { t : mkArr(int,mkArr(int,int))  
+            , f : function(x){return function(y){return x+y;}; } },
+   's'    : { t : mkArr(int,int)
+            , f : function(x){return x+1;} }
+  };
+
+  ctx = mkCtx({
+    'plus' : [ [int,int,int]
+           , function(x){return function(y){return x+y;}; }  ],
+    's'    : [ [int,int]
+           , function(x){return x+1;} ]
+  });
+
+  startUnf = mkUnf(int,ctx);
+
+  nextsIT = function(m){
+
+  };
+
+
+});
+
+
+var showCtx = function(ctx){
+  var ret = '\n';
+  for(var i in ctx){
+     ret += i + ' : ' + code(ctx[i].t) + '\n' ;
+  }
+  return ret;
+};
+
+var ctxCompile = function( m , ctx ){
+  var ctxc = function(m){ 
+    switch(m.c){
+      case 'val' : 
+        if( ctx[m.x] ){
+          return mkVal( ctx[m.x].f , ctx[m.x].t );
+        }else{
+          return m;
+        } 
+      case 'var' : return m;
+      case 'app' : return mkApp( ctxc(m.m) , ctxc(m.n) ) ;
+      case 'lam' : 
+        assert(isArr(m.t));
+        return mkLam(m.x,m.t.a,ctxc(m.m));
+    }
+  }
+  return code(ctxc(m));
+};
+
+var code = function(m,opt){
+  if( isTyp(m) ){
+    return typToStr(m);
+  } else if( _.isObject(opt) ) {
+    return ctxCompile(m,opt);
+  } else {
+    switch( opt ){
+      case 'js'    : return toJSexpr( m );
+      case 'jsstr' : return toJSstr ( m );
+      case 'lc'    : return toLCstr ( m );
+      default      : return toJSexpr( m );
+    }
+  }
+};
+
+
+
+var typToStr = function(t){
+  switch(t.c){
+    case 'atm' : return t.a; 
+    case 'arr' : return '(' + typToStr(t.a) + '->' + typToStr(t.b) + ')';
+    default    : throw 'Unsupported type: ' + t
+  }  
+};
+
+
+var toJSexpr = function(m){
+  var result;
+  var jsStr = 'result=' + toJSstr(m) + ';';
+  eval(jsStr);
+  return result; 
+};
+
+var toJSstr = function(m){
+  switch(m.c){
+    case 'val' : return m.x; 
+    case 'var' : return m.x;
+    case 'app' : return toJSstr(m.m) + '(' + toJSstr(m.n) + ')';
+    case 'lam' : return 'function(' + m.x  + '){' +
+                           'return ' + toJSstr(m.m) + ';}';
+    case 'sex' : 
+      var str = m.f +'(' ;
+      for(var i=0;i<m.ms.length-1 ; i++ ){
+        str += m.ms[i] + ','; 
+      }
+      str += m.ms[m.ms.length-1] + ')';
+      return str;
+    default    : throw 'Unsupported term structure.'
+  }
+};
+
+
+var toLCstr = function(m){
+  switch(m.c){
+    case 'val' : return m.x; 
+    case 'var' : return m.x;
+    case 'app' : return '( ' + toLCstr(m.m) + ' '   + toLCstr(m.n) + ' )';
+    case 'lam' : return '( ' + m.x          + ' . ' + toLCstr(m.m) + ' )';
+    default    : throw 'Unsupported term structure.'
+  }
+};
+
+
+var log = function(x){
+  return console.log(x);
+};
+
+var assert = function(condition, message) {
+  if (!condition) {
+    throw message || "Assertion failed!";
+  }
+};
+
+
+
+//----------------------------------------------------
+
+
+var mkSex = function(f,ms,t){
+  return { c  : 'sex'
+         , f  : f 
+         , ms : ms 
+         , t  : t  };
+};
+
+
+
+
+var mkSexpr = function(f,ms){
+
+  var parts = tParts(f.t);
+  var ts    = parts[0];
+  var alpha = parts[1]; 
+
+  assert( ts.length === ms.length );
+  
+  var acc = f ;
+
+  for( var i = 0 ; i < ms.length ; i++ ){
+    assert( same( ts[i] , ms[i].t ) );
+    
+    acc = mkApp( acc , ms[i] );
+  }
+
+  return acc;
+};
+
+
+
+var mkAppLZ = function(m){
+  assert( m.c === 'app' );
+  return {
+    c : 'appLZ' ,
+    n : m.n ,
+    t : m.t 
+  };
+};
+
+var mkAppRZfromLZ = function(lz,m){
+  assert( lz.c === 'appLZ' );
+  return {
+    c : 'appRZ' ,
+    m : m ,
+    t : lz.t 
+  };
+};
+
+var mkLamZ = function(m){
+  assert( m.c === 'lam' );
+  return {
+    c : 'lamZ',
+    x : m.x ,
+    t : m.t
+  };
+};
+
+
+
+
+var empty = undefined;
+var cons = function(x,xs){
+  return { head : x  , 
+           tail : xs };
+};
+
+
+var showZipper = function(zipper){
+  assert(zipper.c = 'zipper');
+  var show = function( zips , str ){
+    if( ! zips.head ){ return str; }
+    switch( zips.head.c ){
+      case 'lamZ'  :
+        return show( zips.tail , 
+          '( ' + zips.head.x + ' . ' + str + ')'  );
+      case 'appLZ' :
+        return show( zips.tail ,
+          '( '+ str +' '+ zips.head.n +' )' );
+      case 'appRZ' : 
+        return show( zips.tail ,
+          '( '+ zips.head.m +' '+ str +' )' );
+    }
+  };
+  return show( zipper.zips , 
+               ' { ' + code(zipper.act,'lc') + ' } ' );
+};
+
+var mkZipper = function(obj){
+  return {
+    c    : 'zipper' ,
+    act  : obj.act ,
+    zips : obj.zips  
+  }
+};
+
+
+var dfsStep = function( zipper ){
+  switch( zipper.act.c ){
+    case 'app' :
+      return mkZipper({ 
+        act  : zipper.act.m ,
+        zips : cons( mkAppLZ(m) , zipper.zips ) 
+      });
+    case 'lam' :
+      return mkZipper({
+        act  : zipper.act.m ,
+        zips : cons( mkLamZ(m) , zipper.zips )
+      });
+    default : return stepToNextBigger( zipper );
+  }
+};
+
+var stepToNextBigger = function( zipper ){
+  var headZip = zipper.zips.head ;
+  if( ! headZip ){ return null; }
+
+  switch( headZip.c ){
+    case 'appLZ' :
+      return mkZipper({
+        act  : headZip.n ,
+        zips : cons( mkAppRZfromLZ(headZip,zipper.act)  
+                   , zipper.zips ) 
+      });
+    case 'appRZ' :
+      return stepToNextBigger(mkZipper({
+        act  : mkApp( headZip.m , zipper.act ),
+        zips : zipper.zips.tail 
+      }));
+    case 'lamZ'  :
+      return stepToNextBigger(mkZipper({ 
+        act  : mkLam_( headZip.x , zipper.act , headZip.t ),
+        zips : zipper.zips.tail 
+      }));
+    default : throw "Unsupported zip constructor."
+  }
+
+};
+
+
+
+var mkZip = function(f,ls,rs,t){
+  return { c  : 'zip' 
+         , f  : f     
+         , ls : ls
+         , rs : rs
+         , t  : t }; 
+};
+
+var mkStartZipper = function(t,ctx){
+  return { act  : mkUnf(t,ctx)
+         , zips : [] };
+};
+
+/*var dfsStep = function(zipper){
+  var act  = zipper.act  ;
+  var zips = zipper.zips ;
+
+};*/
+
+var mkUnf = function(t,ctx){
+  return { c   : 'unf'
+         , t   : t
+         , ctx : ctx };
+};
+
+var isUnf = function(m){
+  return m.c === 'unf';
+};
+
+var treeAStar = function(problem){
+
+  var start  = {s:problem.start,G:0} ;
+  var nexts  = problem.nexts  ;
+  var isGoal = problem.isGoal ;
+  var n      = problem.n      || 1;
+  var heur   = problem.heur   || function(x){return 0;};
+  var limit  = problem.limit  || 1000000;
+
+  var q = PriorityQueue({low: true});
+  var results = [];
+
+  q.push( start , heur(start.s) );
+
+  while( ! q.empty() && limit > 0 ){
+    limit--;
+
+    var st    = q.pop() ;
+    var state = st.s    ;
+    var G     = st.G    ;
+
+    if( isGoal(state) ){
+      results.push(state);
+      if( results.length == n ){
+        return results;
+      }
+    }
+
+    var ns = nexts(state);
+    for( var i = 0 ; i < ns.length ; i++ ){
+      
+      var newG = G + ns[i].dist ;
+
+      var next = {s : ns[i].state ,
+                  G : newG  };
+    
+      q.push( next ,  newG + heur(next) );  
+    }
+
+  }
+  return results;
+};
+
+
+
+
+$(function(){
+
+
+  sumStr = function(str){
+    var sum = 0;
+    for( var i = 0 ; i < str.length ; i++ ){
+      sum += parseInt(str[i]);
+    }
+    return sum;
+  };
+
+  res = treeAStar({
+    n     : 100 ,
+    start : '' ,
+    isGoal: function(x){
+              return sumStr(x) == 10;} ,
+    nexts : function(x){
+              return [ {state:x+'0',dist:1} ,
+                       {state:x+'1',dist:1} ]; },
+    heur  : function(x){
+              return Math.max( 0 , 10 - sumStr(x) );}
+  });  
+
+
+
+
+});
+
+
+
+
+
+</script>
+</head>
+<body>
+</body>
+</html>
+
+
+
