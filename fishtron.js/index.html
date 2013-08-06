@@ -17,6 +17,56 @@
 <script>
 
 
+$(function(){
+
+  int  = mkAtm('int');
+  char = mkAtm('char');
+
+  x = mkVar('x',int);
+
+
+  s = mkVal('s', mkTyp([int,int]) );
+
+  f = mkLam(x, mkApp(s,x)  );
+
+  one = mkVal(1,int);
+
+  plus = mkVal( 'plus' , mkTyp([int,int,int])  );
+
+  m = mkApp( f , one );
+
+  //log( 'm = ' + code(m,'lc') );
+  //log( 'm = ' + code(m,'jsstr') );
+
+
+  g = mkVal( function(x){return x+1;} , mkArr(int,int) );
+
+  ctx_ = {
+   'plus' : { t : mkArr(int,mkArr(int,int))  
+            , f : function(x){return function(y){return x+y;}; } },
+   's'    : { t : mkArr(int,int)
+            , f : function(x){return x+1;} }
+  };
+
+  ctx = mkCtx({
+    'plus' : [ [int,int,int]
+           , function(x){return function(y){return x+y;}; }  ],
+    's'    : [ [int,int]
+           , function(x){return x+1;} ]
+  });
+
+
+
+  s0 = mkStartZipper(mkTyp([int,char,int]),ctx);
+  log(showZipper(s0));
+  s1 = expandLam(s0);
+  log(showZipper(s1));
+
+});
+
+
+
+
 var same = function(x,y){
   if( ! x.c || ! y.c ){return false;}
   if(   x.c !==  y.c ){return false;}
@@ -311,58 +361,10 @@ var mkSexpr = function(f,ms){
   return acc;
 };
 
-$(function(){
-
-
-  int = mkAtm('int');
-
-  x = mkVar('x',int);
-
-
-  s = mkVal('s', mkTyp([int,int]) );
-
-  f = mkLam(x, mkApp(s,x)  );
-
-  one = mkVal(1,int);
-
-  plus = mkVal( 'plus' , mkTyp([int,int,int])  );
-
-  m = mkApp( f , one );
-
-  log( 'm = ' + code(m,'lc') );
-  log( 'm = ' + code(m,'jsstr') );
-
-
-  g = mkVal( function(x){return x+1;} , mkArr(int,int) );
-
-  ctx_ = {
-   'plus' : { t : mkArr(int,mkArr(int,int))  
-            , f : function(x){return function(y){return x+y;}; } },
-   's'    : { t : mkArr(int,int)
-            , f : function(x){return x+1;} }
-  };
-
-  ctx = mkCtx({
-    'plus' : [ [int,int,int]
-           , function(x){return function(y){return x+y;}; }  ],
-    's'    : [ [int,int]
-           , function(x){return x+1;} ]
-  });
-
-  startUnf = mkUnf(int,ctx);
-
-  nextsIT = function(m){
-
-  };
-
-
-  start = mkStartZipper(mkTyp([int,int]),ctx);
-
-});
 
 
 var mkAppLZ = function(m){
-  assert( m.c === 'app' );
+  assert( m.c === 'app' , 'Error in mkAppLZ!');
   return {
     c : 'appLZ' ,
     n : m.n ,
@@ -380,7 +382,7 @@ var mkAppRZfromLZ = function(lz,m){
 };
 
 var mkLamZ = function(m){
-  assert( m.c === 'lam' );
+  assert( m.c === 'lam' , 'Error in mkLamZ!');
   return {
     c : 'lamZ',
     x : m.x ,
@@ -401,7 +403,8 @@ var cons = function(x,xs){
 
 
 var showZipper = function(zipper){
-  assert(zipper.c = 'zipper');
+  if( zipper === null ){ return '[NULL ZIPPER]'}
+  assert(zipper.c === 'zipper');
   var show = function( zips , str ){
     if( !zips || !zips.head ){ return str; }
     switch( zips.head.c ){
@@ -420,12 +423,24 @@ var showZipper = function(zipper){
                ' { ' + code(zipper.act,'lc') + ' } ' );
 };
 
-var mkZipper = function(obj){
+var mkZipper = function(obj,parentZipper){
+
+  var pz = function(prop,defa){
+    if( obj[prop] !== undefined ){
+      return obj[prop];
+    } else if( parentZipper ){
+      return parentZipper[prop] ;
+    } else {
+      return defa ;
+    }
+  };
+
   return {
-    c    : 'zipper' ,
-    act  : obj.act ,
-    zips : obj.zips  
-  }
+    c       : 'zipper' ,
+    act     : pz('act'),
+    zips    : pz('zips'   ,empty ) ,
+    nextVar : pz('nextVar',0     ) 
+  };
 };
 
 
@@ -440,27 +455,34 @@ var expandLam = function( zipper ){
   assert( zipper.act.c === 'unf' , 
           'act must be unf to be lam-expanded' );
 
-  var newZipper = zipper;
-  var t         = zipper.act.t;
-  var ctx       = _.clone(zipper.act.ctx);
-  
+  var t       = zipper.act.t;
+  var ctx     = _.clone(zipper.act.ctx);
+  var varI    = zipper.nextVar; 
+  var newVars = [];
+ 
+
   assert( isArr(t), 'Lam-expanded can be only arrow type.' );
 
-  var i = 0 ; //TODO predelat na nacteni ze zipperu
-
+  
   while( isArr(t) ){
-
-
-
-    newZipper = mkZipper({
-      act  :  undefined, 
-      zips : zipper.zips
-    });
-
+    var varName = '_'+varI ;
+    newVars.push(  mkVar(varName,t.a)  );
+    ctx[varName] = { t : t.a ,
+                     f : varName };
+    varI ++;
+    t = t.b;
   }
 
+  var acc = mkUnf( t , ctx );
 
-  
+  for( var i = newVars.length-1 ; i >= 0 ; i-- ){
+    acc = mkLam( newVars[i] , acc );
+  }
+
+  return mkZipper({
+    act     : acc,
+    nextVar : varI 
+  },zipper);  
 
 
 };
@@ -471,13 +493,13 @@ var dfsStep = function( zipper ){
     case 'app' :
       return mkZipper({ 
         act  : zipper.act.m ,
-        zips : cons( mkAppLZ(m) , zipper.zips ) 
-      });
+        zips : cons( mkAppLZ(zipper.act) , zipper.zips ) 
+      },zipper);
     case 'lam' :
       return mkZipper({
         act  : zipper.act.m ,
-        zips : cons( mkLamZ(m) , zipper.zips )
-      });
+        zips : cons( mkLamZ(zipper.act) , zipper.zips )
+      },zipper);
     default : return stepToNextBigger( zipper );
   }
 };
@@ -485,25 +507,25 @@ var dfsStep = function( zipper ){
 var stepToNextBigger = function( zipper ){
   if( !zipper.zips ){ return null; }
   var headZip = zipper.zips.head ;
-  if( ! headZip ){ return null; }
+  if( !headZip ){ return null; }
 
   switch( headZip.c ){
     case 'appLZ' :
       return mkZipper({
         act  : headZip.n ,
         zips : cons( mkAppRZfromLZ(headZip,zipper.act)  
-                   , zipper.zips ) 
-      });
+                   , zipper.zips.tail ) 
+      },zipper);
     case 'appRZ' :
       return stepToNextBigger(mkZipper({
         act  : mkApp( headZip.m , zipper.act ),
         zips : zipper.zips.tail 
-      }));
+      },zipper));
     case 'lamZ'  :
       return stepToNextBigger(mkZipper({ 
         act  : mkLam_( headZip.x , zipper.act , headZip.t ),
         zips : zipper.zips.tail 
-      }));
+      },zipper));
     default : throw "Unsupported zip constructor."
   }
 
@@ -511,13 +533,6 @@ var stepToNextBigger = function( zipper ){
 
 
 
-var mkZip = function(f,ls,rs,t){
-  return { c  : 'zip' 
-         , f  : f     
-         , ls : ls
-         , rs : rs
-         , t  : t }; 
-};
 
 var mkStartZipper = function(t,ctx){
   return mkZipper({ 
@@ -526,11 +541,6 @@ var mkStartZipper = function(t,ctx){
   });
 };
 
-/*var dfsStep = function(zipper){
-  var act  = zipper.act  ;
-  var zips = zipper.zips ;
-
-};*/
 
 var mkUnf = function(t,ctx){
   return { c   : 'unf'
