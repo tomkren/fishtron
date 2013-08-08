@@ -197,14 +197,19 @@ var mkLam_fromVar = function(x,m){
 
 
 
-var isArr = function( t ){
-  return t.c === 'arr' ;
-};
+var isArr = function( x ){ return x.c === 'arr' ; };
+var isAtm = function( x ){ return x.c === 'atm' ; };
+var isVar = function( x ){ return x.c === 'var' ; };
+var isVal = function( x ){ return x.c === 'val' ; };
+var isApp = function( x ){ return x.c === 'app' ; };
+var isLam = function( x ){ return x.c === 'lam' ; };
+var isUnf = function( x ){ return x.c === 'unf' ; };
+var isZipper =function(x){ return x.c === 'zipper';};
+var isTyp = function( x ){ return isArr(x) || isAtm(x) ;};
 
-var isTyp = function( x ){
-  return (  x.c === 'arr' 
-         || x.c === 'atm') ;
-};
+
+
+
 
 
 var mkCtx = function(obj){
@@ -256,6 +261,8 @@ var ctxCompile = function( m , ctx ){
 var code = function(m,opt){
   if( isTyp(m) ){
     return typToStr(m);
+  } else if( isZipper(m) ){
+    return showZipper(m);
   } else if( _.isObject(opt) ) {
     return ctxCompile(m,opt);
   } else {
@@ -364,7 +371,7 @@ var mkSexpr = function(f,ms){
 
 
 var mkAppLZ = function(m){
-  assert( m.c === 'app' , 'Error in mkAppLZ!');
+  assert( isApp(m) , 'Error in mkAppLZ!');
   return {
     c : 'appLZ' ,
     n : m.n ,
@@ -382,7 +389,7 @@ var mkAppRZfromLZ = function(lz,m){
 };
 
 var mkLamZ = function(m){
-  assert( m.c === 'lam' , 'Error in mkLamZ!');
+  assert( isLam(m) , 'Error in mkLamZ!');
   return {
     c : 'lamZ',
     x : m.x ,
@@ -404,7 +411,7 @@ var cons = function(x,xs){
 
 var showZipper = function(zipper){
   if( zipper === null ){ return '[NULL ZIPPER]'}
-  assert(zipper.c === 'zipper');
+  assert( isZipper(zipper) );
   var show = function( zips , str ){
     if( !zips || !zips.head ){ return str; }
     switch( zips.head.c ){
@@ -452,7 +459,7 @@ var expand = function( zipper ){
 };
 
 var expandLam = function( zipper ){
-  assert( zipper.act.c === 'unf' , 
+  assert( isUnf(zipper.act) , 
           'act must be unf to be lam-expanded' );
 
   var t       = zipper.act.t;
@@ -487,6 +494,13 @@ var expandLam = function( zipper ){
 
 };
 
+
+var gotoNextUnf = function( zipper ){
+  while( zipper !== null && ! isUnf(zipper.act) ){
+    zipper = dfsStep(zipper);
+  }
+  return zipper;
+};
 
 var dfsStep = function( zipper ){
   switch( zipper.act.c ){
@@ -548,9 +562,6 @@ var mkUnf = function(t,ctx){
          , ctx : ctx };
 };
 
-var isUnf = function(m){
-  return m.c === 'unf';
-};
 
 var treeAStar = function(problem){
 
