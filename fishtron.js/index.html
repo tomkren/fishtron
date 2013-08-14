@@ -61,25 +61,23 @@ $(function(){
   log(showZipper(s0));
   s1 = expandLam(s0);
   log(showZipper(s1));
-
+  s2 = gotoNextUnf(s1);
+  log(showZipper(s2));
+  s3 = expandApp(s2);
+  s4 = [];
+  s5 = [];
+  _.each(s3,function(z,i){
+    s4[i] = z ;
+    s5[i] = gotoNextUnf(z) ;
+    log('  ' + showZipper(z));
+    log('    ' + showZipper(s5[i]));
+  });
+  
 });
 
 
 
 
-var same = function(x,y){
-  if( ! x.c || ! y.c ){return false;}
-  if(   x.c !==  y.c ){return false;}
-
-
-  switch( x.c ){
-    case 'atm' : return x.a === y.a ;
-    case 'arr' : return (  same(x.a,y.a) 
-                        && same(x.b,y.b) );
-  }
-
-  return null;
-};
 
 var mkAtm = function(a){
   return {
@@ -115,14 +113,18 @@ var mkTyp = function( x ){
 
 var tParts = function(t){
   assert( isTyp(t) , 'tParts: t must be typ.' );
-
   var ts = [];
   while( isArr(t) ){
     ts.push( t.a );
     t = t.b; 
   }
-
   return [ ts , t ];
+};
+
+var tHead = function(t){
+  assert( isTyp(t) , 'tHead: t must be typ.' );
+  while( isArr(t) ){ t = t.b; }
+  return t;
 };
 
 
@@ -159,7 +161,7 @@ var mkApp = function(m,n){
 
 
 var mkLam_ = function(x,m,t){
-  assert( same( m.t , t.b )  );
+  assert( _.isEqual( m.t , t.b )  );
   return { 
     c : 'lam',
     x : x    ,
@@ -210,6 +212,53 @@ var isTyp = function( x ){ return isArr(x) || isAtm(x) ;};
 
 
 
+var mkAtmTab = function(ctx){
+  var ret = {};
+  for( var i in ctx ){ 
+    var alpha  = tHead( ctx[i].t ).a;
+    if( ret[alpha] === undefined ){ ret[alpha] = {}; }  
+    ret[alpha][i] = mkVal(i,ctx[i].t);
+  }  
+  return ret;
+};
+
+var atmTabToCtx = function(tab){
+  var ret = {};
+  for(var i in tab){
+    for( var j in tab[i] ){
+      ret[j] = {
+        t : tab[i][j].t  ,
+        f : undefined
+      };
+    }
+  }
+  return ret;
+};
+
+var showAtmTab = function(tab,opt){
+  return showCtx( atmTabToCtx(tab) , opt );
+};
+
+var addVarToAtmTab = function(tab, newVar ){
+  assert( isVar(newVar) , 'addVarToAtmTab : newVar must be var' );
+
+  var ret   = _.clone(tab);
+  var alpha = tHead(newVar.t).a;
+
+  if( ret[alpha] === undefined ){ 
+    ret[alpha] = {}; 
+  } else {
+    ret[alpha] = _.clone(ret[alpha]);
+  } 
+
+  ret[alpha][newVar.x] = newVar ;
+
+  return ret;
+};
+
+
+
+
 
 
 var mkCtx = function(obj){
@@ -218,9 +267,10 @@ var mkCtx = function(obj){
     var name = i;
     var typ  = mkTyp(obj[i][0]);
     var fun  = obj[i][1];
-
-    ctx[name] = { t : typ
-                , f : fun };
+    ctx[name] = { 
+      t : typ, 
+      f : fun 
+    };
   }
   return ctx;
 };
@@ -318,7 +368,7 @@ var toLCstr = function(m){
     case 'var' : return m.x;
     case 'app' : return '( '+ toLCstr(m.m) +' '+ toLCstr(m.n) +' )';
     case 'lam' : return '( '+ m.x +' . '+ toLCstr(m.m) +' )';
-    case 'unf' : return '[' + code(m.t) +';'+ showCtx(m.ctx,'short')+']';
+    case 'unf' : return '[' + code(m.t) +';'+ showAtmTab(m.atmTab,'short')+']';
     default    : throw 'Unsupported term structure (toLCstr).'
   }
 };
@@ -347,20 +397,20 @@ var mkSex = function(f,ms,t){
 };
 
 
-
-
 var mkSexpr = function(f,ms){
 
   var parts = tParts(f.t);
   var ts    = parts[0];
   var alpha = parts[1]; 
 
-  assert( ts.length === ms.length );
+  assert( ts.length === ms.length , 
+    'mkSexpr : lengths dont match' );
   
   var acc = f ;
 
   for( var i = 0 ; i < ms.length ; i++ ){
-    assert( same( ts[i] , ms[i].t ) );
+    assert( _.isEqual( ts[i] , ms[i].t ) ,
+      'mkSexpr : types are not equal' );
     
     acc = mkApp( acc , ms[i] );
   }
@@ -411,7 +461,7 @@ var cons = function(x,xs){
 
 var showZipper = function(zipper){
   if( zipper === null ){ return '[NULL ZIPPER]'}
-  assert( isZipper(zipper) );
+  assert( isZipper(zipper) , 'showZipper : it is not a zipper' );
   var show = function( zips , str ){
     if( !zips || !zips.head ){ return str; }
     switch( zips.head.c ){
@@ -420,10 +470,10 @@ var showZipper = function(zipper){
           '( ' + zips.head.x + ' . ' + str + ')'  );
       case 'appLZ' :
         return show( zips.tail ,
-          '( '+ str +' '+ zips.head.n +' )' );
+          '( '+ str +' '+ code(zips.head.n,'lc') +' )' );
       case 'appRZ' : 
         return show( zips.tail ,
-          '( '+ zips.head.m +' '+ str +' )' );
+          '( '+ code(zips.head.m,'lc') +' '+ str +' )' );
     }
   };
   return show( zipper.zips , 
@@ -462,25 +512,25 @@ var expandLam = function( zipper ){
   assert( isUnf(zipper.act) , 
           'act must be unf to be lam-expanded' );
 
-  var t       = zipper.act.t;
-  var ctx     = _.clone(zipper.act.ctx);
-  var varI    = zipper.nextVar; 
-  var newVars = [];
- 
+  var t         = zipper.act.t;
+  var newAtmTab = zipper.act.atmTab; 
+  var varI      = zipper.nextVar; 
+  var newVars   = [];
+
 
   assert( isArr(t), 'Lam-expanded can be only arrow type.' );
 
   
   while( isArr(t) ){
-    var varName = '_'+varI ;
-    newVars.push(  mkVar(varName,t.a)  );
-    ctx[varName] = { t : t.a ,
-                     f : varName };
+    var newVar = mkVar( '_'+varI , t.a );
+    newVars.push(  newVar  );
+    newAtmTab = addVarToAtmTab( newAtmTab , newVar );
+
     varI ++;
     t = t.b;
   }
 
-  var acc = mkUnf( t , ctx );
+  var acc = mkUnf( t , newAtmTab );
 
   for( var i = newVars.length-1 ; i >= 0 ; i-- ){
     acc = mkLam( newVars[i] , acc );
@@ -490,7 +540,36 @@ var expandLam = function( zipper ){
     act     : acc,
     nextVar : varI 
   },zipper);  
+};
 
+
+var expandApp = function( zipper ){
+  assert( isUnf(zipper.act) , 
+          'act must be unf to be app-expanded' );
+
+  var typ    = zipper.act.t;
+  var atmTab = zipper.act.atmTab;
+
+  assert( isAtm(typ), 'App-expanded can be only atomic type.' );
+
+  var ret = [];
+
+  var row = atmTab[typ.a];
+  if( row !== undefined ){
+    for( var i in row ){
+
+      var ms = _.map( tParts(row[i].t)[0] , function(t){
+        return mkUnf(t,atmTab);
+      });
+      
+      ret.push(mkZipper({
+        act : mkSexpr(row[i],ms) 
+      },zipper));
+
+    }
+  }
+
+  return ret;
 
 };
 
@@ -550,16 +629,16 @@ var stepToNextBigger = function( zipper ){
 
 var mkStartZipper = function(t,ctx){
   return mkZipper({ 
-        act  : mkUnf(t,ctx) ,
+        act  : mkUnf(t, mkAtmTab(ctx) ) ,
         zips : empty  
   });
 };
 
 
-var mkUnf = function(t,ctx){
-  return { c   : 'unf'
-         , t   : t
-         , ctx : ctx };
+var mkUnf = function(t,atmTab){
+  return { c       : 'unf'
+         , t       : t
+         , atmTab  : atmTab };
 };
 
 
