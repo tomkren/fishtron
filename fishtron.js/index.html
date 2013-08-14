@@ -9,11 +9,9 @@
     </style>
 
     <script src="js/libs/jquery.js"></script>
-    <script src="js/libs/jquery.ui.js"></script>
     <script src="js/libs/underscore.js"></script>
-    <script src="js/libs/priority_queue.js"></script>
-
-
+    <!--<script src="js/libs/jquery.ui.js"></script>-->
+    
 <script>
 
 
@@ -49,6 +47,16 @@ $(function(){
   };
 
   ctx = mkCtx({
+    '+' : [ [int,int,int]
+        , function(x){return function(y){return x+y;}; }  ],
+    's' : [ [int,int]
+        , function(x){return x+1;} ]
+  });
+
+
+  ctx2 = mkCtx({
+    'omg'  : [ [int,[int,int,int],[char,char],int]
+             , function(x,y,z){return x;}  ],
     'plus' : [ [int,int,int]
            , function(x){return function(y){return x+y;}; }  ],
     's'    : [ [int,int]
@@ -56,12 +64,11 @@ $(function(){
   });
 
 
-
   s0 = mkStartZipper(mkTyp([int,char,int]),ctx);
   log(showZipper(s0));
   s1 = expandLam(s0);
-  log(showZipper(s1));
-  s2 = gotoNextUnf(s1);
+  log(showZipper(s1.zipper) + ' >>> dist=' + s1.dist );
+  s2 = gotoNextUnf(s1.zipper);
   log(showZipper(s2));
   s3 = expandApp(s2);
   s4 = [];
@@ -72,9 +79,62 @@ $(function(){
     log('  ' + showZipper(z));
     log('    ' + showZipper(s5[i]));
   });
+
+  log('---------------------------');
+
+  var logz = function(z){return log(showZipper(z))};
+
+  z0 = mkStartZipperSmart( mkTyp([int,char,int]),ctx2 );
+  logz( z0 );
+  zs1 = smartExpand(z0);
+  _.each(zs1,function(z,i){
+    //z2[i] = z.zipper ;
+    log('  ' + showZipper(z.state) + '  >>> dist=' + z.dist );
+  });
+
+
+  log('------------------------------');
+
+
+
+  prove({
+    n     : 500,
+    typ   : mkTyp([int,int]),
+    ctx   : ctx ,
+    logit : true
+  });
+
+
   
 });
 
+
+var prove = function(opts){
+  if(opts === undefined){
+    opts = {logit:true};
+  } 
+
+  var typ = opts.typ || mkTyp(['a','a']);
+  var ctx = opts.ctx || mkCtx({});
+
+  var ret = treeAStar({
+    n     : opts.n     || 1,
+    limit : opts.limit || 1000000,
+    start : mkStartZipperSmart(typ,ctx),
+    nexts : smartExpand,
+    isGoal: function(zipper){return zipper.numUnfs === 0 ;},
+    heur  : function(zipper){return zipper.numUnfs;}
+  });  
+
+  if( opts.logit ){
+    _.each(ret,function(z,i){
+      //log( i + ' : \t' + showZipper(z) );
+      log( (i+1) + ' : \t' + code(gotoTop(z).act,'jsstr') );
+    });  
+  }
+
+  return ret;
+}
 
 
 
@@ -199,15 +259,15 @@ var mkLam_fromVar = function(x,m){
 
 
 
-var isArr = function( x ){ return x.c === 'arr' ; };
-var isAtm = function( x ){ return x.c === 'atm' ; };
-var isVar = function( x ){ return x.c === 'var' ; };
-var isVal = function( x ){ return x.c === 'val' ; };
-var isApp = function( x ){ return x.c === 'app' ; };
-var isLam = function( x ){ return x.c === 'lam' ; };
-var isUnf = function( x ){ return x.c === 'unf' ; };
-var isZipper =function(x){ return x.c === 'zipper';};
-var isTyp = function( x ){ return isArr(x) || isAtm(x) ;};
+var isArr    = function( x ){ return x.c === 'arr' ; };
+var isAtm    = function( x ){ return x.c === 'atm' ; };
+var isVar    = function( x ){ return x.c === 'var' ; };
+var isVal    = function( x ){ return x.c === 'val' ; };
+var isApp    = function( x ){ return x.c === 'app' ; };
+var isLam    = function( x ){ return x.c === 'lam' ; };
+var isUnf    = function( x ){ return x.c === 'unf' ; };
+var isZipper = function( x ){ return x.c === 'zipper';};
+var isTyp    = function( x ){ return isArr(x) || isAtm(x) ;};
 
 
 
@@ -477,26 +537,23 @@ var showZipper = function(zipper){
     }
   };
   return show( zipper.zips , 
-               ' { ' + code(zipper.act,'lc') + ' } ' );
+               ' { ' + code(zipper.act,'lc') + ' } ' ) + '   ['+ zipper.numUnfs +']';
 };
 
 var mkZipper = function(obj,parentZipper){
 
   var pz = function(prop,defa){
-    if( obj[prop] !== undefined ){
-      return obj[prop];
-    } else if( parentZipper ){
-      return parentZipper[prop] ;
-    } else {
-      return defa ;
-    }
+    if( obj[prop] !== undefined ){ return obj[prop];} 
+    else if( parentZipper )      { return parentZipper[prop];} 
+    else                         { return defa ;}
   };
 
   return {
     c       : 'zipper' ,
     act     : pz('act'),
-    zips    : pz('zips'   ,empty ) ,
-    nextVar : pz('nextVar',0     ) 
+    zips    : pz('zips',empty),
+    nextVar : pz('nextVar',0),
+    numUnfs : pz('numUnfs',0)
   };
 };
 
@@ -504,9 +561,10 @@ var mkZipper = function(obj,parentZipper){
 
 
 
-var expand = function( zipper ){
-  //TODO
-};
+
+
+
+
 
 var expandLam = function( zipper ){
   assert( isUnf(zipper.act) , 
@@ -536,10 +594,13 @@ var expandLam = function( zipper ){
     acc = mkLam( newVars[i] , acc );
   }
 
-  return mkZipper({
-    act     : acc,
-    nextVar : varI 
-  },zipper);  
+  return {
+    zipper : mkZipper({
+               act     : acc,
+               nextVar : varI 
+             },zipper),
+    dist   : newVars.length 
+  };  
 };
 
 
@@ -563,7 +624,8 @@ var expandApp = function( zipper ){
       });
       
       ret.push(mkZipper({
-        act : mkSexpr(row[i],ms) 
+        act     : mkSexpr(row[i],ms),
+        numUnfs : zipper.numUnfs - 1 + ms.length 
       },zipper));
 
     }
@@ -573,6 +635,99 @@ var expandApp = function( zipper ){
 
 };
 
+var smartExpand = function( zipper ){
+  assert( isUnf(zipper.act) , 'smartExpand : act must be unf to be smart-expanded'+
+  '\n zipper : '+ showZipper(zipper) );
+
+  var typ    = zipper.act.t;
+  var atmTab = zipper.act.atmTab;
+
+  assert( isAtm(typ), 'smartExpand : Smart-expanded can be only atomic type.' );
+
+  var ret = [];
+
+  var row = atmTab[typ.a];
+  if( row !== undefined ){
+    for( var i in row ){
+
+      var varI = zipper.nextVar; 
+
+      var ms = _.map( tParts(row[i].t)[0] , function(t){
+
+        var newAtmTab = atmTab;   
+        var newVars   = [];
+
+        while( isArr(t) ){
+          var newVar = mkVar( '_'+varI , t.a );
+          newVars.push(newVar);
+          newAtmTab = addVarToAtmTab(newAtmTab,newVar);
+      
+          varI ++;
+          t = t.b;
+        }
+      
+        var acc = mkUnf(t,newAtmTab);
+      
+        for( var i = newVars.length-1 ; i >= 0 ; i-- ){
+          acc = mkLam( newVars[i] , acc );
+        }
+
+        return acc;
+      });
+      
+      var newNumUnfs = zipper.numUnfs - 1 + ms.length ;
+
+      var newZipper  = mkZipper({
+                          act     : mkSexpr(row[i],ms),
+                          numUnfs : newNumUnfs, 
+                          nextVar : varI  
+                       },zipper);
+
+      if( newNumUnfs !== 0 ){
+        newZipper = gotoNextUnf( newZipper );
+      }
+
+
+      ret.push({
+        state : newZipper,
+        dist  : 1 + (varI-zipper.nextVar) 
+      });
+
+    }
+  }
+
+  return ret;
+
+};
+
+var gotoTop = function( zipper ){
+  while( zipper.zips ){
+    zipper = goUp(zipper);
+  }
+  return zipper;
+};
+
+var goUp = function( zipper ){
+  assert( zipper.zips , 'goUp : impossible to go up ' );
+  var headZip = zipper.zips.head ;
+  assert( headZip , 'goUp : incorrect headZip..' );
+
+  switch( headZip.c ){
+    case 'appLZ' : return mkZipper({
+        act  : mkApp( zipper.act , headZip.n ) ,
+        zips : zipper.zips.tail
+      },zipper);
+    case 'appRZ' : return mkZipper({
+        act  : mkApp( headZip.m , zipper.act ),
+        zips : zipper.zips.tail 
+      },zipper);
+    case 'lamZ' : return mkZipper({ 
+        act  : mkLam_( headZip.x , zipper.act , headZip.t ),
+        zips : zipper.zips.tail 
+      },zipper);
+    default : throw "Unsupported zip constructor."
+  }
+};
 
 var gotoNextUnf = function( zipper ){
   while( zipper !== null && ! isUnf(zipper.act) ){
@@ -629,9 +784,24 @@ var stepToNextBigger = function( zipper ){
 
 var mkStartZipper = function(t,ctx){
   return mkZipper({ 
-        act  : mkUnf(t, mkAtmTab(ctx) ) ,
-        zips : empty  
+        act     : mkUnf(t, mkAtmTab(ctx) ) ,
+        zips    : empty,
+        numUnfs : 1  
   });
+};
+
+var mkStartZipperSmart = function(t,ctx){
+  var zipper = mkZipper({ 
+        act     : mkUnf(t, mkAtmTab(ctx) ) ,
+        zips    : empty,
+        numUnfs : 1  
+  });
+
+  if( isArr(t) ){
+    zipper = gotoNextUnf(expandLam(zipper).zipper);
+  }
+
+  return zipper;
 };
 
 
@@ -640,6 +810,40 @@ var mkUnf = function(t,atmTab){
          , t       : t
          , atmTab  : atmTab };
 };
+
+
+
+
+var mkPrioQueue = function(){
+  return [];
+}; 
+
+var prioPush = function( queue , x , val ){
+  var newEntry = [x,val];
+  var i = _.sortedIndex(queue,newEntry,function(pair){return pair[1];});
+  queue.splice(i,0,newEntry);
+}
+
+var prioPop = function( queue ){
+  return queue.shift();
+}
+
+var isPrioEmpty = function( queue ){
+  return queue.length === 0;
+};
+
+logPrio = function(queue,showFun){
+  if(showFun === undefined){
+    showFun = function(x){return x;}; 
+  }
+
+  _.each(queue,function(pair){
+    log( pair[1] +' : '+ showFun(pair[0]) );
+  });
+};
+
+
+
 
 
 var treeAStar = function(problem){
@@ -651,34 +855,42 @@ var treeAStar = function(problem){
   var heur   = problem.heur   || function(x){return 0;};
   var limit  = problem.limit  || 1000000;
 
-  var q = PriorityQueue({low: true});
+  var q = mkPrioQueue(); 
   var results = [];
 
-  q.push( start , heur(start.s) );
+  prioPush( q , start , heur(start.s) );
 
-  while( ! q.empty() && limit > 0 ){
+  while( !isPrioEmpty(q) && limit > 0 ){
+      
     limit--;
 
-    var st    = q.pop() ;
+    var st    = prioPop(q)[0];
     var state = st.s    ;
     var G     = st.G    ;
+    //log( 'vyndavam : ' + showZipper(state) );
 
     if( isGoal(state) ){
       results.push(state);
       if( results.length == n ){
         return results;
       }
-    }
+    } else { // TODO : obecně to ale pro grafovej Astrar neplatí
+             // (to že je to v else) prorože i za cílovym může bejt 
+             // další cílovej, u nás toé ale tak rozhodně neni a tak si to dovolíme
+             // vlastně se jedná o treeAStar-s-goalama-v-listech-tho-tree
 
-    var ns = nexts(state);
-    for( var i = 0 ; i < ns.length ; i++ ){
-      
-      var newG = G + ns[i].dist ;
+      var ns = nexts(state);
+      for( var i = 0 ; i < ns.length ; i++ ){
+        
+        var newG = G + ns[i].dist ;
+  
+        var next = {s : ns[i].state ,
+                    G : newG  };
+        
+        //log( '  vkladam : ' + showZipper(ns[i].state) );
+        prioPush( q , next , newG + heur(next.s) ); 
+      }
 
-      var next = {s : ns[i].state ,
-                  G : newG  };
-    
-      q.push( next ,  newG + heur(next) );  
     }
 
   }
@@ -687,7 +899,7 @@ var treeAStar = function(problem){
 
 
 
-
+/* /
 $(function(){
 
 
@@ -715,7 +927,7 @@ $(function(){
 
 
 });
-
+/ */
 
 
 
