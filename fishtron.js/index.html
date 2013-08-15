@@ -47,7 +47,7 @@ $(function(){
   };
 
   ctx = mkCtx({
-    '+' : [ [int,int,int]
+    'p' : [ [int,int,int]
         , function(x){return function(y){return x+y;}; }  ],
     's' : [ [int,int]
         , function(x){return x+1;} ]
@@ -99,7 +99,7 @@ $(function(){
 
   prove({
     n     : 500,
-    typ   : mkTyp([int,int]),
+    typ   : mkTyp([int,int,int]),
     ctx   : ctx ,
     logit : true
   });
@@ -129,7 +129,7 @@ var prove = function(opts){
   if( opts.logit ){
     _.each(ret,function(z,i){
       //log( i + ' : \t' + showZipper(z) );
-      log( (i+1) + ' : \t' + code(gotoTop(z).act,'jsstr') );
+      log( (i+1) + ' : \t' + code(gotoTop(z).act,'nicejsstr') );
     });  
   }
 
@@ -377,10 +377,12 @@ var code = function(m,opt){
     return ctxCompile(m,opt);
   } else {
     switch( opt ){
-      case 'js'    : return toJSexpr( m );
-      case 'jsstr' : return toJSstr ( m );
-      case 'lc'    : return toLCstr ( m );
-      default      : return toJSexpr( m );
+      case 'lc'       : return toLCstr     (m);
+      case 'js'       : return toJSexpr    (m);
+      case 'jsstr'    : return toJSstr     (m);
+      case 'nicejs'   : return toNiceJSexpr(m);
+      case 'nicejsstr': return toNicejs    (m);
+      default         : return toJSexpr    (m);
     }
   }
 };
@@ -403,6 +405,39 @@ var toJSexpr = function(m){
   return result; 
 };
 
+var toNiceJSexpr = function(m){
+  var result;
+  var jsStr = 'result=' + toNicejs(m) + ';';
+  eval(jsStr);
+  return result;   
+};
+
+var toNicejs = function(m){
+  switch(m.c){
+    case 'val' : return m.x; 
+    case 'var' : return m.x;
+    case 'app' : 
+      var str = '';
+      while(true){
+        str = toNicejs(m.n) + str;
+        m = m.m;
+        if(isApp(m)){ str = ',' + str ; }
+        else        { break;            } 
+      }
+      return toNicejs(m) + '(' + str + ')';
+    case 'lam' :
+      var xsStr = ''; 
+      while(true){
+        xsStr += m.x;
+        m = m.m;
+        if(isLam(m)){ xsStr += ',' ; }
+        else        { break ;        } 
+      }
+      return 'function('+ xsStr  +'){return '+ toNicejs(m) +'}';
+    default : throw 'Unsupported term structure (toJSstr).'
+  }
+};
+
 var toJSstr = function(m){
   switch(m.c){
     case 'val' : return m.x; 
@@ -410,13 +445,6 @@ var toJSstr = function(m){
     case 'app' : return toJSstr(m.m) + '(' + toJSstr(m.n) + ')';
     case 'lam' : return 'function(' + m.x  + '){' +
                            'return ' + toJSstr(m.m) + ';}';
-    case 'sex' : 
-      var str = m.f +'(' ;
-      for(var i=0;i<m.ms.length-1 ; i++ ){
-        str += m.ms[i] + ','; 
-      }
-      str += m.ms[m.ms.length-1] + ')';
-      return str;
     default    : throw 'Unsupported term structure (toJSstr).'
   }
 };
@@ -447,15 +475,6 @@ var assert = function(condition, message) {
 
 
 //----------------------------------------------------
-
-
-var mkSex = function(f,ms,t){
-  return { c  : 'sex'
-         , f  : f 
-         , ms : ms 
-         , t  : t  };
-};
-
 
 var mkSexpr = function(f,ms){
 
