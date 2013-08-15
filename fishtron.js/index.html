@@ -8,11 +8,13 @@
     <style>
     </style>
 
-    <script src="js/libs/jquery.js"></script>
-    <script src="js/libs/underscore.js"></script>
-    <!--<script src="js/libs/jquery.ui.js"></script>-->
+    <script src="js/libs/jquery-1.10.2.js"></script>
+    <script src="js/libs/underscore-1.5.1.js"></script>
+    <script src="js/ie-compat.js"></script>
     
 <script>
+
+
 
 
 $(function(){
@@ -48,7 +50,7 @@ $(function(){
 
   ctx = mkCtx({
     'p' : [ [int,int,int]
-        , function(x){return function(y){return x+y;}; }  ],
+        , function(x,y){return x+y;} ],
     's' : [ [int,int]
         , function(x){return x+1;} ]
   });
@@ -64,6 +66,8 @@ $(function(){
   });
 
 
+
+/*
   s0 = mkStartZipper(mkTyp([int,char,int]),ctx);
   log(showZipper(s0));
   s1 = expandLam(s0);
@@ -94,15 +98,33 @@ $(function(){
 
 
   log('------------------------------');
+*/
 
-
-
-  prove({
+  console.time('term-generation');
+  terms = prove({
     n     : 500,
     typ   : mkTyp([int,int,int]),
     ctx   : ctx ,
-    logit : true
+    logit : !true
   });
+  console.timeEnd('term-generation');
+
+
+  console.time('term-evaluation');
+  funs = evalTerms(terms,ctx);
+  log(_.map(funs,function(f){return f(1,2);}));
+  console.timeEnd('term-evaluation');
+
+
+  // console.time('term-evaluation-2');
+  // funs = evalTerms_2(terms,ctx);
+  // log(_.map(funs,function(f){return f(1,2);}));
+  // console.timeEnd('term-evaluation-2');
+           
+  // console.time('term-evaluation-slow');
+  // funs = evalTerms_slow(terms,ctx);
+  // log(_.map(funs,function(f){return f(1,2);}));
+  // console.timeEnd('term-evaluation-slow');
 
 
   
@@ -126,10 +148,11 @@ var prove = function(opts){
     heur  : function(zipper){return zipper.numUnfs;}
   });  
 
+  ret = _.map(ret,function(z){return gotoTop(z).act;});
+
   if( opts.logit ){
-    _.each(ret,function(z,i){
-      //log( i + ' : \t' + showZipper(z) );
-      log( (i+1) + ' : \t' + code(gotoTop(z).act,'nicejsstr') );
+    _.each(ret,function(term,i){
+      log( (i+1) + ' : \t' + code(term,'nicejsstr') );
     });  
   }
 
@@ -318,9 +341,6 @@ var addVarToAtmTab = function(tab, newVar ){
 
 
 
-
-
-
 var mkCtx = function(obj){
   var ctx = {};
   for( var i in obj ){
@@ -349,6 +369,70 @@ var showCtx = function(ctx,opt){
   return ret;
 };
 
+
+
+
+var ctxToWithobj = function(ctx){
+  var ret = _.clone(ctx);
+  for( var i in ret ){
+    ret[i] = ret[i].f;
+  }
+  return ret;
+};
+
+var ctxToLocalcode = function(ctx){
+  var ret = '';
+  for( var i in ctx ){
+    ret += 'var '+ i + ' = ' + ctx[i].f.toString() + ';\n' ;
+  }
+  return ret;
+
+};
+
+
+var evalTerms = function( terms , ctx ){
+  var __termsStr = _.map(terms,toNicejs).join();
+  var __result;
+  with(ctxToWithobj(ctx)){
+    eval('__result=[' + __termsStr + '];');
+  }
+  return __result;
+};
+
+// o něco pomalejší (cca 1.5×)
+var evalTerms_2 = function( __terms , __ctx ){
+  var __result;
+  var __termsStr = '[' + _.map(__terms,toNicejs).join() + ']' ;
+  eval( ctxToLocalcode(__ctx) +'__result='+ __termsStr + ';');
+  return __result;
+};
+
+
+//cca 20× pomalejší !!!!
+var evalTerms_slow = function( terms , ctx ){
+
+  var ctxWithobj = ctxToWithobj(ctx);
+  var __ret      = [];
+  
+  for( var i=0 ; i<terms.length ; i++ ){
+    var __termStr = toNicejs(terms[i]);
+    with(ctxWithobj){
+      var __result;
+      eval('__result=' + __termStr + ';');
+      __ret.push(__result);
+    }
+  }
+
+  return __ret;
+};
+
+
+
+
+
+
+
+//TODO asi smazat, divně je to řešený
 var ctxCompile = function( m , ctx ){
   var ctxc = function(m){ 
     switch(m.c){
@@ -416,24 +500,23 @@ var toNicejs = function(m){
   switch(m.c){
     case 'val' : return m.x; 
     case 'var' : return m.x;
-    case 'app' : 
-      var str = '';
-      while(true){
-        str = toNicejs(m.n) + str;
+    
+    case 'app' :
+      var args = [];
+      while(isApp(m)){
+        args.unshift(toNicejs(m.n));
         m = m.m;
-        if(isApp(m)){ str = ',' + str ; }
-        else        { break;            } 
       }
-      return toNicejs(m) + '(' + str + ')';
+      return toNicejs(m) + '(' + args.join(',') + ')';
+    
     case 'lam' :
-      var xsStr = ''; 
-      while(true){
-        xsStr += m.x;
+      var xs = [];
+      while(isLam(m)){
+        xs.push(m.x);
         m = m.m;
-        if(isLam(m)){ xsStr += ',' ; }
-        else        { break ;        } 
       }
-      return 'function('+ xsStr  +'){return '+ toNicejs(m) +'}';
+      return 'function('+ xs.join()  +'){return '+ toNicejs(m) +'}';
+    
     default : throw 'Unsupported term structure (toJSstr).'
   }
 };
