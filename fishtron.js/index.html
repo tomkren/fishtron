@@ -2,22 +2,31 @@
 <html>
   <head>
     <title>fishtron.js</title>
+
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
 
-    <style>
-    </style>
+    <link rel="stylesheet" href="css/libs/qunit-1.12.0.css">
+    <style></style>
 
     <script src="js/libs/jquery-1.10.2.js"></script>
     <script src="js/libs/underscore-1.5.1.js"></script>
+    <script src="js/libs/qunit-1.12.0.js"></script>
+    
     <script src="js/ie-compat.js"></script>
+    <script src="js/priority-queue.js"></script>
+    <script src="js/prove.js"></script>
+    <script src="js/tests.js"></script>
+
     
 <script>
 
 
-
-
 $(function(){
+
+
+
+  fishtronTests();
 
   int  = mkAtm('int');
   char = mkAtm('char');
@@ -50,9 +59,9 @@ $(function(){
 
   ctx = mkCtx({
     'p' : [ [int,int,int]
-        , function(x,y){return x+y;} ],
+          , function(x,y){return x+y;} ],
     's' : [ [int,int]
-        , function(x){return x+1;} ]
+          , function(x){return x+1;} ]
   });
 
 
@@ -100,20 +109,24 @@ $(function(){
   log('------------------------------');
 */
 
-  console.time('term-generation');
-  terms = prove({
-    n     : 500,
-    typ   : mkTyp([int,int,int]),
-    ctx   : ctx ,
-    logit : !true
-  });
-  console.timeEnd('term-generation');
+  if( false ){
 
+    console.time('term-generation');
+    terms = prove({
+      n     : 100,
+      typ   : mkTyp([int,int,int]),
+      ctx   : ctx ,
+      logit : true
+    });
+    console.timeEnd('term-generation');
+  
+  
+    console.time('term-evaluation');
+    funs = evalTerms(terms,ctx);
+    log(_.map(funs,function(f){return f(23,42);}));
+    console.timeEnd('term-evaluation');
 
-  console.time('term-evaluation');
-  funs = evalTerms(terms,ctx);
-  log(_.map(funs,function(f){return f(1,2);}));
-  console.timeEnd('term-evaluation');
+  }
 
 
   // console.time('term-evaluation-2');
@@ -131,33 +144,7 @@ $(function(){
 });
 
 
-var prove = function(opts){
-  if(opts === undefined){
-    opts = {logit:true};
-  } 
 
-  var typ = opts.typ || mkTyp(['a','a']);
-  var ctx = opts.ctx || mkCtx({});
-
-  var ret = treeAStar({
-    n     : opts.n     || 1,
-    limit : opts.limit || 1000000,
-    start : mkStartZipperSmart(typ,ctx),
-    nexts : smartExpand,
-    isGoal: function(zipper){return zipper.numUnfs === 0 ;},
-    heur  : function(zipper){return zipper.numUnfs;}
-  });  
-
-  ret = _.map(ret,function(z){return gotoTop(z).act;});
-
-  if( opts.logit ){
-    _.each(ret,function(term,i){
-      log( (i+1) + ' : \t' + code(term,'nicejsstr') );
-    });  
-  }
-
-  return ret;
-}
 
 
 
@@ -916,120 +903,14 @@ var mkUnf = function(t,atmTab){
 
 
 
-var mkPrioQueue = function(){
-  return [];
-}; 
-
-var prioPush = function( queue , x , val ){
-  var newEntry = [x,val];
-  var i = _.sortedIndex(queue,newEntry,function(pair){return pair[1];});
-  queue.splice(i,0,newEntry);
-}
-
-var prioPop = function( queue ){
-  return queue.shift();
-}
-
-var isPrioEmpty = function( queue ){
-  return queue.length === 0;
-};
-
-logPrio = function(queue,showFun){
-  if(showFun === undefined){
-    showFun = function(x){return x;}; 
-  }
-
-  _.each(queue,function(pair){
-    log( pair[1] +' : '+ showFun(pair[0]) );
-  });
-};
 
 
 
 
 
-var treeAStar = function(problem){
-
-  var start  = {s:problem.start,G:0} ;
-  var nexts  = problem.nexts  ;
-  var isGoal = problem.isGoal ;
-  var n      = problem.n      || 1;
-  var heur   = problem.heur   || function(x){return 0;};
-  var limit  = problem.limit  || 1000000;
-
-  var q = mkPrioQueue(); 
-  var results = [];
-
-  prioPush( q , start , heur(start.s) );
-
-  while( !isPrioEmpty(q) && limit > 0 ){
-      
-    limit--;
-
-    var st    = prioPop(q)[0];
-    var state = st.s    ;
-    var G     = st.G    ;
-    //log( 'vyndavam : ' + showZipper(state) );
-
-    if( isGoal(state) ){
-      results.push(state);
-      if( results.length == n ){
-        return results;
-      }
-    } else { // TODO : obecně to ale pro grafovej Astrar neplatí
-             // (to že je to v else) prorože i za cílovym může bejt 
-             // další cílovej, u nás toé ale tak rozhodně neni a tak si to dovolíme
-             // vlastně se jedná o treeAStar-s-goalama-v-listech-tho-tree
-
-      var ns = nexts(state);
-      for( var i = 0 ; i < ns.length ; i++ ){
-        
-        var newG = G + ns[i].dist ;
-  
-        var next = {s : ns[i].state ,
-                    G : newG  };
-        
-        //log( '  vkladam : ' + showZipper(ns[i].state) );
-        prioPush( q , next , newG + heur(next.s) ); 
-      }
-
-    }
-
-  }
-  return results;
-};
 
 
 
-/* /
-$(function(){
-
-
-  sumStr = function(str){
-    var sum = 0;
-    for( var i = 0 ; i < str.length ; i++ ){
-      sum += parseInt(str[i]);
-    }
-    return sum;
-  };
-
-  res = treeAStar({
-    n     : 100 ,
-    start : '' ,
-    isGoal: function(x){
-              return sumStr(x) == 10;} ,
-    nexts : function(x){
-              return [ {state:x+'0',dist:1} ,
-                       {state:x+'1',dist:1} ]; },
-    heur  : function(x){
-              return Math.max( 0 , 10 - sumStr(x) );}
-  });  
-
-
-
-
-});
-/ */
 
 
 
@@ -1037,6 +918,10 @@ $(function(){
 </script>
 </head>
 <body>
+
+  <div id="qunit"></div>
+  <div id="qunit-fixture"></div>
+
 </body>
 </html>
 
