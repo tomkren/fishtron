@@ -39,19 +39,22 @@ var fishtronTests = function(){
   
     test( 'prove()', function(){
       
-      var funs = prove({
+      var res = prove({
         n   : 3,
         typ : mkTyp(['a','a','a']),
         ctx : mkCtx({}) ,
-        evalThem: true
+        resultMode: 'both'
       });
 
-      strictEqual( 2 , funs.length  , '(a->a->a;{}) has 2 inhabitans' );
-      deepEqual( [23,42] , _.map(funs,function(f){return f(23,42)}).sort() ,
+      strictEqual( 2 , res[1].length  , '(a->a->a;{}) has 2 inhabitans' );
+      deepEqual( [23,42] , _.map(res[1],function(f){return f(23,42)}).sort() ,
           '... and those inhabitans are K and K*.' );
+      ok( areTermsNondecreasing(res[0]) , '... and their size is nondecreasing.' );
 
-      var funs2 = prove({
-         evalThem : true,
+      var int = mkAtm('int');
+
+      res = prove({
+         resultMode: 'both',
          n        : 100,
          typ      : mkTyp([int,int,int]),
          ctx      : mkCtx({ 
@@ -61,6 +64,8 @@ var fishtronTests = function(){
                             , function(x){return x+1;} ] 
                     })
       });
+      
+      var realResult = _.map(res[1],function(f){return f(23,42);})
 
       var supposedResult = [
         42, 23, 43, 24, 44, 25, 84, 65, 65, 46, 66, 47, 85, 66, 85, 66, 66, 47, 45, 
@@ -71,15 +76,67 @@ var fishtronTests = function(){
         108, 89, 108, 89, 89, 70, 108, 89
       ];
 
-      var realResult = _.map(funs2,function(f){return f(23,42);})
-
+      
       deepEqual( supposedResult , realResult ,  
              'Check that implementation doesn\'t change on (Int->Int->Int;{+,s}) (100 terms). '+
              '(Fail doesn\'t necessary mean bug..)');
+
+      ok( areTermsNondecreasing(res[0]) , '... and again their size is nondecreasing.' );
+
+
+
+
+      res = prove({
+         resultMode : 'both',
+         n        : 100,
+         typ      : mkTyp(['int','int','int']),
+         ctx      : mkCtx({
+                      ap42 : [ [['int','int'],'int'],
+                             function(f){return f(42)}  ],
+                      p :    [ ['int','int','int'],
+                             function(x,y){return x+y;} ],
+                      s :    [ ['int','int'],
+                             function(x){return x+1;} ] 
+                    })
+      });
+
+      realResult = _.map(res[1],function(f){return f(23,42);})
+
+      supposedResult = [
+        42, 23, 43, 24, 44, 25, 84, 65, 65, 46, 42, 42, 23, 43, 43, 24, 66, 47, 85, 66, 85, 66, 
+        66, 47, 45, 26, 85, 66, 66, 47, 43, 43, 24, 44, 44, 25, 67, 48, 86, 67, 86, 67, 67, 48, 
+        46, 27, 67, 48, 86, 67, 86, 67, 67, 48, 86, 67, 67, 48, 44, 44, 25, 84, 84, 65, 84, 84, 
+        65, 65, 65, 46, 42, 42, 42, 23, 107, 88, 88, 69, 65, 65, 46, 126, 107, 107, 88, 84, 84, 
+        65, 126, 107, 107, 88, 107, 88, 88, 69, 84, 65, 84, 65
+      ];
+      
+      deepEqual( supposedResult , realResult , 'Similar check on the slightly bigger ctx.');
+
+      ok( areTermsNondecreasing(res[0]) , '... size is nondecreasing.' );
+    
+    
+
+
+
 
 
       console.timeEnd('tests');
     });
 
+};
+
+var isNondecreasing = function(xs){
+  for(var i = 0 ; i < xs.length-1 ; i++ ){
+    if( xs[i] > xs[i+1] ){
+      return false;
+    }
+  }
+  return true;
+};
+  
+var areTermsNondecreasing = function(terms){
+  return isNondecreasing(_.map(terms, function(term){
+    return termSize(term, {countAPPs:false} );
+  }));
 };
  

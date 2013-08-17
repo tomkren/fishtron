@@ -3,9 +3,9 @@ var prove = function(opts){
     opts = {logit:true};
   } 
 
-  var typ      = opts.typ      || mkTyp(['a','a']);
-  var ctx      = opts.ctx      || mkCtx({});
-  var evalThem = opts.evalThem || false;
+  var typ        = opts.typ        || mkTyp(['a','a']);
+  var ctx        = opts.ctx        || mkCtx({});
+  var resultMode = opts.resultMode || 'terms' ;
 
   var ret = treeAStar({
     n     : opts.n     || 1,
@@ -24,12 +24,136 @@ var prove = function(opts){
     });  
   }
 
-  if(evalThem){
-    ret = evalTerms(ret,ctx);
+  switch( resultMode ){
+    case 'terms': return ret;
+    case 'funs' : return evalTerms(ret,ctx);
+    case 'both' : return [ret,evalTerms(ret,ctx)];
+    default     : throw 'prove : unsupported result mode.'
+  }
+
+};
+
+var mkStartZipperSmart = function(t,ctx){
+  var zipper = mkZipper({ 
+        act     : mkUnf(t, mkAtmTab(ctx) ) ,
+        zips    : empty,
+        numUnfs : 1  
+  });
+
+  if( isArr(t) ){
+    zipper = gotoNextUnf(expandLam(zipper).zipper);
+  }
+
+  return zipper;
+};
+
+
+var smartExpand = function( zipper ){
+  assert( isUnf(zipper.act) , 'smartExpand : act must be unf to be smart-expanded'+
+  '\n zipper : '+ showZipper(zipper) );
+
+  var typ    = zipper.act.t;
+  var atmTab = zipper.act.atmTab;
+
+  assert( isAtm(typ), 'smartExpand : Smart-expanded can be only atomic type.' );
+
+  var ret = [];
+
+  var row = atmTab[typ.a];
+  if( row !== undefined ){
+    for( var i in row ){
+
+      var varI = zipper.nextVar; 
+
+      var ms = _.map( tParts(row[i].t)[0] , function(t){
+
+        var newAtmTab = atmTab;   
+        var newVars   = [];
+
+        while( isArr(t) ){
+          var newVar = mkVar( '_'+varI , t.a );
+          newVars.push(newVar);
+          newAtmTab = addVarToAtmTab(newAtmTab,newVar);
+      
+          varI ++;
+          t = t.b;
+        }
+      
+        var acc = mkUnf(t,newAtmTab);
+      
+        for( var i = newVars.length-1 ; i >= 0 ; i-- ){
+          acc = mkLam( newVars[i] , acc );
+        }
+
+        return acc;
+      });
+      
+      var newNumUnfs = zipper.numUnfs - 1 + ms.length ;
+
+      var newZipper  = mkZipper({
+                          act     : mkSexpr(row[i],ms),
+                          numUnfs : newNumUnfs, 
+                          nextVar : varI  
+                       },zipper);
+
+      if( newNumUnfs !== 0 ){
+        newZipper = gotoNextUnf( newZipper );
+      }
+
+
+      ret.push({
+        state : newZipper,
+        dist  : 1 + (varI-zipper.nextVar) 
+      });
+
+    }
   }
 
   return ret;
+
 };
+
+
+// TODO dost podobnej kód je ve smart expand, nějak to 
+// zredukovat do jednoho ( aby to neduplikovalo znalost ! :) )
+var expandLam = function( zipper ){
+  assert( isUnf(zipper.act) , 
+          'act must be unf to be lam-expanded' );
+
+  var t         = zipper.act.t;
+  var newAtmTab = zipper.act.atmTab; 
+  var varI      = zipper.nextVar; 
+  var newVars   = [];
+
+
+  assert( isArr(t), 'Lam-expanded can be only arrow type.' );
+
+  
+  while( isArr(t) ){
+    var newVar = mkVar( '_'+varI , t.a );
+    newVars.push(  newVar  );
+    newAtmTab = addVarToAtmTab( newAtmTab , newVar );
+
+    varI ++;
+    t = t.b;
+  }
+
+  var acc = mkUnf( t , newAtmTab );
+
+  for( var i = newVars.length-1 ; i >= 0 ; i-- ){
+    acc = mkLam( newVars[i] , acc );
+  }
+
+  return {
+    zipper : mkZipper({
+               act     : acc,
+               nextVar : varI 
+             },zipper),
+    dist   : newVars.length 
+  };  
+};
+
+
 
 
 var treeAStar = function(problem){
@@ -82,7 +206,7 @@ var treeAStar = function(problem){
 
 
 
-/* /
+/* 
 $(function(){
 
 
@@ -107,4 +231,37 @@ $(function(){
   });  
 
 });
-/ */
+
+
+var expandApp = function( zipper ){
+  assert( isUnf(zipper.act) , 
+          'act must be unf to be app-expanded' );
+
+  var typ    = zipper.act.t;
+  var atmTab = zipper.act.atmTab;
+
+  assert( isAtm(typ), 'App-expanded can be only atomic type.' );
+
+  var ret = [];
+
+  var row = atmTab[typ.a];
+  if( row !== undefined ){
+    for( var i in row ){
+
+      var ms = _.map( tParts(row[i].t)[0] , function(t){
+        return mkUnf(t,atmTab);
+      });
+      
+      ret.push(mkZipper({
+        act     : mkSexpr(row[i],ms),
+        numUnfs : zipper.numUnfs - 1 + ms.length 
+      },zipper));
+
+    }
+  }
+
+  return ret;
+
+};
+
+*/
