@@ -1,53 +1,59 @@
 
 
-// ????????????????????????????????????????????????????????????????????????????????????
-// TODO :  ??? jsou ubec ty cesty potřeba, nestačí přirozeně pracovat s podstromama ???
-// ????????????????????????????????????????????????????????????????????????????????????
 
 
 
 
-var tt1 = {"c":6,"x":"_0","m":{"c":6,"x":"_1","m":{"c":5,"m":{"c":5,"m":{"c":4,"x":"p","t":{"c":2,"a":{"c":1,"a":"int"},"b":{"c":2,"a":{"c":1,"a":"int"},"b":{"c":1,"a":"int"}}}},"n":{"c":5,"m":{"c":4,"x":"ap42","t":{"c":2,"a":{"c":2,"a":{"c":1,"a":"int"},"b":{"c":1,"a":"int"}},"b":{"c":1,"a":"int"}}},"n":{"c":6,"x":"_2","m":{"c":3,"x":"_1","t":{"c":1,"a":"int"}},"t":{"c":2,"a":{"c":1,"a":"int"},"b":{"c":1,"a":"int"}}},"t":{"c":1,"a":"int"}},"t":{"c":2,"a":{"c":1,"a":"int"},"b":{"c":1,"a":"int"}}},"n":{"c":3,"x":"_0","t":{"c":1,"a":"int"}},"t":{"c":1,"a":"int"}},"t":{"c":2,"a":{"c":1,"a":"int"},"b":{"c":1,"a":"int"}}},"t":{"c":2,"a":{"c":1,"a":"int"},"b":{"c":2,"a":{"c":1,"a":"int"},"b":{"c":1,"a":"int"}}}}
+var tt1 = {"c":6,"x":"_0","m":{"c":6,"x":"_1","m":{"c":5,"m":{"c":5,"m":{"c":4,"x":"p","t":{"c":2,"a":{"c":1,"a":"int"},"b":{"c":2,"a":{"c":1,"a":"int"},"b":{"c":1,"a":"int"}}}},"n":{"c":5,"m":{"c":4,"x":"ap42","t":{"c":2,"a":{"c":2,"a":{"c":1,"a":"int"},"b":{"c":1,"a":"int"}},"b":{"c":1,"a":"int"}}},"n":{"c":6,"x":"_2","m":{"c":3,"x":"_1","t":{"c":1,"a":"int"}},"t":{"c":2,"a":{"c":1,"a":"int"},"b":{"c":1,"a":"int"}}},"t":{"c":1,"a":"int"}},"t":{"c":2,"a":{"c":1,"a":"int"},"b":{"c":1,"a":"int"}}},"n":{"c":3,"x":"_0","t":{"c":1,"a":"int"}},"t":{"c":1,"a":"int"}},"t":{"c":2,"a":{"c":1,"a":"int"},"b":{"c":1,"a":"int"}}},"t":{"c":2,"a":{"c":1,"a":"int"},"b":{"c":2,"a":{"c":1,"a":"int"},"b":{"c":1,"a":"int"}}}};
+
+var tt2 = mkVar('x',mkTyp('int'));
 
 
-var tt2 = mkVar('x');
+var allWays = function( term , mode ){
 
-var allWays = function( term , wayToTerm ){
+    var isAtTreeMode = !mode || mode !== 'sexprTree';
 
-  if( wayToTerm === undefined ){ wayToTerm = []; }
-
-  switch(term.c){
-    case VAR : return [wayToTerm] ;
-    case VAL : return [wayToTerm] ;
-    case APP : 
-      var mWays = allWays( term.m , ['m'].concat(wayToTerm) );
-      var nWays = allWays( term.n , ['n'].concat(wayToTerm) );
-      return [wayToTerm].concat(mWays).concat(nWays);
-    case LAM : 
-      var mWays = allWays( term.m , ['m'].concat(wayToTerm) );
-      return [wayToTerm].concat(mWays);
-    case UNF : throw 'allPoses : UNF in switch'
-    default  : throw 'allPoses : default in switch '
-  }
-
+    var allWays_ = function( term , wayToTerm ){
+      switch(term.c){
+        case VAR : return [wayToTerm];
+        case VAL : return [wayToTerm];
+        case APP : 
+          if( isAtTreeMode ){
+            var mWays = allWays_( term.m , wayToTerm.concat(['m']) );
+            var nWays = allWays_( term.n , wayToTerm.concat(['n']) );
+            return [wayToTerm].concat(mWays).concat(nWays);    
+          } else { //sexprTreeMode
+            var ret = [];
+            var accWay = wayToTerm;
+            while( isApp(term) ){
+                ret = allWays_( term.n , accWay.concat(['n']) ).concat(ret);
+                accWay = accWay.concat(['m']);
+                term = term.m;
+            }
+            return [wayToTerm].concat( ret );            
+          }
+        case LAM : 
+          var mWayz = allWays_( term.m , wayToTerm.concat(['m']) );
+          return [wayToTerm].concat(mWayz);
+        case UNF : throw 'allPoses : UNF in switch'
+        default  : throw 'allPoses : default in switch '
+      }
+    };
+    
+    return allWays_(term,[]);
 };
 
-var allWays_mustBeTrue = function( term ){
-  return allWays(term).length === termSize(term,{countAPPs:true});
-};
+
 
 var subterm = function( term , wayToSubterm ){
-  
   for( var i=0 ; i<wayToSubterm.length ; i++ ){
     term = term[wayToSubterm[i]];
   }
-
   return term;
 };
 
-var allSubterms_byWays = function( term ){
-  //TODO
-};
+
+
 
 
 /*

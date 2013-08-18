@@ -111,6 +111,8 @@ var code = function(m,opt){
     return typToStr(m);
   } else if( isZipper(m) ){
     return showZipper(m);
+  } else if( _.isArray(m) ){
+    return _.map(m,function(t){return code(t,opt);});      
   } else if( _.isObject(opt) ) {
     return ctxCompile(m,opt);
   } else {
@@ -120,7 +122,7 @@ var code = function(m,opt){
       case 'jsstr'    : return toJSstr     (m);
       case 'nicejs'   : return toNiceJSexpr(m);
       case 'nicejsstr': return toNicejs    (m);
-      default         : return toJSexpr    (m);
+      default         : return toNicejs    (m); //toJSexpr    (m);
     }
   }
 };

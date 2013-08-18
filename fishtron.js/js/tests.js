@@ -100,7 +100,7 @@ var fishtronTests = function(){
                     })
       });
 
-      realResult = _.map(res[1],function(f){return f(23,42);})
+      realResult = _.map(res[1],function(f){return f(23,42);});
 
       supposedResult = [
         42, 23, 43, 24, 44, 25, 84, 65, 65, 46, 42, 42, 23, 43, 43, 24, 66, 47, 85, 66, 85, 66, 
@@ -113,9 +113,52 @@ var fishtronTests = function(){
       deepEqual( supposedResult , realResult , 'Similar check on the slightly bigger ctx.');
 
       ok( areTermsNondecreasing(res[0]) , '... size is nondecreasing.' );
-    
-    
 
+    });
+  
+  
+    test( 'xover', function(){
+      
+      var terms = prove({
+         n        : 100,
+         typ      : mkTyp(['int','int','int']),
+         ctx      : mkCtx({
+                      ap42 : [ [['int','int'],'int'],
+                             function(f){return f(42)}  ],
+                      p :    [ ['int','int','int'],
+                             function(x,y){return x+y;} ],
+                      s :    [ ['int','int'],
+                             function(x){return x+1;} ] 
+                    })
+      });
+      
+      var allWays_mustBeTrue = function( term , mode ){
+        return allWays(term,mode).length === termSize(term,{countAPPs:(mode!=='sexprTree')});
+      };
+
+      var allSubterms_byWays = function( term , mode ){
+        var ways = allWays(term,mode);
+        return _.map(ways,function(way){return subterm(term,way);});
+      };
+
+      var allSubterms_mustBeTrue = function( term , mode ){
+        return allSubterms_byWays(term,mode).length === termSize(term,{countAPPs:(mode!=='sexprTree')});
+      };
+      
+      ok( _.every( terms, function(t){return allWays_mustBeTrue(t,'atTree');} ) , 
+         'Number of ways (positions of subterms) in term is eq to number of term nodes '+
+         '(tested on 100 generated terms) .... @-tree variant.' );
+      
+      ok( _.every( terms, function(t){return allSubterms_mustBeTrue(t,'atTree');} ) , 
+         'Actually generates subterms and count them, to test that their number'+
+         ' is the same as the number of term nodes ... again @-tree.' );
+
+      ok( _.every( terms, function(t){return allWays_mustBeTrue(t,'sexprTree');} ) , 
+         '... test 1 with sexprTree.' );
+      
+      ok( _.every( terms, function(t){return allSubterms_mustBeTrue(t,'sexprTree');} ) , 
+         '... test 2 with sexprTree.' );
+         
 
 
 

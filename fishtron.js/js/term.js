@@ -1,14 +1,14 @@
 
-var ATM    = 1 ;
-var ARR    = 2 ;
+var ATM    = 1;
+var ARR    = 2;
 
-var VAR    = 3 ;
-var VAL    = 4 ;
-var APP    = 5 ;
-var LAM    = 6 ;
-var UNF    = 7 ;
+var VAR    = 3;
+var VAL    = 4;
+var APP    = 5;
+var LAM    = 6;
+var UNF    = 7;
 
-var ZIPPER = 8 ;
+var ZIPPER = 8;
 
 
 
@@ -120,7 +120,7 @@ var mkSexpr = function(f,ms){
   assert( ts.length === ms.length , 
     'mkSexpr : lengths dont match' );
   
-  var acc = f ;
+  var acc = f;
 
   for( var i = 0 ; i < ms.length ; i++ ){
     assert( _.isEqual( ts[i] , ms[i].t ) ,
@@ -161,7 +161,7 @@ var termSize = function(term,mode){
     case UNF : throw 'termSize : unfinished term';
     default  : throw 'termSize : default-in-switch error';
   }
-}
+};
 
 
 var tParts = function(t){

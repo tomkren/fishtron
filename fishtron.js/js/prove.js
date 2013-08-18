@@ -5,7 +5,7 @@ var prove = function(opts){
 
   var typ        = opts.typ        || mkTyp(['a','a']);
   var ctx        = opts.ctx        || mkCtx({});
-  var resultMode = opts.resultMode || 'terms' ;
+  var resultMode = opts.resultMode || 'terms';
 
   var ret = treeAStar({
     n     : opts.n     || 1,
@@ -88,7 +88,7 @@ var smartExpand = function( zipper ){
         return acc;
       });
       
-      var newNumUnfs = zipper.numUnfs - 1 + ms.length ;
+      var newNumUnfs = zipper.numUnfs - 1 + ms.length;
 
       var newZipper  = mkZipper({
                           act     : mkSexpr(row[i],ms),
@@ -158,9 +158,9 @@ var expandLam = function( zipper ){
 
 var treeAStar = function(problem){
 
-  var start  = {s:problem.start,G:0} ;
-  var nexts  = problem.nexts  ;
-  var isGoal = problem.isGoal ;
+  var start  = {s:problem.start,G:0};
+  var nexts  = problem.nexts;
+  var isGoal = problem.isGoal;
   var n      = problem.n      || 1;
   var heur   = problem.heur   || function(x){return 0;};
   var limit  = problem.limit  || 1000000;
@@ -175,13 +175,13 @@ var treeAStar = function(problem){
     limit--;
 
     var st    = q.pop()[0];
-    var state = st.s    ;
-    var G     = st.G    ;
+    var state = st.s;
+    var G     = st.G;
     //log( 'vyndavam : ' + showZipper(state) );
 
     if( isGoal(state) ){
       results.push(state);
-      if( results.length == n ){
+      if( results.length === n ){
         return results;
       }
     } else { // TODO : obecně to ale pro grafovej Astrar neplatí
@@ -192,7 +192,7 @@ var treeAStar = function(problem){
       var ns = nexts(state);
       for( var i = 0 ; i < ns.length ; i++ ){
         
-        var newG = G + ns[i].dist ;
+        var newG = G + ns[i].dist;
         var next = {s : ns[i].state ,
                     G : newG  };
         

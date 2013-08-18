@@ -1,6 +1,12 @@
 
 var log = function(x){
-  return console.log(x);
+  console.log(x);
+};
+
+var logArray = function(xs){
+  _.each(xs,function(x){
+      console.log(x);
+  });  
 };
 
 var assert = function(condition, message) {
