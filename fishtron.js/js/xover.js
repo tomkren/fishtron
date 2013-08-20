@@ -1,13 +1,15 @@
 
 
 
+// TODO NEXT : SKI conversion
 
 
 
-var tt1 = {"c":6,"x":"_0","m":{"c":6,"x":"_1","m":{"c":5,"m":{"c":5,"m":{"c":4,"x":"p","t":{"c":2,"a":{"c":1,"a":"int"},"b":{"c":2,"a":{"c":1,"a":"int"},"b":{"c":1,"a":"int"}}}},"n":{"c":5,"m":{"c":4,"x":"ap42","t":{"c":2,"a":{"c":2,"a":{"c":1,"a":"int"},"b":{"c":1,"a":"int"}},"b":{"c":1,"a":"int"}}},"n":{"c":6,"x":"_2","m":{"c":3,"x":"_1","t":{"c":1,"a":"int"}},"t":{"c":2,"a":{"c":1,"a":"int"},"b":{"c":1,"a":"int"}}},"t":{"c":1,"a":"int"}},"t":{"c":2,"a":{"c":1,"a":"int"},"b":{"c":1,"a":"int"}}},"n":{"c":3,"x":"_0","t":{"c":1,"a":"int"}},"t":{"c":1,"a":"int"}},"t":{"c":2,"a":{"c":1,"a":"int"},"b":{"c":1,"a":"int"}}},"t":{"c":2,"a":{"c":1,"a":"int"},"b":{"c":2,"a":{"c":1,"a":"int"},"b":{"c":1,"a":"int"}}}};
 
-var tt2 = mkVar('x',mkTyp('int'));
 
+var isWayToLeaf = function(way){
+  return way.isLeaf ;
+};
 
 var allWays = function( term , mode ){
 
@@ -15,13 +17,13 @@ var allWays = function( term , mode ){
 
     var allWays_ = function( term , wayToTerm ){
       switch(term.c){
-        case VAR : return [wayToTerm];
-        case VAL : return [wayToTerm];
+        case VAR : return [{way : wayToTerm, t: term.t, isLeaf: true}];
+        case VAL : return [{way : wayToTerm, t: term.t, isLeaf: true}];
         case APP : 
           if( isAtTreeMode ){
             var mWays = allWays_( term.m , wayToTerm.concat(['m']) );
             var nWays = allWays_( term.n , wayToTerm.concat(['n']) );
-            return [wayToTerm].concat(mWays).concat(nWays);    
+            return [{way : wayToTerm, t: term.t, isLeaf: false}].concat(mWays).concat(nWays);    
           } else { //sexprTreeMode
             var ret = [];
             var accWay = wayToTerm;
@@ -30,11 +32,11 @@ var allWays = function( term , mode ){
                 accWay = accWay.concat(['m']);
                 term = term.m;
             }
-            return [wayToTerm].concat( ret );            
+            return [{way : wayToTerm, t: term.t, isLeaf: false}].concat( ret );            
           }
         case LAM : 
           var mWayz = allWays_( term.m , wayToTerm.concat(['m']) );
-          return [wayToTerm].concat(mWayz);
+          return [{way : wayToTerm, t: term.t, isLeaf: false}].concat(mWayz);
         case UNF : throw 'allPoses : UNF in switch'
         default  : throw 'allPoses : default in switch '
       }
@@ -46,28 +48,40 @@ var allWays = function( term , mode ){
 
 
 var subterm = function( term , wayToSubterm ){
-  for( var i=0 ; i<wayToSubterm.length ; i++ ){
-    term = term[wayToSubterm[i]];
+  for( var i=0 ; i<wayToSubterm.way.length ; i++ ){
+    term = term[wayToSubterm.way[i]];
   }
   return term;
 };
 
 
+var changeSubterm = function( term , way , newSubterm ){
+
+  assert( _.isEqual(way.t,newSubterm.t) , 'changeSubterm : way typ and newSubterm typ do not match.' );
+
+  var w = way.way;
+  var zipper = mkZipperFromTerm(term);
+  var go = {  
+    m : goM,
+    n : goN
+  };
+
+  for( var i = 0 ; i < w.length ; i++ ){
+    zipper = go[w[i]](zipper);
+  }
+
+  var oldSubterm = zipper.act ;
+
+  assert( _.isEqual(way.t,oldSubterm.t) , 'changeSubterm : way typ and oldSubterm typ do not match.' );
+
+  zipper = mkZipper({act : newSubterm} , zipper);
+  zipper = gotoTop(zipper);
+
+  return {
+    newTerm     : zipper.act ,
+    oldSubterm  : oldSubterm
+  };
+
+};
 
 
-
-/*
-
-ttreePoses2WithTyps :: TTree -> ([(TTPos,Typ)],[(TTPos,Typ)])
-ttreePoses2WithTyps t = 
-  let xs  = poses2xx [] t 
-      rev = map (\(pos,typ)->(reverse pos,typ))
-   in ( rev . lefts $ xs , rev . rights $ xs )
- where
-  poses2xx :: [Int] -> TTree -> [ Either ([Int],Typ) ([Int],Typ) ]
-  poses2xx pos (TTree _ typ []) = [Left (pos,typ)]
-  poses2xx pos (TTree _ typ ts) = 
-   (Right (pos,typ)) : (concatMap (\(i,t)-> poses2xx (i:pos) t ) (zip [1..] ts) )
-
-
-*/

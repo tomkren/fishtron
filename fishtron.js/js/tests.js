@@ -132,18 +132,7 @@ var fishtronTests = function(){
                     })
       });
       
-      var allWays_mustBeTrue = function( term , mode ){
-        return allWays(term,mode).length === termSize(term,{countAPPs:(mode!=='sexprTree')});
-      };
 
-      var allSubterms_byWays = function( term , mode ){
-        var ways = allWays(term,mode);
-        return _.map(ways,function(way){return subterm(term,way);});
-      };
-
-      var allSubterms_mustBeTrue = function( term , mode ){
-        return allSubterms_byWays(term,mode).length === termSize(term,{countAPPs:(mode!=='sexprTree')});
-      };
       
       ok( _.every( terms, function(t){return allWays_mustBeTrue(t,'atTree');} ) , 
          'Number of ways (positions of subterms) in term is eq to number of term nodes '+
@@ -159,14 +148,77 @@ var fishtronTests = function(){
       ok( _.every( terms, function(t){return allSubterms_mustBeTrue(t,'sexprTree');} ) , 
          '... test 2 with sexprTree.' );
          
+      ok( _.every(terms,invariant_partitionedByIsLeaf) , 'Testing invariant_partitionedByIsLeaf.' );
 
 
+      var tt1 = {"c":"lam","x":"_0","m":{"c":"lam","x":"_1","m":{"c":"app","m":{"c":"app","m":{"c":"val",
+      "x":"p","t":{"c":"arr","a":{"c":"atm","a":"int"},"b":{"c":"arr","a":{"c":"atm","a":"int"},
+      "b":{"c":"atm","a":"int"}}}},"n":{"c":"app","m":{"c":"val","x":"s","t":{"c":"arr",
+      "a":{"c":"atm","a":"int"},"b":{"c":"atm","a":"int"}}},"n":{"c":"var","x":"_0",
+      "t":{"c":"atm","a":"int"}},"t":{"c":"atm","a":"int"}},"t":{"c":"arr","a":{"c":"atm","a":"int"},
+      "b":{"c":"atm","a":"int"}}},"n":{"c":"var","x":"_0","t":{"c":"atm","a":"int"}},
+      "t":{"c":"atm","a":"int"}},"t":{"c":"arr","a":{"c":"atm","a":"int"},"b":{"c":"atm","a":"int"}}},
+      "t":{"c":"arr","a":{"c":"atm","a":"int"},"b":{"c":"arr","a":{"c":"atm","a":"int"},
+      "b":{"c":"atm","a":"int"}}}};
+      
+      var tt2 = {"c":"lam","x":"_0","m":{"c":"lam","x":"_1","m":{"c":"app","m":{"c":"app","m":
+      {"c":"val","x":"p","t":{"c":"arr","a":{"c":"atm","a":"int"},"b":{"c":"arr","a":{"c":"atm",
+      "a":"int"},"b":{"c":"atm","a":"int"}}}},"n":{"c":"app","m":{"c":"val","x":"ap42","t":
+      {"c":"arr","a":{"c":"arr","a":{"c":"atm","a":"int"},"b":{"c":"atm","a":"int"}},"b":
+      {"c":"atm","a":"int"}}},"n":{"c":"lam","x":"_2","m":{"c":"var","x":"_1","t":{"c":"atm","a":"int"}},
+      "t":{"c":"arr","a":{"c":"atm","a":"int"},"b":{"c":"atm","a":"int"}}},"t":{"c":"atm","a":"int"}},
+      "t":{"c":"arr","a":{"c":"atm","a":"int"},"b":{"c":"atm","a":"int"}}},"n":{"c":"var","x":"_0",
+      "t":{"c":"atm","a":"int"}},"t":{"c":"atm","a":"int"}},"t":{"c":"arr","a":{"c":"atm","a":"int"},
+      "b":{"c":"atm","a":"int"}}},"t":{"c":"arr","a":{"c":"atm","a":"int"},"b":{"c":"arr",
+      "a":{"c":"atm","a":"int"},"b":{"c":"atm","a":"int"}}}};
+    
+      var way  = allWays(tt1)[8];
+      var newS = allSubterms_byWays(tt2)[5];
+
+      strictEqual( code(changeSubterm(tt1,way,newS).newTerm) ,  
+                   'function(_0,_1){return p(s(_0),ap42(function(_2){return _1}))}' ,
+                   'Primitive changeSubterm test on two arbitrary terms (swapping their subterms).' );      
 
 
       console.timeEnd('tests');
     });
 
 };
+
+
+
+var invariant_partitionedByIsLeaf = function( term ){
+  var ways  = allWays(term,'atTree');
+  var pWays = partition( isWayToLeaf , ways );
+
+  var ok1 = _.every( pWays.satisfy , function(way){
+    var sTerm = subterm(term,way);
+    return (sTerm.t === way.t) && ( isVar(sTerm) || isVal(sTerm) );
+  });
+
+  var ok2 = _.every( pWays.notSatisfy , function(way){
+    var sTerm = subterm(term,way);
+    return (sTerm.t === way.t) && ( isApp(sTerm) || isLam(sTerm) );
+  });
+
+  return ok1 && ok2 ;
+};
+
+
+
+var allWays_mustBeTrue = function( term , mode ){
+  return allWays(term,mode).length === termSize(term,{countAPPs:(mode!=='sexprTree')});
+};
+          
+var allSubterms_byWays = function( term , mode ){
+  var ways = allWays(term,mode);
+  return _.map(ways,function(way){return subterm(term,way);});
+};
+       
+var allSubterms_mustBeTrue = function( term , mode ){
+  return allSubterms_byWays(term,mode).length === termSize(term,{countAPPs:(mode!=='sexprTree')});
+};
+
 
 var isNondecreasing = function(xs){
   for(var i = 0 ; i < xs.length-1 ; i++ ){

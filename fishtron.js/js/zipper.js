@@ -22,7 +22,12 @@ var mkZipper = function(obj,parentZipper){
 };
 
 
-
+var mkZipperFromTerm = function(term){
+  return mkZipper({
+    act  : term,
+    zips : empty
+  });
+};
 
 
 
@@ -32,6 +37,15 @@ var mkAppLZ = function(m){
   return {
     c : 'appLZ' ,
     n : m.n ,
+    t : m.t 
+  };
+};
+
+var mkAppRZ = function(m){
+  assert( isApp(m) , 'Error in mkAppRZ!');
+  return {
+    c : 'appRZ' ,
+    m : m.m ,
     t : m.t 
   };
 };
@@ -55,6 +69,38 @@ var mkLamZ = function(m){
 };
 
 
+
+var goDown = function( zipper ){
+  assert( isLam(zipper.act) , 'goDown : act must be LAM' );
+  return mkZipper({
+    act  : zipper.act.m ,
+    zips : cons( mkLamZ(zipper.act) , zipper.zips )
+  },zipper);
+};
+
+var goLeft = function( zipper ){
+  assert( isApp(zipper.act) , 'goLeft : act must be APP' );
+  return mkZipper({ 
+    act  : zipper.act.m ,
+    zips : cons( mkAppLZ(zipper.act) , zipper.zips ) 
+  },zipper);
+};
+
+var goRight = function( zipper ){
+  assert( isApp(zipper.act) , 'goRight : act must be APP' );
+  return mkZipper({ 
+    act  : zipper.act.n ,
+    zips : cons( mkAppRZ(zipper.act) , zipper.zips ) 
+  },zipper);
+};
+
+var goM = function( zipper ){
+  return isApp(zipper.act) ? goLeft(zipper) : goDown(zipper);
+};
+
+var goN = function( zipper ){
+  return goRight(zipper);
+};
 
 
 var gotoTop = function( zipper ){
@@ -95,17 +141,9 @@ var gotoNextUnf = function( zipper ){
 
 var dfsStep = function( zipper ){
   switch( zipper.act.c ){
-    case APP :
-      return mkZipper({ 
-        act  : zipper.act.m ,
-        zips : cons( mkAppLZ(zipper.act) , zipper.zips ) 
-      },zipper);
-    case LAM :
-      return mkZipper({
-        act  : zipper.act.m ,
-        zips : cons( mkLamZ(zipper.act) , zipper.zips )
-      },zipper);
-    default : return stepToNextBigger( zipper );
+    case APP : return goLeft(zipper);
+    case LAM : return goDown(zipper);
+    default  : return stepToNextBigger(zipper);
   }
 };
 

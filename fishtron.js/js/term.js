@@ -1,14 +1,14 @@
 
-var ATM    = 1;
-var ARR    = 2;
-
-var VAR    = 3;
-var VAL    = 4;
-var APP    = 5;
-var LAM    = 6;
-var UNF    = 7;
-
-var ZIPPER = 8;
+var ATM    = 'atm'; // 1;
+var ARR    = 'arr'; // 2;
+                            
+var VAR    = 'var'; // 3;
+var VAL    = 'val'; // 4;
+var APP    = 'app'; // 5;
+var LAM    = 'lam'; // 6;
+var UNF    = 'unf'; // 7;
+                     
+var ZIPPER = 'zipper'; // 8;
 
 
 

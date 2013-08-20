@@ -26,6 +26,22 @@ var cons = function(x,xs){
 
 
 
+var partition = function(mustBeTrue,array){
+  assert(_.isArray(array),'partition : the array argument mus be an array.');
+  var satisfy    = [];
+  var notSatisfy = [];
+  for( var i = 0 ; i < array.length ; i++ ){
+    if( mustBeTrue(array[i]) ){
+      satisfy.push( array[i] );
+    } else {
+      notSatisfy.push( array[i] );
+    }
+  }
+  return { satisfy    : satisfy ,
+           notSatisfy : notSatisfy };
+};
+
+
 
 
 var mkTypeChecker = function(arg){
