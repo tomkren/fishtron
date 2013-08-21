@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>test...</title>
+
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+
+
+
+<script>
+
+// v chrome : n=8  ...   0.089 s
+//            n=9  ...   0.808 s
+//            n=10 ...   9.139 s
+// v javě   : n=8  ...   3     s
+//            n=9  ...  26     s
+//            n=10 ... 267     s
+
+
+
+console.time('time');
+
+
+
+var n  = 9;
+var xs =  [];
+for(var i = 0 ; i < n ; i++){
+  xs.push(i);
+}
+
+var perms = function( xs ){
+  if( xs.length === 0 ){ return [[]]; }
+
+  var ret = [];
+
+  for( var i = 0 ; i < xs.length ; i++ ){
+    var x = xs[i];
+    var rest = xs.slice(0,i).concat( xs.slice(i+1) );
+
+    var ps = perms(rest);
+
+    for( var j = 0 ; j < ps.length ; j++ ){
+      ps[j].unshift(x);
+    }
+
+    ret = ret.concat( ps );
+
+
+    //ret.push( rest );
+  }
+  return ret;  
+};
+
+var fact = function(n){
+  if(n === 0){return 1;}
+  return n*fact(n-1);
+}
+
+
+
+
+console.log( perms(xs)[fact(n)-1] );
+console.timeEnd('time');
+
+
+</script>
+</head>
+<body>
+
+
+
+</body>
+</html>
+
+
+
