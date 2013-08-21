@@ -1,7 +1,46 @@
 
 
 
-// TODO NEXT : SKI conversion
+// TODO NEXT : SKI conversion dodělat
+
+
+
+
+var FV = function(term){
+  switch( term.c ){
+    case VAL : return [];
+    case VAR : return [term.x];
+    case APP : return _.union( FV(term.m) , FV(term.n) );
+    case LAM : return _.without( FV(term.m) , term.x );
+    default  : throw 'simpleAE : default in switch (FV)';
+  }
+};
+
+
+var AE = function(term){
+  switch( term.c ){
+    case VAL : 
+    case VAR : return term;
+    case APP : return mkApp( AE(term.m) , AE(term.n) );
+    case LAM :
+       
+      if( isVar(term.m) && term.m.x === term.x ){
+        return mkVal('I',term.t);
+      }
+         
+      var mFV = FV(term.m);
+        
+      if( !_.contains(mFV,term.x) ){
+        // K : B -> (A -> B)
+        return mkApp( mkVal('K', mkArr( term.t.b , term.t ) ) ,  AE(term.m) );
+      }else{
+         
+        throw 'TODO !!!!!!!!!!!!!!!!!!!!!!!!';
+      }
+       
+    default : throw 'simpleAE : default in switch (AE)';
+  }
+};
 
 
 
