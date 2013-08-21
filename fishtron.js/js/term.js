@@ -150,6 +150,125 @@ var mkTyp = function( x ){
 };
 
 
+var checkTerms = function(terms,typ,ctx){
+  var result;
+  var ok = true;
+  for( var i = 0 ; i < terms.length ; i++ ){
+    result = checkTerm(terms[i],typ,ctx);
+    if( !result.ok ){
+      result.koTerm = terms[i];
+      ok = false;
+      break;
+    }
+  }
+  if(ok){ result.msg = 'checkTerms : All terms are OK!' };
+  return result;
+};
+
+var checkTerm = function(term,typ,ctx){ // TODO z venčí by měl bejt danej eště typ co je čeknut
+
+  var ctxSupplied = (ctx !== undefined);
+
+  var checkOK  = {ok:true,msg:'Term is OK!'};
+  var checkErr = function(msg){return{ok:false,msg:msg};};
+
+  if( !_.isEqual(typ,term.t) ){
+    return checkErr('high-level-typ-mismatch');
+  }
+
+  var check = function(term,baze){
+
+    if( ! isTerm(term) ){
+      return checkErr('unsupported term constructor');
+    }
+
+    switch(term.c){
+      case VAR : 
+
+        if( baze[term.x] === undefined ){
+          return checkErr('undefined VAR ' + term.x + ' is used' );
+        }
+        if( !_.isEqual(baze[term.x],term.t) ){
+          return checkErr('(var,baze)-typ-mismatch in VAR ' + term.x ); 
+        }
+
+        return checkOK;        
+
+      case VAL : 
+
+        if( ctxSupplied ){
+          if( ctx[term.x] === undefined ){
+            return checkErr('supplied ctx has no VAL ' + term.x );
+          }
+          if( !_.isEqual(ctx[term.x].t,term.t) ){
+            return checkErr('(val,ctx)-typ-mismatch in VAL ' + term.x ); 
+          }
+        }
+
+        return checkOK;
+
+      case LAM : 
+
+        if( !isArr(term.t) ){
+          return checkErr('LAM must have arrow typ, but LAM with var '+term.x+' has typ '+code(term.t) );
+        }
+        if( ctx[term.x] !== undefined ){
+          return checkErr('LAM shadows VAL '+term.x+' from ctx by its var');
+        }
+        if( baze[term.x] !== undefined ){
+          return checkErr('LAM shadows VAR '+term.x);
+        }
+
+        if( !_.isEqual(term.t.b,term.m.t) ){
+          return checkErr('typ mismatch in ' + term.x );
+        }
+
+        baze[term.x] = term.t.a;
+        var subResult = check(term.m,baze);
+        baze[term.x] = undefined;
+
+        return subResult;
+
+
+      case APP : 
+
+        var mTyp = term.m.t;  //        ....A->B
+        var nTyp = term.n.t;  //        ... A
+                              // term.t ... B
+
+        if( !isArr(mTyp) ){
+          return checkErr('m-term of APP must have arrow type');
+        }
+        if( !_.isEqual( mTyp.a , nTyp ) ){
+          return checkErr('(A->B,A)-typ-mismatch in APP');
+        }
+        if( !_.isEqual( mTyp.b , term.t ) ){
+          return checkErr('(A->B,B)-typ-mismatch in APP');
+        }
+
+        var mResult = check(term.m,baze);
+
+        if( !mResult.ok ){
+          return mResult;
+        }
+
+        return check(term.n,baze);
+
+      case UNF : return checkErr('UNF is not allowed');
+      default  : return checkErr('metaERROR this should be unreachable (1)');
+    }
+
+    return checkErr('metaERROR this shuold be unreachable (2)');
+  };
+
+  var baze   = {};
+  var result = check(term,baze);
+  result.msg = 'checkTerm : ' + result.msg;
+
+  return result;
+};
+
+
 
 var termSize = function(term,mode){
   assert( isTerm(term) , 'termSize : argument must be terms.' );

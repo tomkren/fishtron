@@ -39,10 +39,13 @@ var fishtronTests = function(){
   
     test( 'prove()', function(){
       
+      var typ1 = mkTyp(['a','a','a']);
+      var ctx1 = mkCtx({});
+
       var res = prove({
         n   : 3,
-        typ : mkTyp(['a','a','a']),
-        ctx : mkCtx({}) ,
+        typ : typ1,
+        ctx : ctx1,
         resultMode: 'both'
       });
 
@@ -51,21 +54,28 @@ var fishtronTests = function(){
           '... and those inhabitans are K and K*.' );
       ok( areTermsNondecreasing(res[0]) , '... and their size is nondecreasing.' );
 
+      var checkRes1 = checkTerms(res[0],typ1,ctx1);
+      ok( checkRes1.ok , '... ' + checkRes1.msg );
+
+
       var int = mkAtm('int');
 
-      res = prove({
+      var typ2 = mkTyp([int,int,int]);
+      var ctx2 = mkCtx({ 
+        'p' : [ [int,int,int]
+              , function(x,y){return x+y;} ],
+        's' : [ [int,int]
+              , function(x){return x+1;} ] 
+      });
+
+      var res2 = prove({
          resultMode: 'both',
          n        : 100,
-         typ      : mkTyp([int,int,int]),
-         ctx      : mkCtx({ 
-                      'p' : [ [int,int,int]
-                            , function(x,y){return x+y;} ],
-                      's' : [ [int,int]
-                            , function(x){return x+1;} ] 
-                    })
+         typ      : typ2,
+         ctx      : ctx2
       });
       
-      var realResult = _.map(res[1],function(f){return f(23,42);})
+      var realResult = _.map(res2[1],function(f){return f(23,42);})
 
       var supposedResult = [
         42, 23, 43, 24, 44, 25, 84, 65, 65, 46, 66, 47, 85, 66, 85, 66, 66, 47, 45, 
@@ -81,26 +91,29 @@ var fishtronTests = function(){
              'Check that implementation doesn\'t change on (Int->Int->Int;{+,s}) (100 terms). '+
              '(Fail doesn\'t necessary mean bug..)');
 
-      ok( areTermsNondecreasing(res[0]) , '... and again their size is nondecreasing.' );
+      ok( areTermsNondecreasing(res2[0]) , '... and again their size is nondecreasing.' );
 
+      var checkRes2 = checkTerms(res2[0],typ2,ctx2);
+      ok( checkRes2.ok , '... ' + checkRes2.msg );
 
-
-
-      res = prove({
-         resultMode : 'both',
-         n        : 100,
-         typ      : mkTyp(['int','int','int']),
-         ctx      : mkCtx({
-                      ap42 : [ [['int','int'],'int'],
-                             function(f){return f(42)}  ],
-                      p :    [ ['int','int','int'],
-                             function(x,y){return x+y;} ],
-                      s :    [ ['int','int'],
-                             function(x){return x+1;} ] 
-                    })
+      var typ3 = mkTyp(['int','int','int']);
+      var ctx3 = mkCtx({
+        ap42 : [ [['int','int'],'int'],
+               function(f){return f(42)}  ],
+        p :    [ ['int','int','int'],
+               function(x,y){return x+y;} ],
+        s :    [ ['int','int'],
+               function(x){return x+1;} ] 
       });
 
-      realResult = _.map(res[1],function(f){return f(23,42);});
+      var res3 = prove({
+         resultMode : 'both',
+         n        : 100,
+         typ      : typ3,
+         ctx      : ctx3
+      });
+
+      realResult = _.map(res3[1],function(f){return f(23,42);});
 
       supposedResult = [
         42, 23, 43, 24, 44, 25, 84, 65, 65, 46, 42, 42, 23, 43, 43, 24, 66, 47, 85, 66, 85, 66, 
@@ -112,24 +125,30 @@ var fishtronTests = function(){
       
       deepEqual( supposedResult , realResult , 'Similar check on the slightly bigger ctx.');
 
-      ok( areTermsNondecreasing(res[0]) , '... size is nondecreasing.' );
+      ok( areTermsNondecreasing(res3[0]) , '... size is nondecreasing.' );
+
+      var checkRes3 = checkTerms(res3[0],typ3,ctx3);
+      ok( checkRes3.ok , '... ' + checkRes3.msg );
 
     });
   
   
     test( 'xover', function(){
       
+      var typ1 = mkTyp(['int','int','int']);
+      var ctx1 = mkCtx({
+        ap42 : [ [['int','int'],'int'],
+               function(f){return f(42)}  ],
+        p :    [ ['int','int','int'],
+               function(x,y){return x+y;} ],
+        s :    [ ['int','int'],
+               function(x){return x+1;} ] 
+      });
+
       var terms = prove({
          n        : 100,
-         typ      : mkTyp(['int','int','int']),
-         ctx      : mkCtx({
-                      ap42 : [ [['int','int'],'int'],
-                             function(f){return f(42)}  ],
-                      p :    [ ['int','int','int'],
-                             function(x,y){return x+y;} ],
-                      s :    [ ['int','int'],
-                             function(x){return x+1;} ] 
-                    })
+         typ      : typ1,
+         ctx      : ctx1
       });
       
 
@@ -172,12 +191,16 @@ var fishtronTests = function(){
       "b":{"c":"atm","a":"int"}}},"t":{"c":"arr","a":{"c":"atm","a":"int"},"b":{"c":"arr",
       "a":{"c":"atm","a":"int"},"b":{"c":"atm","a":"int"}}}};
     
-      var way  = allWays(tt1)[8];
-      var newS = allSubterms_byWays(tt2)[5];
+      var way     = allWays(tt1)[8];
+      var newS    = allSubterms_byWays(tt2)[5];
+      var newTerm = changeSubterm(tt1,way,newS).newTerm;
 
-      strictEqual( code(changeSubterm(tt1,way,newS).newTerm) ,  
+      strictEqual( code(newTerm) ,  
                    'function(_0,_1){return p(s(_0),ap42(function(_2){return _1}))}' ,
                    'Primitive changeSubterm test on two arbitrary terms (swapping their subterms).' );      
+
+      var checkRes1 = checkTerm(newTerm,typ1,ctx1);
+      ok( checkRes1.ok , '... ' + checkRes1.msg );
 
 
       console.timeEnd('tests');
