@@ -4,9 +4,14 @@ var log = function(x){
 };
 
 var logArray = function(xs){
+  if(!_.isArray(xs)){xs=[xs];}
   _.each(xs,function(x){
-      console.log(x);
+      log(x);
   });  
+};
+
+var logCodes = function(xs){
+  return logArray(code(xs));  
 };
 
 var assert = function(condition, message) {

@@ -1,8 +1,35 @@
 
 
 
-// TODO NEXT : SKI conversion dodělat
+// TODO NEXT : pořádně otestovat AE !!!!!!!!!!!!!!!!!!
 
+
+//S( K(  S(  S(K(p) , S( K(ap42) , S(K(K),I)  )  )) )  , S(K(K),I)    )
+
+var S = function(f,g){
+  return function(x){
+    return f(x)(g(x));
+    //_partial(_.partial(f,x),_.partial(g,x)); //taky blbě pač _.partial(f_1arg,42) je fce co čekí na ()
+  };
+};
+
+var K = function(x){
+  return function(y){
+    return x;
+  };
+};
+
+var I = function(x){
+  return x;
+};
+
+//var cur2 = function(f){
+//  return function(x){
+//    return function(y){
+//      return f(x,y);
+//    };
+//  };
+//};
 
 
 
@@ -12,7 +39,7 @@ var FV = function(term){
     case VAR : return [term.x];
     case APP : return _.union( FV(term.m) , FV(term.n) );
     case LAM : return _.without( FV(term.m) , term.x );
-    default  : throw 'simpleAE : default in switch (FV)';
+    default  : throw 'FV : default in switch';
   }
 };
 
@@ -34,11 +61,28 @@ var AE = function(term){
         // K : B -> (A -> B)
         return mkApp( mkVal('K', mkArr( term.t.b , term.t ) ) ,  AE(term.m) );
       }else{
-         
-        throw 'TODO !!!!!!!!!!!!!!!!!!!!!!!!';
+        
+        if( isLam(term.m) ){
+          return AE( mkLam_(term.x, AE(term.m), term.t) ); 
+        }
+
+        if( isApp(term.m) ){
+
+          var xTyp = term.t.a;
+
+          var lam1 = AE(mkLam(term.x,xTyp,term.m.m));
+          var lam2 = AE(mkLam(term.x,xTyp,term.m.n));
+
+          //S : (A->B->C) -> (A->B) -> a -> c
+          //S f g x = f x (g x)
+          var sTyp = mkTyp([ lam1.t , lam2.t , term.t ]);
+          
+          return mkApp( mkApp( mkVal('S',sTyp), lam1 ) , lam2 );
+        }
+
+        throw 'AE : this place in code should be unreachable';        
       }
-       
-    default : throw 'simpleAE : default in switch (AE)';
+    default : throw 'AE : default in switch';
   }
 };
 

@@ -172,7 +172,7 @@ var checkTerm = function(term,typ,ctx){ // TODO z venčí by měl bejt danej eš
   var checkOK  = {ok:true,msg:'Term is OK!'};
   var checkErr = function(msg){return{ok:false,msg:msg};};
 
-  if( !_.isEqual(typ,term.t) ){
+  if( typ !== undefined && !_.isEqual(typ,term.t) ){
     return checkErr('high-level-typ-mismatch');
   }
 
@@ -212,7 +212,7 @@ var checkTerm = function(term,typ,ctx){ // TODO z venčí by měl bejt danej eš
         if( !isArr(term.t) ){
           return checkErr('LAM must have arrow typ, but LAM with var '+term.x+' has typ '+code(term.t) );
         }
-        if( ctx[term.x] !== undefined ){
+        if( ctxSupplied && ctx[term.x] !== undefined ){
           return checkErr('LAM shadows VAL '+term.x+' from ctx by its var');
         }
         if( baze[term.x] !== undefined ){
