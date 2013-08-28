@@ -2,26 +2,29 @@
 
 
 // TODO NEXT : pořádně otestovat AE !!!!!!!!!!!!!!!!!!
+//           : ---------||------ toBNF !!
+//           : dodelat unSKI
+//           : spojit unSKI a toBNF, a následně otestovat že se to "nuluje" s AE.
 
 
 //S( K(  S(  S(K(p) , S( K(ap42) , S(K(K),I)  )  )) )  , S(K(K),I)    )
 
-var S = function(f,g){
-  return function(x){
-    return f(x)(g(x));
-    //_partial(_.partial(f,x),_.partial(g,x)); //taky blbě pač _.partial(f_1arg,42) je fce co čekí na ()
-  };
-};
-
-var K = function(x){
-  return function(y){
-    return x;
-  };
-};
-
-var I = function(x){
-  return x;
-};
+//var S = function(f,g){
+//  return function(x){
+//    return f(x)(g(x));
+//    //_partial(_.partial(f,x),_.partial(g,x)); //taky blbě pač _.partial(f_1arg,42) je fce co čekí na ()
+//  };
+//};
+//
+//var K = function(x){
+//  return function(y){
+//    return x;
+//  };
+//};
+//
+//var I = function(x){
+//  return x;
+//};
 
 //var cur2 = function(f){
 //  return function(x){
@@ -32,6 +35,78 @@ var I = function(x){
 //};
 
 
+var toBNF = function(term){
+
+  var subs = function(m,x,n){
+    switch(m.c){
+      case VAL : return m;
+      case VAR : return m.x === x ? n : m;
+      case APP : return mkApp( subs(m.m,x,n) , subs(m.n,x,n) );
+      case LAM : 
+        assert( m.x !== x , 'toBNF.subs : "shadowing"' );
+        //assert( m.x notin FV(n) )
+        return mkLam_( m.x , subs(m.m,x,n) , m.t );
+      default  : throw 'toBNF.subs : default in switch';
+    }
+  };
+
+  var reduce = function(term){
+    switch(term.c){
+      case VAL : 
+      case VAR : return {ret:term,reduced:false};
+      case APP : 
+        if( isLam(term.m) ){
+          return {
+            ret     : subs(term.m.m,term.m.x,term.n),
+            reduced : true
+          };
+        } else {
+          var mRes = reduce(term.m);
+          var nRes = reduce(term.n); 
+          return {
+            ret     : mkApp( mRes.ret , nRes.ret ),
+            reduced : mRes.reduced || nRes.reduced 
+          };
+        } 
+      case LAM : 
+        var res = reduce(term.m);
+        return {
+          ret     : mkLam_(term.x,res.ret,term.t),
+          reduced : res.reduced
+        };
+      default  : throw 'toBNF.reduce : default in switch';      
+    }
+  };
+
+  var res;
+  do{
+    res = reduce(term);
+    term = res.ret;
+  }while(res.reduced);
+
+  return term;
+};
+
+var unSKI = function(term,i){
+  switch(term.c){
+    case VAL : 
+      switch( term.x ){
+        case 'I' : throw 'TODO'; 
+        case 'K' : throw 'TODO';
+        case 'S' : throw 'TODO';
+        default  : return {ret:term,i:i} ;
+      }
+    case VAR : return {ret:term,i:i};
+    case APP : 
+      var mRes = unSKI(term.m,i);
+      var nRes = unSKI(term.n,mRes.i); 
+      return {ret:mkApp( mRes.ret , nRes.ret ), i: nRes.i };
+    case LAM : 
+      var res = unSKI(term.m,i); 
+      return {ret:mkLam_( term.x , res.ret , term.t ),i:res.i};
+    default  : throw 'unSKI : default in switch';
+  }  
+};
 
 var FV = function(term){
   switch( term.c ){
