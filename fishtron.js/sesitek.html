@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>sešítek</title>
+
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+
+    <style>
+    </style>
+
+    <script src="js/libs/jquery-1.10.2.js"></script>
+    <script src="js/libs/underscore-1.5.1.js"></script>
+
+    <script src="js/utils.js"></script>
+    
+<script>
+
+var renderSections = function(){
+
+
+  $('section').each(function(){
+    var code   = $(this).attr('id');
+    var nadpis = $(this).html();
+    $(this)
+     .html( $('<h2>').html( nadpis ) )
+     .prepend( $('<a>').attr('name', code ) );
+    $('#contents')
+      .append( $('<a>').attr('href','#'+code).html( nadpis ) )
+      .append( $('<br>') );
+  });
+
+};
+
+var renderTodos = function(){
+  $('todo').each(function(){
+    $(this)
+     .css('color','white')
+     .css('background-color','red')
+     .css('width','intrinsic')
+     .css('width','-moz-max-content')
+     .css('padding','3px')
+     .prepend('<b>TODO : </b>');
+  });
+};
+
+$(function(){ 
+  renderSections();
+  renderTodos();
+});
+
+</script>
+
+</head>
+<body>
+
+<h1>Sešítek</h1>
+
+<section id="contents">Obsah</section>
+
+<section id="uvod">Úvodní poznámky</section>
+
+<p>
+Pokus jestli je praktické psát si poznámky v html/js a zda
+se to osvědčí jako kontrapart autoepištoly.
+</p>
+
+<todo>ukázka todo :) </todo>
+
+
+<section id="cocky">Čočky</section>
+
+Čočky jsou koncep založený na pozorování, že můžeme řetězit modely a views podobně
+jako při skládání funkcí. Čočka nasazená na nějaký model generuje pohled na ten model, který může být zase
+interpretován jako model další čočkou atd. Jedná se vlastně jen o funkci transformující objektu na jiný objekt,
+nic složitého. Zdá se mi však, že by bylo chytré těmhle objektům dát jednotící "interfece" ve stylu 
+<a href="#json_">JSONu_</a>. 
+
+
+<section id="simul">Několik neuspořádaných nápadů o chystaném simulátůrku</section>
+
+<ul>
+  <li>
+    Měla by to být prostá hierarchie objektů ve stylu <a href="#json_">JSON_</a>,
+    respektive to co to generuje jako výstup.
+  </li>
+  <li>
+    Mělo by to být designovaný s ohledem na princip <a href="#cocky">"čoček"</a>
+  </li>
+</ul>
+
+<section id="json_">JSON_</section>
+
+
+Rozšíření JSONu o nějaký jednoduchý konstrukt zajišťující 
+rozšíření o funkce. Něco ve stylu:
+
+<pre>
+{
+  "name" : "Chuan",
+  "age" : 10,
+  "foo" : { "_" : "function (x){return x+1;}" }
+}
+</pre>
+
+Který by se ale přeložil pomocí "JSON_.parse"
+na objekt:
+
+<pre>
+{
+  name : 'Chuan',
+  age  : 10,
+  foo  : function(x){return x+1;} 
+}
+</pre>
+
+<p>
+Podstatná vlastnost objektu který má být korektně převeden do JSONu_,
+že by neměl nic schovávat do closure, aby jednoduché .toString() aplikované
+na funkci nestratilo o funkci žádnou inforaci.
+</p>
+
+<p>
+Je otázka, zda se spokojit s esteticky pěkným ale nebezpečným "_". 
+V zásadě však to myslím není problém použít, protože by němělo být vždy
+jasné, že daný JSON  je vlastně JSON_. Případný atribut s klíčem "_" může být
+zakódován jako "__" atd. nebo prostě bude zakázán. Zdá se mi to lepší, než
+používat nějaké "__FUN__" apod. 
+</p>
+
+
+</body>
+</html>
+
+
+
