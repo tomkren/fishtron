@@ -6,6 +6,7 @@ var fishtronTests = function(){
       console.time('tests');
 
       var q = PriorityQueue();
+      //var q = Heap();
       ok( q.isEmpty() , 'New queue is empty.' );
   
       q.push('a' , 100 ); // pushing 'a' with prority 100. The lower number, the higher priority. 
@@ -25,13 +26,14 @@ var fishtronTests = function(){
       var q2   = _.chain(arr1)
                   .shuffle()
                   .reduce(function(q,x){return q.push('',x)},PriorityQueue())
+                  //.reduce(function(q,x){return q.push('',x)},Heap())
                   .value();
       var arr2 = [];
       while( !q2.isEmpty() ){
         arr2.push(q2.pop()[1]);
       }
 
-      deepEqual( arr1, arr2, 'Shuffled array test (series of pushes and pops) : arrays are equal' );
+      deepEqual( arr2, arr1, 'Shuffled array test (series of pushes and pops) : arrays are equal' );
       ok( q2.isEmpty() , '... and queue is empty.' )
 
     });
@@ -86,6 +88,12 @@ var fishtronTests = function(){
         108, 89, 108, 89, 89, 70, 108, 89
       ];
 
+      //var supposedResult_heap = [23, 42, 24, 43, 25, 44, 46, 65, 65, 84, 85, 66, 66, 85, 47, 66, 
+      // 66, 85, 47, 66, 26, 45, 47, 66, 86, 48, 86, 67, 67, 48, 67, 67, 86, 48, 86, 69, 48, 67, 48, 
+      // 67, 27, 46, 88, 48, 67, 88, 107, 67, 69, 88, 88, 107, 88, 67, 86, 88, 107, 107, 126, 107, 
+      // 107, 126, 67, 67, 86, 67, 127, 87, 127, 47, 68, 68, 87, 68, 108, 68, 127, 108, 89, 68, 87, 
+      // 49, 68, 68, 87, 70, 89, 89, 108, 89, 108, 108, 89, 108, 108, 127, 70, 89, 89, 108]
+
       
       deepEqual( supposedResult , realResult ,  
              'Check that implementation doesn\'t change on (Int->Int->Int;{+,s}) (100 terms). '+
@@ -122,6 +130,12 @@ var fishtronTests = function(){
         65, 65, 65, 46, 42, 42, 42, 23, 107, 88, 88, 69, 65, 65, 46, 126, 107, 107, 88, 84, 84, 
         65, 126, 107, 107, 88, 107, 88, 88, 69, 84, 65, 84, 65
       ];
+
+      //supposedResult_heap = [23, 42, 24, 43, 44, 46, 65, 65, 84, 25, 23, 42, 42, 43, 66, 85, 26, 
+      //  45, 24, 43, 66, 85, 43, 24, 47, 66, 66, 85, 43, 47, 66, 47, 66, 86, 42, 42, 84, 67, 86, 65, 
+      //  84, 84, 67, 67, 44, 86, 65, 84, 65, 84, 48, 67, 46, 67, 67, 48, 67, 86, 67, 25, 44, 27, 44, 
+      //  44, 48, 44, 67, 23, 46, 42, 65, 65, 86, 25, 48, 65, 46, 107, 69, 88, 88, 107, 65, 84, 84, 
+      //  48, 67, 67, 86, 25, 107, 126, 44, 48, 67, 69, 88, 88, 107, 107]
       
       deepEqual( supposedResult , realResult , 'Similar check on the slightly bigger ctx.');
 

@@ -166,6 +166,8 @@ var treeAStar = function(problem){
   var limit  = problem.limit  || 1000000;
 
   var q = PriorityQueue(); 
+  //var q = Heap();
+  
   var results = [];
 
   q.push( start , heur(start.s) );
