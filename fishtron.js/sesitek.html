@@ -21,7 +21,7 @@ var renderSections = function(contentsSelector){
     var code   = $(this).attr('id');
     var nadpis = $(this).html();
     $(this)
-     .html( $('<h2>').html( nadpis ) )
+     .html( h2 = $('<h2>').html( nadpis + ' <a href="'+contentsSelector+'">⌂</a>' ) )
      .prepend( $('<a>').attr('name', code ) );
     $(contentsSelector)
       .append( $('<a>').attr('href','#'+code).html( nadpis ) )
@@ -38,7 +38,25 @@ var renderLabels = function(tag,str,color){
      .css('width','intrinsic')
      .css('width','-moz-max-content')
      .css('padding','3px')
-     .prepend('<b>'+str+'</b>');
+     .prepend('<b>'+str+'</b>')
+     .before('<p>')
+     .after('</p>');
+  });
+};
+
+var runCodes = function(){
+  $('code').each(function(){
+    $(this)
+     .append($('<script>').html( $(this).html() ));
+  });
+};
+
+var showScripts = function(){
+  $('script').each(function(){
+    var it = $(this); 
+    if( it.attr('show') === 'true' ){
+      it.after($('<div>').html( '<pre>'+it.html()+'</pre>' ));
+    }
   });
 };
 
@@ -46,6 +64,7 @@ $(function(){
   renderSections('#contents');
   renderLabels('todo','TODO : ','red');
   renderLabels('note','Note: ','blue');
+  showScripts();
 
 });
 
@@ -60,12 +79,14 @@ $(function(){
 
 <section id="uvod">Úvodní poznámky</section>
 
-<p>
 Pokus jestli je praktické psát si poznámky v html/js a zda
 se to osvědčí jako kontrapart autoepištoly.
-</p>
 
 <todo>ukázka todo :) .. rozepsat to tu víc .. </todo>
+
+Zatím tu diskutuju pár věcí co se mi honěj hlavou poslední dobou,
+postupně bych to chtěl obohacovat o obecnější témata - pokud se to osvědčí
+jako dobrá metoda.
 
 
 <section id="cocky">Čočky</section>
@@ -134,10 +155,80 @@ Několik neuspořádaných nápadů:
     transplantovat hardcoded věci z jádra simulátoru co by tam neměli bejt.
   </li>
 
+  <li>
+    Je otázka jak se postavit k indexování zón/políček, bylo by hezký, kdyby to bylo udělaný nějak obecně
+    jak pro 2D i 3D. Nebo rovnou 3D? Nebo nejdřív 2D? 
+    <br>
+    Je lepší indexovat přímo stringovou adresou, nebo strukturovaně world[x][y][z]?
+    Jeden string má nevýhodu v adjacentnostech atd - i když můžu použít strukturovaný
+    objek zonePos a ten až přeložit na stringovou adresu.
+  </li>
  
-
-
 </ul>
+
+<h3>Trocha pokusného kódu</h3>
+
+<script show="true">
+
+var NUM_DIM   = 3;
+var ZONE_SIDE = 32;
+
+
+var mkWorld = function(){
+  return {};
+};
+
+var mkZone = function(){
+  var zone = []; 
+  for( var i = 0 ; i < NUM_DIM ; i++ ){
+    //TODO ??? udělat to jako n-D pole nebo zase jako obj..?
+    //         a mít tu samou NUM_DIM pro zony a pro world
+    //         nebo to může bejt !=
+  }
+  return zone;
+};
+
+// ZonePos -> String
+var encodeZonePos = function( zonePos ){
+
+  var arr2str = function(xs){
+    return xs.splice(0,NUM_DIM).join();
+  };
+
+  if( _.isArray(zonePos) ){
+    if(zonePos.length < NUM_DIM){
+      var zonePos = _.clone(zonePos);
+      while( zonePos.length < NUM_DIM){
+        zonePos.push(0);
+      }
+    }
+    return arr2str(zonePos);
+  }
+
+  if( _.isObject(zonePos) ){
+    var x = zonePos.x || 0 ;
+    var y = zonePos.y || 0 ;
+    var z = zonePos.z || 0 ;
+    return arr2str([x,y,z]);
+  }
+
+  throw 'encodeZonePos : unsupported zonePos format';  
+};
+
+// World -> ZonePos -> Zone
+var getZone = function( world , zonePos ){
+  return world[encodeZonePos(zonePos)];
+};
+
+
+$(function(){
+
+
+});
+
+</script>
+
+
 
 <section id="json_">JSON_</section>
 
@@ -168,6 +259,14 @@ Podstatná vlastnost objektu který má být korektně převeden do JSONu_,
 že by neměl nic schovávat do closure, aby jednoduché .toString() aplikované
 na funkci nestratilo o funkci žádnou inforaci.
 </p>
+
+<p>
+A samozřejmě closure neni jediná potíž, další potíž je, kde to vezme
+context ve kterém bude interpretovat konstanty obecně (jména funkcí, konstant,..).
+Přímočarý a pravděpodobně né moc dobrý je globální scope. Bude moct
+referencovat svoje položky? Jaká bude politika vůči this?
+</p>
+
 
 <p>
 Je otázka, zda se spokojit s esteticky pěkným ale nebezpečným "_". 
@@ -227,6 +326,38 @@ než plaintext.
 blogpost : JSON: serialize and deserialize functions in JavaScript</a><br>
 <a href="https://github.com/tarruda/super-json">
 github repo : super-json</a>
+
+
+<section id="typy-vs-dyna">(Typovanost vs dynamičnost) vs (stroj vs člověk)</section>
+
+Zde bych v budoucnu chtěl trochu rozebrat myšlenku, která mě občas napadá ohledně 
+staticky typovaných vs dynamických jazyků. Respektive napadá mě od tý doby co si hraju s javascriptem,
+potom co sem si poměrně dlouho hrál s haskellem. 
+<br><br>
+
+Hrubě ve zkratce: ačkoli oceňuju typovanost a jak člověku pomáhá, zároveň mám velkou 
+zálibu v dynamických jazycích. Zatím si nepřijdu dost pevný v kramflecích abych vynášel moc silné soudy,
+ale přijde mi že typy mohou člověka až nepříjemě svazovat, zvlážť když pracuje s metaprogramovacíma věcma.
+Alespoň takový jsou moje zkušenosti po dělání Fištrona, může to bejt hodně daný mojí nezkušeností
+haskellu nebo nějakejma špatnejma designovejma rozhodnutíma, ale přišlo mi že až nepřiměřeně
+času jsem strávil fajtěnim typovýho systému v eval záležitostech. Naopak v JS je vše evalózní
+jednoduché, jen halt má člověk tu velkou zodpovědnost nestřelit se do nohy, ktrerou typy z velké části
+zjednodušují. Proto mě napadá (možná předčasně vzhledem k tomu že sem toho zas
+tolik v js nenaprogramoval) že může být zajímave nahlížet na typy jako na <i>nástroj kterým 
+koriguje lidský programátor strojového programátora, ale sám si může dovolit luxus nebýt jimy svázán</i>.
+Spíš to tu poznamenávám, abych to měl někde poznamenáno, než že by to už byla moc hotová myšlenka.
+Cejtim jí pocitově, do slov se jí ještě asi moc nechce.
+<p>
+Rozhodně se mi zdá, že dynamický jazyky jsou asi o něco vhodnější na dělání prototypů.
+Kdy člověk ještě nemusí mít v hlavě moc představu o datovejch strukturách který je
+vhjodný použít a ty se až "vyloupávaj" za běhu. Ve chvíli kdy se to vyloupne, tak může
+mít smisl to ukotvit, přepsat v tyxpovanym jazyce - pokud vypadá že by to mohlo přinýst zlepšení
+- zrychlení, zpřehlednění, zbezpečnění.. 
+<p>
+Na druhou stranu jsou zase věci co si člověk bez typů neužije, protože neni drženej tim zábradlíčkem
+a nemůže si dovolit některý úlety. No je to na hlubší zamyšlení, ale aspoň něco.
+
+
 
 </body>
 </html>
