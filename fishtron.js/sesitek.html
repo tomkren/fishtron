@@ -15,8 +15,7 @@
     
 <script>
 
-var renderSections = function(){
-
+var renderSections = function(contentsSelector){
 
   $('section').each(function(){
     var code   = $(this).attr('id');
@@ -24,28 +23,30 @@ var renderSections = function(){
     $(this)
      .html( $('<h2>').html( nadpis ) )
      .prepend( $('<a>').attr('name', code ) );
-    $('#contents')
+    $(contentsSelector)
       .append( $('<a>').attr('href','#'+code).html( nadpis ) )
       .append( $('<br>') );
   });
 
 };
 
-var renderTodos = function(){
-  $('todo').each(function(){
+var renderLabels = function(tag,str,color){
+  $(tag).each(function(){
     $(this)
      .css('color','white')
-     .css('background-color','red')
+     .css('background-color',color)
      .css('width','intrinsic')
      .css('width','-moz-max-content')
      .css('padding','3px')
-     .prepend('<b>TODO : </b>');
+     .prepend('<b>'+str+'</b>');
   });
 };
 
 $(function(){ 
-  renderSections();
-  renderTodos();
+  renderSections('#contents');
+  renderLabels('todo','TODO : ','red');
+  renderLabels('note','Note: ','blue');
+
 });
 
 </script>
@@ -53,7 +54,7 @@ $(function(){
 </head>
 <body>
 
-<h1>Sešítek</h1>
+<h1>sešítek</h1>
 
 <section id="contents">Obsah</section>
 
@@ -64,7 +65,7 @@ Pokus jestli je praktické psát si poznámky v html/js a zda
 se to osvědčí jako kontrapart autoepištoly.
 </p>
 
-<todo>ukázka todo :) </todo>
+<todo>ukázka todo :) .. rozepsat to tu víc .. </todo>
 
 
 <section id="cocky">Čočky</section>
@@ -76,20 +77,69 @@ nic složitého. Zdá se mi však, že by bylo chytré těmhle objektům dát je
 <a href="#json_">JSONu_</a>. 
 
 
-<section id="simul">Několik neuspořádaných nápadů o chystaném simulátůrku</section>
+<section id="simul">Simulátůrek</section>
 
+Několik neuspořádaných nápadů:
 <ul>
-  <li>
-    Měla by to být prostá hierarchie objektů ve stylu <a href="#json_">JSON_</a>,
-    respektive to co to generuje jako výstup.
-  </li>
+  <li>Základní prvky:
+    <ul>
+      <li>Svět - má zóny</li>
+      <li>Zóna - má políčka</li>
+      <li>Políčko - obsahuje objekty</li>
+      <li>Objekty:
+         <ul>
+          <li>Strom</li>
+          <li>Panáček/Robot - má vnitřek: inventář</li>
+          <li>Barák - má vnitřek: něco jako vnitřní zóna </li>
+         </ul>
+      </li>
+    </ul>
+  </li> 
+
   <li>
     Mělo by to být designovaný s ohledem na princip <a href="#cocky">"čoček"</a>
   </li>
+
+  <li>
+    Měla by to být prostá hierarchie objektů ve stylu <a href="#json_">JSON_</a>,
+    respektive to co to generuje jako výstup.
+    <br> 
+    Konkrétnějc: měl by bejt json_ serializovatelnej ten výstup simulátoru, tzn 
+    stav/model světa. To prakticky asi znamená, že se by funkce (membři) toho 
+    výstupního objektu měli bejt takový, že na nich toString() dá něco co de evalem
+    rekonstruovat. To, jestli tam nejsou nějaký další šity znamená, že by tyhle funkce
+    neměli bejt napojený na neviditelnej closure, tzn např že nevzniknou jako
+    výstup nějaký jiný funkce, což je dost nepříjemný omezení. V <a href="#json_">JSON_</a>
+    se to popisuje podrobněji, uvidí se jestli to bude mít nějaký praktický řešení.
+    <br>
+    To samozřejmě neomezuje použití kloužrů uvnitř toho simulátoru, jen že
+    ve stavu světa by neměli bejt funkce, co maj clousre data.
+  </li>
+
+  <li>
+    "problém cest" :
+    když si budou moct zabrat uzemí kde budou chtít, tak můžou barákama
+    obestavět jinej barák a ten nebude mít možnost dostat se k surovinám.
+    Tzn vzniká tu agrese samovolně [železná ruka oligarchie jako fyzikální zákon]
+    i když by se člověk snažil udělat to hezky "jehovisticky" - tzn explicitně
+    jim tam nezavádět nějaký prvky agrese jako zbraně. 
+  </li>
+
+  <li>snažit se to udělat jako obecnej simulátor, kterej má jako argumenty
+    "bussines rules" který udávaj konkretní arbitrární pravidla. Samozřejmě
+    že tohle je někdy asi na úkor efektivity práce... nebo spíš lehkost
+    práce, a mohlo by to tíhnout k premature rozhodnutím; takže to zklouzne k tomu, že
+    budou nějaký věci co budou v jádru co by tam neměli bejt podle tohodle principu, 
+    ale už od začátku to pojmout tak, že jsou tam rules do kerejch je možno refaktoringem
+    transplantovat hardcoded věci z jádra simulátoru co by tam neměli bejt.
+  </li>
+
+ 
+
+
 </ul>
 
 <section id="json_">JSON_</section>
-
 
 Rozšíření JSONu o nějaký jednoduchý konstrukt zajišťující 
 rozšíření o funkce. Něco ve stylu:
@@ -127,8 +177,56 @@ zakódován jako "__" atd. nebo prostě bude zakázán. Zdá se mi to lepší, n
 používat nějaké "__FUN__" apod. 
 </p>
 
+<p>
+Zdá se, že se zákazem closure je docela netriviální potíž, protože to vylučuje
+použít funkci vrácenou funkcí v objektu, který pak chceme serializovat. Např:
+</p>
 
+<pre>
+foo = function(x){return function(y){return x(y);}}
+bar = foo(Math.sin)
+bar.toString() 
 
+  ===> "function (y){return x(y);}"
+  a né "function (y){return Math.sin(y);}"
+</pre>
+
+Věc co mě napadla a nevim do jaký míry je rylejtlá k tomuhle je to, že jde celkem
+elegantně psát lambda termy přímo v jsonu:
+
+<pre>
+\x y.x y
+{'x':{'y':['x','y']}}
+případně
+{'x y':['x','y']}
+možná i dokonce (ale to už trochu strácí tu jednoduchou parzovatelnost)
+{'x y':'x y'}
+
+tzn něco jako 
+{_:{'x':{'y':['x','y']}}}
+místo
+{_:"function(x){return function(y){return x(y);}}"}
+
+ten seznam tam má hezkou vlastnost že
+\ f g x. f x (g x)
+jde jako
+{f:{g:{x:[f,x,[g,x]]}}}
+(případně)
+{'f g x':[f,x,[g,x]]}
+</pre>
+
+Nevim jestli je to k něčemu dobrý, vypadá to ale že bude třeba ručně řešit
+některý takový věci, pokud se nebudeme chtít ochudit o možnost funkcí co vracej funkce
+a takováhle notace neni až taková pain-in-the-ass a je jednodušejc parsovatelná 
+než plaintext.
+
+<p><note>Možná přendat někam jinam až na to bude někde lepší místo</note></p>
+
+<h3>Links</h3>
+<a href="http://www.kristofdegrave.be/2012/07/json-serialize-and-deserialize.html">
+blogpost : JSON: serialize and deserialize functions in JavaScript</a><br>
+<a href="https://github.com/tarruda/super-json">
+github repo : super-json</a>
 
 </body>
 </html>
