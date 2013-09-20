@@ -1,0 +1,3 @@
+rmdir C:\wamp\www\fishtron /s /q
+mkdir C:\wamp\www\fishtron
+xcopy . C:\wamp\www\fishtron /s /e
