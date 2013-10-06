@@ -166,11 +166,24 @@ Několik neuspořádaných nápadů:
  
 </ul>
 
+<canvas id="sim_canvas" width="512" height="512"></canvas>
+<script>$(function(){
+  //var
+  ctx = $('#sim_canvas')[0].getContext('2d'); 
+  
+
+  //var
+  zona = mkZone();
+  drawZone2D(ctx,zona);
+
+
+});</script>
+
 <h3>Trocha pokusného kódu</h3>
 
 <script show="true">
 
-var NUM_DIM   = 3;
+var NUM_DIM   = 2;
 var ZONE_SIDE = 32;
 
 
@@ -178,12 +191,115 @@ var mkWorld = function(){
   return {};
 };
 
-var mkZone = function(){
+var defaultZoneInit2D = function(pos){
+  var k =  256/ZONE_SIDE ;
+  return {
+    //pos:pos.join(),
+    color : _.map(pos,function(x){return k*x;}).concat([75]) 
+  };
+};
+
+var stepPole1 = function(pole,zone,pos){
+  var ns = nejbrs(pos,true);
+  ns = _.map(ns,function(n){return poleAt(zone,n)});
+  hax = ns;
+  return{ color: [ ns[0].color[2] , pole.color[2] , ns[2].color[2] ] };
+};
+
+var poleAt = function(zone,pos){
+  if(pos.length===0){return zone;}
+  return poleAt(zone[_.head(pos)],_.tail(pos));
+};
+
+var nejbrs = function(pos,isToroid,free){
+  if(isToroid){
+    if(free === undefined){free = true;}
+
+    if(pos.length===0){return [[]];}
+
+
+    var ret1 = [] ,ret2 = [], ret3 = [];
+
+    var x = _.head(pos);
+
+    if( free ){
+      x1 = (x+1) % ZONE_SIDE;
+      x2 = (x-1) % ZONE_SIDE;
+      var ns = nejbrs( _.tail(pos) , isToroid ,false );
+    
+      ret1 = _.map(ns,function(n){return [x1].concat(n);});
+      ret2 = _.map(ns,function(n){return [x2].concat(n);});
+    }
+
+    if( !(pos.length==1 && free) ){
+      var ns_ = nejbrs( _.tail(pos) , isToroid ,free );
+      ret3 = _.map(ns_,function(n){return [x].concat(n);});
+      
+    };
+
+    return ret1.concat(ret2.concat(ret3));
+  }
+
+  throw 'TODO - nejbrs : to be implemented';
+};
+
+var stepZone = function(zone,stepPole){
+  return z_map(zone,function(pole,pos){
+    return stepPole(pole,zone,pos);
+  });
+};
+
+var drawZone2D = function(ctx,zone){
+  var side = 16;
+  var i = 0;
+  z_each(zone,function(pole,pos){
+    var x = pos[0];
+    var y = pos[1];
+    
+    ctx.fillStyle = 'rgb('+pole.color.join()+')';
+    ctx.fillRect(x*side, y*side, (x+1)*side, (y+1)*side);
+  
+    i++;
+  });
+  log(i);
+};
+
+
+var z_each = function(zone,fun,dim,pos){
+  if(dim === undefined){ dim = NUM_DIM; }
+  if(pos === undefined){ pos = []; }
+  if(dim === 0){ return fun(zone,pos); }
+  
+  for( var i = 0 ; i < ZONE_SIDE ; i++ ){
+    z_each(zone[i],fun,dim-1,pos.concat([i]));
+  }
+};
+
+var z_map = function(zone,fun,dim,pos){
+  if(dim === undefined){ dim = NUM_DIM; }
+  if(pos === undefined){ pos = []; }
+  if(dim === 0){ return fun(zone,pos); }
+  
   var zone = []; 
-  for( var i = 0 ; i < NUM_DIM ; i++ ){
-    //TODO ??? udělat to jako n-D pole nebo zase jako obj..?
-    //         a mít tu samou NUM_DIM pro zony a pro world
-    //         nebo to může bejt !=
+  for( var i = 0 ; i < ZONE_SIDE ; i++ ){
+    var subZone = z_map(zone[i],fun,dim-1,pos.concat([i]));
+    zone.push(subZone);
+  }
+  return zone;
+};
+
+var mkZone = function(initFun,dim,pos){
+  if(dim === undefined){ dim = NUM_DIM; }
+  if(pos === undefined){ pos = []; }
+  if(initFun === undefined){ initFun = defaultZoneInit2D;}
+  if(dim === 0){ return initFun(pos); }
+  
+  var zone = []; 
+  for( var i = 0 ; i < ZONE_SIDE ; i++ ){
+
+    var subZone = mkZone(initFun,dim-1,pos.concat([i]));
+    zone.push(subZone);
+
   }
   return zone;
 };
