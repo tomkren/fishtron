@@ -1,0 +1,234 @@
+
+\documentclass[conference]{IEEEtran}
+%\usepackage{stmaryrd}
+\usepackage{amsfonts}
+
+
+%\usepackage{graphicx,times,psfig,amsmath} % Add all your packages here
+%\usepackage{hyperref}
+%\usepackage{amsmath}
+%\usepackage{amssymb}
+\usepackage[utf8]{inputenc}
+
+\hyphenation{op-tical net-works semi-conduc-tor IEEEtran}
+
+\IEEEoverridecommandlockouts    % to create the author's affliation portion
+
+\textwidth 178mm    % <------ These are the adjustments we made 10/18/2005
+\textheight 239mm   % You may or may not need to adjust these numbers again
+\oddsidemargin -7mm
+\evensidemargin -7mm
+\topmargin -6mm
+\columnsep 5mm
+
+\begin{document}
+
+
+% paper title: Must keep \ \\ \LARGE\bf in it to leave enough margin.
+\title{\ \\ \LARGE\bf Typed Functional Genetic Programming}
+
+\author{Tom\'{a}\v{s} K\v{r}en}
+
+
+\maketitle
+
+\begin{abstract}
+In this paper, generalization of the standard genetic programming (GP)
+for simply typed lambda calculus is presented. We use population 
+initialization method parameterized by simple search strategy. 
+First described strategy corresponds to standard ramped half-and-half method, 
+second one corresponds to exhaustive systematic search and third one is a 
+novel geometric strategy, which outperforms standard method in success 
+rate, time consumption and average individual size in two experiments. 
+Other performance enhancements based on theory of lambda calculus are 
+proposed and supported by experiment. Abstraction elimination is 
+utilized to enable use of simple tree-swapping crossover.
+\end{abstract}
+% no key words
+
+\section{Introduction}
+
+
+\PARstart{O}{ur} approach aims to play with the full arsenal given by simply typed lambda calculus, thus we begin our reasoning with an exhaustive systematic search
+in mind. Our second goal is to construct a system generalizing Standard 
+GP \cite{koza92}.
+In order to satisfy both these goals the designed system should be 
+parameterized by some simple piece of code that makes the difference
+between exhaustive systematic search and standard but 
+quiet arbitrary ramped half-and-half generating method. 
+
+Those two design goals also differentiate our system from 
+the three state of the art systems for typed GP known to us.
+
+~\\
+\textit{[Kurzívou jsou neformální poznámky]\\\\
+\textbf{Yu} - (články: evenParity, polyGP co sem ted našel, ten o burzách co mám v kindlu)
+Odlišnosti:
+(1) - generování se nedělá systematicky: pokud strom dojde do místa
+kde funkci nemá dát jaký parametr, tak místo tý funkce dá nějaký 
+terminál.(uvádí 85\% uspěšnost)  
+(2) - Ty křížení ma trochu jinak než v tom článku o even parity,
+musim zjistit jak má udělaný že se jí nedostane např prom \#3 někam,
+kde neni definovaná když dělá přesun podstromu, v tom starym to ale 
+bylo myslim založený na tom, že nedovolovala vnější proměnný uvnitř
+lambda termu - což platí i nadále. čili vtom to určitě nehraje full deck.
+Naopak se víc zaměřuje na polymorfizmus a další věci.\\
+\textbf{kanadani}\\ 
+- o dost silnější typovej systém\\
+- System F, i jim dynamicky vznikaj typy\\
+- moc silný typoví systém, takže generování už je dost
+  složitý, to se otiskuje v silně nestandardním algoritmu\\
+\textbf{kombinátoři} \\
+- vůbec nepoužívaj Lambda Abstrakce\\
+- univerzální genetickej operator\\
+- taky řešej systematický prohledávání\\
+\textbf{A eště tak nak všeobecně}\\
+- geometrická strategie generování termů jakožto hybrid systematického a náhodného sytylu --- to že jsme si vytičili ty dva cíle který plníme tou 
+jednoduchou strategií, tak máme možnost nalízt jednoduchou strategii která 
+je na pomezí obou cílů - taková strategie je právě ta naše geometrická 
+a ukazuje se že se bohulibě chová právě k strašáku GP -- \textbf{bloatu}.\\
+- teoretické LC konstrukty s výhodou použity - @-stromy a eta-redukce\\
+- křížení by eliminace 
+}
+
+
+ 
+
+\section{Generating method}
+
+\textit{
+- Unifished term je term který může obsahovat jako list uzel tvaru (tau,Gamma), takzvaný unfinished leaf (UL).\\
+- Pracujeme s prioritní frontou rozdělaných lambda termů.\\ 
+- Priorita je dána počtem UL v termu.\\
+- Na počátku je do fronty vložen jediný UT = (tau,gama)\\
+- Z fronty vyndám term s nejnižším \#UL, pokud má \#UL = 0, pak je to vygenerovaný jedinec, pokud ne tak vezmu jeho DFS-první UL a expanduju ho. Výsledkem expandování je několik (possibly 0) unfin. termů, které jsou až na expandovaný uzel totožné s původním UT, daný UT je nahrazen novým pod-UT. \\
+- Expandování probíhá následovně: \\
+(a) je to (a-b,Gama) pak tento list nahradim novým podstromem x.(b;Gama,x:a)\\
+(b) je to (alfa,Gama) pak pro každý f:(T1-T2-...-Tn-alpha) el Gama 
+nahradíme tento list novým podstromem ( f (T1,Gama) (T2,Gama) .. (Tn,Gama) )
+\\\\
+- Prohledávací strategie má pak funkci filtru následníků. \\
+- Pokud se fronta vyprázdní ještě před vygenerováním požadovaného 
+  počtu termů tak zbytek dogenerujeme stejným zpusobem, tzn do 
+  fronty přihodíme (tau,gama)  \\
+- Systematická strategie nezahodí nic (Pro ní generování 
+  kolapsuje do A* algoritmu).\\
+- Ramped-half-and-half zahodí vždy vše krom jediného.\\
+- Geometrická strategie nezahodí s pravděpodobností q na hloubka UL \\
+}
+
+\textbf{$\eta$-normalization ...}
+
+\textit{- pač je to generovany v lnf, neboli beta-eta na -1 nf kde 
+eta na -1 je eta expanze tak je chytrý transformovat 
+to do beta-eta nf kde  
+}
+
+\section{Crossover}
+\textit{- design goal: proper generalization of standard tree 
+swapping crossover\\ 
+- … výceméně zkopčit z diplomky\\
+\textbf{@-tree representation ...}\\
+...
+}
+\section{Experiments}
+
+\subsection{Simple Symbolic Regression}
+\subsection{Artificial Ant}
+\subsection{Even-parity problem}
+
+
+\section{Conclusions}
+
+
+\begin{thebibliography}{22}
+
+
+\bibitem{koza92}
+  John R. Koza,
+  \emph{Genetic Programming: On the Programming of Computers by Means of Natural Selection}.
+  MIT Press, Cambridge, MA,
+  1992. 
+
+\bibitem{koza05}
+  Koza, J.R., Keane, M., Streeter, M., Mydlowec, W.,Yu, J., Lanza, G. 
+  \emph{Genetic Programming IV: Routine Human-Competitive Machine Intelligence.} 
+  Springer, 2005. ISBN 978-0-387-26417-2 
+
+\bibitem{fg}
+ Riccardo Poli, William B. Langdon, Nicholas F. McPhee
+ \emph{A Field Guide to Genetic Programming}.
+ Lulu Enterprises, UK Ltd, 2008.
+
+\bibitem{yu01}
+  T. Yu. 
+  \emph{Hierachical processing for evolving recursive and modular 
+        programs using higher order functions and lambda abstractions}. 
+  Genetic Programming and Evolvable Machines,
+  2(4):345–380, December 2001. ISSN 1389-2576.
+
+
+\bibitem{montana95}
+D. J. Montana. 
+\emph{Strongly typed genetic programming.} 
+Evolutionary Computation, 3(2): 199–230, 1995.
+%URL \url{ http://vishnu.bbn.com/papers/stgp.pdf }. nefacha
+
+\bibitem{haynes96}
+T. D. Haynes, D. A. Schoenefeld, and R. L. Wainwright. 
+\emph{Type inheritance in strongly typed genetic programming.} 
+In P. J. Angeline and K. E. Kinnear, Jr., editors, Advances
+in Genetic Programming 2, chapter 18, pages 359–376.
+MIT Press, Cambridge, MA, USA, 1996. ISBN 0-262-01158-1. 
+%URL \url{http://www.mcs.utulsa.edu/~rogerw/papers/Haynes-hier.pdf}.
+
+\bibitem{olsson94}
+J. R. Olsson. 
+\emph{Inductive functional programming using incremental program 
+transformation and Execution of logic programs by 
+iterative-deepening A* SLD-tree search.} 
+Dr scient thesis, University of Oslo, Norway, 1994.
+
+\bibitem{kes}
+Forrest Briggs, Melissa O’Neill.
+\emph{Functional Genetic Programming and Exhaustive
+Program Search with Combinator Expressions.}
+International Journal of Knowledge-based and Intelligent Engineering Systems,
+Volume 12 Issue 1, Pages 47-68, January 2008. 
+
+
+\bibitem{barendregt84}
+H. P. Barendregt,
+\emph{The Lambda Calculus: its Syntax and Semantics}, 
+revised ed., North-Holland, 1984.
+
+\bibitem{barendregt92}
+H. Barendregt , S. Abramsky , D. M. Gabbay , T. S. E. Maibaum.
+\emph{Lambda Calculi with Types.} 
+Handbook of Logic in Computer Science, 1992. 
+
+\bibitem{barendregt10}
+
+  Henk Barendregt, Wil Dekkers, Richard Statman,
+  \emph{Lambda Calculus With Types}.
+  Cambridge University Press,
+  2010. 
+  %URL \url{http://www.cs.ru.nl/~henk/book.pdf}.
+
+\bibitem{jones87}
+Simon Peyton Jones. 
+\emph{The Implementation of Functional Programming Languages}. 
+Prentice Hall, 1987.
+
+
+\bibitem{AIAMA}
+	Stuart J. Russell, Peter Norvig,
+	\emph{Artificial Intelligence: A Modern Approach}.
+	Pearson Education,
+	2003. 
+
+
+\end{thebibliography}
+
+% that's all folks
+\end{document}

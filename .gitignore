@@ -32,12 +32,20 @@ tex/thesis.out
 tex/thesis.pdf
 tex/thesis.synctex.gz
 tex/thesis.toc
+tex/article.aux
+tex/article.dvi
+tex/article.log
+tex/article.out
+tex/article.pdf
+tex/article.synctex.gz
+tex/article.toc
 tex/Thumbs.db
 tex/vystrizek.toc
 tex/vystrizek.aux
 tex/vystrizek.log
 tex/vystrizek.pdf
 tex/vystrizek.synctex.gz
+
 
 javaajs/nbproject/private/
 javaajs/build/
