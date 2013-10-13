@@ -6,9 +6,65 @@
 
 %\usepackage{graphicx,times,psfig,amsmath} % Add all your packages here
 %\usepackage{hyperref}
-%\usepackage{amsmath}
+\usepackage{amsmath}
 %\usepackage{amssymb}
 \usepackage[utf8]{inputenc}
+\usepackage{qtree}
+\usepackage{xspace}
+
+
+\newcommand{\Lets}{Let us\xspace}
+\newcommand{\lets}{let us\xspace}
+\newcommand{\lterm}{$\lambda$-term\xspace}
+\newcommand{\lterms}{$\lambda$-terms\xspace}
+\newcommand{\lhead}{$\lambda$-head\xspace}
+\newcommand{\lheads}{$\lambda$-heads\xspace}
+\newcommand{\la}{\leftarrow\xspace}
+\newcommand{\Lp}  {\Lambda^{\prime}\xspace}
+\newcommand{\tur}[3]{#1\vdash{}#2:#3}
+\newcommand{\turst}[3]{$#1\vdash{}#2:#3$\xspace}
+\newcommand{\GMS}{\turst{\Gamma}{M}{\sigma}}
+\newcommand{\atTree}{@-tree\xspace}
+\newcommand{\setDots}[2]{ \lbrace #1 , \dots , #2 \rbrace}
+\newcommand{\lh}[1]{\lambda #1}
+\newcommand{\sexprTree}{sexpr-tree\xspace}
+\newcommand{\SexprTree}{Sexpr-tree\xspace}
+\newcommand{\then}{\Rightarrow\xspace}
+\newcommand{\lamb}[2]{( \lambda \, #1 \, . \, #2 )}
+\newcommand{\lam}[2]{\lambda \, #1 \, . \, #2}
+\newcommand{\ST}{\mathop{\mathrm{ST}}}
+\newcommand{\FV}{\mathop{\mathrm{FV}}}
+\newcommand{\Scomb }{\mathbf{S}}
+\newcommand{\Kcomb }{\mathbf{K}}
+\newcommand{\Icomb }{\mathbf{I}}
+\newcommand{\bbarr}{\twoheadrightarrow_\beta}
+\newcommand{\barr}{\rightarrow_\beta}
+\newcommand{\beq}{=_\beta}
+\newcommand{\eearr}{\twoheadrightarrow_\eta}
+\newcommand{\earr}{\rightarrow_\eta}
+\newcommand{\eeq}{=_\eta}
+\newcommand{\bearr}{\rightarrow_{\beta\eta}}
+\newcommand{\bbeearr}{\twoheadrightarrow_{\beta\eta}}
+\newcommand{\beeq}{=_{\beta\eta}}
+\newcommand{\etar}{\twoheadrightarrow_\eta}
+\newcommand{\ered}{$\eta$-reduction\xspace}
+\newcommand{\bnf}{$\beta$-\textit{nf}\xspace}
+\newcommand{\enf}{$\eta$-\textit{nf}\xspace}
+\newcommand{\eenf}{$\eta^{-1}$-\textit{nf}\xspace}
+\newcommand{\beenf}{$\beta\eta^{-1}$-\textit{nf}\xspace}
+\newcommand{\benf}{$\beta\eta$-\textit{nf}\xspace}
+\newcommand{\bredex}{$\beta$-redex\xspace} 
+\newcommand{\lnf}{\textit{lnf}\xspace}
+\newcommand{\Ae}{\mathop{\mathrm{\AE}}}
+\newcommand{\Bcomb }{\mathbf{B}}   
+\newcommand{\BBcomb }{\mathbf{B*}}
+\newcommand{\Ccomb }{\mathbf{C}}   
+\newcommand{\CCcomb }{\mathbf{C'}}
+\newcommand{\SScomb }{\mathbf{S'}}
+\newcommand{\ar}{\rightarrow\xspace}
+\newcommand{\T}{\mathbb{T}\xspace}
+\newcommand{\Real}{\mathbb{R}}
+
 
 \hyphenation{op-tical net-works semi-conduc-tor IEEEtran}
 
@@ -125,20 +181,312 @@ to do beta-eta nf kde
 }
 
 \section{Crossover}
-\textit{- design goal: proper generalization of standard tree 
-swapping crossover\\ 
-- … výceméně zkopčit z diplomky\\
-\textbf{@-tree representation ...}\\
-...
-}
+
+Design goal behind our approach to crossover operation is
+to try to generalize standard tree swapping crossover.
+The crossover operation in standard GP is performed 
+by swapping randomly selected subtrees in each parent 
+S-expression.
+
+For typed lambda terms two difficulties arise: Types and variables.
+We will show how to crossover typed \lterm trees in both 
+\atTree and \sexprTree notation.
+As in standard GP our crossover will be performed by swapping
+two subtrees. But now with constraint that both subtrees have
+the same type.
+
+Variables bring more difficulties then types do.
+This problem arises from variables that are free in subterms corresponding 
+to swapped subtrees. 
+
+Following example illustrates the problem. 
+\Lets have these two parent trees with selected nodes in bold.\\
+
+\Tree [.$\lh{x_1}$ [.f [.$\lh{x_2}$ [.\textbf{g} $x_2$ c ] ] $x_1$ ] ]
+\Tree [.$\lh{x_1}$ [.h $x_1$ $\mathbf{x_1}$ ] ]
+
+~\\The swap of subtrees results in following trees:\\
+
+\Tree [.$\lh{x_1}$ [.f [.$\lh{x_2}$ $\mathbf{x_1}$ ] $x_1$ ] ]
+\Tree [.$\lh{x_1}$ [.h $x_1$ [.\textbf{g} $\mathbf{x_2}$ \textbf{c} ] ] ]
+
+~\\The problem is that variable $x_2$ in the second tree
+is not bound by any $\lambda$-head and since
+it is not element of $\Gamma$, the second tree is not well-typed \lterm.  
+
+We can avoid dealing with this problem by avoiding use of variables.
+This can be achieved by process called abstraction elimination. 
+
+\subsection{Abstraction elimination}
+
+\textit{Abstraction elimination} is a process of transforming 
+an arbitrary \lterm into \lterm that contains no lambda abstractions
+and no bound variables.
+The newly produced \lterm may contain function applications, 
+free symbols from former \lterm and some new symbols standing for 
+combinators $\Scomb$, $\Kcomb$ and $\Icomb$. \\
+
+Those combinators are defined as:
+\begin{align*}
+\Scomb &= \lam{f\,g\,x}{f\,x\,(g\,x)} \\
+\Kcomb &= \lam{x\,y}{x} \\
+\Icomb &= \lam{x}{x} 
+\end{align*}
+
+
+\Lets describe transformation $\Ae$ performing this process.
+\begin{align*}
+\Ae[x]           &= x &\\[0.4em]
+\Ae[\,(M\,N)\,]  &= (\Ae[M]\;\;\Ae[N]) &\\[0.4em]
+\Ae[\lam{x}{x}]  &= \Icomb &\\
+\Ae[\lam{x}{M}]  &= (\Kcomb~\Ae[M]) &\textbf{if } x \not\in \FV(M)\\
+\Ae[\lam{x}{\lamb{y}{M}}] &= \Ae[\lam{x}{\Ae[\lam{y}{M}]}]  
+&\textbf{if } x \in \FV(M)\\
+\Ae[\lam{x}{(M\,N)}] &= (\Scomb~\Ae[\lam{x}{M}]~\Ae[\lam{x}{N}])  
+&\textbf{if } x \in \FV(M) \\
+&&\vee x \in \FV(N)
+\end{align*}
+
+
+This is simple version of this process. More optimized version,
+in the means of the size of resulting term and its performance
+is following one, presented in \cite{jones87}.
+
+This version operates with more combinators:
+\begin{align*}
+\Bcomb  &= \lam{f\,g\,x}{f\,(g\,x)} \\
+\Ccomb  &= \lam{f\,g\,x}{f\,x\,g} \\
+\SScomb &= \lam{c\,f\,g\,x}{c\,(f\,x)\,(g\,x)} \\
+\BBcomb &= \lam{c\,f\,g\,x}{c\,(f\,(g\,x))} \\
+\CCcomb &= \lam{c\,f\,g\,x}{c\,(f\,x)\,g} 
+\end{align*}
+
+And the transformation can be written as follows.
+\begin{align*}
+\Ae[x]           &= x &\\
+\Ae[\,(M\,N)\,]  &= (\Ae[M]\;\;\Ae[N]) &\\
+\Ae[\lam{x}{M}]  &= A[ x ; \Ae[M] ] &
+\\[1em]
+A[x;x]           &= \Icomb &\\
+A[x;y]           &= (\Kcomb~y)\\
+A[x;\,(M\,N)\,]  &= Opt[~\Scomb~(A[x;M])~(A[x;N])~]
+\\[1em]
+Opt[~\Scomb~(\Kcomb~M)~(\Kcomb~N)~]   &= \Kcomb~(M~N)\\
+Opt[~\Scomb~(\Kcomb~M)~\Icomb~]       &= M\\
+Opt[~\Scomb~(\Kcomb~M)~(\Bcomb~N~L)~] &= \BBcomb~M~N~L\\
+Opt[~\Scomb~(\Kcomb~M)~N~]            &= \Bcomb~M~N\\
+Opt[~\Scomb~(\Bcomb~M~N)~(\Kcomb~L)~] &= \CCcomb~M~N~L\\
+Opt[~\Scomb~M~(\Kcomb~N)~]            &= \Ccomb~M~N\\
+Opt[~\Scomb~(\Bcomb~M~N)~L~]          &= \SScomb~M~N~L
+\end{align*}
+
+As is stated in \cite{jones87},
+the biggest disadvantage of this technique is that the translated
+term is often much larger than in its lambda form --- the size of
+the translated term can be proportional to the
+square of the size of the original term. 
+
+But the advantage is also tempting --- no need to deal with variables
+and lambda heads.
+
+\subsection{Typed subtree swapping}
+\label{typed-swapping}
+
+First thing to do in standard subtree swapping is to select random node
+in the first parent. 
+
+We modify this procedure so that we allow
+selection only of those nodes with such a type that there exists  
+a node in the second parent with the same type.
+
+Standard subtree swapping crossover as a first thing selects 
+whether the selected node will be inner node (usually with probability 
+$p_{ip} = 90\%$) or leaf node (with probability 10\%).
+
+We are in a more complicated situation, because one of those 
+sets may be empty, because of allowing only nodes with possible "partner"
+in the second parent. Thus we do this step only if both sets are
+nonempty. 
+
+After selecting a node in the first parent we select node in the
+second parent such that type of that node must by the same as the type 
+of the first node. Again, this may eliminate the "90-10" step of
+first deciding whether the selected node will be internal node 
+or leaf node.
+
+When both nodes are selected we may swap the trees. \\
+
+If the abstraction elimination was performed, then 
+since the trees are of the same type and there are no variables to be 
+moved from their scope, the offspring trees are well typed.\\
+
+
+Both \sexprTree and \atTree are able to be crossed by this 
+mechanism. But \atTree has more possibilities then \atTree.
+This comes from the fact that every subtree of the \sexprTree
+corresponds to a subtree of \atTree, but there are subtrees
+of \atTree that do not correspond to a subtree of a \sexprTree.\\
+
+Following example should clarify this.
+
+\Tree[.@	
+   [.@ \textbf{f} x ]
+   [.y ]  		 			
+]
+\Tree[.\textbf{f} x y ]~\\
+
+In \atTree, \textbf{f} is leaf thus subtree, 
+whereas in \sexprTree it is internal node thus not a subtree.\\ 
+
+Another nice property of \sexprTree{}s with no lambdas 
+is that they are the same representation as S-expressions
+used by standard GP.\\
+
+Again, similarly as for standard version, 
+a maximum permissible depth $D_{created}$ 
+for offspring individuals is defined (e.g. $D_{created} = 17$).
+If one of the offspring has greater depth than this limit, then 
+this offspring is replaced by the first parent in the result of 
+the crossover operator. If both offspring exceeds this limit, than 
+both are replaced by both parents.  
+
+For \atTree the $D_{created}$ must be larger since
+\atTree (without lambdas) is a binary tree. This 
+enlargement is approximately proportionate to average number of 
+function arguments. We use generous $D_{created} = 17\times3$. 
+
+
+
 \section{Experiments}
 
 \subsection{Simple Symbolic Regression}
+
+\textit{Simple Symbolic Regression} is a problem described
+in \cite{koza92}. Objective of this problem is to 
+find a function $f(x)$ that fits a sample
+of twenty given points. The target function is 
+function $f_{t}(x) = x^4 + x^3 + x^2 + x$.  
+
+Desired type of generated programs $\sigma$ and 
+building blocks context $\Gamma$ are following.
+\begin{align*}
+\sigma = \Real \ar &\Real\\
+\Gamma = \{
+  (+)  &: \Real \ar \Real \ar \Real    ,\\
+  (-)  &: \Real \ar \Real \ar \Real    ,\\
+  (*)  &: \Real \ar \Real \ar \Real    ,\\
+  rdiv &: \Real \ar \Real \ar \Real    ,\\
+  sin  &: \Real \ar \Real              ,\\
+  cos  &: \Real \ar \Real              ,\\
+  exp  &: \Real \ar \Real              ,\\ 
+  rlog &: \Real \ar \Real              \}
+\end{align*}
+where
+\begin{align*}
+rdiv(p,q) &= \begin{cases} 1 &\mbox{if } q = 0 \\
+p/q & \mbox{otherwise } \end{cases}  \\
+rlog(x) &= \begin{cases} 0 &\mbox{if } x = 0 \\
+log(\vert x\vert) & \mbox{otherwise}. \end{cases}
+\end{align*}
+
+Fitness function is computed as follows
+
+$$ fitness(f) =  \sum\limits_{i=1}^{20}{ \vert f(x_i)-y_i }\vert   $$
+
+where $(x_i,y_i)$ are 20 data samples from $[-1,1]$, such that $y_i = f_t(x_i)$.\\
+
+An individual $f$ such that $\vert f(x_i)-y_i \vert < 0.01 $ for all data samples is 
+considered as a correct individual.
+
 \subsection{Artificial Ant}
 \subsection{Even-parity problem}
 
 
 \section{Conclusions}
+
+Our goal was to design and implement a system
+performing GP over some typed functional programming language.
+As this typed functional programming language we have chosen the 
+\textit{simply typed lambda calculus}.
+We have also obligated ourselves to do it in a such way that 
+generalizes the standard GP, rather than
+crates completely new system.
+
+We may say that we have chosen the simplest possible
+option in both areas --- the simply typed calculus and the standard GP.
+We see this decision as fortunate one --- since it enables us add more
+complex features after sufficient exploration of those simplest cases.
+   
+We have started the journey toward this goal by study 
+of subject that intersects both those areas:
+Method which for desired type and context generates lambda terms.  
+
+The way to obtain this method started with inference rules 
+(the defining concepts of the typed lambda calculus),
+it proceeded through term generating grammars and finished 
+with inhabitation trees.
+
+A* algorithm in combination with inhabitation trees
+has been utilized to drive systematic enumeration
+of typed \lterms in their \lnf. This enumeration was further 
+parameterized by simple search strategy in order to enable
+such different approaches as \textit{systematic} generation 
+and \textit{ramped half-and-half} generation to be definable
+in the means of simple search strategy.\\
+
+With this apparatus in hands we introduced novel approach
+to term generation by defining the \textit{geometric} search 
+strategy. This strategy is further parameterized by parameter
+$q$,  but since we wanted to avoid suspicion that success
+of this generating method depends on fine-tuning of this
+parameter, we used its default value $q = 0.75$ in every experiment.
+
+After being generated all terms undergo process of \textit{abstraction
+elimination}, which enables our simple tree swapping crossover operation
+which is only genetic operator that we have used in all experiments.
+
+We examined it in three different experiments, which all 
+supported the idea that it has very desirable qualities.
+
+First two experiments, \textit{Simple Symbolic Regression} and 
+\textit{Artificial Ant}, were performed in order to compare
+the \textit{geometric} strategy with the standard GP term 
+generating method \textit{ramped half-and-half}. 
+
+In both experiments were observed improvements in the following aspects.
+
+\begin{enumerate}
+ \item Success rate was improved.
+ \item Minimal number of individuals needed to be processed in order to yield 
+       correct solution with probability 99\% was lowered.
+ \item Run time was significantly reduced. 
+ \item Average size of a term was decreased.
+\end{enumerate}
+
+In the case of Artificial Ant problem, all improvements were significant.
+
+These results make me believe that \textit{geometric} strategy might
+be welcomed reinforcements in the fight against the bogey of 
+the GP community --- the \textit{bloat}.
+Or at least, it seems to work for those two experiments in a such way.\\
+
+
+In the third experiment, the \textit{even-parity} problem, geometric strategy 
+showed ability to yield correct solution in the initial generation
+8 times out of 200 runs (throughout 5 experiments), which is interesting
+result since it is uninformed search. 
+
+Five consecutive experiments with even-parity problem supported 
+hypothesis that $\eta$-normalization of generated terms enhances performance.
+We have also seen that use \atTree{}s instead of more traditional \sexprTree{}s
+as tree representation of individuals is able to enhanced performance.
+
+Use of optimized abstraction elimination instead of its basic variant 
+showed significant improvements in time consumption with little or 
+non effects on performance rates.
+
+Implemented system was designed with importance of interactivity in mind,
+resulting in server/client architecture for core/GUI components.
 
 
 \begin{thebibliography}{22}
