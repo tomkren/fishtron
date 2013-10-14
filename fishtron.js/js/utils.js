@@ -30,6 +30,10 @@ var cons = function(x,xs){
 };
 
 
+function sum(xs){
+  return _.reduce(xs,function(x,y){return x+y;},0);  
+}
+
 
 var partition = function(mustBeTrue,array){
   assert(_.isArray(array),'partition : the array argument mus be an array.');

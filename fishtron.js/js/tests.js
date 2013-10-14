@@ -1,5 +1,13 @@
 var fishtronTests = function(){
 
+
+  test( 'utils', function(){
+
+    strictEqual( sum([1,2,3,1000]), 1006 ,'sum (1)' );
+    strictEqual( sum([])          , 0    ,'sum (2)' );
+
+
+  });
     
     test( 'PriorityQueue', function(){
 
@@ -219,6 +227,14 @@ var fishtronTests = function(){
 
       console.timeEnd('tests');
     });
+
+  test( 'ants', function(){
+
+    ok(true,'fake test...' );
+
+  });
+
+  
 
 };
 
