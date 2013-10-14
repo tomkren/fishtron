@@ -118,7 +118,9 @@ the three state of the art systems for typed GP known to us.
 
 ~\\
 \textit{[Kurzívou jsou neformální poznámky]\\\\
-\textbf{Yu} - (články: evenParity, polyGP co sem ted našel, ten o burzách co mám v kindlu)
+\textbf{Yu} - (články: evenParity, polyGP
+\textbf{[doplnit do citací]}
+ co sem ted našel, ten o burzách co mám v kindlu)
 Odlišnosti:
 (1) - generování se nedělá systematicky: pokud strom dojde do místa
 kde funkci nemá dát jaký parametr, tak místo tý funkce dá nějaký 
@@ -152,21 +154,25 @@ a ukazuje se že se bohulibě chová právě k strašáku GP -- \textbf{bloatu}.
 
 \section{Generating method}
 
+
 \textit{
-- Unifished term je term který může obsahovat jako list uzel tvaru (tau,Gamma), takzvaný unfinished leaf (UL).\\
+- Unifished term je term který může obsahovat jako list uzel tvaru 
+$(\tau,\Gamma)$, takzvaný unfinished leaf (UL).\\
 - Pracujeme s prioritní frontou rozdělaných lambda termů.\\ 
 - Priorita je dána počtem UL v termu.\\
-- Na počátku je do fronty vložen jediný UT = (tau,gama)\\
+- Na počátku je do fronty vložen jediný UT = $(\tau,\Gamma)$\\
 - Z fronty vyndám term s nejnižším \#UL, pokud má \#UL = 0, pak je to vygenerovaný jedinec, pokud ne tak vezmu jeho DFS-první UL a expanduju ho. Výsledkem expandování je několik (possibly 0) unfin. termů, které jsou až na expandovaný uzel totožné s původním UT, daný UT je nahrazen novým pod-UT. \\
 - Expandování probíhá následovně: \\
-(a) je to (a-b,Gama) pak tento list nahradim novým podstromem x.(b;Gama,x:a)\\
-(b) je to (alfa,Gama) pak pro každý f:(T1-T2-...-Tn-alpha) el Gama 
-nahradíme tento list novým podstromem ( f (T1,Gama) (T2,Gama) .. (Tn,Gama) )
+(a) je to  $(\sigma \ar \tau,\Gamma)$ pak tento list nahradim novým podstromem $\lam{x}{(\tau;\Gamma,x:a)}$\\
+(b) je to $(\alpha,\Gamma)$ pak pro každý\\ 
+$f : (\tau_1 \ar \dots \ar \tau_n \ar \alpha) \in \Gamma$ \\
+nahradíme tento list novým podstromem \\
+$(~f~(\tau_1,\Gamma)~\dots~(\tau_n,\Gamma)~)$
 \\\\
 - Prohledávací strategie má pak funkci filtru následníků. \\
 - Pokud se fronta vyprázdní ještě před vygenerováním požadovaného 
   počtu termů tak zbytek dogenerujeme stejným zpusobem, tzn do 
-  fronty přihodíme (tau,gama)  \\
+  fronty přihodíme $(\tau,\Gamma)$ a jedem dál \\
 - Systematická strategie nezahodí nic (Pro ní generování 
   kolapsuje do A* algoritmu).\\
 - Ramped-half-and-half zahodí vždy vše krom jediného.\\
@@ -177,10 +183,15 @@ nahradíme tento list novým podstromem ( f (T1,Gama) (T2,Gama) .. (Tn,Gama) )
 
 \textit{- pač je to generovany v lnf, neboli beta-eta na -1 nf kde 
 eta na -1 je eta expanze tak je chytrý transformovat 
-to do beta-eta nf kde  
+to do beta-eta nf. To stačí opakovanou eta redukcí, protože beta normálnost
+se neporuší (asi ve zkratce uvést proč, pač je to celkem přímočarý) 
 }
 
 \section{Crossover}
+
+\textbf{[Odtud dál jsou zkrácené pasáže z diplomky,co mi 
+přišli celkem ok, ale ještě budou určitě editováný 
+(zkracování, doplňování, vhodnější formulace,...)]\\}
 
 Design goal behind our approach to crossover operation is
 to try to generalize standard tree swapping crossover.
