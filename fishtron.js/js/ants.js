@@ -1,3 +1,31 @@
+// -- TSP test ---
+
+$(function(){
+
+  tsp1 = mkTSPInstance({
+    'Praha,Londýn'  : 1034 ,
+    'Praha,Berlín'  : 280  ,
+    'Berlín,Londýn' : 929  ,
+    'Berlín,Paříž'  : 876  ,
+    'Paříž,Praha'   : 885  ,
+    'Paříž,Londýn'  : 340
+  });
+
+  problem1 = {
+    from     : 'Praha',
+    fitness  : mkTSPFitness(tsp1,1000),
+    heur     : mkTspHeur(tsp1),
+    succsFun : mkTspSuccs(tsp1),
+    initTau  : initTau(tsp1,1),
+    isGoal   : mkTspIsGoal(tsp1),
+    opts     : defaultOpts
+  };
+
+  test1 = step('Praha',problem1.initTau,problem1);
+  test2 = aco( problem1 );
+
+});
+
 
 // --- obecný mravenci -------------------
 
@@ -5,11 +33,43 @@ var defaultOpts = {
   rho          : 0.15 ,
   alpha        : 1.2  ,
   beta         : 1.2  ,
-  antsPerRound : 10   ,
+  antsPerRound : 100  ,
+  numRounds    : 10   ,
 };
 
+function aco( problem ){
 
-function round( from , tau , succsFun , heur , isGoal , fitness , opts ){
+  var best = initBest;
+  var tau  = problem.initTau;
+
+  for(var i = 0 ; i < problem.opts.numRounds ; i++){
+    var stepResult = step( problem.from, tau , problem );
+    tau  = stepResult.tau;
+    best = updateBest(best,stepResult.best); 
+  }
+
+  return best;
+}
+
+var initBest = {
+  path   : null,
+  fitVal : 0
+};
+
+function updateBest( oldRes , newRes ){
+  if( oldRes.fitVal < newRes.fitVal ){
+    return newRes;
+  }
+  return oldRes;
+}
+
+function step( from , tau , problem ){
+
+  var succsFun = problem.succsFun;
+  var heur     = problem.heur;
+  var isGoal   = problem.isGoal;
+  var fitness  = problem.fitness;
+  var opts     = problem.opts;
 
   var antPaths = [];
 
@@ -30,33 +90,37 @@ function updateTau( oldTau , antPaths , fitness , opts ){
 
   var i,j;
 
-  for( i in feroMap ){
-    for( j in feroMap ){
+  for( i in oldTau ){
+    if( newTau[i] === undefined ){ newTau[i] = {}; }
+    for( j in oldTau ){
       newTau[i][j] = oldTau[i][j] * (1-opts.rho); 
     }
   }
 
+  var best = initBest;
+
   for( var k = 0 ; k < antPaths.length ; k++ ){
+    var path    = antPaths[k];
+    var fitVal  = fitness(path);
+
+    best = updateBest(best,{path:path,fitVal:fitVal});
 
     var pathLen = antPaths[k].length;
-    var fitVal  = fitness(antPaths[k]);
-
     for( var s = 0 ; s < pathLen-1 ; s ++ ){
 
       i = antPaths[k][s];
       j = antPaths[k][s+1];
 
       newTau[i][j] += fitVal ;
-
     }
 
   }
 
-  return newTau;
+  return {
+    tau  : newTau, 
+    best : best
+  };
 }
-
-
-
 
 
 
@@ -211,22 +275,4 @@ function mkTSPFitness(tsp,Q){
 }
 
 
-var tsp1 = mkTSPInstance({
-  'Praha,Londýn'  : 1034 ,
-  'Praha,Berlín'  : 280  ,
-  'Berlín,Londýn' : 929  ,
-  'Berlín,Paříž'  : 876  ,
-  'Paříž,Praha'   : 885  ,
-  'Paříž,Londýn'  : 340
-});
-
-var tsp1_FF     = mkTSPFitness(tsp1,1);
-
-var tsp1_heur   = mkTspHeur( tsp1 ); 
-
-var tsp1_succs  = mkTspSuccs( tsp1 );
-
-var tsp1_tau    = initTau(tsp1,1);
-
-var tsp1_isGoal = mkTspIsGoal(tsp1);
 
