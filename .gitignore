@@ -4,7 +4,9 @@
 *.DS_Store
 *.swp
 *.out
+
 Thumbs.db
+_docs/Thumbs.db
 
 _other/fin_data/
 _other/fin_data2/
