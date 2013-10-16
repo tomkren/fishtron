@@ -11,20 +11,22 @@ $(function(){
     'Paříž,Londýn'  : 340
   });
 
-  problem1 = {
-    from     : 'Praha',
-    fitness  : mkTSPFitness(tsp1,1000),
-    heur     : mkTspHeur(tsp1),
-    succsFun : mkTspSuccs(tsp1),
-    initTau  : initTau(tsp1,1),
-    isGoal   : mkTspIsGoal(tsp1),
-    opts     : defaultOpts
-  };
-
-  test1 = step('Praha',problem1.initTau,problem1);
-  test2 = aco( problem1 );
+  
+  test = aco( mkTspProblem(tsp1,'Praha',1000,1) );
 
 });
+
+function mkTspProblem(tsp,from,Q,initTauVal){
+  return {
+    from     : from,
+    fitness  : mkTSPFitness(tsp,Q),
+    heur     : mkTspHeur(tsp),
+    succsFun : mkTspSuccs(tsp),
+    initTau  : initTau(tsp,initTauVal),
+    isGoal   : mkTspIsGoal(tsp),
+    opts     : defaultOpts
+  }
+}
 
 
 // --- obecný mravenci -------------------
