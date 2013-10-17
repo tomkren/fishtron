@@ -2,10 +2,17 @@ $(function(){
 
 });
 
+var int = mkAtm('int');
+
 var GPOpts1 = {
   fitness : function(x){return 42;},
-  typ     : mkTyp(['a','a']),
-  ctx     : mkCtx({}), 
+  typ     : mkTyp([int,int]),
+  ctx     : mkCtx({
+    'plus' : [ [int,int,int]
+           , function(x,y){return x+y;} ],
+    'sin'  : [ [int,int]
+           , Math.sin ] 
+  }), 
   popSize : 500,
   numGens : 51,
   probabs : {
@@ -23,9 +30,27 @@ function gp(opts){
     n          : opts.popSize,
     typ        : opts.typ,
     ctx        : opts.ctx,
-    resultMode : 'funs'
+    resultMode : 'funs',
+    logit      : false 
   });
 
-  throw 'TODO';
+
+
+  return pop;
 }
+
+
+
+function mkDist( distArr_ ){
+  
+  var distArr = distArr_;
+
+  return {
+
+  };
+}
+
+
+
+
 
