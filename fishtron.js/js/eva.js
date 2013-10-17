@@ -4,7 +4,7 @@ $(function(){
 
 var GPOpts1 = {
   fitness : function(x){return 42;},
-  typ     : 
+  typ     : mkTyp(['a','a']),
   ctx     : mkCtx({}), 
   popSize : 500,
   numGens : 51,
