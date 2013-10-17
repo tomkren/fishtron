@@ -2,7 +2,7 @@
 
 $(function(){
 
-  tsp1 = mkTSPInstance({
+  var tsp1 = mkTSPInstance({
     'Praha,Londýn'  : 1034 ,
     'Praha,Berlín'  : 280  ,
     'Berlín,Londýn' : 929  ,
@@ -24,14 +24,14 @@ function mkTspProblem(tsp,from,Q,initTauVal){
     succsFun : mkTspSuccs(tsp),
     initTau  : initTau(tsp,initTauVal),
     isGoal   : mkTspIsGoal(tsp),
-    opts     : defaultOpts
+    opts     : defaultAntOpts
   }
 }
 
 
 // --- obecný mravenci -------------------
 
-var defaultOpts = {
+var defaultAntOpts = {
   rho          : 0.15 ,
   alpha        : 1.2  ,
   beta         : 1.2  ,
