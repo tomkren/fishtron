@@ -77,12 +77,86 @@ $(function(){
 
 <section id="contents">Obsah</section>
 
-<section id="uvod">Úvodní poznámky</section>
+<section id="simul">Mravenci</section>
+
+<canvas id="ant_canvas" width="512" height="512"></canvas>
+<script>
+
+function drawZone2D_ (ctx, zone) {
+  var side = 16;
+  var i = 0;
+  z_each(zone,function(pole,pos){
+    var x = pos[0];
+    var y = pos[1];
+    
+    var color = [119, 140, 79];
+    for (var oi in pole.inside) {
+      var obj = pole.inside[oi];
+      if( obj.step ) { 
+        obj.step(); 
+      }
+      if( obj.color ){
+        color = obj.color;
+      }
+    }
+
+    ctx.fillStyle = 'rgb(' + color.join() + ')';
+    ctx.fillRect(x*side, y*side, (x+1)*side, (y+1)*side);
+  
+    i++;
+  });
+  //log(i);
+}
+
+function mkZone_ (initFun, dim, pos) {
+  if (dim === undefined) {dim = NUM_DIM; }
+  if (pos === undefined) {pos = []; }
+  if (initFun === undefined) {initFun = defaultZoneInit2D;}
+  if (dim === 0) {return initFun(pos); }
+  
+  var zone = []; 
+  for (var i = 0; i < ZONE_SIDE; i++) {
+
+    var subZone = mkZone(initFun, dim-1, pos.concat([i]));
+    zone.push(subZone);
+
+  }
+  return zone;
+}
+
+function poleInit (pos) {
+  var inside = [];
+  
+  var ball = Math.random();
+  if (ball < 1/50) {
+    inside.push({typ: 'ant', color: [119,49,65]});
+  } else if (ball < 1.2/6) {
+    inside.push({typ: 'W', color: [0, 0, 0]});
+  } else if (ball < 6/7) {
+    // empty color = [119, 140, 79];
+  } else {
+    inside.push({typ: 'B',color: [255,255,255]});
+  }
+
+  return { 
+    inside: inside 
+  };
+};
+
+
+
+$(function () {
+  var ctx = $('#ant_canvas')[0].getContext('2d'); 
+  var zona = mkZone_(poleInit);
+  drawZone2D_(ctx,zona);
+});</script>
+
+
+
+<section id="uvod">Kecy</section>
 
 Pokus jestli je praktické psát si poznámky v html/js a zda
 se to osvědčí jako kontrapart autoepištoly.
-
-<todo>ukázka todo :) .. rozepsat to tu víc .. </todo>
 
 Zatím tu diskutuju pár věcí co se mi honěj hlavou poslední dobou,
 postupně bych to chtěl obohacovat o obecnější témata - pokud se to osvědčí
@@ -186,6 +260,8 @@ nic složitého. Zdá se mi však, že by bylo chytré těmhle objektům dát je
 <a href="#json_">JSONu_</a>. 
 
 
+
+
 <section id="simul">Simulátůrek</section>
 
 Několik neuspořádaných nápadů:
@@ -256,15 +332,9 @@ Několik neuspořádaných nápadů:
 
 <canvas id="sim_canvas" width="512" height="512"></canvas>
 <script>$(function(){
-  //var
-  ctx = $('#sim_canvas')[0].getContext('2d'); 
-  
-
-  //var
-  zona = mkZone();
+  var ctx = $('#sim_canvas')[0].getContext('2d'); 
+  var zona = mkZone();
   drawZone2D(ctx,zona);
-
-
 });</script>
 
 <h3>Trocha pokusného kódu</h3>
@@ -561,6 +631,7 @@ mít smisl to ukotvit, přepsat v tyxpovanym jazyce - pokud vypadá že by to mo
 Na druhou stranu jsou zase věci co si člověk bez typů neužije, protože neni drženej tim zábradlíčkem
 a nemůže si dovolit některý úlety. No je to na hlubší zamyšlení, ale aspoň něco.
 
+<todo>ukázka todo :) .. rozepsat to tu víc .. </todo>
 
 
 </body>
