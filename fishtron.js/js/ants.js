@@ -152,7 +152,8 @@ function selectSucc( from , path , tau , succsFun , heur , opts ){
 
   for( i = 0 ; i < ss.length ; i++ ){
     var to = ss[i];
-    var probab = Math.pow( tau[from][to], opts.alpha) * Math.pow( heur(from,to), opts.beta);
+    var probab = Math.pow( tau[from][to], opts.alpha) 
+               * Math.pow( heur(from,to), opts.beta);
     ps.push( probab );
     pSum += probab;
   }
@@ -175,15 +176,11 @@ function mkPath( from , tau , succsFun , heur , isGoal , opts ){
   var path = [];
 
   while( !isGoal(path) && next !== null ){
-
     path.push(next);
     var next = selectSucc( next , path , tau , succsFun , heur , opts );  
-    
   }
 
   return isGoal(path) ? path : null ;
-
-  
 }
 
 
