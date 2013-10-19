@@ -50,7 +50,35 @@ var partition = function(mustBeTrue,array){
            notSatisfy : notSatisfy };
 };
 
+function mkDist( distArr_ ){
+  
+  var distArr = distArr_;
+  var sum = 0;
 
+  for(var i = 0; i < distArr.length; i++){
+    sum += distArr[i][1];
+  }
+
+  var get = function(){
+
+    var ball = Math.random() * sum;
+    var sumNow = 0;
+    var i;
+    for(i = 0; i < distArr.length; i++){
+      sumNow += distArr[i][1];
+      if( ball < sumNow ){
+        break;
+      }
+    }
+
+    return distArr[i][0];
+
+  };
+
+  return {
+    get : get
+  };
+}
 
 
 var mkTypeChecker = function(arg){
@@ -76,3 +104,4 @@ var mkTypeChecker_union = function( typeCheckerFuns ){
     return false;
   };
 };
+

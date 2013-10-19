@@ -86,8 +86,9 @@ $(function(){
   <span id="ant_canvas_steps">0</span> kroků
 </div>
 
-<p>Výsledek po cca 50-100 000 krocích (dáno 9x vedle
-  sebe aby vynikly důsledky toroidnosti).</p>
+<p>Výsledek po cca 70 000 krocích (dáno 9x vedle
+  sebe aby vynikly důsledky toroidnosti).
+  (5%, 25%, 25%, 45%)</p>
 
 <img src="img/tridici_mravenci.png" style="width: 512px">
 
@@ -98,6 +99,18 @@ $(function(){
 <p>Pokus 3, 40 000 kroků:</p>
 
 <img src="img/tridici_mravenci_3.png" style="width: 512px">
+
+<p>Pokus 4, 60 000 kroků:</p>
+
+<img src="img/tridici_mravenci_4.png" style="width: 512px">
+
+<p>Pokus 5, 20 000 (5, 45, 45, 0): </p>
+
+<img src="img/tridici_mravenci_5.png" style="width: 512px">
+
+<p>Pokus 6, 730 000 (5%, 47.5%, 47.5%, 0%): </p>
+
+<img src="img/tridici_mravenci_6.png" style="width: 512px">
 
 
 <script>
@@ -424,21 +437,22 @@ function mkAnt () {
   };
 }
 
-oneAntHax = true;
+//oneAntHax = true;
+
+var POLE_DIST = mkDist([
+    ['ant', 5],
+    ['B'  , 47.5],
+    ['W'  , 47.5],
+    ['nic', 0 ]]);
 
 function poleInit (pos) {
   var inside = [];
   
-  var ball = Math.random();
-  if (ball < 1/20 && oneAntHax ) {
-    inside.push(mkAnt());
-    //oneAntHax = false;
-  } else if (ball < 1.5/4) {
-    inside.push({typ: 'B', color: [0, 0, 0]});
-  } else if (ball < 3/4) {
-    // empty color = [119, 140, 79];
-  } else {
-    inside.push({typ: 'W',color: [255,255,255]});
+  switch (POLE_DIST.get()) {
+    case 'ant': inside.push(mkAnt()); break;
+    case 'B'  : inside.push({typ:'B',color:[0,0,0]}); break;
+    case 'W'  : inside.push({typ:'W',color:[255,255,255]}); break;
+    case 'nic': break;
   }
 
   return { 
@@ -449,20 +463,24 @@ function poleInit (pos) {
 
 
 $(function () {
-  var fps = 100;
+  var fps = 1000;
+
   var ctx = $('#ant_canvas')[0].getContext('2d'); 
   var zona = mkZone_(poleInit);
+  drawZone2D_(ctx, zona);
   
   var play = false;
 
-  var stepsCount = $('#ant_canvas_steps');
+  var numStepsEl = $('#ant_canvas_steps');
+  var numSteps = 0;
 
   var step = function () {
     if (play) {
       drawZone2D_(ctx, zona);  
       stepZone_(zona);
 
-      stepsCount.html(parseInt(stepsCount.html())+1);
+      numSteps++;
+      numStepsEl.html(numSteps);
       setTimeout(step,1000/fps);
     }
   }
@@ -480,7 +498,6 @@ $(function () {
     
   });
 
-  drawZone2D_(ctx, zona);
   
 });</script>
 
