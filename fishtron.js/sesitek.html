@@ -80,6 +80,26 @@ $(function(){
 <section id="mravenci">Mravenci</section>
 
 <canvas id="ant_canvas" width="512" height="512"></canvas>
+
+<div>
+  <input type="button" id="ant_canvas_play" value="play">
+  <span id="ant_canvas_steps">0</span> kroků
+</div>
+
+<p>Výsledek po cca 50-100 000 krocích (dáno 9x vedle
+  sebe aby vynikly důsledky toroidnosti).</p>
+
+<img src="img/tridici_mravenci.png" style="width: 512px">
+
+<p>Pokus 2, 310 000 kroků:</p>
+
+<img src="img/tridici_mravenci_2.png" style="width: 512px">
+
+<p>Pokus 3, 40 000 kroků:</p>
+
+<img src="img/tridici_mravenci_3.png" style="width: 512px">
+
+
 <script>
 
 function drawZone2D_ (ctx, zone) {
@@ -113,8 +133,24 @@ function stepZone_ (zone) {
   z_each(zone,function(pole,pos){
     for (var oi in pole.inside) {
       var obj = pole.inside[oi];
-      if( obj.step ) { 
-        obj.step(obj); 
+
+      if (!obj.hasStepped) {
+
+        if (obj.mem) {
+          updateMem(obj.mem, pole);
+        }
+
+        if (obj.step && !obj.hasStepped) { 
+          var stepRes = obj.step( obj.mkInfo(obj,pole) ); 
+          if (stepRes.action) {
+            doAction(stepRes.action,obj,pole);
+          }
+          if (stepRes.move) {
+            moveObj(stepRes.move, zone, pole, obj, pos);
+          }
+        }
+
+        obj.hasStepped = true;
       }
     }
   });
@@ -122,16 +158,29 @@ function stepZone_ (zone) {
   z_each(zone,function(pole,pos){
     for (var oi in pole.inside) {
       var obj = pole.inside[oi];
-      if( obj.move ){
-        moveObj(obj.move, zone, obj, pos);
-      }
+      obj.hasStepped = false;
     }
   });
 
-
 }
 
-function moveObj (move, zone, obj, pos) {
+function updateMem (mem, pole) {
+  mem.shift();
+  
+  var memCell = null;
+  for (var oi in pole.inside) {
+    var obj = pole.inside[oi];
+    if (obj.typ == 'W' || obj.typ == 'B') {
+      memCell = obj.typ;
+    }
+  }
+
+  mem.push(memCell);
+
+  //log(mem);
+}
+
+function moveObj (move, zone, pole, obj, pos) {
   //log('move ' + move);
   
   var poleTam;
@@ -139,12 +188,11 @@ function moveObj (move, zone, obj, pos) {
   var dy = 0;
 
   switch (move) {
-    case 'U': dy = -1;  break;
-    case 'D': dy =  1;  break;
-    case 'L': dx = -1;  break;
-    case 'R': dx =  1;  break;
+    case 'U'    : dy = -1;     break;
+    case 'D'    : dy =  1;     break;
+    case 'L'    : dx = -1;     break;
+    case 'R'    : dx =  1;     break;
   }
-
 
   if (dx || dy) {
     
@@ -153,16 +201,39 @@ function moveObj (move, zone, obj, pos) {
     
     var poleTam = poleAt(zone, [x,y] );
     if (poleTam && poleTam.inside){
-      
-      //if (poleTam.inside.length === 0){
-        poleTam.inside.push(obj);
-        obj.move = undefined;
-        var poleZde = poleAt(zone, pos);
-        delObj(poleZde,obj);
-      //}
+      poleTam.inside.push(obj);
+      delObj(pole,obj);
     }
   }
+}
 
+function doAction (action,ant,pole) {
+  
+  switch (action) {
+    case 'PICK' : pickObj(ant, pole); break;
+    case 'PUT'  : putObj (ant, pole); break;
+  }  
+
+}
+
+function pickObj (ant, pole) {
+  if (ant.inside.length === 0) {
+    for (var oi in pole.inside) {
+      var obj = pole.inside[oi];
+      if( obj.typ === 'W' || obj.typ === 'B' ) {
+        ant.inside.push(obj);
+        delObj(pole,obj);
+        break;
+      }
+    }
+  }
+}
+
+function putObj (ant, pole) {
+  if (ant.inside.length > 0){
+    var obj = ant.inside.pop();
+    pole.inside.push(obj);
+  }
 }
 
 function delObj (pole,obj) {
@@ -198,20 +269,176 @@ function mkZone_ (initFun, dim, pos) {
   return zone;
 }
 
-  
+
+var g_id = 0;
+
+
+function mkAnt () {
+
+  var ANT_MEM_SIZE = 10;
+  var K1 = 0.1;
+  var K2 = 0.1;
+
+  var mkInfo = function (ant,pole) {
+
+    var frekv = function (typ) {
+      var num = 0;
+      for (var i = 0; i < ant.mem.length; i++) {
+        if( ant.mem[i] === typ ){
+          num++;
+        }
+      }
+      return num / ant.mem.length;
+    };
+
+    var getTypNazemi = function () {
+      for (var oi in pole.inside) {
+        var obj = pole.inside[oi];
+        if( obj.typ === 'W' || obj.typ === 'B' ) {
+          return obj.typ;
+        }
+      }
+      return null;
+    };
+
+    var getTypNese = function () {
+      for (var oi in ant.inside) {
+        var obj = ant.inside[oi];
+        if( obj.typ === 'W' || obj.typ === 'B' ) {
+          return obj.typ;
+        }
+      }
+      return null;
+    };
+
+    var canPut = function () {
+      var isFree = ant.inside.length === 0;
+      
+      var poleHasNoBorW = true;
+      for (var oi in pole.inside) {
+        var obj = pole.inside[oi];
+        if( obj.typ === 'W' || obj.typ === 'B' ) {
+          poleHasNoBorW = false;
+          break;
+        }
+      }
+
+      return !isFree && poleHasNoBorW;
+    };
+
+    var canPick = function () {
+      var isFree = ant.inside.length === 0;
+      
+      var reachesOnBorW = false;
+      for (var oi in pole.inside) {
+        var obj = pole.inside[oi];
+        if( obj.typ === 'W' || obj.typ === 'B' ) {
+          reachesOnBorW = true;
+          break;
+        }
+      }
+
+      return isFree && reachesOnBorW;
+    };
+
+    return {
+      canPick: canPick,
+      canPut: canPut,
+      frekv: frekv,
+      getTypNazemi: getTypNazemi,
+      getTypNese: getTypNese
+    };
+  };
+
+  var step = function (antInfo) {
+
+    var typNazemi = antInfo.getTypNazemi();
+    var typNese   = antInfo.getTypNese();
+
+    /*
+    log( 'f_W    : ' + antInfo.frekv('W') );
+    log( 'f_B    : ' + antInfo.frekv('B') );
+    log( 'Nazemi : ' + typNazemi );
+    log( 'Nese   : ' + typNese );
+    */
+
+    var move;
+    var action = undefined;
+    
+    var ball1 = Math.random();
+
+    if (typNazemi === null && typNese !== null) {
+      var fr    = antInfo.frekv(typNese);
+      var p_put = fr / (K2+fr);
+      p_put = p_put * p_put;
+      if(ball1 < p_put){
+        action = 'PUT';
+      }
+    }
+
+    if (typNazemi !== null && typNese === null) {
+      var fre    = antInfo.frekv(typNazemi);
+      var p_pick = K1 / (K1+fre);
+      p_pick = p_pick * p_pick;
+      if(ball1 < p_pick){
+        action = 'PICK';
+      } 
+    }
+
+    /* if (antInfo.canPick()) { 
+      action = 'PICK';
+    } else if (antInfo.canPut()) {
+      action = 'PUT';  
+    } */
+
+    var ball = Math.random();
+
+    if      (ball < 1/4) {move = 'L'; }
+    else if (ball < 2/4) {move = 'R'; }
+    else if (ball < 3/4) {move = 'U'; }
+    else if (ball < 4/4) {move = 'D'; }  
+
+    return {
+      move: move,
+      action: action
+    };
+  };
+
+  var id = g_id;
+  g_id ++;
+
+  var mem = [];
+
+  for (var i = 0; i < ANT_MEM_SIZE; i++){
+    mem.push(null);
+  }
+
+  return {
+    id: id,
+    typ: 'ant', 
+    mem: mem,
+    color: [119,49,65],
+    inside: [],
+    step: step,
+    mkInfo: mkInfo
+  };
+}
+
+oneAntHax = true;
 
 function poleInit (pos) {
   var inside = [];
   
   var ball = Math.random();
-  if (ball < 1/50) {
+  if (ball < 1/20 && oneAntHax ) {
     inside.push(mkAnt());
-  } else if (ball < 1.2/6) {
-    inside.push({typ: 'W', color: [0, 0, 0]});
-  } else if (ball < 6/7) {
+    //oneAntHax = false;
+  } else if (ball < 1.5/4) {
+    inside.push({typ: 'B', color: [0, 0, 0]});
+  } else if (ball < 3/4) {
     // empty color = [119, 140, 79];
   } else {
-    inside.push({typ: 'B',color: [255,255,255]});
+    inside.push({typ: 'W',color: [255,255,255]});
   }
 
   return { 
@@ -219,53 +446,42 @@ function poleInit (pos) {
   };
 };
 
-var g_id = 0;
-
-function mkAnt () {
-
-  var step = function (self) {
-    var ball = Math.random();
-    var move;
-    if      (ball < 1/4) {move = 'L'; }
-    else if (ball < 2/4) {move = 'R'; }
-    else if (ball < 3/4) {move = 'U'; }
-    else if (ball < 4/4) {move = 'D'; }
-    self.move = move;
-  };
-
-  var id = g_id;
-  g_id ++;
-
-  return {
-    id: id,
-    typ: 'ant', 
-    color: [119,49,65],
-    step: step
-  };
-}
-
-var play = true;
 
 
 $(function () {
-  var fps = 42;
+  var fps = 100;
   var ctx = $('#ant_canvas')[0].getContext('2d'); 
-  //var 
-  zona = mkZone_(poleInit);
-  drawZone2D_(ctx, zona);
-
-  step = function () {
-    stepZone_(zona);
-    drawZone2D_(ctx, zona);  
-  }
-
+  var zona = mkZone_(poleInit);
   
-  if (play) {
-    setInterval( function(){
-      log('TIK!');
-      step();
-    } , 1000/fps );
+  var play = false;
+
+  var stepsCount = $('#ant_canvas_steps');
+
+  var step = function () {
+    if (play) {
+      drawZone2D_(ctx, zona);  
+      stepZone_(zona);
+
+      stepsCount.html(parseInt(stepsCount.html())+1);
+      setTimeout(step,1000/fps);
+    }
   }
+
+  var button = $('#ant_canvas_play');  
+  button.click(function(){
+    play = !play;
+
+    if (play) {
+      button.val('pause');
+      step();  
+    } else {
+      button.val('play');
+    }
+    
+  });
+
+  drawZone2D_(ctx, zona);
+  
 });</script>
 
 
