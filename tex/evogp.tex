@@ -1,0 +1,365 @@
+\documentclass{llncs}
+
+\usepackage[utf8]{inputenc}
+\usepackage{amsfonts}
+\usepackage{qtree}
+\usepackage{xspace}
+
+%\usepackage{makeidx}  % allows for indexgeneration
+%\usepackage{graphicx,times,psfig,amsmath} % Add all your packages here
+%\usepackage{hyperref}
+\usepackage{amsmath}
+%\usepackage{amssymb}
+
+
+\newcommand{\Lets}{Let us\xspace}
+\newcommand{\lets}{let us\xspace}
+\newcommand{\lterm}{$\lambda$-term\xspace}
+\newcommand{\lterms}{$\lambda$-terms\xspace}
+\newcommand{\lhead}{$\lambda$-head\xspace}
+\newcommand{\lheads}{$\lambda$-heads\xspace}
+\newcommand{\la}{\leftarrow\xspace}
+\newcommand{\Lp}  {\Lambda^{\prime}\xspace}
+\newcommand{\tur}[3]{#1\vdash{}#2:#3}
+\newcommand{\turst}[3]{$#1\vdash{}#2:#3$\xspace}
+\newcommand{\GMS}{\turst{\Gamma}{M}{\sigma}}
+\newcommand{\atTree}{@-tree\xspace}
+\newcommand{\setDots}[2]{ \lbrace #1 , \dots , #2 \rbrace}
+\newcommand{\lh}[1]{\lambda #1}
+\newcommand{\sexprTree}{sexpr-tree\xspace}
+\newcommand{\SexprTree}{Sexpr-tree\xspace}
+\newcommand{\then}{\Rightarrow\xspace}
+\newcommand{\lamb}[2]{( \lambda \, #1 \, . \, #2 )}
+\newcommand{\lam}[2]{\lambda \, #1 \, . \, #2}
+\newcommand{\ST}{\mathop{\mathrm{ST}}}
+\newcommand{\FV}{\mathop{\mathrm{FV}}}
+\newcommand{\Scomb }{\mathbf{S}}
+\newcommand{\Kcomb }{\mathbf{K}}
+\newcommand{\Icomb }{\mathbf{I}}
+\newcommand{\bbarr}{\twoheadrightarrow_\beta}
+\newcommand{\barr}{\rightarrow_\beta}
+\newcommand{\beq}{=_\beta}
+\newcommand{\eearr}{\twoheadrightarrow_\eta}
+\newcommand{\earr}{\rightarrow_\eta}
+\newcommand{\eeq}{=_\eta}
+\newcommand{\bearr}{\rightarrow_{\beta\eta}}
+\newcommand{\bbeearr}{\twoheadrightarrow_{\beta\eta}}
+\newcommand{\beeq}{=_{\beta\eta}}
+\newcommand{\etar}{\twoheadrightarrow_\eta}
+\newcommand{\ered}{$\eta$-reduction\xspace}
+\newcommand{\bnf}{$\beta$-\textit{nf}\xspace}
+\newcommand{\enf}{$\eta$-\textit{nf}\xspace}
+\newcommand{\eenf}{$\eta^{-1}$-\textit{nf}\xspace}
+\newcommand{\beenf}{$\beta\eta^{-1}$-\textit{nf}\xspace}
+\newcommand{\benf}{$\beta\eta$-\textit{nf}\xspace}
+\newcommand{\bredex}{$\beta$-redex\xspace} 
+\newcommand{\lnf}{\textit{lnf}\xspace}
+\newcommand{\Ae}{\mathop{\mathrm{\AE}}}
+\newcommand{\Bcomb }{\mathbf{B}}   
+\newcommand{\BBcomb }{\mathbf{B*}}
+\newcommand{\Ccomb }{\mathbf{C}}   
+\newcommand{\CCcomb }{\mathbf{C'}}
+\newcommand{\SScomb }{\mathbf{S'}}
+\newcommand{\ar}{\rightarrow\xspace}
+\newcommand{\T}{\mathbb{T}\xspace}
+\newcommand{\Real}{\mathbb{R}}
+
+
+\hyphenation{op-tical net-works semi-conduc-tor IEEEtran}
+
+\begin{document}
+
+\title{\textit{[něco jako?]} 
+Generating lambda term individuals using undisciplined A*}
+\author{Tom\'{a}\v{s} K\v{r}en \and Roman Neruda}
+\institute{Matfyz}
+\maketitle
+
+\begin{abstract}
+\textit{(Aby tu něco bylo, pak se udělá lepší (trochu upravenej abstract z diplomky))}
+In this paper, generalization of the standard genetic programming (GP)
+for simply typed lambda calculus is presented. We use population 
+initialization method parameterized by simple search strategy. 
+First described strategy corresponds to standard ramped half-and-half method, 
+second one corresponds to exhaustive systematic search and third one is a 
+novel geometric strategy, which outperforms standard method in success 
+rate, time consumption and average individual size in two experiments. 
+Other performance enhancements based on theory of lambda calculus are 
+proposed and supported by experiment. Abstraction elimination is 
+utilized to enable use of simple tree-swapping crossover.
+\end{abstract}
+
+
+\section{Introduction}
+
+\subsection{gp a typy jsou dobrý / motivace}
+...
+\subsection{příběh}
+
+Our approach aims to play with the full arsenal given by simply typed lambda calculus, thus we begin our reasoning with an exhaustive systematic search
+in mind. Our second goal is to construct a system generalizing Standard 
+GP \cite{koza92}.
+In order to satisfy both these goals the designed system should be 
+parameterized by some simple piece of code that makes the difference
+between exhaustive systematic search and standard but 
+quiet arbitrary ramped half-and-half generating method. 
+
+Those two design goals also differentiate our system from 
+the three state of the art systems for typed GP known to us.
+
+~\\
+\textbf{poznamky naky}\textit{\\
+- geometrická strategie generování termů jakožto hybrid systematického a náhodného sytylu --- to že jsme si vytičili ty dva cíle který plníme tou 
+jednoduchou strategií, tak máme možnost nalízt jednoduchou strategii která 
+je na pomezí obou cílů - taková strategie je právě ta naše geometrická 
+a ukazuje se že se bohulibě chová právě k strašáku GP -- \textbf{bloatu}.\\
+- teoretické LC konstrukty s výhodou použity - @-stromy a eta-redukce\\
+- křížení by eliminace 
+}
+
+
+\subsection{obsah kapitol článku v 1 větě}
+...
+
+\section{Related work}
+\subsection{Yu}
+\textbf{Yu} - (články: evenParity, polyGP
+\textbf{[doplnit do citací]}
+ co sem ted našel, ten o burzách co mám v kindlu)
+Odlišnosti:
+(1) - generování se nedělá systematicky: pokud strom dojde do místa
+kde funkci nemá dát jaký parametr, tak místo tý funkce dá nějaký 
+terminál.(uvádí 85\% uspěšnost)  
+(2) - Ty křížení ma trochu jinak než v tom článku o even parity,
+musim zjistit jak má udělaný že se jí nedostane např prom \#3 někam,
+kde neni definovaná když dělá přesun podstromu, v tom starym to ale 
+bylo myslim založený na tom, že nedovolovala vnější proměnný uvnitř
+lambda termu - což platí i nadále. čili vtom to určitě nehraje full deck.
+Naopak se víc zaměřuje na polymorfizmus a další věci.
+
+\subsection{kombinatori}
+
+\textbf{kombinátoři} \\
+- vůbec nepoužívaj Lambda Abstrakce\\
+- univerzální genetickej operator\\
+- taky řešej systematický prohledávání
+
+
+\subsection{kanadani}
+
+\textbf{kanadani}\\ 
+- o dost silnější typovej systém\\
+- System F, i jim dynamicky vznikaj typy\\
+- moc silný typoví systém, takže generování už je dost
+  složitý, to se otiskuje v silně nestandardním algoritmu
+
+
+\subsection{barendregt}
+
+
+
+
+
+
+\section{Preliminaries}
+%definice, pojmy
+
+\subsection{Term}
+
+\subsection{Type}
+
+\subsection{Context}
+
+\subsection{Unfinished term}
+
+\textit{- Unifished term je term který může obsahovat jako list uzel tvaru 
+$(\tau,\Gamma)$, takzvaný unfinished leaf (UL).\\}
+
+\section{Our approach}
+\subsection{Introduction}
+úvod ke kapitole - systematicky, A*, filtrace, znova dám do fronty začátek
+
+\subsection{Generating algorithm}
+
+The inputs for the term generating algorithm are following.
+\begin{enumerate}
+ \item Desired type $\tau$ of generated terms.
+ \item Context $\Gamma$ representing set of building symbols.
+ \item Number $n$ of terms to be generated.
+\end{enumerate}
+
+
+
+
+\textit{
+- Pracujeme s prioritní frontou rozdělaných lambda termů.\\ 
+- Priorita je dána počtem UL v termu.\\
+- Na počátku je do fronty vložen jediný UT = $(\tau,\Gamma)$\\
+- Z fronty vyndám term s nejnižším \#UL, pokud má \#UL = 0, pak je to vygenerovaný jedinec, pokud ne tak vezmu jeho DFS-první UL a expanduju ho. Výsledkem expandování je několik (possibly 0) unfin. termů, které jsou až na expandovaný uzel totožné s původním UT, daný UT je nahrazen novým pod-UT. \\
+- Expandování probíhá následovně: \\
+(a) je to  $(\sigma \ar \tau,\Gamma)$ pak tento list nahradim novým podstromem $\lam{x}{(\tau;\Gamma,x:a)}$\\
+(b) je to $(\alpha,\Gamma)$ pak pro každý\\ 
+$f : (\tau_1 \ar \dots \ar \tau_n \ar \alpha) \in \Gamma$ \\
+nahradíme tento list novým podstromem \\
+$(~f~(\tau_1,\Gamma)~\dots~(\tau_n,\Gamma)~)$
+\\\\
+- Prohledávací strategie má pak funkci filtru následníků. \\
+- Pokud se fronta vyprázdní ještě před vygenerováním požadovaného 
+  počtu termů tak zbytek dogenerujeme stejným zpusobem, tzn do 
+  fronty přihodíme $(\tau,\Gamma)$ a jedem dál \\
+- Systematická strategie nezahodí nic (Pro ní generování 
+  kolapsuje do A* algoritmu).\\
+- Ramped-half-and-half zahodí vždy vše krom jediného.\\
+- Geometrická strategie nezahodí s pravděpodobností q na hloubka UL \\
+}
+
+\textbf{$\eta$-normalization ...}
+
+\textit{- pač je to generovany v lnf, neboli beta-eta na -1 nf kde 
+eta na -1 je eta expanze tak je chytrý transformovat 
+to do beta-eta nf. To stačí opakovanou eta redukcí, protože beta normálnost
+se neporuší (asi ve zkratce uvést proč, pač je to celkem přímočarý) 
+}
+
+
+\subsection{Crossover???}
+
+\section{Experiments}
+\subsection{Simple symbolic regression}
+
+\textit{Simple Symbolic Regression} is a problem described
+in \cite{koza92}. Objective of this problem is to 
+find a function $f(x)$ that fits a sample
+of twenty given points. The target function is 
+function $f_{t}(x) = x^4 + x^3 + x^2 + x$.  
+
+Desired type of generated programs $\sigma$ and 
+building blocks context $\Gamma$ are following.
+\begin{align*}
+\sigma = \Real \ar &\Real\\
+\Gamma = \{
+  (+)  &: \Real \ar \Real \ar \Real    ,
+  (-)   : \Real \ar \Real \ar \Real    ,
+  (*)   : \Real \ar \Real \ar \Real    ,
+  rdiv  : \Real \ar \Real \ar \Real    ,\\
+  sin  &: \Real \ar \Real              ,
+  cos   : \Real \ar \Real              ,
+  exp   : \Real \ar \Real              , 
+  rlog  : \Real \ar \Real              \}
+\end{align*}
+where
+\begin{align*}
+rdiv(p,q) &= \begin{cases} 1 &\mbox{if } q = 0 \\
+p/q & \mbox{otherwise } \end{cases}  \\
+rlog(x) &= \begin{cases} 0 &\mbox{if } x = 0 \\
+log(\vert x\vert) & \mbox{otherwise}. \end{cases}
+\end{align*}
+
+Fitness function is computed as follows
+
+$$ fitness(f) =  \sum\limits_{i=1}^{20}{ \vert f(x_i)-y_i }\vert   $$
+
+where $(x_i,y_i)$ are 20 data samples from $[-1,1]$, such that $y_i = f_t(x_i)$.\\
+
+An individual $f$ such that $\vert f(x_i)-y_i \vert < 0.01 $ for all data samples is 
+considered as a correct individual.
+
+
+\subsection{Artificial ant}
+...
+\subsection{Even parity problem}
+...
+\section{Conclusions}
+...
+
+
+\begin{thebibliography}{1}
+
+
+\bibitem{koza92}
+  John R. Koza,
+  \emph{Genetic Programming: On the Programming of Computers by Means of Natural Selection}.
+  MIT Press, Cambridge, MA,
+  1992. 
+
+\bibitem{koza05}
+  Koza, J.R., Keane, M., Streeter, M., Mydlowec, W.,Yu, J., Lanza, G. 
+  \emph{Genetic Programming IV: Routine Human-Competitive Machine Intelligence.} 
+  Springer, 2005. ISBN 978-0-387-26417-2 
+
+\bibitem{fg}
+ Riccardo Poli, William B. Langdon, Nicholas F. McPhee
+ \emph{A Field Guide to Genetic Programming}.
+ Lulu Enterprises, UK Ltd, 2008.
+
+\bibitem{yu01}
+  T. Yu. 
+  \emph{Hierachical processing for evolving recursive and modular 
+        programs using higher order functions and lambda abstractions}. 
+  Genetic Programming and Evolvable Machines,
+  2(4):345–380, December 2001. ISSN 1389-2576.
+
+
+\bibitem{montana95}
+D. J. Montana. 
+\emph{Strongly typed genetic programming.} 
+Evolutionary Computation, 3(2): 199–230, 1995.
+%URL \url{ http://vishnu.bbn.com/papers/stgp.pdf }. nefacha
+
+\bibitem{haynes96}
+T. D. Haynes, D. A. Schoenefeld, and R. L. Wainwright. 
+\emph{Type inheritance in strongly typed genetic programming.} 
+In P. J. Angeline and K. E. Kinnear, Jr., editors, Advances
+in Genetic Programming 2, chapter 18, pages 359–376.
+MIT Press, Cambridge, MA, USA, 1996. ISBN 0-262-01158-1. 
+%URL \url{http://www.mcs.utulsa.edu/~rogerw/papers/Haynes-hier.pdf}.
+
+\bibitem{olsson94}
+J. R. Olsson. 
+\emph{Inductive functional programming using incremental program 
+transformation and Execution of logic programs by 
+iterative-deepening A* SLD-tree search.} 
+Dr scient thesis, University of Oslo, Norway, 1994.
+
+\bibitem{kes}
+Forrest Briggs, Melissa O’Neill.
+\emph{Functional Genetic Programming and Exhaustive
+Program Search with Combinator Expressions.}
+International Journal of Knowledge-based and Intelligent Engineering Systems,
+Volume 12 Issue 1, Pages 47-68, January 2008. 
+
+
+\bibitem{barendregt84}
+H. P. Barendregt,
+\emph{The Lambda Calculus: its Syntax and Semantics}, 
+revised ed., North-Holland, 1984.
+
+\bibitem{barendregt92}
+H. Barendregt , S. Abramsky , D. M. Gabbay , T. S. E. Maibaum.
+\emph{Lambda Calculi with Types.} 
+Handbook of Logic in Computer Science, 1992. 
+
+\bibitem{barendregt10}
+
+  Henk Barendregt, Wil Dekkers, Richard Statman,
+  \emph{Lambda Calculus With Types}.
+  Cambridge University Press,
+  2010. 
+  %URL \url{http://www.cs.ru.nl/~henk/book.pdf}.
+
+\bibitem{jones87}
+Simon Peyton Jones. 
+\emph{The Implementation of Functional Programming Languages}. 
+Prentice Hall, 1987.
+
+
+\bibitem{AIAMA}
+	Stuart J. Russell, Peter Norvig,
+	\emph{Artificial Intelligence: A Modern Approach}.
+	Pearson Education,
+	2003. 
+
+
+\end{thebibliography}
+
+\end{document}
