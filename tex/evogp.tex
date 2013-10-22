@@ -11,6 +11,8 @@
 \usepackage{amsmath}
 %\usepackage{amssymb}
 
+\usepackage[ampersand]{easylist}
+\usepackage{color}
 
 \newcommand{\Lets}{Let us\xspace}
 \newcommand{\lets}{let us\xspace}
@@ -62,8 +64,17 @@
 \newcommand{\SScomb }{\mathbf{S'}}
 \newcommand{\ar}{\rightarrow\xspace}
 \newcommand{\T}{\mathbb{T}\xspace}
+\newcommand{\C}{\mathbb{C}\xspace}
 \newcommand{\Real}{\mathbb{R}}
 
+\newenvironment{todo}
+{ ~\\[0.5em]
+  {\color{red}\textbf{TODO}}
+  \begin{easylist}[itemize]}
+{ \end{easylist}
+  ~}
+
+\newcommand{\Lpr}{\Lambda^\prime}
 \newcommand{\ul}[2]{\langle #1 ; #2 \rangle}
 
 \hyphenation{op-tical net-works semi-conduc-tor IEEEtran}
@@ -71,7 +82,10 @@
 \begin{document}
 
 \title{\textit{[něco jako?]} 
-Generating lambda term individuals using undisciplined A*}
+Generating lambda term individuals using 
+%undisciplined 
+forgetful
+A*}
 \author{Tom\'{a}\v{s} K\v{r}en \and Roman Neruda}
 \institute{Matfyz ...}
 \maketitle
@@ -175,30 +189,174 @@ Naopak se víc zaměřuje na polymorfizmus a další věci.
 
 \subsection{Term}
 
-\subsubsection{Reductions}
-\subsubsection{Tree representations}
-%\subsubsection{}
+Here we  %formally 
+describe programming language, 
+in which we generate individual programs --- so called \lterms.  
 
+
+\begin{definition}
+Let $V$ be infinite countable set of {\it 
+variable names}. Let $C$ be set of {\it constant names}, 
+$V \cap C = \emptyset$.	 	
+Then $\Lambda$ is set of {\it \lterms} defined inductively as follows.	
+\begin{align*}
+x   \in V \cup C  &\then x     \in \Lambda \\
+M,N \in \Lambda   &\then (M~N) \in \Lambda 
+\textit{~~~~~~(Function application)} \\
+x   \in V , M \in \Lambda &\then \lamb{x}{M} \in \Lambda
+\textit{~~~~($\lambda$-abstraction)} 
+\end{align*}
+\end{definition}
+
+\textit{Function application} and 
+\textit{$\lambda$-abstraction} are concepts
+well known from common programming languages. 
+For example in JavaScript 
+$(M~N)$ translates to expression \texttt{$M$($N$)} and
+$\lamb{x}{M}$ translates to expression \texttt{function($x$)\{return $M$;\}}.
+In other words, the function application 
+corresponds to the act of supplying a function 
+with an argument and
+the $\lambda$-abstraction is equivalent to 
+\textit{anonymous function}.
+
+\begin{todo}
+ & asi říct o zkratkách notací
+\end{todo}
+
+
+\subsubsection{Reductions}
+(... zmiňovat ? a pokud ano tak tady nebo radši v sekci která diskutuje 
+normálnost vygenerovanejch termů a jejich zkrácení pomocí $eta$-redukce)
+\subsubsection{Tree representations}
+(... zmiňovat ?)
 
 \subsection{Type}
 
+A \lterm as described above
+corresponds to a program expression with no type information
+included. Now we will describe \textit{types} (or \textit{type terms}).
+After putting those two pieces 
+(\textit{\lterms} and \textit{types}) together 
+we will get system called \textit{simply typed $\lambda$-calculus}.
+
+
+\begin{definition}
+Let $A$ be set of {\it atomic type names}. 
+Then $\mathbb{T}$ is set of {\it types} inductively defined as follows.
+\begin{align*}
+\alpha      \in A  &\then   \alpha \in \T \\
+\sigma,\tau \in \T &\then ( \sigma \ar  \tau ) \in \T 
+\end{align*}~
+
+\end{definition}
+
+Type $\sigma \ar \tau$ is type for functions taking as input
+something of a type $\sigma$ and returning 
+as output something of a type $\tau$. 
+
+\begin{todo}
+ & asi říct o zkratce notace
+\end{todo}
+
+
 \subsection{Context}
 
-\textit{--- nezapomenout popsat $\Gamma,x:\tau$ notaci
- a to že to automaticky implikuje že x neni obsažena v $\Gamma$,
- tzn je nová...}
 
-\subsection{\GMS}
+\begin{definition} 
+~
+\begin{enumerate}
+ \item 	Let $\Lambda$ be set of {\it \lterms}. 
+	Let $\mathbb{T}$ be set of {\it types}.       
+	A {\it statement} $M : \sigma$ is a pair 
+	$(M,\sigma) \in \Lambda \times \mathbb{T}$.
+	Statement $M : \sigma$ is vocalized as 
+	{\it "$M$ has type $\sigma$"}.
+	The term $M$ is called the {\it subject} of the 
+	statement $M : \sigma$.
+ \item A \textit{declaration} is a statement 
+ $x : \sigma$ where $x \in V \cup C$.
+  
+ \item A \textit{context} 
+ %(or \textit{basis}) 
+ is set of declarations with distinct variables as subjects.
+\end{enumerate}~
+\end{definition}
+
+
+\begin{todo}
+   & říct že $T \cup F$ v Std GP je u nás $\Gamma$
+   & popsat $\Gamma,x:\tau$ notaci
+ a to že to automaticky implikuje že x neni obsažena v $\Gamma$,
+ tzn je nová...
+  & že píšem $x:\sigma \in \Gamma$ místo $(x,\sigma) \in \Gamma$
+\end{todo}
+
+\subsection{Simply typed $\lambda$-calculus}
+
+\begin{definition}
+A statement $M\colon\sigma$ is \textit{derivable from}
+a context $\Gamma$ (notation 
+\mbox{$\Gamma\vdash{}M\colon\sigma$}) 
+if it can be produced by the following rules.
+\begin{align*}
+x : \sigma \in \Gamma &~\then~ \tur{\Gamma}{x}{\sigma}\\
+\tur{\Gamma}{M}{\sigma \ar \tau}~,~\tur{\Gamma}{N}{\sigma} 
+&~\then~ \tur{\Gamma}{(M~N)}{\tau}\\  
+\tur{\Gamma,x:\sigma}{M}{\tau}
+&~\then~ \tur{\Gamma}{\lamb{x}{M}}{\sigma \ar \tau} 
+\end{align*}~
+\end{definition}
+
+...Our goal is to produce terms $M$
+for a given pair $\ul{\tau}{\Gamma}$
+such that for each $M$ is $\tur{\Gamma}{M}{\tau}$.
+
+
+
+
+\begin{todo}
+    & From this definition we can derive following rules...
+
+	& citovat něco, asi barendrechta 
+	(on to tam ale nějak moc nedokazuje) 
+	případně mojí diplomku (tam to dokazuju)
+\end{todo}
 
 \subsection{Unfinished term}
 
-\textit{- Unifished term je term který může obsahovat jako list uzel tvaru 
-$(\tau,\Gamma)$, takzvaný unfinished leaf (UL).\\
--Vysvětlit unfinished leaf.\\}
+\begin{definition}
+Let $V$ be infinite countable set of {\it 
+variable names}. Let $C$ be set of {\it constant names}, 
+$V \cap C = \emptyset$.	
+Let $\T$ be set of types.
+Let $\C$ be set of all contexts on ($V \cup C$, $\T$).
+Then $\Lpr$ is set of 
+\textit{unfinished  \lterms} defined inductively as follows.	
+\begin{align*}
+\tau \in \T , \Gamma \in \C &\then \ul{\tau}{\Gamma} \in \Lpr
+\textit{~~~~~~~~(Unfinished leaf)}\\
+x   \in V \cup C  &\then x     \in \Lpr \\
+M,N \in \Lpr   &\then (M~N) \in \Lpr 
+\textit{~~~~~~(Function application)} \\
+x   \in V , M \in \Lpr &\then \lamb{x}{M} \in \Lpr
+\textit{~~~~($\lambda$-abstraction)} 
+\end{align*}
+\end{definition}
+
+
+\begin{todo}
+   & Vysvětlit k čemu je to dobrý.
+\end{todo}
+
 
 \section{Our approach}
 \subsection{Introduction}
-úvod ke kapitole - systematicky, A*, filtrace, znova dám do fronty začátek
+
+\begin{todo}
+ & úvod ke kapitole - systematicky, A*, filtrace, znova dám do fronty začátek
+\end{todo}
+
 
 \subsection{Generating algorithm}
 
@@ -212,17 +370,16 @@ The inputs for the term generating algorithm are following.
 
 Essential data structure of our term generating algorithm 
 is priority queue of unfinished terms. 
-Priority of an unfinished term is given by 
-the number of unfinished leafs in that term.
+Priority of an unfinished term is given by its size.
 Initially, the queue contains only one unfinished term; 
 $\ul{\tau}{\Gamma}$.\\
 
-At each step, the term $M$ with the lowest number of 
-unfinished leafs is pulled from the queue.
+At each step, the term $M$ with the smallest size
+is pulled from the queue.
 According to the actual number of those leafs one of
 the following actions is performed.
 \begin{enumerate}
- \item If the term has no unfinished leaf (i.e., it is a finished
+ \item If the term $M$ has no unfinished leaf (i.e., it is a finished
  term satisfying \mbox{$\tur{\Gamma}{M}{\tau}$}), then it is added to the
  result collection of generated terms.   
  \item Otherwise, \textit{successors} of the unfinished term $M$ are
@@ -282,15 +439,18 @@ is inserted to the queue and the process continues.
 
 \subsection{$\eta$-normalization}
 
-\textit{- pač je to generovany v lnf, neboli beta-eta na -1 nf kde 
-eta na -1 je eta expanze tak je chytrý transformovat 
-to do beta-eta nf. To stačí opakovanou eta redukcí, protože beta normálnost
+\textbf{(Otázka zda vůbec zminovat?)}
+
+\textit{- pač je to generovany v lnf, neboli \beenf kde 
+$\eta^{-1}$ je $\eta$-expanze tak je chytrý transformovat 
+to do \benf. To stačí opakovanou $\eta$-redukcí, protože beta normálnost
 se neporuší (asi ve zkratce uvést proč, pač je to celkem přímočarý) 
 }
 
 \subsection{Crossover}
 
-\textit{Zmínil bych jí tu ale jen hodně rychle...}
+\textit{Zmínil bych jí tu ale jen hodně rychle..., nutno zmínit
+pokud budem uvádět even parity problém }
 
 \section{Experiments}
 \subsection{Simple symbolic regression}
