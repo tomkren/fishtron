@@ -20,7 +20,7 @@
 \newcommand{\lheads}{$\lambda$-heads\xspace}
 \newcommand{\la}{\leftarrow\xspace}
 \newcommand{\Lp}  {\Lambda^{\prime}\xspace}
-\newcommand{\tur}[3]{#1\vdash{}#2:#3}
+\newcommand{\tur}[3]{#1\vdash{}#2 \colon #3}
 \newcommand{\turst}[3]{$#1\vdash{}#2:#3$\xspace}
 \newcommand{\GMS}{\turst{\Gamma}{M}{\sigma}}
 \newcommand{\atTree}{@-tree\xspace}
@@ -64,6 +64,7 @@
 \newcommand{\T}{\mathbb{T}\xspace}
 \newcommand{\Real}{\mathbb{R}}
 
+\newcommand{\ul}[2]{\langle #1 ; #2 \rangle}
 
 \hyphenation{op-tical net-works semi-conduc-tor IEEEtran}
 
@@ -72,11 +73,13 @@
 \title{\textit{[něco jako?]} 
 Generating lambda term individuals using undisciplined A*}
 \author{Tom\'{a}\v{s} K\v{r}en \and Roman Neruda}
-\institute{Matfyz}
+\institute{Matfyz ...}
 \maketitle
 
 \begin{abstract}
-\textit{(Aby tu něco bylo, pak se udělá lepší (trochu upravenej abstract z diplomky))}
+\textbf{\textit{
+(Aby tu něco bylo, pak se udělá lepší 
+(tohle je trochu upravenej abstract z diplomky))}}
 In this paper, generalization of the standard genetic programming (GP)
 for simply typed lambda calculus is presented. We use population 
 initialization method parameterized by simple search strategy. 
@@ -96,6 +99,8 @@ utilized to enable use of simple tree-swapping crossover.
 ...
 \subsection{příběh}
 
+(...)\\
+
 Our approach aims to play with the full arsenal given by simply typed lambda calculus, thus we begin our reasoning with an exhaustive systematic search
 in mind. Our second goal is to construct a system generalizing Standard 
 GP \cite{koza92}.
@@ -106,6 +111,8 @@ quiet arbitrary ramped half-and-half generating method.
 
 Those two design goals also differentiate our system from 
 the three state of the art systems for typed GP known to us.
+
+~\\(...)
 
 ~\\
 \textbf{poznamky naky}\textit{\\
@@ -164,16 +171,30 @@ Naopak se víc zaměřuje na polymorfizmus a další věci.
 \section{Preliminaries}
 %definice, pojmy
 
+\subsection{Ramped half-and-half}
+
 \subsection{Term}
+
+\subsubsection{Reductions}
+\subsubsection{Tree representations}
+%\subsubsection{}
+
 
 \subsection{Type}
 
 \subsection{Context}
 
+\textit{--- nezapomenout popsat $\Gamma,x:\tau$ notaci
+ a to že to automaticky implikuje že x neni obsažena v $\Gamma$,
+ tzn je nová...}
+
+\subsection{\GMS}
+
 \subsection{Unfinished term}
 
 \textit{- Unifished term je term který může obsahovat jako list uzel tvaru 
-$(\tau,\Gamma)$, takzvaný unfinished leaf (UL).\\}
+$(\tau,\Gamma)$, takzvaný unfinished leaf (UL).\\
+-Vysvětlit unfinished leaf.\\}
 
 \section{Our approach}
 \subsection{Introduction}
@@ -186,34 +207,80 @@ The inputs for the term generating algorithm are following.
  \item Desired type $\tau$ of generated terms.
  \item Context $\Gamma$ representing set of building symbols.
  \item Number $n$ of terms to be generated.
+ \item Search strategy $S$. 
 \end{enumerate}
 
+Essential data structure of our term generating algorithm 
+is priority queue of unfinished terms. 
+Priority of an unfinished term is given by 
+the number of unfinished leafs in that term.
+Initially, the queue contains only one unfinished term; 
+$\ul{\tau}{\Gamma}$.\\
+
+At each step, the term $M$ with the lowest number of 
+unfinished leafs is pulled from the queue.
+According to the actual number of those leafs one of
+the following actions is performed.
+\begin{enumerate}
+ \item If the term has no unfinished leaf (i.e., it is a finished
+ term satisfying \mbox{$\tur{\Gamma}{M}{\tau}$}), then it is added to the
+ result collection of generated terms.   
+ \item Otherwise, \textit{successors} of the unfinished term $M$ are
+       filtered out by \textit{search strategy} $S$ and
+       those successors that outlast the filtration 
+       are inserted into the queue.
+\end{enumerate}
+
+\textit{Successors} of an unfinished term $M$ are obtained by 
+\textit{expansion} of the \mbox{\textit{DFS-first}} unfinished leaf $L$
+(i.e., the leftmost unfinished leaf of $M$).\\
+
+Expansion of the selected unfinished leaf $L$ leads to creation of 
+one or many (possibly zero) successors.
+In this process, $L$ is replaced
+by a new subterm defined by the following rules.
+\begin{enumerate}
+ \item If $L = \ul{\rho \ar \sigma}{\Gamma}$, 
+       then $L$ is replaced by $\lamb{x}{\ul{\sigma}{\Gamma,x \colon \rho}}$.
+       Thus this expansion results in exactly one successor.  
+ \item If $L = \ul{\alpha}{\Gamma}$ where $\alpha$ is \textit{atomic} type,
+       then for each 
+       \mbox{$f : (\tau_1 \ar \dots \ar \tau_n \ar \alpha) \in \Gamma$}
+       the unfinished leaf $L$ is replaced by 
+       $(~f~(\tau_1,\Gamma)~\dots~(\tau_n,\Gamma)~)$.
+       Thus this expansion results in many (possibly zero or one) successors.
+\end{enumerate}
+
+Now that we have all possible successors of $M$, we are about to apply
+the \textit{search strategy} $S$. A search strategy is a procedure
+which takes as input a set of unfinished terms and returns a subset
+of the input set. Therefore, search strategy acts as a filter reducing 
+the search space. 
+
+If the queue becomes empty before the desired number $n$ of terms
+is generated, then the initial unfinished term $\ul{\tau}{\Gamma}$ 
+is inserted to the queue and the process continues.
+
+\Lets now discuss three such search strategies.
+
+\subsubsection{Systematic strategy}
+\subsubsection{Ramped half-and-half strategy}
+\subsubsection{Geometric strategy}
 
 
-
+~\\\\
 \textit{
-- Pracujeme s prioritní frontou rozdělaných lambda termů.\\ 
-- Priorita je dána počtem UL v termu.\\
-- Na počátku je do fronty vložen jediný UT = $(\tau,\Gamma)$\\
-- Z fronty vyndám term s nejnižším \#UL, pokud má \#UL = 0, pak je to vygenerovaný jedinec, pokud ne tak vezmu jeho DFS-první UL a expanduju ho. Výsledkem expandování je několik (possibly 0) unfin. termů, které jsou až na expandovaný uzel totožné s původním UT, daný UT je nahrazen novým pod-UT. \\
-- Expandování probíhá následovně: \\
-(a) je to  $(\sigma \ar \tau,\Gamma)$ pak tento list nahradim novým podstromem $\lam{x}{(\tau;\Gamma,x:a)}$\\
-(b) je to $(\alpha,\Gamma)$ pak pro každý\\ 
-$f : (\tau_1 \ar \dots \ar \tau_n \ar \alpha) \in \Gamma$ \\
-nahradíme tento list novým podstromem \\
-$(~f~(\tau_1,\Gamma)~\dots~(\tau_n,\Gamma)~)$
-\\\\
-- Prohledávací strategie má pak funkci filtru následníků. \\
-- Pokud se fronta vyprázdní ještě před vygenerováním požadovaného 
-  počtu termů tak zbytek dogenerujeme stejným zpusobem, tzn do 
-  fronty přihodíme $(\tau,\Gamma)$ a jedem dál \\
 - Systematická strategie nezahodí nic (Pro ní generování 
   kolapsuje do A* algoritmu).\\
 - Ramped-half-and-half zahodí vždy vše krom jediného.\\
 - Geometrická strategie nezahodí s pravděpodobností q na hloubka UL \\
 }
 
-\textbf{$\eta$-normalization ...}
+
+
+\subsection{Discussion and further improvements}
+
+\subsection{$\eta$-normalization}
 
 \textit{- pač je to generovany v lnf, neboli beta-eta na -1 nf kde 
 eta na -1 je eta expanze tak je chytrý transformovat 
@@ -221,8 +288,9 @@ to do beta-eta nf. To stačí opakovanou eta redukcí, protože beta normálnost
 se neporuší (asi ve zkratce uvést proč, pač je to celkem přímočarý) 
 }
 
+\subsection{Crossover}
 
-\subsection{Crossover???}
+\textit{Zmínil bych jí tu ale jen hodně rychle...}
 
 \section{Experiments}
 \subsection{Simple symbolic regression}
@@ -248,13 +316,21 @@ building blocks context $\Gamma$ are following.
   rlog  : \Real \ar \Real              \}
 \end{align*}
 where
+
+\noindent\begin{minipage}{.5\linewidth}
 \begin{align*}
 rdiv(p,q) &= \begin{cases} 1 &\mbox{if } q = 0 \\
-p/q & \mbox{otherwise } \end{cases}  \\
+p/q & \mbox{otherwise } \end{cases}  
+\end{align*}
+\end{minipage}%
+\begin{minipage}{.5\linewidth}
+\begin{align*}
 rlog(x) &= \begin{cases} 0 &\mbox{if } x = 0 \\
 log(\vert x\vert) & \mbox{otherwise}. \end{cases}
 \end{align*}
+\end{minipage}
 
+~\\\\
 Fitness function is computed as follows
 
 $$ fitness(f) =  \sum\limits_{i=1}^{20}{ \vert f(x_i)-y_i }\vert   $$
