@@ -68,11 +68,9 @@
 \newcommand{\Real}{\mathbb{R}}
 
 \newenvironment{todo}
-{ ~\\[0.5em]
-  {\color{red}\textbf{TODO}}
+{~\\ {\color{red}\textbf{TODO}}
   \begin{easylist}[itemize]}
-{ \end{easylist}
-  ~}
+{ \end{easylist}}
 
 \newcommand{\Lpr}{\Lambda^\prime}
 \newcommand{\ul}[2]{\langle #1 ; #2 \rangle}
@@ -185,14 +183,13 @@ Naopak se víc zaměřuje na polymorfizmus a další věci.
 \section{Preliminaries}
 %definice, pojmy
 
-\subsection{Ramped half-and-half}
 
-\subsection{Term}
+%\subsection{Term}
 
-Here we  %formally 
+\Lets 
+%Here we  %formally 
 describe programming language, 
 in which we generate individual programs --- so called \lterms.  
-
 
 \begin{definition}
 Let $V$ be infinite countable set of {\it 
@@ -219,20 +216,17 @@ corresponds to the act of supplying a function
 with an argument and
 the $\lambda$-abstraction is equivalent to 
 \textit{anonymous function}.
-
-\begin{todo}
- & asi říct o zkratkách notací
-\end{todo}
-
-
-\subsubsection{Reductions}
-(... zmiňovat ? a pokud ano tak tady nebo radši v sekci která diskutuje 
-normálnost vygenerovanejch termů a jejich zkrácení pomocí $eta$-redukce)
-\subsubsection{Tree representations}
-(... zmiňovat ?)
-
-\subsection{Type}
-
+%\begin{todo}
+% & asi říct o zkratkách notací
+%\end{todo}
+%
+%
+%\subsubsection{Reductions}
+%(... zmiňovat ? a pokud ano tak tady nebo radši v sekci která diskutuje 
+%normálnost vygenerovanejch termů a jejich zkrácení pomocí $eta$-redukce)
+%\subsubsection{Tree representations}
+%(... zmiňovat ?)
+%\subsection{Type}
 A \lterm as described above
 corresponds to a program expression with no type information
 included. Now we will describe \textit{types} (or \textit{type terms}).
@@ -247,25 +241,22 @@ Then $\mathbb{T}$ is set of {\it types} inductively defined as follows.
 \begin{align*}
 \alpha      \in A  &\then   \alpha \in \T \\
 \sigma,\tau \in \T &\then ( \sigma \ar  \tau ) \in \T 
-\end{align*}~
-
+\end{align*}
 \end{definition}
 
 Type $\sigma \ar \tau$ is type for functions taking as input
 something of a type $\sigma$ and returning 
 as output something of a type $\tau$. 
 
-\begin{todo}
- & asi říct o zkratce notace
-\end{todo}
+%\begin{todo}
+% & asi říct o zkratce notace
+%\end{todo}
 
 
-\subsection{Context}
+%\subsection{Context}
 
 
-\begin{definition} 
-~
-\begin{enumerate}
+\begin{definition}\begin{enumerate}
  \item 	Let $\Lambda$ be set of {\it \lterms}. 
 	Let $\mathbb{T}$ be set of {\it types}.       
 	A {\it statement} $M : \sigma$ is a pair 
@@ -280,19 +271,19 @@ as output something of a type $\tau$.
  \item A \textit{context} 
  %(or \textit{basis}) 
  is set of declarations with distinct variables as subjects.
-\end{enumerate}~
+\end{enumerate}
 \end{definition}
 
 
-\begin{todo}
-   & říct že $T \cup F$ v Std GP je u nás $\Gamma$
-   & popsat $\Gamma,x:\tau$ notaci
- a to že to automaticky implikuje že x neni obsažena v $\Gamma$,
- tzn je nová...
-  & že píšem $x:\sigma \in \Gamma$ místo $(x,\sigma) \in \Gamma$
-\end{todo}
+%\begin{todo}
+%   & říct že $T \cup F$ v Std GP je u nás $\Gamma$
+%   & popsat $\Gamma,x:\tau$ notaci
+% a to že to automaticky implikuje že x neni obsažena v $\Gamma$,
+% tzn je nová...
+%  & že píšem $x:\sigma \in \Gamma$ místo $(x,\sigma) \in \Gamma$
+%\end{todo}
 
-\subsection{Simply typed $\lambda$-calculus}
+%\subsection{Simply typed $\lambda$-calculus}
 
 \begin{definition}
 A statement $M\colon\sigma$ is \textit{derivable from}
@@ -305,7 +296,7 @@ x : \sigma \in \Gamma &~\then~ \tur{\Gamma}{x}{\sigma}\\
 &~\then~ \tur{\Gamma}{(M~N)}{\tau}\\  
 \tur{\Gamma,x:\sigma}{M}{\tau}
 &~\then~ \tur{\Gamma}{\lamb{x}{M}}{\sigma \ar \tau} 
-\end{align*}~
+\end{align*}
 \end{definition}
 
 ...Our goal is to produce terms $M$
@@ -315,15 +306,15 @@ such that for each $M$ is $\tur{\Gamma}{M}{\tau}$.
 
 
 
-\begin{todo}
-    & From this definition we can derive following rules...
+%\begin{todo}
+%    & From this definition we can derive following rules...
+%
+%	& citovat něco, asi barendrechta 
+%	(on to tam ale nějak moc nedokazuje) 
+%	případně mojí diplomku (tam to dokazuju)
+%\end{todo}
 
-	& citovat něco, asi barendrechta 
-	(on to tam ale nějak moc nedokazuje) 
-	případně mojí diplomku (tam to dokazuju)
-\end{todo}
-
-\subsection{Unfinished term}
+%\subsection{Unfinished term}
 
 \begin{definition}
 Let $V$ be infinite countable set of {\it 
@@ -345,9 +336,9 @@ x   \in V , M \in \Lpr &\then \lamb{x}{M} \in \Lpr
 \end{definition}
 
 
-\begin{todo}
-   & Vysvětlit k čemu je to dobrý.
-\end{todo}
+%\begin{todo}
+%   & Vysvětlit k čemu je to dobrý.
+%\end{todo}
 
 
 \section{Our approach}
@@ -368,11 +359,12 @@ The inputs for the term generating algorithm are following.
  \item Search strategy $S$. 
 \end{enumerate}
 
-Essential data structure of our term generating algorithm 
+Essential data structure of our algorithm 
 is priority queue of unfinished terms. 
 Priority of an unfinished term is given by its size.
-Initially, the queue contains only one unfinished term; 
-$\ul{\tau}{\Gamma}$.\\
+At the beginning, the queue contains only one unfinished term; 
+$\ul{\tau}{\Gamma}$. The search strategy $S$ also 
+initializes its internal state (if it has one).\\
 
 At each step, the term $M$ with the smallest size
 is pulled from the queue.
@@ -397,14 +389,17 @@ one or many (possibly zero) successors.
 In this process, $L$ is replaced
 by a new subterm defined by the following rules.
 \begin{enumerate}
- \item If $L = \ul{\rho \ar \sigma}{\Gamma}$, 
-       then $L$ is replaced by $\lamb{x}{\ul{\sigma}{\Gamma,x \colon \rho}}$.
+ \item If $L = \ul{\rho_1 \ar \dots \ar \rho_n \ar \alpha}{\Gamma}$,
+ 	   where $\alpha$ is atomic type and $n \geq 1$, 
+       then $L$ is replaced by 
+       $\lamb{x_1 \dots x_n}{\ul{\sigma}
+       {\Gamma,x_1 \colon \rho_1,\dots,x_n \colon \rho_n}}$.
        Thus this expansion results in exactly one successor.  
  \item If $L = \ul{\alpha}{\Gamma}$ where $\alpha$ is \textit{atomic} type,
        then for each 
-       \mbox{$f : (\tau_1 \ar \dots \ar \tau_n \ar \alpha) \in \Gamma$}
+       \mbox{$f : (\tau_1 \ar \dots \ar \tau_m \ar \alpha) \in \Gamma$}
        the unfinished leaf $L$ is replaced by 
-       $(~f~(\tau_1,\Gamma)~\dots~(\tau_n,\Gamma)~)$.
+       $(~f~(\tau_1,\Gamma)~\dots~(\tau_m,\Gamma)~)$.
        Thus this expansion results in many (possibly zero or one) successors.
 \end{enumerate}
 
@@ -416,23 +411,103 @@ the search space.
 
 If the queue becomes empty before the desired number $n$ of terms
 is generated, then the initial unfinished term $\ul{\tau}{\Gamma}$ 
-is inserted to the queue and the process continues.
+is inserted to the queue, search strategy $S$
+again initializes its internal state and the process continues.
 
 \Lets now discuss three such search strategies.
 
+\begin{todo}
+ & Okomentovat jak se počítá velikost a při tý příležitosti říct
+   že A* heuristika se skrejvá v tom jak velký určíme unfinished leafs,
+   že my používáme 1, ale že si de představit o dost sofistikovanější 
+   verze.   
+\end{todo}
+
 \subsubsection{Systematic strategy}
+
+If we use trivial strategy that returns all the inputs, 
+then the algorithm systematically generates 
+first $n$ smallest lambda terms in their
+\textit{long normal form}.
+
 \subsubsection{Ramped half-and-half strategy}
+
+The internal state of this strategy consists of two variables.
+It is the only one strategy described here that uses an internal state.
+
+\begin{enumerate}
+ \item \textit{isFull} - A boolean value, determining whether \textit{full}
+                     or \textit{grow} method will be performed.
+ \item \textit{d} - A integer value from $\setDots{2}{D_{init}}$, where 
+                $D_{init}$ is predefined maximal depth (e.g. 6).                    
+\end{enumerate}
+
+This strategy returns precisely one randomly
+(uniformly) selected  element from 
+the \textit{selection subset} of input set
+(or zero elements if the input set is empty). 
+The \textit{selection subset} 
+to select from is determined by $depth, d$ and $isFull$.
+The $depth$ parameter is the depth (in the term tree) 
+of the unfinished leaf that was expanded.
+Those elements of input set whose newly added subtree contains one ore more 
+unfinished leafs are regarded as \textit{non-terminals}, whereas 
+those whose newly added subtree contains no unfinished leaf are regarded as 
+\textit{terminals}.
+If $depth = 0$, then the subset to select from is  
+set of all \textit{non-terminals} of the input set.
+If $depth = d$, then the subset to select from is
+set of all \textit{terminals} of the input set.
+In other cases of $depth$ it depends on value of $isFull$.
+If $isFull = true$, then the subset to select from is 
+set of all \textit{non-terminals} of the input set.
+If $isFull = false$, then the subset to select from is 
+the whole input set.
+
+\begin{todo}
+ & napsat o tom že ji používa koza [citace] a že je to standard,
+ pokud je použita na gamu co splnuje closure podmínku, tak 
+ generuje přesně stejně jako
+ & ...This means that the queue always contains only one (or zero) state.
+\end{todo}
+
+
 \subsubsection{Geometric strategy}
 
-
-~\\\\
-\textit{
-- Systematická strategie nezahodí nic (Pro ní generování 
-  kolapsuje do A* algoritmu).\\
-- Ramped-half-and-half zahodí vždy vše krom jediného.\\
-- Geometrická strategie nezahodí s pravděpodobností q na hloubka UL \\
-}
-
+We can see those two previous strategies as two extremes on the spectrum of 
+possible strategies. 
+\textit{Systematic strategy} filters no successor state thus performing
+exhaustive search resulting in discovery of $n$ smallest terms in one run.
+On the other hand, \textit{ramped half-and-half strategy} filters 
+all but one successor states resulting in degradation of 
+the priority queue into "fancy variable".
+\textit{Geometric strategy} is simple yet fairly effective term generating 
+strategy somewhere in the middle of this spectrum.
+It is parameterized by parameter $q \in (0,1)$, its default well-performing 
+value is $q = 0.75$.
+For each element of the input set 
+it is probabilistically decided whether
+it will be returned or omitted. A probability $p$ of returning is
+same for all elements, but depends on the $depth$, 
+which is defined in the same way as in previous strategy. 
+It is computed as follows.
+$$ p = q^{depth} $$
+This formula is motivated by idea that it is important to
+explore all possible root symbols, but as the $depth$ 
+increases it becomes less "dangerous" to omit 
+an exploration branch. 
+We can see this by considering that this strategy results in
+somehow forgetful A* search.
+With each omission we make the search space smaller. But with
+increasing depth these omissions have smaller impact on the search space,
+i.e., they cut out lesser portion of the search space.
+Another slightly esoteric argument supporting this formula is that "root 
+parts" of a program usually stand for more crucial parts
+with radical impact on global behavior of a program, 
+whereas "leaf parts" of a program usually
+stand for less important local parts (e.g. constants).  
+This strategy also plays nicely with the idea that 
+"too big trees should be killed".
 
 
 \subsection{Discussion and further improvements}
@@ -464,7 +539,7 @@ function $f_{t}(x) = x^4 + x^3 + x^2 + x$.
 Desired type of generated programs $\sigma$ and 
 building blocks context $\Gamma$ are following.
 \begin{align*}
-\sigma = \Real \ar &\Real\\
+\tau = \Real \ar &\Real\\
 \Gamma = \{
   (+)  &: \Real \ar \Real \ar \Real    ,
   (-)   : \Real \ar \Real \ar \Real    ,
@@ -476,8 +551,8 @@ building blocks context $\Gamma$ are following.
   rlog  : \Real \ar \Real              \}
 \end{align*}
 where
-
-\noindent\begin{minipage}{.5\linewidth}
+\noindent
+\begin{minipage}{.5\linewidth}
 \begin{align*}
 rdiv(p,q) &= \begin{cases} 1 &\mbox{if } q = 0 \\
 p/q & \mbox{otherwise } \end{cases}  
@@ -489,24 +564,73 @@ rlog(x) &= \begin{cases} 0 &\mbox{if } x = 0 \\
 log(\vert x\vert) & \mbox{otherwise}. \end{cases}
 \end{align*}
 \end{minipage}
-
-~\\\\
-Fitness function is computed as follows
-
+~\\
+Fitness function is computed as follows.
 $$ fitness(f) =  \sum\limits_{i=1}^{20}{ \vert f(x_i)-y_i }\vert   $$
-
-where $(x_i,y_i)$ are 20 data samples from $[-1,1]$, such that $y_i = f_t(x_i)$.\\
-
+where $(x_i,y_i)$ are 20 data samples from $[-1,1]$, such that $y_i = f_t(x_i)$.
 An individual $f$ such that $\vert f(x_i)-y_i \vert < 0.01 $ for all data samples is 
 considered as a correct individual.
 
 
 \subsection{Artificial ant}
-...
+
+\textit{Artificial Ant} is another problem described
+in \cite{koza92}. Objective of this problem is to 
+find a control program for an artificial ant so
+that it can find all food located on "Santa Fe" trail.
+The Santa Fe trail lies on toroidal square grid.
+The ant is in the upper left corner, facing right.
+The ant is able to move forward, turn left, and sense if a food 
+piece is ahead of him.
+
+\begin{align*}
+\tau = An&tAction\\
+\Gamma = \{~~
+  l    &: AntAction                              ,
+  r    : AntAction                               ,
+  m    : AntAction                               ,\\
+  ifa  &: AntAction \ar AntAction \ar AntAction  ,\\
+  p2   &: AntAction \ar AntAction \ar AntAction  ,\\
+  p3   &: AntAction \ar AntAction \ar AntAction \ar AntAction  \}
+\end{align*}
+
+Action $l$ turns the ant left. 
+Action $r$ turns the ant right.
+Action $m$ moves the ant forward.
+Action $ifa~x~y$ (if-food-ahead) performs action $x$ 
+if a food piece is ahead of the ant,
+otherwise it performs action $y$.
+Action $p2~x~y$ first performs action $x$ and after it action $y$.
+Action $p3~x~y~z$ first performs action $x$, 
+after that action $y$ and finally $z$.
+Actions $l, r$ and $m$ each take one time step to execute.
+Ants action is performed over and over again until it reaches predefined
+maximal number of steps. 
+Fitness value is equal to number of eaten food pieces.
+An individual such that eats all 89 pieces of food is 
+considered as a correct solution.
+This limit is set to be 600\footnote{
+In \cite{koza92} this limit is said to be 400 time steps.
+But there is also mentioned following solution, 
+which is described as correct solution:
+\texttt{(ifa m (p3 l (p2 (ifa m r) (p2 r (p2 l r)))(p2 (ifa m l) m)))}.
+This program needs 545
+time steps; if it is given only 400 time steps, then it eats only 79 pieces
+of food. Thus we use 600 time steps. 
+} time steps.
+
+
+
+
 \subsection{Even parity problem}
 ...
 \section{Conclusions}
-...
+
+\begin{todo}
+ & do future work bych napsal, že díky jednoduchosti 
+   toho co strategie dělá je to idealní kandidát na 
+   optimalizaci pomocí samotnýho GP
+\end{todo}
 
 
 \begin{thebibliography}{1}
