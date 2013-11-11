@@ -1,0 +1,346 @@
+atTree s optSki (jako poslední v tamty)
+
+rege = PO_CTTeP_ PO_CTTeP {
+  cttep_code        = "ep2"                                     ,
+  cttep_info        = "Even-parity problem. With @-Trees." ,
+  cttep_data        = jsObj [ ( "im" , imGraphInJSON prog_typ prog_ctx ) ] ,
+  cttep_numRuns     = IntSlider "Runs"            1 100   50   1   ,
+  cttep_numGene     = IntSlider "Generations"     0 500   50   10  ,
+  cttep_popSize     = IntSlider "Population size" 0 5000  500  100 ,
+  
+  cttep_typ         = prog_typ                                     ,
+  cttep_ctx         = prog_ctx                                     ,
+  
+  cttep_gOpt        = CTTermG_Geom     prog_typ prog_ctx 0.75 , 
+--cttep_gOpt        = CTTG_Koza2    prog_typ prog_ctx  , 
+--cttep_gOpt        = CTTG_AllEdges prog_typ prog_ctx  , 
+
+  cttep_ff          = FF6 prog_type ff "Problems.EvenParity.Funs", 
+  
+  cttep_saveBest    = True
+}
+
+proveCTTerm :: SearchOptions -> [CTTerm]
+proveCTTerm so = 
+  let ( so' , problemHead ) = problemHeadPreproccess so
+      trees = proveWith2 so'
+   in map ( CTTerm problemHead . optSki . fullEtaReduce . tree2tterm ) trees  
+
+36/50 = 72%
+
+Total time: 1764.4579212s
+
+
+[2, 4, 5, 5, 6, 7, 9, 10, 11, 11, 13, 13, 14, 16, 16, 19, 20, 21, 21, 21, 21, 21, 23, 23, 23, 23, 24, 27, 27, 28, 28, 29, 29, 30, 30, 31, 32, 32, 32, 33, 33, 34, 34, 34, 35, 35, 35, 35, 35, 36, 36]
+
+"[[0,26.819960000000005],[1,26.673],[2,26.72769565217391],[3,26.68102222222222],[4,26.668444444444443],[5,26.82259090909091],[6,26.987395348837207],[7,26.95497560975609],[8,27.1076],[9,27.11764102564103],[10,27.6254358974359],[11,27.922162162162167],[12,28.544270270270268],[13,28.78527777777778],[14,29.239882352941176],[15,29.66576470588236],[16,29.963677419354827],[17,30.542933333333327],[18,31.67227586206896],[19,32.59786206896552],[20,33.08013793103448],[21,34.04193103448276],[22,34.54048275862069],[23,35.60933333333334],[24,36.41903703703704],[25,37.47607407407408],[26,38.35674074074073],[27,39.169769230769234],[28,40.66756521739131],[29,42.02817391304348],[30,43.70600000000001],[31,45.83918181818182],[32,45.89857142857143],[33,47.31628571428572],[34,48.81180000000001],[35,50.6664],[36,53.20242105263157],[37,57.23222222222223],[38,59.67533333333333],[39,62.19044444444445],[40,66.1465882352941],[41,68.66588235294117],[42,74.391375],[43,76.92087500000004],[44,79.758125],[45,85.70733333333331],[46,89.10706666666668],[47,92.11613333333334],[48,94.64519999999999],[49,97.32093333333333],[50,101.52442857142856]]"
+
+26.819960000000005, 26.673, 26.72769565217391, 26.68102222222222, 26.668444444444443, 26.82259090909091, 26.987395348837207, 26.95497560975609, 27.1076, 27.11764102564103, 27.6254358974359, 27.922162162162167, 28.544270270270268, 28.78527777777778, 29.239882352941176, 29.66576470588236, 29.963677419354827, 30.542933333333327, 31.67227586206896, 32.59786206896552, 33.08013793103448, 34.04193103448276, 34.54048275862069, 35.60933333333334, 36.41903703703704, 37.47607407407408, 38.35674074074073, 39.169769230769234, 40.66756521739131, 42.02817391304348, 43.70600000000001, 45.83918181818182, 45.89857142857143, 47.31628571428572, 48.81180000000001, 50.6664, 53.20242105263157, 57.23222222222223, 59.67533333333333, 62.19044444444445, 66.1465882352941, 68.66588235294117, 74.391375, 76.92087500000004, 79.758125, 85.70733333333331, 89.10706666666668, 92.11613333333334, 94.64519999999999, 97.32093333333333, 101.52442857142856
+
+"[[0,56500],[1,56000],[2,66000],[3,88000],[4,92500],[5,93000],[6,84000],[7,84000],[8,85500],[9,95000],[10,88000],[11,96000],[12,97500],[13,84000],[14,90000],[15,80000],[16,85000],[17,81000],[18,85500],[19,90000],[20,94500],[21,99000],[22,92000],[23,96000],[24,100000],[25,104000],[26,108000],[27,84000],[28,87000],[29,90000],[30,93000],[31,96000],[32,99000],[33,102000],[34,105000],[35,90000],[36,92500],[37,95000],[38,97500],[39,100000],[40,102500],[41,105000],[42,107500],[43,110000],[44,90000],[45,92000],[46,94000],[47,96000],[48,98000],[49,100000],[50,102000]]"
+
+
+
+nej 1,56000
+
+
+(\ x0 -> ( ( ( foldr ( ( c ( ( ( b_ ( c_ ( foldr ( ( ( c_ ( s_ (||))) ( c (&&)))
+ i)))) ( ( ( s_ ( s_ nor)) ( ( c_ (&&)) ( ( s (||)) i))) nor)) ( ( c ( ( s ( ( (
+ b_ foldr) k) k)) ( (||) ( head_ x0)))) x0))) x0)) ( ( ( foldr ( k ( ( ( s_ (||)
+) ( (&&) ( head_ x0))) ( nand ( ( (&&) ( head_ x0)) ( head_ x0)))))) ( ( ( foldr
+ ( ( b k) i)) ( head_ x0)) ( tail_ x0))) x0)) x0),1.0,Just 10)
+(\ x0 -> ( ( ( foldr ( ( b ( c nand)) ( (||) ( head_ ( tail_ x0))))) ( ( ( foldr
+ ( c (&&))) ( ( ( foldr ( ( c_ (||)) i)) ( head_ x0)) x0)) x0)) x0),0.8125,Nothi
+ng)
+(\ x0 -> ( ( ( foldr ( ( ( s_ s) ( ( ( s_ ( b_ nor)) (&&)) ( c nand))) ( ( c_ (
+( b ( s nor)) ( ( ( s_ c) ( ( s ( ( ( b_ ( b_ nand)) (&&)) ( ( s (&&)) i))) ( (
+( s_ ( c_ nand)) (&&)) ( ( s (&&)) i)))) i))) i))) ( ( ( foldr ( k ( nor ( head_
+ ( tail_ ( tail_ ( tail_ ( tail_ x0)))))))) ( head_ x0)) x0)) ( tail_ x0)),1.0,J
+ust 12)
+(\ x0 -> ( ( ( foldr ( ( ( s_ ( s_ (&&))) (||)) nand)) ( ( ( foldr ( ( s ( ( ( b
+_ ( ( c_ ( s_ nand)) nor)) ( c nand)) ( nand ( head_ x0)))) ( ( s nand) ( ( s no
+r) i)))) ( ( (||) ( head_ x0)) ( head_ x0))) x0)) x0),1.0,Just 35)
+(\ x0 -> ( ( ( foldr ( ( ( s_ ( s_ (&&))) ( c (||))) ( c nand))) ( ( nand ( head
+_ x0)) ( head_ x0))) ( tail_ x0)),1.0,Just 15)
+(\ x0 -> ( ( ( foldr ( ( ( s_ ( s_ nor)) ( ( c_ (&&)) i)) ( ( c_ nor) i))) ( ( (
+ s nand) i) ( head_ x0))) ( tail_ x0)),1.0,Just 10)
+(\ x0 -> ( ( ( foldr ( ( ( s_ ( ( c_ ( s_ (&&))) (||))) ( c nand)) i)) ( ( ( fol
+dr ( ( b k) ( ( ( s_ nand) ( ( s nand) i)) i))) ( ( ( foldr ( k i)) ( head_ x0))
+ x0)) x0)) x0),1.0,Just 1)
+(\ x0 -> ( ( ( foldr ( ( s ( ( ( b_ ( c_ (||))) ( s nand)) ( ( ( c_ ( c_ ( foldr
+ ( ( c ( ( ( s_ c_) ( ( ( b_ foldr) ( b k)) (||))) k)) ( tail_ x0))))) nor) x0))
+) ( nor ( ( ( foldr ( c nor)) ( ( nor ( head_ x0)) ( ( ( foldr ( ( s ( ( ( b_ b)
+ nor) ( ( s (&&)) i))) k)) ( ( ( foldr ( ( ( c_ ( c_ ( foldr nand))) ( ( ( c_ c)
+ ( ( ( s_ ( s_ foldr)) ( ( ( c_ s) ( ( c ( ( ( b_ ( c_ b_)) ( ( b_ b) (||))) nan
+d)) (&&))) (||))) k)) x0)) x0)) ( head_ x0)) x0)) ( tail_ x0)))) x0)))) ( ( ( fo
+ldr k) ( ( ( foldr ( ( s ( ( ( b_ ( c_ (||))) ( s nand)) ( ( ( c_ ( s_ (||))) no
+r) i))) ( nor ( ( ( foldr ( c nor)) ( ( nor ( ( ( foldr (||)) ( ( ( foldr (&&))
+( ( (||) ( head_ ( tail_ ( tail_ x0)))) ( head_ ( tail_ ( tail_ x0))))) x0)) x0)
+) ( ( ( foldr ( ( s ( ( ( b_ ( c_ (||))) ( s nand)) nor)) i)) ( ( ( foldr k) ( (
+ ( foldr ( ( c_ (||)) ( ( s nor) i))) ( head_ x0)) x0)) x0)) ( tail_ x0)))) x0))
+)) ( ( ( foldr k) ( ( ( foldr ( k i)) ( head_ x0)) ( tail_ x0))) x0)) ( tail_ x0
+))) x0)) x0),0.8125,Nothing)
+(\ x0 -> ( ( ( foldr ( ( b ( ( s_ nor) ( ( ( s_ (&&)) ( ( ( s_ (&&)) ( (&&) ( he
+ad_ ( tail_ x0)))) i)) ( (&&) ( head_ ( tail_ x0)))))) ( c nor))) ( ( ( c ( ( s
+( ( ( b_ foldr) k) k)) i)) x0) ( ( nor ( ( (&&) ( ( ( foldr ( ( b ( ( s_ (&&)) (
+ nor ( ( (&&) ( ( ( foldr ( ( ( s_ s) ( ( ( c_ ( b_ (&&))) nand) i)) ( c nor)))
+( ( ( foldr ( ( b ( ( s_ nor) ( ( ( s_ (&&)) ( (&&) ( head_ ( tail_ x0)))) i)))
+( ( b ( ( s_ (&&)) ( ( ( s_ (&&)) ( ( ( s_ (&&)) ( (&&) ( head_ ( tail_ x0)))) i
+)) ( (&&) ( head_ ( tail_ x0)))))) ( ( s ( ( s ( ( ( b_ b_) (||)) ( ( s nand) i)
+)) (||))) ( ( c ( ( ( b_ c) ( s ( ( ( b_ foldr) k) k))) ( ( b k) ( (&&) ( ( ( fo
+ldr nor) ( head_ ( tail_ x0))) ( tail_ x0)))))) x0))))) ( i ( head_ x0))) x0)) (
+ tail_ x0))) ( head_ x0))))) ( ( c ( ( ( b_ c) ( s ( ( ( b_ foldr) ( c ( ( ( b_
+b) (&&)) ( ( s nand) i)))) k))) ( k ( (&&) ( head_ ( tail_ x0)))))) x0))) ( ( (
+foldr ( ( ( c_ b) (&&)) ( (&&) ( ( ( foldr ( ( ( s_ s) ( ( ( c_ ( b_ nor)) (||))
+ ( (&&) ( head_ ( tail_ x0))))) (&&))) ( head_ x0)) ( tail_ ( tail_ x0)))))) ( h
+ead_ x0)) x0)) ( tail_ x0))) ( head_ x0))) ( head_ x0)))) ( tail_ x0)),0.875,Not
+hing)
+(\ x0 -> ( ( ( foldr ( ( b ( s nor)) ( ( ( c_ ( c_ ( foldr ( ( ( c_ ( s_ (&&)))
+(&&)) i)))) ( ( s ( ( ( b_ ( b ( ( s_ nor) ( ( s nand) i)))) ( ( b_ nor) ( nor (
+ head_ x0)))) (||))) i)) x0))) ( ( ( foldr ( ( ( s_ ( s_ nand)) nand) ( c (||)))
+) ( head_ x0)) ( tail_ x0))) x0),1.0,Just 5)
+(\ x0 -> ( ( ( foldr ( ( ( c_ c) ( ( s ( ( ( b_ ( s_ foldr)) ( ( b_ ( c ( ( ( b_
+ b) (||)) ( nor ( ( ( foldr (||)) ( head_ x0)) ( tail_ x0)))))) k)) ( ( c_ (&&))
+ ( (&&) ( ( ( foldr ( c nand)) ( ( ( s (||)) ( ( s (||)) i)) ( head_ x0))) ( tai
+l_ ( tail_ x0))))))) nand)) x0)) ( head_ ( tail_ x0))) ( tail_ x0)),0.875,Nothin
+g)
+(\ x0 -> ( ( ( foldr ( ( ( s_ ( s_ nor)) ( c (&&))) ( ( s ( ( ( b_ b) (&&)) ( (
+c ( ( c ( ( ( b_ foldr) ( ( s_ ( ( c_ ( s_ ( ( c_ nor) ( ( s nand) i)))) (&&)))
+(||))) k)) ( head_ x0))) x0))) nor))) ( ( ( foldr ( ( b ( s ( ( ( b_ nand) ( ( s
+ (&&)) ( ( ( b ( s nand)) ( k ( ( s nand) ( nand ( head_ ( tail_ x0)))))) ( head
+_ x0)))) ( k ( head_ x0))))) nor)) ( ( ( s ( ( ( c_ s) ( ( ( b_ ( ( b_ nand) ( (
+ ( s_ (&&)) i) ( ( s nand) ( ( k i) ( head_ ( tail_ x0))))))) nor) ( ( s (&&)) i
+))) i)) i) ( ( ( foldr ( c (&&))) ( head_ x0)) ( tail_ x0)))) ( tail_ x0))) x0),
+1.0,Just 39)
+(\ x0 -> ( ( nand ( ( ( foldr ( ( ( s_ ( s_ nor)) nor) ( c (&&)))) ( head_ x0))
+( tail_ x0))) ( ( ( foldr ( ( ( s_ ( c_ nand)) (||)) ( ( s (&&)) ( nand ( head_
+x0))))) ( ( ( foldr k) ( ( ( foldr ( ( ( s_ b) nand) nand)) ( ( ( foldr ( c ( (
+( c_ ( c_ nand)) ( ( b k) ( ( s nor) i))) ( head_ x0)))) ( ( k ( head_ x0)) ( he
+ad_ ( tail_ x0)))) ( tail_ x0))) x0)) x0)) x0)),1.0,Just 16)
+(\ x0 -> ( ( ( foldr ( ( ( c_ s) ( ( ( s_ ( b_ nand)) (||)) ( ( ( c_ c) ( ( ( s_
+ s) ( ( ( b_ ( ( b_ foldr) ( b ( b ( nor ( head_ x0)))))) ( c_ ( c_ nor))) ( ( (
+ s_ ( b_ nand)) (||)) ( ( ( c_ c) ( ( ( s_ ( s_ foldr)) ( ( c ( ( ( b_ ( b_ k))
+( s_ (||))) ( ( c ( ( s ( ( ( b_ b_) nor) ( nor ( head_ x0)))) nand)) ( ( c ( (
+s ( ( ( b_ foldr) ( c_ nand)) ( ( b (||)) ( ( s (&&)) i)))) i)) x0)))) ( k i)))
+nand)) x0)))) ( k i))) x0))) i)) ( ( nor ( ( ( foldr ( ( c_ nor) i)) ( head_ x0)
+) x0)) ( ( ( foldr ( ( ( c_ c) ( ( ( s_ s) ( ( ( b_ ( ( b_ foldr) ( ( s_ ( s_ (&
+&))) nand))) ( c_ ( ( s_ ( c_ nor)) nor))) ( ( ( s_ ( b_ nand)) (||)) ( ( b nand
+) ( nand ( ( ( foldr ( ( ( c_ c) ( ( ( c_ ( s_ foldr)) ( ( c ( ( ( b_ ( b_ k)) (
+ s_ (||))) ( ( b nor) ( ( s nor) i)))) (||))) ( nor ( head_ x0)))) ( tail_ ( tai
+l_ x0)))) ( ( ( foldr ( ( ( s_ ( c_ nand)) nor) ( nor ( ( ( foldr ( ( c_ nor) i)
+) ( head_ x0)) x0)))) ( ( nand ( head_ x0)) ( ( ( foldr ( ( ( s_ c) ( ( ( s_ ( b
+_ nor)) nand) ( ( ( c_ c) ( ( ( s_ s) ( ( ( b_ ( ( b_ foldr) ( ( s_ ( s_ (||)))
+(||)))) ( c_ ( c_ (||)))) ( ( ( s_ ( b_ nand)) (||)) nor))) ( ( c_ nand) ( ( ( c
+_ (||)) ( ( s (&&)) i)) ( head_ x0))))) x0))) ( nand ( head_ x0)))) ( head_ x0))
+ x0))) ( tail_ x0))) x0)))))) ( c nand))) x0)) ( ( nor ( ( ( foldr ( ( ( c_ c) (
+ ( ( s_ s) ( ( ( b_ ( ( b_ foldr) ( ( s_ ( s_ (||))) nand))) ( c_ ( ( s_ ( c_ no
+r)) nor))) ( ( ( s_ ( b_ nand)) (||)) ( ( ( c_ s) ( ( ( s_ ( b_ nand)) (||)) ( (
+ ( c_ c) ( ( ( s_ s) ( ( ( b_ ( ( b_ foldr) ( b ( b ( nor ( head_ x0)))))) ( c_
+( c_ nor))) ( ( ( s_ ( b_ nand)) (||)) ( ( ( c_ c) ( ( ( s_ ( s_ foldr)) ( ( c (
+ ( ( b_ ( b_ k)) ( s_ (||))) ( ( c ( ( s ( ( ( b_ b_) nor) ( nor ( head_ x0))))
+nand)) ( ( c ( ( s ( ( ( b_ foldr) ( c_ nand)) ( ( b ( c (&&))) ( ( s (&&)) ( (
+s ( ( b ( c (&&))) ( ( s (&&)) i))) i))))) i)) x0)))) ( k i))) nand)) x0)))) ( k
+ i))) x0))) ( ( s ( ( b ( c (&&))) ( nor ( ( ( foldr ( ( ( c_ s) ( ( ( s_ ( b_ n
+and)) (||)) ( ( ( s_ ( c_ nor)) ( c nor)) i))) ( nor ( head_ x0)))) ( head_ x0))
+ x0)))) i))))) ( c nand))) x0)) ( ( nor ( head_ x0)) ( head_ x0))) x0)) ( head_
+x0))) ( tail_ x0)))) x0),0.875,Nothing)
+(\ x0 -> ( ( ( foldr ( ( ( s_ ( s_ nor)) ( ( c_ (&&)) i)) nor)) ( ( ( s nor) i)
+( ( ( foldr ( ( ( s_ ( s_ nor)) ( ( s ( ( ( b_ ( ( s_ ( c_ (||))) ( ( b nand) i)
+)) (&&)) ( ( s nand) i))) ( ( s nor) i))) (&&))) ( head_ ( tail_ x0))) x0))) x0)
+,1.0,Just 22)
+(\ x0 -> ( ( ( foldr ( ( s ( ( ( b_ ( s_ nor)) ( ( s_ nor) ( ( s (||)) i))) ( (
+( s_ ( s_ nand)) nand) (||)))) ( ( ( c_ ( s_ (&&))) ( ( ( c_ c) ( ( c ( ( ( b_ s
+) ( ( b_ foldr) k)) ( ( s ( ( ( b_ ( c_ ( c_ nand))) ( c_ (||))) nand)) i))) i))
+ x0)) i))) ( ( ( foldr ( k i)) ( ( ( foldr ( k ( ( s nor) i))) ( head_ x0)) x0))
+ x0)) ( tail_ x0)),1.0,Just 0)
+(\ x0 -> ( ( ( foldr ( ( ( s_ ( s_ (&&))) (||)) ( ( ( s_ ( c_ nand)) ( ( ( s_ (
+s_ (||))) (&&)) ( ( ( c_ b) nor) ( ( c ( ( ( s_ foldr) ( ( ( b_ k) k) ( nand ( h
+ead_ x0)))) i)) x0)))) i))) ( ( ( foldr ( ( b ( ( b ( ( s_ (||)) ( ( s nor) i)))
+ ( ( c_ (||)) i))) ( ( ( s_ nor) ( ( k i) ( head_ x0))) i))) ( head_ ( tail_ x0)
+)) x0)) x0),1.0,Just 22)
+(\ x0 -> ( ( ( foldr ( ( ( s_ ( s_ (&&))) nand) ( c (||)))) ( ( ( foldr ( ( ( c_
+ ( s_ nand)) ( ( ( s_ ( s_ (&&))) nand) (&&))) ( ( ( c_ ( foldr ( k i))) ( ( s (
+||)) ( ( c ( foldr k)) x0))) x0))) ( head_ x0)) ( tail_ x0))) x0),1.0,Just 6)
+(\ x0 -> ( ( ( foldr ( ( c ( ( ( b_ b) nand) ( ( c ( foldr ( ( ( s_ ( ( c_ ( s_
+nand)) ( c nor))) nand) i))) ( tail_ x0)))) ( ( ( s ( ( ( b_ ( c_ nand)) ( s nor
+)) ( ( ( c_ ( s_ (&&))) (&&)) ( ( ( s_ (&&)) ( nand ( ( ( foldr ( ( ( s_ ( s_ (|
+|))) ( ( c ( ( ( b_ ( s_ nand)) ( s nor)) ( ( ( s_ ( ( c_ ( s_ (&&))) ( ( c_ nan
+d) ( ( ( s_ nor) ( ( s ( ( ( c_ ( s_ nand)) (&&)) i)) i)) i)))) (&&)) ( (&&) ( (
+ ( foldr ( ( c_ nand) i)) ( head_ ( tail_ ( tail_ ( tail_ x0))))) x0))))) i)) (
+( s ( ( ( b_ ( s_ nand)) ( s nand)) ( ( ( c_ ( s_ (&&))) (&&)) ( ( c ( foldr ( (
+ s ( ( ( b_ ( s_ nand)) ( s nand)) ( ( c_ (&&)) ( ( ( s_ (||)) ( ( s nor) i)) i)
+))) ( ( ( c_ ( s_ (&&))) nand) i)))) ( tail_ x0))))) ( ( ( c_ ( s_ ( ( ( s_ ( c_
+ (||))) ( ( ( c_ c) ( c ( ( ( b_ foldr) k) k))) x0)) i))) nand) i)))) ( ( ( s (|
+|)) i) ( head_ x0))) x0))) i)))) i) ( head_ x0)))) ( ( ( foldr ( ( ( c_ ( s_ (&&
+))) ( ( ( c_ ( s_ (&&))) (&&)) i)) ( ( ( c_ ( ( ( c_ ( s_ ( ( c ( ( ( b_ b) nand
+) ( ( c ( foldr k)) ( tail_ x0)))) ( ( c ( foldr ( ( c_ nand) i))) ( tail_ ( tai
+l_ x0)))))) (&&)) ( ( c ( foldr ( ( ( c_ ( s_ (&&))) (||)) ( ( s nor) i)))) ( ta
+il_ x0)))) ( nor ( head_ x0))) ( head_ ( tail_ x0))))) ( head_ x0)) x0)) x0),0.9
+375,Nothing)
+(\ x0 -> ( ( ( foldr ( ( ( s_ ( s_ (&&))) ( c (||))) ( c nand))) ( ( ( foldr ( (
+ ( c_ c) ( ( s ( ( ( b_ s) ( ( b_ foldr) ( c_ nand))) ( ( c_ ( c_ nor)) nand)))
+( ( ( c_ c) ( c ( ( ( b_ foldr) k) (||)))) x0))) x0)) ( ( ( foldr ( ( b ( c nand
+)) ( ( s nand) ( ( s (||)) i)))) ( head_ x0)) x0)) x0)) x0),1.0,Just 13)
+(\ x0 -> ( ( ( foldr ( ( ( s_ ( s_ (||))) nor) ( ( ( s_ ( c_ (&&))) ( ( ( c_ c)
+( ( c_ foldr) ( ( ( b_ k) k) ( ( s (&&)) i)))) x0)) i))) ( ( ( foldr ( c nor)) (
+ ( ( foldr ( ( c_ ( ( ( s_ ( s_ (||))) (||)) nor)) ( ( c ( ( s ( ( ( b_ foldr) k
+) k)) i)) x0))) ( head_ x0)) x0)) ( tail_ ( tail_ x0)))) x0),1.0,Just 27)
+(\ x0 -> ( ( ( foldr ( ( b ( ( ( s_ ( c_ (||))) nor) ( ( ( c_ ( foldr ( ( b ( s
+(&&))) ( ( ( s_ ( c_ (||))) ( ( ( b_ nand) ( (||) ( head_ x0))) ( ( s (&&)) ( (
+s (&&)) i)))) ( ( k ( ( ( c_ (&&)) ( (||) ( head_ x0))) ( head_ x0))) ( head_ x0
+)))))) ( ( s (&&)) i)) x0))) ( ( c ( foldr nand)) x0))) ( ( ( foldr ( ( ( c_ ( c
+_ (&&))) ( k ( (&&) ( head_ x0)))) ( head_ ( tail_ x0)))) ( ( ( foldr ( ( ( c_ (
+ s_ nand)) nand) i)) ( ( ( ( c_ (&&)) ( (||) ( ( (&&) ( head_ x0)) ( head_ x0)))
+) ( head_ ( tail_ x0))) ( head_ x0))) x0)) x0)) x0),0.875,Nothing)
+(\ x0 -> ( ( ( foldr ( ( c ( ( ( b_ ( s_ nand)) nand) ( ( s nand) i))) ( nand (
+head_ x0)))) ( ( ( foldr ( ( c ( ( ( b_ ( s_ nand)) ( s (&&))) (&&))) ( ( ( s_ n
+and) ( ( s nor) ( ( c ( foldr nand)) ( tail_ x0)))) ( (&&) ( head_ ( tail_ x0)))
+))) ( ( ( foldr ( ( c ( ( ( b_ c) ( ( b_ ( foldr k)) ( (&&) ( ( ( foldr ( ( ( s_
+ ( c_ (&&))) nand) i)) ( ( ( foldr nor) ( ( ( foldr ( ( ( c_ ( s_ nand)) ( ( ( s
+_ ( s_ nand)) nand) ( ( c_ nor) ( nand ( head_ x0))))) ( ( s nand) i))) ( ( ( fo
+ldr (&&)) ( head_ x0)) x0)) ( tail_ x0))) ( tail_ x0))) ( tail_ x0))))) ( ( c_ (
+||)) ( (&&) ( ( ( foldr nand) ( head_ ( tail_ x0))) x0))))) ( tail_ x0))) ( ( (
+foldr nor) ( ( ( foldr ( ( ( s_ ( s_ nand)) nand) ( ( b nor) i))) ( ( ( foldr (&
+&)) ( ( ( foldr (||)) ( head_ x0)) x0)) x0)) x0)) x0)) x0)) x0)) ( tail_ x0)),0.
+875,Nothing)
+(\ x0 -> ( ( ( foldr ( ( ( s_ ( s_ nor)) (&&)) ( c nor))) ( ( ( foldr (||)) ( (
+( foldr ( k ( ( s (||)) ( nor ( head_ x0))))) ( head_ x0)) x0)) ( tail_ x0))) x0
+),1.0,Just 2)
+(\ x0 -> ( ( ( foldr ( ( ( s_ ( s_ nor)) ( c (&&))) nor)) ( ( ( foldr ( ( ( s_ (
+ c_ nor)) (&&)) i)) ( head_ ( tail_ x0))) x0)) ( tail_ x0)),1.0,Just 17)
+(\ x0 -> ( ( ( foldr ( ( s ( ( ( b_ ( s_ nor)) ( s nor)) (||))) (&&))) ( ( ( s n
+or) i) ( ( ( foldr ( ( ( c_ s) ( ( ( s_ ( b_ nor)) nand) nand)) ( ( ( s_ nor) (
+(&&) ( head_ x0))) i))) ( head_ x0)) x0))) x0),1.0,Just 26)
+(\ x0 -> ( ( ( foldr ( ( ( s_ ( s_ (&&))) (||)) nand)) ( ( ( ( s_ (||)) ( (&&) (
+ head_ x0))) ( nand ( head_ x0))) ( ( ( foldr k) ( ( ( foldr ( ( b ( c ( ( ( s_
+k) ( ( ( c_ ( s_ ( k i))) ( c ( ( b (&&)) i))) ( ( c (||)) ( head_ ( tail_ x0)))
+)) i))) ( nand ( head_ x0)))) ( head_ ( tail_ x0))) x0)) x0))) x0),1.0,Just 44)
+(\ x0 -> ( ( (||) ( ( ( foldr ( ( s ( ( ( b_ b) nor) ( ( ( c_ nor) ( nor ( ( ( f
+oldr ( ( s ( ( ( b_ b) nor) ( ( ( ( b_ ( b i)) ( s k)) ( k ( ( ( s_ nor) ( ( ( (
+ s_ b) nor) k) ( head_ x0))) i))) ( head_ x0)))) ( ( b ( ( s_ nand) i)) ( ( b no
+r) ( (||) ( ( ( foldr (||)) ( ( nor ( ( ( foldr ( ( s ( ( ( b_ b) nor) ( ( ( c_
+nor) ( ( ( c_ nor) ( ( k ( nor ( ( ( foldr ( ( b nor) ( ( ( ( s_ b) nor) k) ( he
+ad_ ( tail_ ( tail_ x0)))))) ( head_ x0)) x0))) ( head_ x0))) ( head_ x0))) ( he
+ad_ x0)))) ( k ( ( ( s_ nor) ( ( ( ( s_ b) nor) k) ( head_ x0))) i)))) ( ( ( fol
+dr (||)) ( ( nor ( head_ x0)) ( head_ x0))) ( tail_ x0))) x0)) ( head_ x0))) x0)
+))))) ( ( ( foldr (||)) ( ( nor ( head_ x0)) ( head_ x0))) x0)) x0))) ( head_ x0
+)))) ( k ( ( s nand) i)))) ( ( ( foldr (||)) ( ( nor ( ( ( foldr (||)) ( ( nor (
+ ( ( foldr ( ( s ( ( ( b_ b) nor) i)) nor)) ( ( ( foldr (||)) ( ( nor ( head_ x0
+)) ( head_ x0))) ( tail_ ( tail_ x0)))) x0)) ( head_ x0))) x0)) ( head_ x0))) (
+tail_ x0))) x0)) ( ( ( ( b (&&)) ( ( ( c_ nor) ( ( s nand) i)) ( head_ x0))) ( h
+ead_ ( tail_ x0))) ( head_ ( tail_ ( tail_ x0))))),0.9375,Nothing)
+(\ x0 -> ( ( ( foldr ( ( s ( ( ( b_ ( s_ nor)) nor) ( ( s (||)) i))) (&&))) ( (
+( foldr ( c ( k ( nand ( head_ x0))))) ( ( ( foldr k) ( ( ( foldr ( c ( c nand))
+) ( ( ( foldr ( ( s ( ( ( b_ ( s_ nand)) ( s ( ( ( s_ b) nand) ( ( ( s_ k) ( c (
+&&))) i)))) ( ( ( s_ ( s_ nand)) nand) ( ( b ( ( b ( s (&&))) nor)) i)))) ( ( s
+( ( ( b_ ( s_ (&&))) ( s ( ( ( s_ k) ( c nand)) i))) ( ( s ( ( s ( ( ( b_ b_) (|
+|)) ( ( s nor) i))) (&&))) ( ( b ( s nand)) nor)))) ( c (||))))) ( ( ( foldr ( (
+ ( c_ ( s_ (||))) ( c (&&))) i)) ( head_ x0)) x0)) x0)) x0)) x0)) x0)) ( tail_ x
+0)),1.0,Just 31)
+(\ x0 -> ( ( nand ( ( ( foldr ( ( ( s_ ( s_ nor)) nor) ( ( ( s_ k) (&&)) i))) (
+head_ x0)) ( tail_ x0))) ( ( ( foldr ( ( ( s_ b) nand) nor)) ( head_ x0)) x0)),1
+.0,Just 7)
+(\ x0 -> ( ( ( foldr ( ( b ( ( s_ nor) ( ( s (&&)) ( nor ( head_ x0))))) ( ( ( s
+_ ( s_ (||))) ( c (&&))) nor))) ( ( nand ( head_ x0)) ( head_ x0))) ( tail_ x0))
+,1.0,Just 1)
+(\ x0 -> ( ( nor ( ( ( foldr ( ( b nor) ( ( ( c_ ( foldr ( c nand))) ( ( s nand)
+ i)) ( tail_ x0)))) ( ( (&&) ( ( ( foldr ( c nand)) ( ( ( s (||)) i) ( head_ x0)
+)) x0)) ( head_ x0))) x0)) ( ( ( foldr ( ( c_ nor) ( ( s nand) i))) ( ( ( s (&&)
+) i) ( head_ x0))) ( tail_ x0))),0.9375,Nothing)
+(\ x0 -> ( ( ( foldr ( ( ( s_ ( s_ (&&))) ( ( ( c_ k) (||)) ( head_ x0))) nand))
+ ( ( ( foldr ( ( s ( ( ( b_ ( s_ (||))) ( c nand)) ( ( c nand) ( head_ x0)))) (
+( ( s_ b) (||)) ( ( c ( ( ( b_ ( s_ (&&))) ( s (&&))) ( ( ( c_ c) ( ( ( c_ ( b_
+( foldr ( ( b ( s (&&))) ( k i))))) nand) ( ( ( ( c_ ( c_ (||))) ( c (&&))) ( (
+( foldr ( k i)) ( head_ x0)) x0)) ( head_ x0)))) x0))) i)))) ( head_ x0)) ( tail
+_ x0))) x0),1.0,Just 41)
+(\ x0 -> ( ( ( foldr ( ( ( s_ ( s_ (&&))) nand) (||))) ( ( ( ( s_ (||)) ( ( s na
+nd) ( ( s nand) ( ( s nor) i)))) i) ( head_ ( tail_ x0)))) x0),1.0,Just 27)
+(\ x0 -> ( ( ( foldr ( ( b ( s (&&))) ( ( ( s_ ( c_ nand)) ( ( b ( ( s_ nor) ( (
+ ( c_ (&&)) ( ( s (&&)) i)) ( head_ x0)))) nand)) ( ( s ( k ( ( s ( ( c_ ( ( ( c
+_ c) ( c ( ( ( b_ foldr) ( c_ nand)) nand))) x0)) i)) i))) i)))) ( ( ( foldr nan
+d) ( ( ( foldr ( ( ( c_ c) ( ( ( b_ foldr) k) ( c ( ( ( c_ c) ( c ( ( ( b_ foldr
+) ( c_ (&&))) nand))) x0)))) x0)) ( ( ( foldr nand) ( ( ( foldr ( ( b ( s (&&)))
+ ( ( ( s_ ( c_ nand)) ( ( b ( ( s_ nor) ( (||) ( head_ x0)))) ( ( c ( ( ( b_ b)
+( ( b ( s (||))) ( ( ( s_ ( c_ nand)) (||)) ( ( b ( ( s ( ( ( c_ c) ( c ( ( ( b_
+ foldr) ( c ( ( ( b_ ( s_ (||))) (||)) ( nor ( head_ ( tail_ x0)))))) nand))) x0
+)) i)) i)))) ( ( ( s_ (||)) ( k ( head_ x0))) ( nand ( head_ x0))))) ( (&&) ( he
+ad_ ( tail_ x0)))))) i))) ( ( ( foldr nand) ( head_ x0)) x0)) x0)) x0)) ( tail_
+x0))) x0)) ( tail_ x0)),0.875,Nothing)
+(\ x0 -> ( ( ( foldr ( ( ( s_ ( s_ nor)) ( c (&&))) nor)) ( ( (||) ( head_ x0))
+( ( ( foldr ( ( ( s_ b) nor) (&&))) ( head_ ( tail_ ( tail_ x0)))) x0))) x0),1.0
+,Just 36)
+(\ x0 -> ( i ( ( ( foldr ( ( ( s_ s) ( ( ( c_ ( b_ (||))) nor) ( ( s nand) i)))
+( ( b ( s nor)) nor))) ( ( ( foldr ( k i)) ( ( ( s nand) i) ( head_ x0))) ( tail
+_ ( tail_ x0)))) ( tail_ x0))),1.0,Just 15)
+(\ x0 -> ( ( ( foldr ( ( ( s_ ( s_ (&&))) ( ( ( c_ c) ( ( c ( ( ( b_ ( s_ foldr)
+) ( ( b_ k) k)) ( c nand))) i)) ( tail_ x0))) ( ( b ( s (||))) ( ( b nor) ( ( s
+nor) i))))) ( ( nand ( head_ ( tail_ ( tail_ ( tail_ ( tail_ ( tail_ x0))))))) (
+ ( nand ( head_ x0)) ( head_ x0)))) x0),1.0,Just 8)
+(\ x0 -> ( ( ( foldr ( ( ( s_ ( s_ nor)) (&&)) nor)) ( ( ( foldr ( c ( ( b ( c n
+and)) ( ( s nor) i)))) ( ( ( foldr ( k ( ( ( s_ nand) ( ( ( s_ nand) ( nand ( (
+( foldr ( ( b ( s nand)) ( k i))) ( ( ( ( c ( ( ( b_ ( s_ (&&))) ( ( s_ nor) ( (
+||) ( head_ x0)))) ( c nand))) i) ( head_ x0)) ( head_ x0))) ( tail_ x0)))) i))
+( ( s nor) i)))) ( head_ x0)) ( tail_ x0))) x0)) x0),1.0,Just 27)
+(\ x0 -> ( ( ( foldr ( ( s ( ( ( b_ ( s_ nand)) ( s (||))) ( ( ( s_ b) nand) nan
+d))) ( ( b nand) ( ( s nor) i)))) ( ( nand ( head_ x0)) ( head_ x0))) ( tail_ x0
+)),1.0,Just 0)
+(\ x0 -> ( ( ( foldr ( ( ( s_ ( s_ nand)) ( ( ( c_ ( s_ (||))) nand) i)) ( ( ( s
+_ ( s_ (||))) (&&)) ( c nor)))) ( ( ( foldr ( ( ( b_ ( ( s_ (||)) ( ( s nand) i)
+)) ( c (&&))) ( ( ( b (||)) ( ( s ( ( b ( s nand)) ( ( ( c_ ( s_ nand)) ( c (&&)
+)) ( ( s nor) ( ( s (||)) i))))) i)) ( head_ x0)))) ( head_ x0)) x0)) x0),1.0,Ju
+st 13)
+(\ x0 -> ( ( ( foldr ( ( ( s_ ( s_ nor)) ( c ( ( b ( ( s_ nor) ( nand ( ( ( fold
+r ( c nand)) ( head_ x0)) x0)))) (||)))) ( ( ( s_ ( s_ nand)) ( c ( ( c_ nand) i
+))) ( c ( c (||)))))) ( ( ( foldr ( ( b ( ( s_ nand) ( ( s ( ( s ( ( ( b_ ( s_ n
+or)) ( ( ( s_ ( s_ nor)) ( c ( ( b ( ( s_ nor) ( nand ( ( ( foldr ( c nand)) ( h
+ead_ x0)) x0)))) (||)))) ( ( b ( b ( ( ( s_ ( c nor)) ( ( s nor) i)) i))) (&&)))
+) ( ( s nor) i))) nor)) i))) ( c (&&)))) ( head_ x0)) x0)) x0),1.0,Just 33)
+(\ x0 -> ( ( ( foldr ( ( s ( ( ( b_ ( s_ nand)) ( ( s_ nand) ( ( ( s_ nand) ( (
+s ( ( c ( ( ( b_ b) nor) ( ( s (||)) ( ( s (||)) ( nand ( head_ ( tail_ ( tail_
+x0)))))))) ( ( ( ( c_ ( c_ nor)) (||)) ( head_ x0)) ( head_ x0)))) ( ( s nor) i)
+)) i))) (&&))) (||))) ( ( ( foldr ( k ( ( s (&&)) ( ( s (&&)) i)))) ( ( ( foldr
+( k ( ( s nor) i))) ( head_ x0)) x0)) ( tail_ ( tail_ ( tail_ x0))))) ( tail_ x0
+)),1.0,Just 6)
+(\ x0 -> ( ( nor ( ( ( foldr ( ( ( s_ ( c_ (&&))) (&&)) ( ( s nor) ( ( s (||)) (
+ nor ( ( ( foldr ( ( ( s_ s) ( ( ( c_ ( b_ (&&))) (&&)) ( ( ( s_ (&&)) ( ( c ( (
+ s ( ( ( b_ foldr) ( c_ ( k ( ( ( s_ nor) ( ( s (&&)) i)) i)))) k)) ( (&&) ( hea
+d_ ( tail_ x0))))) x0)) ( nor ( head_ x0))))) (&&))) ( ( nor ( head_ ( tail_ x0)
+)) ( head_ x0))) ( tail_ x0))))))) ( ( (&&) ( head_ ( tail_ x0))) ( ( ( foldr (&
+&)) ( head_ x0)) x0))) x0)) ( ( ( foldr ( ( ( s_ ( s_ nor)) nor) (&&))) ( ( (&&)
+ ( head_ x0)) ( head_ x0))) ( tail_ x0))),1.0,Just 29)
+(\ x0 -> ( ( ( foldr ( c ( ( b k) ( (&&) ( ( ( foldr nand) ( head_ x0)) x0)))))
+( ( ( foldr nand) ( ( ( ( ( c_ ( s_ nand)) k) ( (&&) ( head_ x0))) ( head_ x0))
+( ( ( foldr ( ( ( s_ ( c_ (||))) ( ( ( s_ ( c_ (||))) nand) i)) ( ( s (||)) i)))
+ ( head_ ( tail_ ( tail_ x0)))) x0))) ( tail_ x0))) ( tail_ x0)),0.8125,Nothing)
+
+(\ x0 -> ( ( (&&) ( ( (||) ( ( ( foldr ( ( c ( ( ( b_ c) ( c ( ( ( b_ foldr) k)
+( ( ( c_ c) ( ( ( c_ ( b_ ( foldr k))) (&&)) i)) x0)))) ( ( s nor) i))) x0)) ( h
+ead_ ( tail_ x0))) ( tail_ x0))) ( ( ( foldr ( c nand)) ( ( ( foldr nand) ( ( (
+foldr ( ( ( c_ b) ( ( ( c_ c) ( c ( ( ( b_ foldr) k) nor))) x0)) ( ( k ( ( s (||
+)) ( ( c ( foldr ( k ( (&&) ( head_ x0))))) x0))) ( head_ x0)))) ( ( (&&) ( ( (
+foldr k) ( ( ( foldr ( ( ( c_ ( s_ (&&))) ( ( ( c_ b) nand) i)) ( ( ( ( s_ ( s_
+(||))) ( c nand)) (||)) ( head_ x0)))) ( ( ( c ( foldr ( k ( (||) ( ( ( foldr (
+( b k) i)) ( head_ x0)) x0))))) x0) ( ( ( s nor) i) ( i ( head_ x0))))) x0)) x0)
+) ( ( ( foldr ( k ( ( c ( foldr ( ( b k) ( ( ( s_ (&&)) i) i)))) x0))) ( head_ (
+ tail_ x0))) x0))) ( tail_ x0))) x0)) ( tail_ x0)))) ( ( ( foldr ( c nand)) ( (
+( foldr k) ( head_ x0)) x0)) x0)),0.875,Nothing)
+(\ x0 -> ( ( ( foldr ( ( ( s_ ( s_ (&&))) nand) (||))) ( ( ( foldr ( k ( (||) (
+( nand ( head_ x0)) ( head_ x0))))) ( head_ x0)) x0)) x0),1.0,Just 15)
+(\ x0 -> ( ( ( foldr ( ( c ( ( ( c_ c_) ( ( ( b_ foldr) ( ( c_ ( s_ (&&))) nand)
+) ( ( b ( k ( ( c ( k ( ( ( c_ (||)) i) ( ( ( foldr ( ( c ( ( ( c_ c_) ( ( ( b_
+foldr) ( b k)) ( k i))) ( k ( head_ x0)))) x0)) ( ( ( foldr nand) ( head_ x0)) (
+ tail_ x0))) x0)))) ( ( ( foldr ( ( s ( ( ( b_ b) nand) ( ( c ( ( s ( ( ( b_ fol
+dr) ( ( c_ s) ( ( ( c_ ( b_ nor)) nor) ( ( s (||)) i)))) ( ( c ( ( ( b_ ( s_ nor
+)) ( s nand)) ( ( c_ (||)) ( nand ( head_ x0))))) i))) i)) x0))) ( ( b ( ( ( c_
+b) (||)) ( nand ( head_ ( tail_ x0))))) ( ( s nor) i)))) ( ( nand ( head_ x0)) (
+ ( ( foldr ( ( ( s_ ( ( s_ c) ( ( ( s_ ( b_ nor)) ( c nand)) ( k ( ( ( c_ ( fold
+r ( ( s ( ( ( b_ ( ( s_ k) ( c (&&)))) ( s nor)) nand)) i))) ( nand ( head_ x0))
+) x0))))) nor) i)) ( head_ x0)) x0))) x0)))) i))) ( ( s (&&)) ( ( k ( k ( head_
+x0))) ( head_ ( tail_ x0)))))) x0)) ( head_ ( tail_ x0))) x0),0.875,Nothing)
+(\ x0 -> ( ( ( foldr ( c ( ( ( s_ ( s_ nand)) ( ( ( s_ ( s_ nand)) nand) (||)))
+( ( b ( ( ( b_ nand) ( ( s nor) i)) i)) ( ( s (||)) i))))) ( ( ( foldr ( ( s ( (
+ ( s_ b_) nand) nor)) nand)) ( head_ ( tail_ ( tail_ ( tail_ x0))))) x0)) x0),1.
+0,Just 49)
+(\ x0 -> ( ( ( foldr ( ( s ( ( ( b_ ( s_ nor)) ( ( c_ nor) ( ( s (&&)) i))) ( (
+s (||)) i))) ( c (&&)))) ( ( ( foldr (||)) ( ( nand ( ( ( foldr k) ( head_ x0))
+x0)) ( ( (||) ( head_ x0)) ( head_ x0)))) x0)) x0),1.0,Just 4)

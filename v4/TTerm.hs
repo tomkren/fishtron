@@ -74,7 +74,16 @@ instance Show CTTerm where
          in "\\ "++ vars ++ " -> " ++ show tt 
 
 instance JShow CTTerm where
+  jss_size (CTTerm _ tt) = Just $ ttermSize tt
   jshow_js ctt = Just . jsStr . jsShow $ ctt
+
+ttermSize :: TTerm -> Int
+ttermSize tterm = case tterm of
+ TVar _   _ -> 1
+ TVal _   _ -> 1
+ TLam _ m _ -> 1 + ttermSize m
+ TApp m n _ -> 0 + ttermSize m + ttermSize n
+
 
 
 jsShow :: CTTerm -> String

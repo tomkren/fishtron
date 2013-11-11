@@ -11,6 +11,7 @@
 %\usepackage{hyperref}
 \usepackage{amsmath}
 %\usepackage{amssymb}
+\usepackage{graphicx}
 
 \usepackage[ampersand]{easylist}
 \usepackage[usenames,dvipsnames]{color}
@@ -77,27 +78,26 @@
 \newcommand{\ul}[2]{\langle #1 ; #2 \rangle}
 \newcommand{\ro}[1]{{\color{blue} #1}}
 \newcommand{\tom}[1]{{\color{ForestGreen} #1}}
+\newcommand{\red}[1]{{\color{red} #1}}
 
 %\hyphenation{op-tical net-works semi-conduc-tor IEEEtran}
 
 \begin{document}
 
 \title{
-Generating Lambda Term Individuals in Typed Genetic Programming Using 
-%undisciplined 
-Forgetful A*}
-\author{Tom\'{a}\v{s} K\v{r}en\inst{1} \and Roman Neruda\inst{2}}
-\institute{%
-Faculty of Mathematics and Physics\\
-Charles University in Prague\\
-Malostransk\'e n\'am\v{e}st\'\i~25, 11000 Prague, Czech Republic\\
-\email{tomas.kren@mff.cuni.cz}
-\and
-Institute of Computer Science\\
-Academy of Sciences of the Czech Republic\\
-Pod Vod\'arenskou v\v{e}\v{z}\'\i~2, 18207, Prague, Czech Republic\\
-\email{roman@cs.cas.cz}
-}
+Generating Lambda Term Individuals in Typed Genetic Programming Using Forgetful A*}
+%\author{Tom\'{a}\v{s} K\v{r}en\inst{1} \and Roman Neruda\inst{2}}
+%\institute{%
+%Faculty of Mathematics and Physics\\
+%Charles University in Prague\\
+%Malostransk\'e n\'am\v{e}st\'\i~25, 11000 Prague, Czech Republic\\
+%\email{tomas.kren@mff.cuni.cz}
+%\and
+%Institute of Computer Science\\
+%Academy of Sciences of the Czech Republic\\
+%Pod Vod\'arenskou v\v{e}\v{z}\'\i~2, 18207, Prague, Czech Republic\\
+%\email{roman@cs.cas.cz}
+%}
 \maketitle
 
 \begin{abstract}
@@ -106,12 +106,12 @@ for simply typed lambda calculus is presented. We propose three population
 initialization methods depending on different search strategies. 
 The first strategy corresponds to standard ramped half-and-half initialization, 
 the second one corresponds to exhaustive systematic search, and the third one 
-represents a novel geometric strategy which outperforms standard genetic 
-programming in success rate, time consumption and average individual size 
-on two experiments. 
-Other performance enhancements based on theory of lambda calculus are 
-proposed and supported by experiments, including abstraction elimination 
-that enables us to utilize a simple tree-swapping crossover.
+represents a novel geometric strategy. Three well-known benchmark experiments
+support that the geometric strategy outperforms
+the standard generating method in success rate, time consumption and average individual size. 
+%Other performance enhancements based on theory of lambda calculus are 
+%proposed and supported by experiments, including abstraction elimination 
+%that enables us to utilize a simple tree-swapping crossover.
 \end{abstract}
 
 
@@ -125,10 +125,11 @@ that enables us to utilize a simple tree-swapping crossover.
 
 
 Genetic programming (GP) represents an efficient method for automatic generating of programs by means of evolutionary techniques~\cite{koza92,koza03}. Early attempts to enhance the GP approach with the concept of types include the seminal work~\cite{montana95} where the ideas from Ada programming language were used to define a so-called strongly typed GP.   
-
-\begin{todo}
-& \ro{... něco k tomu, že se to teda dělá i skrz lambda kalkul}
-\end{todo}
+Use of types naturally opens door to enriching S-expressions,
+the traditional GP representation of individuals, with concepts from
+lambda calculus, which is simple yet powerful functional mathematical and programming 
+language extensively used in type theory. Such attempts has shown to be 
+successful \cite{yu01}. 
 
 The key issue in the lambda calculus approach to enrich GP with types is the method of individual generation. During the expansion phase the set of unfinished terms can be browsed with respect to various search strategies. Our approach to this problem aims to utilize the full arsenal given by the simply typed lambda calculus. Thus, the natural idea is to employ an exhaustive systematic search. On the other hand, if we were to mimic the standard GP approach, a quite arbitrary yet common and successful ramped half-and-half generating heuristic~\cite{fg} should probably be used.  
 These two search methods in fact represent boundaries between which we will try to position our parameterized solution that allows us to take advantage of both strategies. This design goal also differentiate our approach from 
@@ -152,47 +153,51 @@ Our proposed \emph{geometrical search strategy} described in this paper is such 
 
 The rest of the paper is organized as follows: The next section briefly discusses related work in the field of typed GP, while section~\ref{preliminaries} introduces necessary notions. Main original results about search strategies in individual generating are described in section~\ref{approach}. Section~\ref{experiments} presents results of our method on three well-known tasks, and the paper is concluded by section~\ref{conclusions}.
 
-
 \section{Related work}
 \label{related}
-\subsection{Yu}
-\textbf{Yu} - (články: evenParity, polyGP
-\textbf{[doplnit do citací]}
- co sem ted našel, ten o burzách co mám v kindlu)
-Odlišnosti:
-(1) - generování se nedělá systematicky: pokud strom dojde do místa
-kde funkci nemá dát jaký parametr, tak místo tý funkce dá nějaký 
-terminál.(uvádí 85\% uspěšnost)  
-(2) - Ty křížení ma trochu jinak než v tom článku o even parity,
-musim zjistit jak má udělaný že se jí nedostane např prom \#3 někam,
-kde neni definovaná když dělá přesun podstromu, v tom starym to ale 
-bylo myslim založený na tom, že nedovolovala vnější proměnný uvnitř
-lambda termu - což platí i nadále. čili vtom to určitě nehraje full deck.
-Naopak se víc zaměřuje na polymorfizmus a další věci.
-
-\subsection{kombinatori}
-
-\textbf{kombinátoři} \\
-- vůbec nepoužívaj Lambda Abstrakce\\
-- univerzální genetickej operator\\
-- taky řešej systematický prohledávání
 
 
-\subsection{kanadani}
+In \cite{yu01} Yu presents a GP system utilizing
+polymorphic higher-order functions\footnote{Higher-order 
+function is a function taking another function as 
+input parameter.} and lambda abstractions.
+Important point of interest in this work is use of
+\texttt{foldr} function as a tool for \textit{implicit recursion},
+i.e. recursion without explicit recursive calls. 
+The terminal set for constructing lambda abstraction subtrees 
+is limited to use only constants and variables of that particular
+lambda abstraction, i.e., outer variables are not allowed to be used
+as terminals in this work. This is significant difference from our approach 
+since we permit all well-typed normalized \lterms. From this difference also
+comes different crossover operation. We focus more on term generating process; 
+their term generation is performed in a similar way as the standard one, 
+whereas our term generation also tries to utilize techniques of systematic enumeration. 
 
-\textbf{kanadani}\\ 
-- o dost silnější typovej systém\\
-- System F, i jim dynamicky vznikaj typy\\
-- moc silný typoví systém, takže generování už je dost
-  složitý, to se otiskuje v silně nestandardním algoritmu
+In \cite{kes} Briggs and O’Neill present technique 
+utilizing typed GP with combinators.
+The difference between approach presented in this work
+and our approach is that in this work terms are generated
+straight from \textit{library} of combinators and no lambda abstractions
+are used. They are using more general polymorphic type system then us
+-- the Hindley–Milner type system. They also discuss the 
+properties of exhaustive enumeration of terms and compare it with GP search.  
+They also present interesting concept of \textit{Generalized
+genetic operator} based on term generation. 
 
+In \cite{binard2008genetic} by Binard and Felty even 
+stronger type system (\textit{System F}) is used.  
+But with increasing power of the type system comes increasing difficulty of term generation.
+For this reason evolution in this work takes interesting and nonstandard shape 
+(fitness is associated with \textit{genes} which are evolved together with \textit{species}
+which together participate in creation of individuals).
+This differs from our approach, which tries to be generalization of
+the standard GP\cite{koza92}.
 
-\subsection{barendregt}
-
-
-
-
-
+In contrast with above mentioned works our approach uses very simple type system 
+(simply typed lambda calculus) and concentrates on process of generation  
+able to generate all possible well-typed normalized lambda terms. In order to do
+so we use technique based on \textit{inhabitation machines} 
+described by Barendregt in~\cite{barendregt10}.    
 
 \section{Preliminaries}
 \label{preliminaries}
@@ -232,10 +237,8 @@ with an argument, and
 the $\lambda$-abstraction is equivalent to 
 \textit{anonymous function}\footnote{Apart from JavaScript, anonymous functions are common e.g. in Python and Ruby, 
 they were recently introduced to C++, and they are expected to be supported in Java 8.}.
-\begin{todo}
- & asi říct o zkratkách notací
-\end{todo}
-
+$M_1~M_2~M_3~\dots~M_n$ is an abbreviation for $(\dots((M_1~M_2)~M_3)~\dots~M_n)$
+and $\lam{x_1 x_2 \dots x_n }{M}$ for $\lamb{x_1}{\lamb{x_2}{\dots\lamb{x_n}{M}\dots}}$.
 
 %\subsubsection{Reductions}
 %(... zmiňovat ? a pokud ano tak tady nebo radši v sekci která diskutuje 
@@ -260,12 +263,8 @@ Then $\mathbb{T}$ is set of {\it types} inductively defined as follows.
 Type $\sigma \ar \tau$ is type for functions taking as input
 something of a type $\sigma$ and returning 
 as output something of a type $\tau$. 
-
-\begin{todo}
- & asi říct o zkratce notace
-\end{todo}
-
-
+$\tau_1 \ar \tau_2 \ar \dots \ar \tau_n$ is an abbreviation for 
+$\tau_1 \ar (\tau_2 \ar (\dots \ar (\tau_{n-1} \ar \tau_n)\dots))$.
 The system called \textit{simply typed $\lambda$-calculus} is now easily obtained by
 combining the previously defined \textit{\lterms} and \textit{types} together. 
 
@@ -292,14 +291,12 @@ combining the previously defined \textit{\lterms} and \textit{types} together.
 \end{enumerate}
 \end{definition}
 
+Context is a basic type theoretic concept suitable as a typed alternative
+for terminal and function set in standard GP. 
+Notation $\Gamma,x:\sigma $ denotes $ \Gamma\cup\{(x:\sigma)\}$ 
+such that $\Gamma$ does not contain any declaration with $x$ as subject.
+We also write $x:\sigma \in \Gamma$ instead of $(x,\sigma) \in \Gamma$.
 
-\begin{todo}
-   & říct že $T \cup F$ v Std GP je u nás $\Gamma$
-   & popsat $\Gamma,x:\tau$ notaci
- a to že to automaticky implikuje že x neni obsažena v $\Gamma$,
- tzn je nová...
-  & že píšem $x:\sigma \in \Gamma$ místo $(x,\sigma) \in \Gamma$
-\end{todo}
 
 %\subsection{Simply typed $\lambda$-calculus}
 
@@ -317,7 +314,7 @@ x : \sigma \in \Gamma &~\then~ \tur{\Gamma}{x}{\sigma}\\
 \end{align*}
 \end{definition}
 
-...Our goal is to produce terms $M$
+Our goal in term generation is to produce terms $M$
 for a given pair $\ul{\tau}{\Gamma}$
 such that for each $M$ is $\tur{\Gamma}{M}{\tau}$.
 
@@ -353,19 +350,15 @@ x   \in V , M \in \Lpr &\then \lamb{x}{M} \in \Lpr
 \end{align*}
 \end{definition}
 
-
-\begin{todo}
-   & Vysvětlit k čemu je to dobrý. Prostě říct že 
-     to $\ul{\tau}{\Gamma}$ představuje zatim nespecifikovaný term
-     který je ale typu $\tau$ a mohu se v něm objevit stavební symboly
-     z $\Gamma$.
-\end{todo}
+\textit{Unfinished leaf} $\ul{\tau}{\Gamma}$ 
+stands for yet not specified \lterm of the type $\tau$ 
+build from symbols of $\Gamma$.
 
 
 \section{Our approach}
 \label{approach}
 \subsection{Introduction}
-\tom{
+
 Our approach to \lterm gerating is based on technique 
 briefly described in \cite{barendregt10}, which generates
 well-typed \lterms in their long normal form. 
@@ -373,6 +366,8 @@ We use this technique to perform systematic exhaustive enumeration
 of \lterms in their long normal form in order from smallest to largest.
 We use well known \textit{A* algorithm} \cite{AIMA} for this task.
 A* is used to search in a given state space for a goal state. 
+It finds the optimal solution (in our case the smallest term)
+and uses "advising" heuristic function.
 It maintains a priority queue to organize states yet to be explored.
 Initially this queue contains only the initial state.  
 
@@ -411,17 +406,8 @@ The systematic search is obtained by search strategy that
 returns whole input set.      
 Our novel \textit{geometric strategy} can be understood as
 point somewhere between those two extremes.
-}
 
-\begin{todo}
-& \tom{Kde nejlíp zmínit citaci diplomky? Něco jako, popisujem to tu velmi ve ztručnosti,
-  more elaborate description may be found in [diplomka]?}
-& \tom{definovat long normal form? (asi nejde uplně krátce bohužel)}
-\end{todo}
-
- 
-
-\subsection{Generating algorithm}
+\subsection{Algorithm}
 
 The inputs for the term generating algorithm are following.
 \begin{enumerate}
@@ -433,10 +419,25 @@ The inputs for the term generating algorithm are following.
 
 Essential data structure of our algorithm 
 is priority queue of unfinished terms. 
-Priority of an unfinished term is given by its size.
+Priority of an unfinished term is given by its size\footnote{
+A* heuristic function is hidden in method of computing
+size of unfinished leafs $\ul{\tau}{\Gamma}$. Our algorithm uses
+trivial estimate $\vert\ul{\tau}{\Gamma}\vert = 1$ which is trivially admissible.
+This heuristic is not as silly as it might seem since it is
+quite usual to have $x$ such that $x : \tau \in \Gamma$.
+Since the true value of $\vert\ul{\tau}{\Gamma}\vert$ depends only on
+$\tau$ and \textit{types} in $\Gamma$ (the \textit{signature}), 
+no matter how many variables/constants of
+each type there are, it is should by pretty effective to compute this
+value precisely and store them for later. 
+%This topic has other interesting 
+%subtopics (such as surprisingly small 
+%number of such "signatures" for a given problem), 
+%but it is unfortunately beyond the scope of this paper.
+}.
 At the beginning, the queue contains only one unfinished term; 
 $\ul{\tau}{\Gamma}$. The search strategy $S$ also 
-initializes its internal state (if it has one).\\
+initializes its internal state (if it has one).
 
 At each step, the term $M$ with the smallest size
 is pulled from the queue.
@@ -445,11 +446,13 @@ the following actions is performed.
 \begin{enumerate}
  \item If the term $M$ has no unfinished leaf (i.e., it is a finished
  term satisfying \mbox{$\tur{\Gamma}{M}{\tau}$}), then it is added to the
- result set\footnote{
- TODO: říct že tim že je to set se řeší problém toho, aby se tam nevyskytovali
- některý vygenerovaný víckrát, pokud však toto nechcem můžem použít jinou collection
- , případně to vůbec nezminovbat když by to kradlo moc místa
- } of generated terms.   
+ result set
+% \footnote{
+% \red{TODO: říct že tim že je to set se řeší problém toho, aby se tam nevyskytovali
+% některý vygenerovaný víckrát, pokud však toto nechcem můžem použít jinou collection
+% , případně to vůbec nezminovbat když by to kradlo moc místa
+% }} 
+ of generated terms.   
  \item Otherwise, \textit{successors} of the unfinished term $M$ are
        filtered out by \textit{search strategy} $S$ and
        those successors that outlast the filtration 
@@ -458,12 +461,18 @@ the following actions is performed.
 
 \textit{Successors} of an unfinished term $M$ are obtained by 
 \textit{expansion} of the \mbox{\textit{DFS-first}} unfinished leaf $L$
-(i.e., the leftmost unfinished leaf of $M$).\\
+(i.e., the leftmost unfinished leaf of $M$).
 
 Expansion of the selected unfinished leaf $L$ leads to creation of 
 one or many (possibly zero) successors.
 In this process, $L$ is replaced
-by a new subterm defined by the following rules.
+by a new subterm defined by the following rules\footnote{
+For the sake of simplicity it is presented as two separate rules. 
+Since the first rule results in exactly one successor it is smarter
+to combine those two rules into one resulting in that unfinished leafs
+have only atomic types. At the beginning we transform the initial type into atomic by first rule (if necessary). After that
+only second rule is applied, but if it results in creation of some unatomic 
+$\ul{\tau_i}{\Gamma}$, then first rules are applied, but during the same successor creation This step eliminates all unatomic unfinished leafs. }.
 \begin{enumerate}
  \item If $L = \ul{\rho_1 \ar \dots \ar \rho_n \ar \alpha}{\Gamma}$,
  	   where $\alpha$ is atomic type and $n \geq 1$, 
@@ -475,7 +484,7 @@ by a new subterm defined by the following rules.
        then for each 
        \mbox{$f : (\tau_1 \ar \dots \ar \tau_m \ar \alpha) \in \Gamma$}
        the unfinished leaf $L$ is replaced by 
-       $(~f~(\tau_1,\Gamma)~\dots~(\tau_m,\Gamma)~)$.
+       $(~f~\ul{\tau_1}{\Gamma}~\dots~\ul{\tau_m}{\Gamma}~)$.
        Thus this expansion results in many (possibly zero or one) successors.
 \end{enumerate}
 
@@ -492,12 +501,7 @@ again initializes its internal state and the process continues.
 
 \Lets now discuss three such search strategies.
 
-\begin{todo}
- & Okomentovat jak se počítá velikost a při tý příležitosti říct
-   že A* heuristika se skrejvá v tom jak velký určíme unfinished leafs,
-   že my používáme 1, ale že si de představit o dost sofistikovanější 
-   verze.   
-\end{todo}
+
 
 \subsubsection{Systematic strategy}
 
@@ -507,14 +511,17 @@ first $n$ smallest lambda terms in their
 \textit{long normal form}.
 
 \subsubsection{Ramped half-and-half strategy}
-
+is generalization of the standard ramped half-and-half method described 
+in \cite{koza92}. If applied to context satisfying closure requirement
+(all constants/variables are of the same type, all functions are operations
+on this type), it will behave in the same way as the standard method.
 The internal state of this strategy consists of two variables.
 It is the only one strategy described here that uses an internal state.
 
 \begin{enumerate}
  \item \textit{isFull} - A boolean value, determining whether \textit{full}
                      or \textit{grow} method will be performed.
- \item \textit{d} - A integer value from $\setDots{2}{D_{init}}$, where 
+ \item \textit{d} - An integer value from $\setDots{2}{D_{init}}$, where 
                 $D_{init}$ is predefined maximal depth (e.g. 6).                    
 \end{enumerate}
 
@@ -539,14 +546,6 @@ If $isFull = true$, then the subset to select from is
 set of all \textit{non-terminals} of the input set.
 If $isFull = false$, then the subset to select from is 
 the whole input set.
-
-\begin{todo}
- & napsat o tom že ji používa koza [citace] a že je to standard,
- pokud je použita na gamu co splnuje closure podmínku, tak 
- generuje přesně stejně jako
- & ...This means that the queue always contains only one (or zero) state.
-\end{todo}
-
 
 \subsubsection{Geometric strategy}
 
@@ -585,36 +584,50 @@ stand for less important local parts (e.g. constants).
 This strategy also plays nicely with the idea that 
 "too big trees should be killed".
 
+~\\
+Furthermore, our system utilizes generalization of the standard 
+tree-swapping crossover operator. Since it is beyond the scope of this 
+paper we mention it only briefly. Two main concerns with swapping typed subtrees 
+are types and free variables. Well-typed offspring is obtained 
+by swapping only subtrees of the same type. Only subtrees with 
+corresponding counterpart in the second parent are randomly chosen from.
+More interesting problem lies in free variables, which may cause trouble
+if swapped somewhere where it is suddenly not bounded. In order to circumvent this
+difficulty we utilize technique called \textit{abstraction elimination}\cite{jones87}
+that transforms an arbitrary \lterm into \lterm that contains no lambda abstractions
+and no bound variables. After the initial population is generated,  it is transformed
+by abstraction elimination. Another possible transformation taking place
+after initialization is $\eta$-normalization shortening 
+rather long long normal form into $\beta\eta$-normal form.  
+Another performence enhancing transformation is use of "applicative" tree 
+representation (coming directly from inductive definition of \lterms). 
 
-\subsection{Discussion and further improvements}
-
-\subsection{$\eta$-normalization}
-
-\textbf{(Otázka zda vůbec zminovat?)}
-
-\textit{- pač je to generovany v lnf, neboli \beenf kde 
-$\eta^{-1}$ je $\eta$-expanze tak je chytrý transformovat 
-to do \benf. To stačí opakovanou $\eta$-redukcí, protože beta normálnost
-se neporuší (asi ve zkratce uvést proč, pač je to celkem přímočarý) 
-}
-
-\subsection{Crossover}
-
-\textit{Zmínil bych jí tu ale jen hodně rychle..., nutno zmínit
-pokud budem uvádět even parity problém }
 
 \section{Experiments}
 \label{experiments}
 
-\subsection{Simple symbolic regression}
+We made tree experiments comparing performance of standard 
+\textit{ramped half-and-half strategy} with our
+\textit{geometric strategy} (with default parameter $q=0.75$). 
+Each experiment consisted of 50 independent runs 
+of GP algorithm. Each run had maximally 51 generations and population size
+was 500 individuals.
+In those experiments we analyze the ability of the system to produce 
+a correct solution, computational cost estimates and average size 
+of an individual throughout generations. 
+For the first two metrics we use the popular measurement  
+methods within GP field --- the \textit{performance curves}
+described in \cite{koza92} --- $P(M,i)$ (cumulative probability of success) 
+and $I(M,i,z)$ (the total number of individuals that must be processed 
+to yield a correct solution with probability $z =99\%$).
 
+\subsection{Simple symbolic regression}
 \textit{Simple Symbolic Regression} is a problem described
 in \cite{koza92}. Objective of this problem is to 
 find a function $f(x)$ that fits a sample
 of twenty given points. The target function is 
 function $f_{t}(x) = x^4 + x^3 + x^2 + x$.  
-
-Desired type of generated programs $\sigma$ and 
+Desired type of generated programs $\tau$ and 
 building blocks context $\Gamma$ are following.
 \begin{align*}
 \tau = \Real \ar &\Real\\
@@ -642,16 +655,32 @@ rlog(x) &= \begin{cases} 0 &\mbox{if } x = 0 \\
 log(\vert x\vert) & \mbox{otherwise}. \end{cases}
 \end{align*}
 \end{minipage}
-~\\
+
+\begin{figure}[h!]
+  \caption{Performance curves for Simple symbolic regression.}
+  \centering
+    \includegraphics[scale=0.135]{imgs/SSR_FINAL.png}
+\end{figure}
 Fitness function is computed as follows.
 $$ fitness(f) =  \sum\limits_{i=1}^{20}{ \vert f(x_i)-y_i }\vert   $$
 where $(x_i,y_i)$ are 20 data samples from $[-1,1]$, such that $y_i = f_t(x_i)$.
 An individual $f$ such that $\vert f(x_i)-y_i \vert < 0.01 $ for all data samples is 
 considered as a correct individual.
 
+Standard \textit{ramped half-and-half strategy} scored 17/50 (34\%) success rate. 
+Minimal $I(M,i,z)$ was in generation 23 with 192,000 individuals to be processed.
+The average individual size for generation 50 was 76.
+The experiment took 46 minutes.
+Our \textit{geometric strategy} scored 21/50 (42\%) success rate. 
+Minimal $I(M,i,z)$ was in generation 29 with 150,000 individuals to be processed.
+The average individual size for generation 50 was 47.
+The experiment took 26 minutes.
+Figure~1 shows the progress of those metrics throughout generations.
+So for the \textit{Simple symbolic regression}
+our geometric strategy is slightly more successful then 
+ramped half-and-half strategy in all observed metrics.
 
 \subsection{Artificial ant}
-
 \textit{Artificial Ant} is another problem described
 in \cite{koza92}. Objective of this problem is to 
 find a control program for an artificial ant so
@@ -684,10 +713,17 @@ after that action $y$ and finally $z$.
 Actions $l, r$ and $m$ each take one time step to execute.
 Ants action is performed over and over again until it reaches predefined
 maximal number of steps. 
+
+\begin{figure}[h!]
+  \caption{Performance curves for Artificial ant problem.}
+  \centering
+    \includegraphics[scale=0.135]{imgs/ANT_FINAL.png}
+\end{figure}
+
 Fitness value is equal to number of eaten food pieces.
 An individual such that eats all 89 pieces of food is 
 considered as a correct solution.
-This limit is set to be 600\footnote{
+This limit is set to be 600 time steps\footnote{
 In \cite{koza92} this limit is said to be 400 time steps.
 But there is also mentioned following solution, 
 which is described as correct solution:
@@ -695,28 +731,127 @@ which is described as correct solution:
 This program needs 545
 time steps; if it is given only 400 time steps, then it eats only 79 pieces
 of food. Thus we use 600 time steps. 
-} time steps.
+}.
 
-
-
+Standard \textit{ramped half-and-half strategy} scored 7/50 (14\%) success rate. 
+Minimal $I(M,i,z)$ was in generation 28 with 449,500 individuals to be processed.
+The average individual size for generation 50 was circa 400.
+The experiment took 265 minutes.
+Our \textit{geometric strategy} scored 19/50 (38\%) success rate. 
+Minimal $I(M,i,z)$ was in generation 10 with 115,500 individuals to be processed.
+The average individual size for generation 50 was circa 90.
+The experiment took 107 minutes.
+This is a big improvement in all watched factors.
+Figure~2 shows it in greater detail.
 
 \subsection{Even parity problem}
-...
+
+Previous two problems were instances of standard GP, i.e. their building symbols
+obeyed the closure requirement. This third experiment will break the closure requirement, thus ideal for testing typed GP techniques. 
+The even-parity function is a boolean function taking as inputs $N$
+boolean values and returning \textit{True} if an even number of inputs 
+are \textit{True}. For odd number it returns \textit{False}.
+This problem has been used by many researchers
+as a benchmark for GP. We compare our results with that obtained by Yu in \cite{yu01},
+where is presented approach to evolve recursive and modular programs
+by use of higher-order functions and $\lambda$-abstractions.
+We use very similar set of \textit{building symbols} as in \cite{yu01}. 
+\begin{align*}
+\tau = [Boo&l] \ar Bool\\
+\Gamma = \{
+  and   &: Bool \ar Bool \ar Bool                              ,
+  or    : Bool \ar Bool \ar Bool                              ,\\
+  nand  &: Bool \ar Bool \ar Bool                              ,
+  nor    : Bool \ar Bool \ar Bool                              ,\\
+  foldr &: (Bool \ar Bool \ar Bool) \ar Bool \ar [Bool] \ar Bool ,\\
+  head' &: [Bool] \ar Bool                                   ,
+  tail' : [Bool] \ar [Bool]                              \}
+\end{align*}
+\begin{figure}[h!]
+  \caption{Performance curves for Even parity problem.}
+  \centering
+    \includegraphics[scale=0.135]{imgs/EP_FINAL.png}
+\end{figure}
+
+The type $[Bool]$ stands for \textit{list of $Bool$s} and for purpose of
+this problem is considered atomic.
+Unlike in \cite{yu01}, we use specific instance of polymorphic 
+function \texttt{foldr}. 
+And modifications of functions \texttt{head} 
+(returning the first element of the list) 
+and \texttt{tail} (returning the list without the first element) are used; 
+making them total by returning default value \textit{False}
+and \texttt{[]}, respectively.
+We use the same fitness function as in \cite{yu01}. 
+The fitness function examines the individual by giving
+it all possible boolean lists of length 2 and 3.
+
+Standard \textit{ramped half-and-half strategy} scored 9/50 (18\%) success rate. 
+Minimal $I(M,i,z)$ was in generation 17 with 333,000 individuals to be processed.
+The average individual size for generation 50 was 39.
+The experiment took 28 minutes.
+Our \textit{geometric strategy} scored 32/50 (64\%) success rate. 
+Minimal $I(M,i,z)$ was in generation 0 with 28,000 individuals to be processed.
+The average individual size for generation 50 was circa 100.
+The experiment took 33 minutes.
+Figure~3 shows it in greater detail.
+Once again this is a big improvement against standard method. 
+One may get the impression that geometric strategy suffers from bloat here,
+but considering that it performs significantly better and
+that term size around 100 is similar as for the previous two problems, 
+it seems to us that ramped half-and-half maybe has difficulties with 
+constructing more complex terms, and therefore is "staying small".
+Another remarkable observation is that 4 times out of 50 (8\% of all runs) 
+the 100\% correct solution was present in the generation 0. This is pretty good
+result for uninformed search. However, our results are less successful 
+then those presented in \cite{yu01} (with slightly different set of 
+building symbols); they scored 40/50 (80\%) success rate and $I(M,i,z)$ of 
+17,500 in generation 4. But by observation of typical solution which is often
+some modification of \texttt{foldr xor False inputList} one sees that important task
+for GP here is to create \texttt{xor} function. This is advantage for the more specialized term representation used in \cite{yu01} 
+(restricting use of outer variables). 
+The difference in crossover operators may also be involved in the difference, 
+but such analysis is beyond the scope of this paper. Finally, our result at least outperforms other results mentioned in \cite{yu01}: \textit{Generic genetic programming} 
+scored 17/60 (28\%); min $I(M,i,z) = 220,000$. \textit{GP with ADFs} 
+scored 10/29 (34\%); min $I(M,i,z) = 1,440,000$.
 
 
 \section{Conclusions}
 \label{conclusions}
 
-\begin{todo}
- & do future work bych napsal, že díky jednoduchosti 
-   toho co strategie dělá je to idealní kandidát na 
-   optimalizaci pomocí samotnýho GP
-\end{todo}
+In this work, we have proposed a generalization of genetic programming 
+for simply typed lambda calculus. The main focus of this paper is on individual generation algorithms. 
+The main idea is to explore the spectrum of available approaches bounded on one end by the traditional
+ramped half-and-half strategy, while the second bound represents an exhaustive systematic search. 
+Thus, three population initialization methods have been designed, 
+depending on different search strategies. 
+The first strategy corresponds to the above mentioned traditional genetic programming initialization,  
+the second one corresponds to exhaustive search, and the third one 
+represents a novel geometric strategy which outperforms standard genetic 
+programming in success rate, resource consumption and average individual size 
+on the presented experiments. 
+
+%\red{ [větu dvě o experimentech]}
+
+The relevance of these algorithms does not effect only initialization, but it can be used during mutation
+operator in a straightforward way. 
+%Other performance enhancements based on theory of lambda calculus are 
+%proposed and supported by experiments, including abstraction 
+%elimination that enables us to utilize
+%a simple tree-swapping crossover.
+
+Our future research will focus on exploring other possible search strategies positioned in the middle ground 
+identified in this paper. Since the search strategy can be easily described by a rather simple filtration algorithm, it might be
+interesting to allow the typed GP system to evolve the search strategy it 
+utilizes in a kind of meta-evolution way. 
+
+%\red{ [ještě něco navíc nebo podrobněji, říct poly že neni ale že se na něm pracuje a de hezky zandat do již systemu] }
+
 
 \nocite{*}
 
 \bibliographystyle{splncs}
-\bibliography{gp}
+\bibliography{evogp}
 
 
 \end{document}

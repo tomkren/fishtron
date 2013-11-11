@@ -47,8 +47,8 @@ rege = PO_CTTeP_ PO_CTTeP {
   cttep_ctx         = prog_ctx                                     ,
   
   cttep_gOpt        = CTTermG_Geom     prog_typ prog_ctx 0.75 , 
---cttp_gOpt        = CTTG_Koza2    prog_typ prog_ctx  , 
---cttp_gOpt        = CTTG_AllEdges prog_typ prog_ctx  , 
+--cttep_gOpt        = CTTermG_Koza     prog_typ prog_ctx  , 
+--cttep_gOpt        = CTTG_AllEdges prog_typ prog_ctx  , 
 
   cttep_ff          = FF6 prog_type ff "Problems.EvenParity.Funs", 
   

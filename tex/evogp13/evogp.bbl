@@ -17,11 +17,6 @@ Montana, D.:
 \newblock Strongly typed genetic programming.
 \newblock Evolutionary computation \textbf{3}(2) (1995)  199--230
 
-\bibitem{fg}
-Poli, R., Langdon, W.B., McPhee, N.F.:
-\newblock A Field Guide to Genetic Programming.
-\newblock Lulu Enterprises, UK Ltd (2008)
-
 \bibitem{yu01}
 Yu, T.:
 \newblock Hierarchical processing for evolving recursive and modular programs
@@ -29,19 +24,10 @@ Yu, T.:
 \newblock Genetic Programming and Evolvable Machines \textbf{2}(4) (2001)
   345--380
 
-\bibitem{haynes96}
-Haynes, T.D., Schoenefeld, D.A., Wainwright, R.L.:
-\newblock Type inheritance in strongly typed genetic programming.
-\newblock In Angeline, P.J., {Kinnear, Jr.}, K.E., eds.: Advances in Genetic
-  Programming 2.
-\newblock MIT Press, Cambridge, MA, USA (1996)  359--376
-
-\bibitem{olsson94}
-Olsson, J.R.:
-\newblock Inductive functional programming using incremental program
-  transformation and Execution of logic programs by iterative-deepening {A}*
-  {SLD}-tree search.
-\newblock Dr scient thesis, University of Oslo, Norway (1994)
+\bibitem{fg}
+Poli, R., Langdon, W.B., McPhee, N.F.:
+\newblock A Field Guide to Genetic Programming.
+\newblock Lulu Enterprises, UK Ltd (2008)
 
 \bibitem{kes}
 Briggs, F., O'Neill, M.:
@@ -50,32 +36,27 @@ Briggs, F., O'Neill, M.:
 \newblock International Journal of Knowledge-Based and Intelligent Engineering
   Systems \textbf{12}(1) (2008)  47--68
 
-\bibitem{barendregt84}
-Barendregt, H.P.:
-\newblock The Lambda Calculus: Its Syntax and Semantics (Studies in Logic and
-  the Foundations of Mathematics). Revised edition edn.
-\newblock Elsevier Science (1984)
-
-\bibitem{barendregt92}
-Barendregt, H.:
-\newblock {Lambda calculi with types}.
-\newblock In Abramsky, S., Gabbay, D.M., Maibaum, T.S.E., eds.: {Handbook of
-  Logic in Computer Science}, {Oxford University Press} ({1992})  117--309
+\bibitem{binard2008genetic}
+Binard, F., Felty, A.:
+\newblock Genetic programming with polymorphic types and higher-order
+  functions.
+\newblock In: Proceedings of the 10th annual conference on Genetic and
+  evolutionary computation, ACM (2008)  1187--1194
 
 \bibitem{barendregt10}
 Barendregt, H., Dekkers, W., Statman, R.:
 \newblock Lambda Calculus With Types.
 \newblock Cambridge University Press (2010)
 
+\bibitem{AIMA}
+Russell, S.J., Norvig, P.:
+\newblock Artificial Intelligence - A Modern Approach (3rd Ed.).
+\newblock Prentice Hall (2010)
+
 \bibitem{jones87}
 Peyton~Jones, S.L.:
 \newblock The Implementation of Functional Programming Languages (Prentice-Hall
   International Series in Computer Science).
 \newblock Prentice-Hall, Inc., Upper Saddle River, NJ, USA (1987)
-
-\bibitem{AIMA}
-Russell, S.J., Norvig, P.:
-\newblock Artificial Intelligence - A Modern Approach (3rd Ed.).
-\newblock Prentice Hall (2010)
 
 \end{thebibliography}

@@ -1,7 +1,7 @@
-This is pdfTeX, Version 3.1415926-2.4-1.40.13 (MiKTeX 2.9) (preloaded format=pdflatex 2013.4.26)  7 NOV 2013 18:21
+This is pdfTeX, Version 3.1415926-2.4-1.40.13 (MiKTeX 2.9) (preloaded format=pdflatex 2013.4.26)  11 NOV 2013 12:23
 entering extended mode
 **evogp.tex
-(C:\Users\sekol\Desktop\evogp13\evogp.tex
+(C:\Users\sekol\Documents\GitHub\fishtron\tex\evogp13\evogp.tex
 LaTeX2e <2011/06/27>
 Babel <v3.8m> and hyphenation patterns for english, afrikaans, ancientgreek, ar
 abic, armenian, assamese, basque, bengali, bokmal, bulgarian, catalan, coptic, 
@@ -13,7 +13,7 @@ german-x-2012-05-30, nynorsk, oriya, panjabi, pinyin, polish, portuguese, roman
 ian, russian, sanskrit, serbian, slovak, slovenian, spanish, swedish, swissgerm
 an, tamil, telugu, turkish, turkmen, ukenglish, ukrainian, uppersorbian, usengl
 ishmax, welsh, loaded.
-(C:\Users\sekol\Desktop\evogp13\llncs.cls
+(C:\Users\sekol\Documents\GitHub\fishtron\tex\evogp13\llncs.cls
 Document Class: llncs 2013/09/27 v2.18 
  LaTeX document class for Lecture Notes in Computer Science
 ("C:\Program Files (x86)\MiKTeX 2.9\tex\latex\base\article.cls"
@@ -425,35 +425,23 @@ Package amsmath Warning: Unable to redefine math accent \vec.
 \mathdisplay@stack=\toks25
 LaTeX Info: Redefining \[ on input line 2665.
 LaTeX Info: Redefining \] on input line 2666.
-) (C:\Users\sekol\AppData\Roaming\MiKTeX\2.9\tex\latex\easylist\easylist.sty
-Package: easylist 2010/02/28 v.1.3 Numbered items with a single command.
-\el@CounterTotal=\count128
-\el@Scratch=\count129
-\el@ControlCounter=\count130
-\el@CounterLevel=\count131
-\c@List1=\count132
-\c@List2=\count133
-\c@List3=\count134
-\c@List4=\count135
-\c@List5=\count136
-\c@List6=\count137
-\c@List7=\count138
-\c@List8=\count139
-\c@List9=\count140
-\c@List10=\count141
-\el@ProgressiveDimension=\dimen133
-\el@CounterBox=\box56
-\el@ControlBox=\box57
-\el@TotalMargin=\dimen134
-\el@LeftMove=\dimen135
-)
-("C:\Program Files (x86)\MiKTeX 2.9\tex\latex\graphics\color.sty"
-Package: color 2005/11/14 v1.0j Standard LaTeX Color (DPC)
+) ("C:\Program Files (x86)\MiKTeX 2.9\tex\latex\graphics\graphicx.sty"
+Package: graphicx 1999/02/16 v1.0f Enhanced LaTeX Graphics (DPC,SPQR)
 
-("C:\Program Files (x86)\MiKTeX 2.9\tex\latex\00miktex\color.cfg"
-File: color.cfg 2007/01/18 v1.5 color configuration of teTeX/TeXLive
+("C:\Program Files (x86)\MiKTeX 2.9\tex\latex\graphics\keyval.sty"
+Package: keyval 1999/03/16 v1.13 key=value parser (DPC)
+\KV@toks@=\toks26
 )
-Package color Info: Driver file: pdftex.def on input line 130.
+("C:\Program Files (x86)\MiKTeX 2.9\tex\latex\graphics\graphics.sty"
+Package: graphics 2009/02/05 v1.0o Standard LaTeX Graphics (DPC,SPQR)
+
+("C:\Program Files (x86)\MiKTeX 2.9\tex\latex\graphics\trig.sty"
+Package: trig 1999/03/16 v1.09 sin cos tan (DPC)
+)
+("C:\Program Files (x86)\MiKTeX 2.9\tex\latex\00miktex\graphics.cfg"
+File: graphics.cfg 2007/01/18 v1.5 graphics configuration of teTeX/TeXLive
+)
+Package graphics Info: Driver file: pdftex.def on input line 91.
 
 ("C:\Program Files (x86)\MiKTeX 2.9\tex\latex\pdftex-def\pdftex.def"
 File: pdftex.def 2011/05/27 v0.06d Graphics/color for pdfTeX
@@ -464,38 +452,71 @@ Package: infwarerr 2010/04/08 v1.3 Providing info/warning/error messages (HO)
 ("C:\Program Files (x86)\MiKTeX 2.9\tex\generic\oberdiek\ltxcmds.sty"
 Package: ltxcmds 2011/11/09 v1.22 LaTeX kernel commands for general use (HO)
 )
-\Gread@gobject=\count142
+\Gread@gobject=\count128
+))
+\Gin@req@height=\dimen133
+\Gin@req@width=\dimen134
 )
+(C:\Users\sekol\AppData\Roaming\MiKTeX\2.9\tex\latex\easylist\easylist.sty
+Package: easylist 2010/02/28 v.1.3 Numbered items with a single command.
+\el@CounterTotal=\count129
+\el@Scratch=\count130
+\el@ControlCounter=\count131
+\el@CounterLevel=\count132
+\c@List1=\count133
+\c@List2=\count134
+\c@List3=\count135
+\c@List4=\count136
+\c@List5=\count137
+\c@List6=\count138
+\c@List7=\count139
+\c@List8=\count140
+\c@List9=\count141
+\c@List10=\count142
+\el@ProgressiveDimension=\dimen135
+\el@CounterBox=\box56
+\el@ControlBox=\box57
+\el@TotalMargin=\dimen136
+\el@LeftMove=\dimen137
+)
+("C:\Program Files (x86)\MiKTeX 2.9\tex\latex\graphics\color.sty"
+Package: color 2005/11/14 v1.0j Standard LaTeX Color (DPC)
+
+("C:\Program Files (x86)\MiKTeX 2.9\tex\latex\00miktex\color.cfg"
+File: color.cfg 2007/01/18 v1.5 color configuration of teTeX/TeXLive
+)
+Package color Info: Driver file: pdftex.def on input line 130.
+
 ("C:\Program Files (x86)\MiKTeX 2.9\tex\latex\graphics\dvipsnam.def"
 File: dvipsnam.def 1999/02/16 v3.0i Driver-dependant file (DPC,SPQR)
 ))
-(C:\Users\sekol\Desktop\evogp13\evogp.aux)
-LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 83.
-LaTeX Font Info:    ... okay on input line 83.
-LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 83.
-LaTeX Font Info:    ... okay on input line 83.
-LaTeX Font Info:    Checking defaults for OT1/cmr/m/n on input line 83.
-LaTeX Font Info:    ... okay on input line 83.
-LaTeX Font Info:    Checking defaults for OMS/cmsy/m/n on input line 83.
-LaTeX Font Info:    ... okay on input line 83.
-LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 83.
-LaTeX Font Info:    ... okay on input line 83.
-LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 83.
-LaTeX Font Info:    ... okay on input line 83.
+(C:\Users\sekol\Documents\GitHub\fishtron\tex\evogp13\evogp.aux)
+LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 85.
+LaTeX Font Info:    ... okay on input line 85.
+LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 85.
+LaTeX Font Info:    ... okay on input line 85.
+LaTeX Font Info:    Checking defaults for OT1/cmr/m/n on input line 85.
+LaTeX Font Info:    ... okay on input line 85.
+LaTeX Font Info:    Checking defaults for OMS/cmsy/m/n on input line 85.
+LaTeX Font Info:    ... okay on input line 85.
+LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 85.
+LaTeX Font Info:    ... okay on input line 85.
+LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 85.
+LaTeX Font Info:    ... okay on input line 85.
 
 (C:\Users\sekol\AppData\Roaming\MiKTeX\2.9\tex\context\base\supp-pdf.mkii
 [Loading MPS to PDF converter (version 2006.09.02).]
 \scratchcounter=\count143
-\scratchdimen=\dimen136
+\scratchdimen=\dimen138
 \scratchbox=\box58
 \nofMPsegments=\count144
 \nofMParguments=\count145
-\everyMPshowfont=\toks26
+\everyMPshowfont=\toks27
 \MPscratchCnt=\count146
-\MPscratchDim=\dimen137
+\MPscratchDim=\dimen139
 \MPnumerator=\count147
 \makeMPintoPDFobject=\count148
-\everyMPtoPDFconversion=\toks27
+\everyMPtoPDFconversion=\toks28
 )
 LaTeX Font Info:    Try loading font information for U+msa on input line 101.
  ("C:\Program Files (x86)\MiKTeX 2.9\tex\latex\amsfonts\umsa.fd"
@@ -505,53 +526,34 @@ LaTeX Font Info:    Try loading font information for U+msb on input line 101.
 
 ("C:\Program Files (x86)\MiKTeX 2.9\tex\latex\amsfonts\umsb.fd"
 File: umsb.fd 2013/01/14 v3.01 AMS symbols B
-)
-LaTeX Font Info:    Try loading font information for OMS+cmr on input line 130.
-
-
-("C:\Program Files (x86)\MiKTeX 2.9\tex\latex\base\omscmr.fd"
-File: omscmr.fd 1999/05/25 v2.5h Standard LaTeX font definitions
-)
-LaTeX Font Info:    Font shape `OMS/cmr/m/n' in size <10> not available
-(Font)              Font shape `OMS/cmsy/m/n' tried instead on input line 130.
- [1
+) [1
 
 {C:/Users/sekol/AppData/Local/MiKTeX/2.9/pdftex/config/pdftex.map}] [2]
-LaTeX Font Info:    Try loading font information for OMS+cmtt on input line 228
+LaTeX Font Info:    Try loading font information for OMS+cmtt on input line 233
 .
-LaTeX Font Info:    No file OMScmtt.fd. on input line 228.
+LaTeX Font Info:    No file OMScmtt.fd. on input line 233.
 
 
 LaTeX Font Warning: Font shape `OMS/cmtt/m/n' undefined
 (Font)              using `OMS/cmsy/m/n' instead
-(Font)              for symbol `textbraceleft' on input line 228.
+(Font)              for symbol `textbraceleft' on input line 233.
 
-[3]
-Overfull \hbox (16.5594pt too wide) in paragraph at lines 307--311
+
+Overfull \hbox (16.5594pt too wide) in paragraph at lines 304--308
 []\OT1/cmr/m/it/10 A state-ment $\OML/cmm/m/it/10 M [] [] $ \OT1/cmr/m/it/10 i
 s deriv-able from a con-text $\OML/cmm/m/it/10  $ \OT1/cmr/m/it/10 (no-ta-tion 
 [])
  []
 
-[4]
-Underfull \hbox (badness 10000) in paragraph at lines 434--440
-
- []
-
-[5]
-Overfull \hbox (3.55412pt too wide) in paragraph at lines 459--462
+[3] [4]
+Overfull \hbox (3.55412pt too wide) in paragraph at lines 462--465
 []\OT1/cmr/m/it/10 Successors \OT1/cmr/m/n/10 of an un-fin-ished term $\OML/cmm
 /m/it/10 M$ \OT1/cmr/m/n/10 are ob-tained by \OT1/cmr/m/it/10 ex-pan-sion \OT1/
 cmr/m/n/10 of the []
  []
 
-
-Underfull \hbox (badness 10000) in paragraph at lines 459--462
-
- []
-
-
-Overfull \hbox (13.76286pt too wide) in paragraph at lines 474--480
+[5]
+Overfull \hbox (13.76286pt too wide) in paragraph at lines 483--489
 []\OT1/cmr/m/n/10 If $\OML/cmm/m/it/10 L \OT1/cmr/m/n/10 = \OMS/cmtt/m/n/10 h\O
 ML/cmm/m/it/10 \OT1/cmr/m/n/10 ; \OML/cmm/m/it/10  \OMS/cmtt/m/n/10 i$ \OT1/cm
 r/m/n/10 where $\OML/cmm/m/it/10 $ \OT1/cmr/m/n/10 is \OT1/cmr/m/it/10 atomic 
@@ -559,54 +561,86 @@ r/m/n/10 where $\OML/cmm/m/it/10 $ \OT1/cmr/m/n/10 is \OT1/cmr/m/it/10 atomic
  []
 
 [6] [7]
-Overfull \hbox (1.83984pt too wide) in paragraph at lines 630--630
+Overfull \hbox (1.83984pt too wide) in paragraph at lines 643--643
 [] 
  []
 
 
-Overfull \hbox (27.80557pt too wide) in paragraph at lines 630--647
-\OT1/cmr/m/n/10 where $[]$$[]$
+Overfull \hbox (27.80557pt too wide) in paragraph at lines 643--658
+\OT1/cmr/m/n/10 where $[]$$[]$ 
  []
 
+<imgs/SSR_FINAL.png, id=42, 2520.41624pt x 811.53188pt>
+File: imgs/SSR_FINAL.png Graphic file (type png)
 
-Underfull \hbox (badness 10000) in paragraph at lines 630--647
+<use imgs/SSR_FINAL.png>
+Package pdftex.def Info: imgs/SSR_FINAL.png used on input line 662.
+(pdftex.def)             Requested size: 340.24152pt x 109.55206pt.
 
- []
 
-[8] (C:\Users\sekol\Desktop\evogp13\evogp.bbl [9]) [10]
-(C:\Users\sekol\Desktop\evogp13\evogp.aux)
+LaTeX Warning: `!h' float specifier changed to `!ht'.
+
+[8] <imgs/ANT_FINAL.png, id=47, 2520.41624pt x 768.62157pt>
+File: imgs/ANT_FINAL.png Graphic file (type png)
+
+<use imgs/ANT_FINAL.png>
+Package pdftex.def Info: imgs/ANT_FINAL.png used on input line 720.
+(pdftex.def)             Requested size: 340.24152pt x 103.75943pt.
+
+
+LaTeX Warning: `!h' float specifier changed to `!ht'.
+
+[9 <C:/Users/sekol/Documents/GitHub/fishtron/tex/evogp13/imgs/SSR_FINAL.png>]
+<imgs/EP_FINAL.png, id=52, 2520.41624pt x 794.2172pt>
+File: imgs/EP_FINAL.png Graphic file (type png)
+ <use imgs/EP_FINAL.png>
+Package pdftex.def Info: imgs/EP_FINAL.png used on input line 773.
+(pdftex.def)             Requested size: 340.24152pt x 107.21469pt.
+
+
+LaTeX Warning: `!h' float specifier changed to `!ht'.
+
+[10 <C:/Users/sekol/Documents/GitHub/fishtron/tex/evogp13/imgs/ANT_FINAL.png>]
+Underfull \vbox (badness 10000) has occurred while \output is active []
+
+ [11 <C:/Users/sekol/Documents/GitHub/fishtron/tex/evogp13/imgs/EP_FINAL.png>]
+(C:\Users\sekol\Documents\GitHub\fishtron\tex\evogp13\evogp.bbl) [12]
+(C:\Users\sekol\Documents\GitHub\fishtron\tex\evogp13\evogp.aux)
 
 LaTeX Font Warning: Some font shapes were not available, defaults substituted.
 
  ) 
 Here is how much of TeX's memory you used:
- 2994 strings out of 493921
- 36332 string characters out of 3144876
- 107642 words of memory out of 3000000
- 6245 multiletter control sequences out of 15000+200000
- 14455 words of font info for 54 fonts, out of 3000000 for 9000
+ 3172 strings out of 493921
+ 39198 string characters out of 3144876
+ 111834 words of memory out of 3000000
+ 6414 multiletter control sequences out of 15000+200000
+ 12351 words of font info for 47 fonts, out of 3000000 for 9000
  841 hyphenation exceptions out of 8191
- 29i,16n,24p,599b,260s stack positions out of 5000i,500n,10000p,200000b,50000s
+ 29i,16n,24p,599b,250s stack positions out of 5000i,500n,10000p,200000b,50000s
 <C:/Program Files (x86)/MiKTeX 2.9/fonts/type1/public/amsfonts/cm/cmbx10.pfb>
 <C:/Program Files (x86)/MiKTeX 2.9/fonts/type1/public/amsfonts/cm/cmbx12.pfb><C
 :/Program Files (x86)/MiKTeX 2.9/fonts/type1/public/amsfonts/cm/cmbx9.pfb><C:/P
 rogram Files (x86)/MiKTeX 2.9/fonts/type1/public/amsfonts/cm/cmex10.pfb><C:/Pro
 gram Files (x86)/MiKTeX 2.9/fonts/type1/public/amsfonts/cm/cmmi10.pfb><C:/Progr
-am Files (x86)/MiKTeX 2.9/fonts/type1/public/amsfonts/cm/cmmi7.pfb><C:/Program 
-Files (x86)/MiKTeX 2.9/fonts/type1/public/amsfonts/cm/cmmib10.pfb><C:/Program F
-iles (x86)/MiKTeX 2.9/fonts/type1/public/amsfonts/cm/cmr10.pfb><C:/Program File
-s (x86)/MiKTeX 2.9/fonts/type1/public/amsfonts/cm/cmr6.pfb><C:/Program Files (x
-86)/MiKTeX 2.9/fonts/type1/public/amsfonts/cm/cmr7.pfb><C:/Program Files (x86)/
-MiKTeX 2.9/fonts/type1/public/amsfonts/cm/cmr9.pfb><C:/Program Files (x86)/MiKT
-eX 2.9/fonts/type1/public/amsfonts/cm/cmsy10.pfb><C:/Program Files (x86)/MiKTeX
- 2.9/fonts/type1/public/amsfonts/cm/cmsy7.pfb><C:/Program Files (x86)/MiKTeX 2.
-9/fonts/type1/public/amsfonts/cm/cmti10.pfb><C:/Program Files (x86)/MiKTeX 2.9/
-fonts/type1/public/amsfonts/cm/cmtt10.pfb><C:/Program Files (x86)/MiKTeX 2.9/fo
-nts/type1/public/amsfonts/cm/cmtt9.pfb><C:/Program Files (x86)/MiKTeX 2.9/fonts
-/type1/public/amsfonts/symbols/msbm10.pfb>
-Output written on evogp.pdf (10 pages, 246756 bytes).
+am Files (x86)/MiKTeX 2.9/fonts/type1/public/amsfonts/cm/cmmi6.pfb><C:/Program 
+Files (x86)/MiKTeX 2.9/fonts/type1/public/amsfonts/cm/cmmi7.pfb><C:/Program Fil
+es (x86)/MiKTeX 2.9/fonts/type1/public/amsfonts/cm/cmmi9.pfb><C:/Program Files 
+(x86)/MiKTeX 2.9/fonts/type1/public/amsfonts/cm/cmr10.pfb><C:/Program Files (x8
+6)/MiKTeX 2.9/fonts/type1/public/amsfonts/cm/cmr6.pfb><C:/Program Files (x86)/M
+iKTeX 2.9/fonts/type1/public/amsfonts/cm/cmr7.pfb><C:/Program Files (x86)/MiKTe
+X 2.9/fonts/type1/public/amsfonts/cm/cmr9.pfb><C:/Program Files (x86)/MiKTeX 2.
+9/fonts/type1/public/amsfonts/cm/cmsy10.pfb><C:/Program Files (x86)/MiKTeX 2.9/
+fonts/type1/public/amsfonts/cm/cmsy7.pfb><C:/Program Files (x86)/MiKTeX 2.9/fon
+ts/type1/public/amsfonts/cm/cmsy9.pfb><C:/Program Files (x86)/MiKTeX 2.9/fonts/
+type1/public/amsfonts/cm/cmti10.pfb><C:/Program Files (x86)/MiKTeX 2.9/fonts/ty
+pe1/public/amsfonts/cm/cmti9.pfb><C:/Program Files (x86)/MiKTeX 2.9/fonts/type1
+/public/amsfonts/cm/cmtt10.pfb><C:/Program Files (x86)/MiKTeX 2.9/fonts/type1/p
+ublic/amsfonts/cm/cmtt9.pfb><C:/Program Files (x86)/MiKTeX 2.9/fonts/type1/publ
+ic/amsfonts/symbols/msbm10.pfb>
+Output written on evogp.pdf (12 pages, 595844 bytes).
 PDF statistics:
- 103 PDF objects out of 1000 (max. 8388607)
+ 124 PDF objects out of 1000 (max. 8388607)
  0 named destinations out of 1000 (max. 500000)
- 1 words of extra memory for PDF output out of 10000 (max. 10000000)
+ 16 words of extra memory for PDF output out of 10000 (max. 10000000)
 
