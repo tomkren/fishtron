@@ -22,6 +22,7 @@ module TTerm
 
 import Data.List ( nub, (\\) , intercalate )
 import Data.Typeable ( Typeable )
+import Data.Maybe (isJust)
 import Text.ParserCombinators.Parsec ( Parser, ParseError, parse, (<|>), eof, char, many1, noneOf, skipMany1, space )
 
 import Data.Either(Either(..),lefts,rights)
@@ -190,6 +191,198 @@ ttermDepth tt = case tt of
 
 
 
+----------------------------------------------------------
+-- unSKI (NEW) -------------------------------------------
+
+
+unSKI :: TTerm -> TTerm
+unSKI t = let ret = fst $ unSKI' 0 t 
+           in if checkTyp ret then ret else error "checkTyp error in unSKI!"
+
+unSKI' :: Int -> TTerm -> (TTerm, Int)
+unSKI' i t = case t of
+ TVal x typ   -> case x of
+                   "i" -> mkTerm_I i typ
+                   "k" -> mkTerm_K i typ
+                   "s" -> mkTerm_S i typ
+                   _   -> (t, i)
+ TVar _ _     -> (t, i)
+ TLam x m typ -> let (m', i' ) = unSKI' i  m
+                  in ( TLam x m' typ , i' ) 
+ TApp m n typ -> let (m', i' ) = unSKI' i  m
+                     (n', i'') = unSKI' i' n
+                  in ( TApp m' n' typ , i'' )
+
+
+-- pro inspiraci js implementace :
+
+-- function unSKI (term,i){
+--   if (i === undefined) {i=0;}
+--   switch (term.c) {
+--     case VAL : 
+--       switch (term.x) {
+--         case 'I' : return mkTerm_I(i,term.t); 
+--         case 'K' : return mkTerm_K(i,term.t);
+--         case 'S' : return mkTerm_S(i,term.t);
+--         default  : return {ret:term,i:i} ;
+--       }
+--     case VAR : return {ret:term,i:i};
+--     case APP : 
+--       var mRes = unSKI(term.m,i);
+--       var nRes = unSKI(term.n,mRes.i); 
+--       return {ret:mkApp( mRes.ret , nRes.ret ), i: nRes.i };
+--     case LAM : 
+--       var res = unSKI(term.m,i); 
+--       return {ret:mkLam_( term.x , res.ret , term.t ),i:res.i};
+--     default  : throw 'unSKI : default in switch';
+--   }  
+-- }
+
+tempVarPrefix = "_"
+
+mkTempVarName :: Int -> String
+mkTempVarName i = tempVarPrefix ++ show i
+
+
+mkTerm_I :: Int -> Typ -> (TTerm, Int)
+mkTerm_I i typ@(a:->a2) = --todo assert ze a == a2 
+ let x = mkTempVarName i
+  in ( TLam x (TVar x a) typ , i+1 )
+
+mkTerm_K :: Int -> Typ -> (TTerm, Int)
+mkTerm_K i typ@(a:->b:->a2) = --todo assert a == a2
+ let x = mkTempVarName i
+     y = mkTempVarName (i+1)
+  in ( TLam x ( TLam y (TVar x a) (b:->a) ) typ , i+2) 
+
+mkTerm_S :: Int -> Typ -> (TTerm, Int)
+mkTerm_S i typ@(  ftyp@(a:->b:->c) :-> gtyp@(a2:->b2) :-> a3 :-> c2  ) = -- asser a == a2 == a3 , b == b2 , c == c2
+ let f = mkTempVarName i
+     g = mkTempVarName (i+1)
+     x = mkTempVarName (i+2)
+     fvar = TVar f ftyp
+     gvar = TVar g gtyp
+     xvar = TVar x a
+     m = TApp fvar xvar (b:->c)
+     n = TApp gvar xvar b
+     body = TApp m n c
+  in ( TLam f ( TLam g ( TLam x body (a:->c) ) (gtyp:->a:->c) ) typ  , i+3)
+
+
+-- function mkTerm_I (i, typ) {
+--   assert(isArr(typ),'mkTerm_I: typ must be arrow.');
+--   assert(_.isEqual(typ.a,typ.b),
+--     'mkTerm_I: typ must be of the form "a->a".');
+--   var x = mkVar('_'+i, typ.a);
+--   return {
+--     ret: mkLam(x,x),
+--     i:   i+1
+--   };
+-- }
+
+-- function mkTerm_K (i, typ) {
+--   assert(isArr(typ)  ,'mkTerm_K: typ must be arrow.');
+--   assert(isArr(typ.b),'mkTerm_K: typ.b must be arrow.');
+--   assert(_.isEqual(typ.a,typ.b.b),
+--     'mkTerm_K: typ must be of the form "a->b->a".');
+--   var x = mkVar('_'+i,     typ.a);
+--   var y = mkVar('_'+(i+1), typ.b.a);
+--   return {
+--     ret: mkLam(x,mkLam(y,x)),
+--     i:   i+2
+--   };
+-- }
+
+-- function mkTerm_S (i, typ) {
+--   // (a->(b->c))  ->  ( (a->b) -> (a->c) )
+--   assert( isArr(typ)     && 
+--           isArr(typ.a)   && 
+--           isArr(typ.b)   && 
+--           isArr(typ.a.b) && 
+--           isArr(typ.b.a) && 
+--           isArr(typ.b.b) , 
+--           'mkTerm_S : spatne osipkovany typ '+code(typ) );
+--   var a = typ.a.a;
+--   var b = typ.a.b.a;
+--   var c = typ.a.b.b;
+--   assert( _.isEqual(a,typ.b.a.a) &&
+--           _.isEqual(a,typ.b.b.a) &&
+--           _.isEqual(b,typ.b.a.b) &&
+--           _.isEqual(c,typ.b.b.b) , 
+--           'mkTerm_S : neco nepasuje' );
+--   var f    = mkVar('_'+i    ,typ.a);
+--   var g    = mkVar('_'+(i+1),typ.b.a);
+--   var x    = mkVar('_'+(i+2),typ.b.b.a);
+--   var body = mkApp( mkApp(f,x) , mkApp(g,x) );
+--   return {
+--     ret: mkLam(f,mkLam(g,mkLam(x,body))),
+--     i:   i+3
+--   };
+-- }
+
+-----------------------------------------------------------
+-- beta-reduction (NEW) -----------------------------------
+
+fullBetaReuce :: TTerm -> TTerm
+fullBetaReuce t = case oneBetaReduce t of
+  Nothing -> t
+  Just t' -> fullBetaReuce t'
+
+-- inspirovano lambda.hs co mam v dev/gpp, zatim nejednoduší verze
+-- beta redukce call-by-name
+-- s tim rozdílem že udelame klidně víc redukcí za kolo, konkrétně 
+-- v TApp to redukujem oboje, to je rychlejší a nezaleží nam kolik 
+-- se jich udela za jeden pruchod
+-- zvážit zda nerozšířit substituci aby čekoval well-typednost
+
+-- Todo: de ešte urychlit kdyz provedeme redukci i na už redukovanym
+
+oneBetaReduce :: TTerm -> Maybe TTerm
+oneBetaReduce t  = case t of
+ TVar _ _ -> Nothing
+ TVal _ _ -> Nothing
+ TApp (TLam x m _) n _ -> Just $ subs x m n
+ TApp m n typ -> let mRes = oneBetaReduce m
+                     nRes = oneBetaReduce n
+                     res mtt deftt = case mtt of Just tt -> tt ; Nothing -> deftt 
+                  in if isJust mRes || isJust nRes 
+                     then Just $ TApp (res mRes m) (res nRes n) typ
+                     else Nothing            
+ TLam x m typ -> do
+  m' <- oneBetaReduce m
+  return $ TLam x m' typ
+
+-- lame testy: 
+
+_a = Typ "a"
+_b = Typ "b"
+_c = Typ "c"
+_fake = Typ "Fake!"
+
+_x = TVar "x" _a
+_z = TVar "z" _a
+_zz = TVar "zz" _a
+
+_k = TLam "x" (TLam "y" _x (_b:->_a) ) (_a:->_b:->_a)
+
+_t1 = TApp _k _z (_b:->_a)
+_t1b = TApp _k _zz (_b:->_a)
+_t2 = TApp _t1 _t1 _fake
+_t3 = TApp _k _t1b _fake
+
+
+-- pro inspiraci z lambda.hs :
+
+-- leftBeta :: Strategie
+-- leftBeta (App (Lam x m) n) = ( subs m x n , True )
+-- leftBeta t@(Var _  ) = ( t , False )
+-- leftBeta t@(App a b) = if succ then (App a' b, succ) else (App a b', succ') 
+--     where
+--     (a' , succ ) = leftBeta a
+--     (b' , succ') = leftBeta b
+-- leftBeta (Lam x m) = ( (Lam x m') , succ ) 
+--     where 
+--     (m', succ ) = leftBeta m
 
 
 -----------------------------------------------------------

@@ -76,6 +76,58 @@ var Global = {
   defaultTab : 'opts' //'im'
 };
 
+// přidáno pro dodatečné statistiky pro články
+var StatsHax = (function(){
+
+  var bestFitLog ; // rostoucí (i pro problemy co nezachovavvaj nejlepšího)
+  var bestOfRun  ; // uchovává maxima z jednotlivých běhů
+
+  var avgSizeLog ;
+
+  function init () {
+    bestFitLog = []; // rostoucí (i pro problemy co nezachovavvaj nejlepšího)
+    bestOfRun  = []; // uchovává maxima z jednotlivých běhů
+    avgSizeLog = [];
+  }
+  
+  function inform (o) {
+    //console.log(o.runI, o.genI, o.bestOfGenFitVal);
+
+    var r       = o.runI - 1;    
+    var g       = o.genI;
+    var ff      = o.bestOfGenFitVal;
+    var avgSize = o.avgTermSize;
+
+    if (bestFitLog[r] === undefined) {
+      bestFitLog[r] = [];
+      bestOfRun [r] = 0;
+      avgSizeLog[r] = [];
+    }
+
+    if (bestOfRun[r] < ff) {
+      bestOfRun[r] = ff;
+    }
+
+    bestFitLog[r][g] = bestOfRun[r];
+    avgSizeLog[r][g] = avgSize;
+    
+  }
+
+  function get () { 
+      return {
+        bestFitLog: bestFitLog,
+        bestOfRun : bestOfRun ,
+        avgSizeLog: avgSizeLog,
+      };
+  }
+
+  return {
+    init:   init,
+    inform: inform,
+    get:    get
+  };
+})();
+
 
 $(document).ready(function() {
 
@@ -325,6 +377,8 @@ var stop = function(  ){
 
 var go_new = function(){
 
+  StatsHax.init();
+
   Global.startTime = new Date().getTime();
 
   $('#progressbar').css('width','0%');
@@ -481,6 +535,14 @@ var runCmd = function(){
 
     generationInfo : function( cmdObj ){
 
+      StatsHax.inform({
+        runI:            cmdObj.run,
+        genI:            cmdObj.i,
+        bestOfGenFitVal: cmdObj.ffvals.best,
+        avgTermSize:     cmdObj.averageTermSize,
+        isWinner:        cmdObj.isWinner
+      });
+
       Global.actRun = cmdObj.run ;
       Global.actGen = cmdObj.i ;
 
@@ -497,8 +559,6 @@ var runCmd = function(){
         Global.averageSizesOfTerms.sums[Global.actGen] += cmdObj.averageTermSize ;
         Global.averageSizesOfTerms.ns[Global.actGen]   ++ ;
       }
-
-
 
       drawPerformanceCurves( Global.performanceCurves , Global.actRun , Global.popsize , cmdObj.averageTermSize );
 

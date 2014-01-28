@@ -21,8 +21,8 @@ reg = PO_CTTP_ PO_CTTP {
   cttp_typ         = ant                                          ,
   cttp_ctx         = ctx                                          ,
   
-  cttp_gOpt        = CTTG_Geom     ant ctx 0.75 ,  
---  cttp_gOpt        = CTTG_Koza2 ant ctx ,    
+  cttp_gOpt        = CTTG_Geom  ant ctx 0.75 ,  
+--cttp_gOpt        = CTTG_Koza2 ant ctx ,    
 
   cttp_ff          = FF5 "ff" "Problems.Ant.Funs" (), 
   
