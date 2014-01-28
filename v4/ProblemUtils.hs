@@ -233,7 +233,8 @@ runProblemOpts pOpts buff = case pOpts of
        fitFun      = cttep_ff   cttep
        gOpt        = cttep_gOpt cttep 
        mOpt        = ()
-       cOpt        = CTTermC_Koza
+--     cOpt        = CTTermC_Koza
+       cOpt        = CTTermC_UNP
 
        genOpProbs  = (10,0,90)
        genOps      = mkGenOps (mOpt,cOpt) genOpProbs

@@ -10,12 +10,13 @@ import Utils   ( getRandom, getRandomR, getRandomL, getNormal, randIf, randCase,
 
 import TTerm (Typ,Context,CTTerm(..),
               TTerm,TTermPos,ttermSubtree,ttermChangeSubtree,ttermDepth
-              ,ttermPoses2WithTyps_onlyCompatible,ttermPoses2ByTyp)
+              ,ttermPoses2WithTyps_onlyCompatible,ttermPoses2ByTyp,
+              pack, unpack)
 
 import TTree (CTT(..),ttreeDepth,ttreeChangeSubtree,ttreeSubtree,TTree,ttreePoses2, 
               TTPos,ttreePoses2WithTyps,ttreePoses2ByTyp, ttreePoses2WithTyps_onlyCompatible)
 
-import InhabTree ( SearchOptions , prove ,proveCTTerm , kozaSearchOptions , allEdgesSearchOptions , geomSearchOptions )
+import InhabTree ( SearchOptions , prove ,proveCTTerm,proveCTTerm_UNP , kozaSearchOptions , allEdgesSearchOptions , geomSearchOptions )
 --import IM2 ( SearchOptions , prove , kozaSearchOptions , allEdgesSearchOptions , geomSearchOptions )
 
 --import IM ( SearchOptions , prove , kozaSearchOptions , allEdgesSearchOptions , geomSearchOptions )
@@ -44,20 +45,28 @@ instance Cros CTTerm CTTermCro where crossIt    = cttermCro
 data CTTermGen  
  = CTTermG_Koza     Typ Context      
  | CTTermG_AllEdges Typ Context 
- | CTTermG_Geom     Typ Context Prob 
+ | CTTermG_Geom     Typ Context Prob
+ | CTTermG_Geom_UNP Typ Context Prob
 
-data CTTermCro = CTTermC_Koza
+data CTTermCro 
+ = CTTermC_Koza
+ | CTTermC_UNP
 
 cttermGen :: Int -> CTTermGen -> Eva [CTTerm]
 cttermGen n opt = case opt of
   CTTermG_AllEdges typ ctx   -> proveIt  allEdgesSearchOptions n typ ctx 
   CTTermG_Koza     typ ctx   -> proveIt  kozaSearchOptions     n typ ctx 
   CTTermG_Geom     typ ctx p -> proveIt (geomSearchOptions p)  n typ ctx
+  CTTermG_Geom_UNP typ ctx p -> proveIt_UNP (geomSearchOptions p)  n typ ctx
  where
   proveIt :: (Int -> Typ -> Context -> StdGen -> SearchOptions) -> Int -> Typ -> Context -> Eva [CTTerm]
   proveIt f n typ ctx = do
     gen <- evaSplitStdGen
     return . proveCTTerm $ f n typ ctx gen
+  proveIt_UNP :: (Int -> Typ -> Context -> StdGen -> SearchOptions) -> Int -> Typ -> Context -> Eva [CTTerm]
+  proveIt_UNP f n typ ctx = do
+    gen <- evaSplitStdGen
+    return . proveCTTerm_UNP $ f n typ ctx gen
 
 cttermCro :: CTTermCro -> CTTerm -> CTTerm -> Eva (CTTerm,CTTerm)
 cttermCro CTTermC_Koza ctt1@(CTTerm v1 tterm1) ctt2@(CTTerm v2 tterm2) = do
@@ -74,6 +83,53 @@ cttermCro CTTermC_Koza ctt1@(CTTerm v1 tterm1) ctt2@(CTTerm v2 tterm2) = do
         child1        = if ttermDepth tterm1' > maxDepth then tterm1 else tterm1'
         child2        = if ttermDepth tterm2' > maxDepth then tterm2 else tterm2'
     return ( (CTTerm v1 child1) , (CTTerm v2 child2) )
+ where
+  maxDepth = 17 * 3 -- je to proto že atTree je o přibližně tolikrat hlubší kolik je pruměrný počet argumentů funkčních sym.
+  crossPos1 :: TTerm  -> TTerm -> Eva (TTermPos,Typ)
+  crossPos1 tterm druhej = do
+   poses <- let (ts,ns) = ttermPoses2WithTyps_onlyCompatible tterm druhej --ttreePoses2WithTyps tree 
+             in if null ns 
+                 then return ts 
+                 else if null ts
+                       then return ns
+                       else randCase 0.9 ns ts
+   getRandomL poses
+  crossPos2 :: TTerm -> Typ -> Eva (Maybe TTermPos)
+  crossPos2 tterm typ = do
+   poses <- let (ts,ns) = ttermPoses2ByTyp typ tterm -- ttreePoses2 tree 
+             in if null ns 
+                 then return ts 
+                 else if null ts
+                       then return ns
+                       else randCase 0.9 ns ts
+   if null poses 
+    then do
+      logIt "hamba" 
+      return Nothing 
+    else Just `liftM` getRandomL poses
+
+cttermCro CTTermC_UNP ctt1@(CTTerm v1 preTterm1) ctt2@(CTTerm v2 preTterm2) = do
+  logIt $ show preTterm1
+  logIt $ "\n\n" ++ show preTterm2 
+  let tterm1 = unpack preTterm1
+      tterm2 = unpack preTterm2
+  (cPos1,typ) <- crossPos1 tterm1 tterm2
+  maybe_cPos2 <- crossPos2 tterm2 typ
+  case maybe_cPos2 of
+   Nothing -> do 
+    logIt "BUM!"
+    return ( ctt1 , ctt2 )
+   Just cPos2 -> do
+    let sub1           = ttermSubtree tterm1 cPos1
+        (tterm2',sub2) = ttermChangeSubtree tterm2 cPos2 sub1
+        (tterm1',_   ) = ttermChangeSubtree tterm1 cPos1 sub2
+        child1        = if ttermDepth tterm1' > maxDepth then tterm1 else tterm1'
+        child2        = if ttermDepth tterm2' > maxDepth then tterm2 else tterm2'
+        postChild1 = pack child1
+        postChild2 = pack child2
+    logIt $ "\n->>>>>\n" ++ show postChild1
+    logIt $ "\n\n" ++ show postChild2 ++ "\n------------\n"
+    return ( (CTTerm v1 postChild1 ) , (CTTerm v2 postChild2 ) )
  where
   maxDepth = 17 * 3 -- je to proto že atTree je o přibližně tolikrat hlubší kolik je pruměrný počet argumentů funkčních sym.
   crossPos1 :: TTerm  -> TTerm -> Eva (TTermPos,Typ)

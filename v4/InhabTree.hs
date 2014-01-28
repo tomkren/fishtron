@@ -14,6 +14,7 @@ module InhabTree
  , geomSearchOptions 
  , prove 
  , proveCTTerm
+ , proveCTTerm_UNP
  ) where
 
 import Debug.Trace
@@ -52,7 +53,14 @@ proveCTTerm :: SearchOptions -> [CTTerm]
 proveCTTerm so = 
   let ( so' , problemHead ) = problemHeadPreproccess so
       trees = proveWith2 so'
-   in map ( CTTerm problemHead . optSki . fullEtaReduce . tree2tterm ) trees   -- <============== toSki s ' je s typeCheckem ...........
+   in map ( CTTerm problemHead . toSki' . fullEtaReduce . tree2tterm ) trees   -- <============== toSki s ' je s typeCheckem ...........
+-- tady nahoře sem zmenil optSki na toSki'
+
+proveCTTerm_UNP :: SearchOptions -> [CTTerm]
+proveCTTerm_UNP so = 
+  let ( so' , problemHead ) = problemHeadPreproccess so
+      trees = proveWith2 so'
+   in map ( CTTerm problemHead . fullEtaReduce . tree2tterm ) trees
 
 
 prove :: SearchOptions -> [CTT]

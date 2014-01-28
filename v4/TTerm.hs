@@ -18,6 +18,9 @@ module TTerm
 ,ttermSubtree,ttermChangeSubtree,ttermDepth,TTermPos
 ,ttermPoses2WithTyps_onlyCompatible,ttermPoses2ByTyp
 ,optSki
+
+,pack
+,unpack
 ) where
 
 import Data.List ( nub, (\\) , intercalate )
@@ -189,7 +192,14 @@ ttermDepth tt = case tt of
  TLam _ m _ -> 1 + (ttermDepth m)
  TApp m n _ -> 1 + (max (ttermDepth m) (ttermDepth n))  
 
+----------------------------------------------------------
+-- PACK/UNPACK -------------------------------------------
 
+pack :: TTerm -> TTerm
+pack = toSki'
+
+unpack :: TTerm -> TTerm
+unpack = fullEtaReduce . fullBetaReduce . unSKI
 
 ----------------------------------------------------------
 -- unSKI (NEW) -------------------------------------------
@@ -323,10 +333,10 @@ mkTerm_S i typ@(  ftyp@(a:->b:->c) :-> gtyp@(a2:->b2) :-> a3 :-> c2  ) = -- asse
 -----------------------------------------------------------
 -- beta-reduction (NEW) -----------------------------------
 
-fullBetaReuce :: TTerm -> TTerm
-fullBetaReuce t = case oneBetaReduce t of
+fullBetaReduce :: TTerm -> TTerm
+fullBetaReduce t = case oneBetaReduce t of
   Nothing -> t
-  Just t' -> fullBetaReuce t'
+  Just t' -> fullBetaReduce t'
 
 -- inspirovano lambda.hs co mam v dev/gpp, zatim nejednoduší verze
 -- beta redukce call-by-name
