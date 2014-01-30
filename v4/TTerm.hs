@@ -195,11 +195,13 @@ ttermDepth tt = case tt of
 ----------------------------------------------------------
 -- PACK/UNPACK -------------------------------------------
 
-pack :: TTerm -> TTerm
-pack = toSki'
-
 unpack :: TTerm -> TTerm
-unpack = fullEtaReduce . fullBetaReduce . unSKI
+unpack = toSki'
+
+pack :: TTerm -> TTerm
+pack = fullEtaReduce . fullBetaReduce . unSKI
+
+
 
 ----------------------------------------------------------
 -- unSKI (NEW) -------------------------------------------
@@ -380,6 +382,7 @@ _t1b = TApp _k _zz (_b:->_a)
 _t2 = TApp _t1 _t1 _fake
 _t3 = TApp _k _t1b _fake
 
+sko = fst $ mkTerm_S 0 ((_a:->_b:->_c):->(_a:->_b):->_a:->_c)
 
 -- pro inspiraci z lambda.hs :
 

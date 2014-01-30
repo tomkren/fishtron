@@ -109,8 +109,8 @@ cttermCro CTTermC_Koza ctt1@(CTTerm v1 tterm1) ctt2@(CTTerm v2 tterm2) = do
     else Just `liftM` getRandomL poses
 
 cttermCro CTTermC_UNP ctt1@(CTTerm v1 preTterm1) ctt2@(CTTerm v2 preTterm2) = do
-  logIt $ show preTterm1
-  logIt $ "\n\n" ++ show preTterm2 
+  --logIt $ show preTterm1
+  --logIt $ "\n\n" ++ show preTterm2 
   let tterm1 = unpack preTterm1
       tterm2 = unpack preTterm2
   (cPos1,typ) <- crossPos1 tterm1 tterm2
@@ -127,8 +127,8 @@ cttermCro CTTermC_UNP ctt1@(CTTerm v1 preTterm1) ctt2@(CTTerm v2 preTterm2) = do
         child2        = if ttermDepth tterm2' > maxDepth then tterm2 else tterm2'
         postChild1 = pack child1
         postChild2 = pack child2
-    logIt $ "\n->>>>>\n" ++ show postChild1
-    logIt $ "\n\n" ++ show postChild2 ++ "\n------------\n"
+    --logIt $ "\n->>>>>\n" ++ show postChild1
+    --logIt $ "\n\n" ++ show postChild2 ++ "\n------------\n"
     return ( (CTTerm v1 postChild1 ) , (CTTerm v2 postChild2 ) )
  where
   maxDepth = 17 * 3 -- je to proto že atTree je o přibližně tolikrat hlubší kolik je pruměrný počet argumentů funkčních sym.
