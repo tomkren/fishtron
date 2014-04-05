@@ -1,0 +1,1 @@
+runhaskell Server.hs 3000

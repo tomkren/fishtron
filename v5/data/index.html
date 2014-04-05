@@ -1,0 +1,1072 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Fishtron</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+
+    <link href="css/bootstrap.min.css" rel="stylesheet" media="screen">
+    <link href="css/my.css" rel="stylesheet" media="screen">
+    <link href="css/jquery-ui.css" rel="stylesheet" media="screen">
+
+    <style>
+      .stdout     { width : 767px; }
+      .graph      { width : 786px; 
+                    height: 400px; }
+      #texta      { font: 15px Courier, monospace;
+                    background-image: url('files/logo3.png'); }
+
+      .slider     { width:400px; position: relative; top:0px;left:10px; }
+      .input-for-slider { width:32px; }
+
+      #stop { position:absolute;
+              top:47px;
+              left: 720px; }
+
+    </style>
+
+    <script src="js/libs/jquery.js"></script>
+    <script src="js/libs/jquery.ui.js"></script>
+    <script src="js/libs/jquery.flot.js"></script>
+    <script src="js/libs/underscore.js"></script>
+    <script src="js/libs/bootstrap.min.js"></script>
+
+    <script src="js/libs/arbor.js"></script>
+    <script src="js/main-arbor.js"></script>
+
+    <script src="js/utils.js"></script>
+
+    <script src="js/Problems/FlySim.js"></script>
+    <script src="js/Problems/Levels.js"></script>    
+
+    <script src="js/Problems/Fly.js"></script>    
+    <script src="js/Problems/Fly02.js"></script>
+    <script src="js/Problems/Ant.js"></script>    
+    <script src="js/Problems/Ant2.js"></script>
+    <script src="js/Problems/SSR.js"></script>
+    <script src="js/Problems/SSR2.js"></script>
+    <script src="js/Problems/BA.js"></script>
+    <script src="js/Problems/BigCtx.js"></script>
+    <script src="js/Problems/EvenParity.js"></script>
+    <script src="js/Problems/EvenParity2.js"></script>
+
+
+
+<script>
+
+var Global = {
+  problemName : undefined,
+  numruns : undefined ,
+  numgens : undefined ,
+  popsize : undefined ,
+
+  plotData : {} ,
+  performanceCurves :{},
+  averageSizesOfTerms : { sums : [] , ns : [] },
+
+  Problems : {},
+
+ 
+  startTime : undefined ,
+  isLoggingOn : false ,
+  bests : [],
+  actRun : undefined ,
+  actGen : undefined,
+  fenotyp : undefined,
+  defaultTab : 'opts' //'im'
+};
+
+// přidáno pro dodatečné statistiky pro články
+var StatsHax = (function(){
+
+  var popi_bests ; // V5 new! -- pro podrobné statistiky o populaci
+
+
+
+  var bestFitLog ; // rostoucí (i pro problemy co nezachovavvaj nejlepšího)
+  var bestOfRun  ; // uchovává maxima z jednotlivých běhů
+
+  var avgSizeLog ;
+
+  function init () {
+    bestFitLog = []; // rostoucí (i pro problemy co nezachovavvaj nejlepšího)
+    bestOfRun  = []; // uchovává maxima z jednotlivých běhů
+    avgSizeLog = [];
+
+    popi_bests = [];
+  }
+  
+  function popi_inform (o) {
+    popi_bests.push(o.best);
+  }
+
+  function inform (o) {
+    //console.log(o.runI, o.genI, o.bestOfGenFitVal);
+
+    var r       = o.runI - 1;    
+    var g       = o.genI;
+    var ff      = o.bestOfGenFitVal;
+    var avgSize = o.avgTermSize;
+
+    if (bestFitLog[r] === undefined) {
+      bestFitLog[r] = [];
+      bestOfRun [r] = 0;
+      avgSizeLog[r] = [];
+    }
+
+    if (bestOfRun[r] < ff) {
+      bestOfRun[r] = ff;
+    }
+
+    bestFitLog[r][g] = bestOfRun[r];
+    avgSizeLog[r][g] = avgSize;
+    
+  }
+
+  function get () { 
+      return {
+        bestFitLog: bestFitLog,
+        bestOfRun : bestOfRun ,
+        avgSizeLog: avgSizeLog,
+        popi_bests: popi_bests,
+      };
+  }
+
+  return {
+    init: init,
+    inform: inform,
+    popi_inform: popi_inform,
+    get_popi_bests: function(){return JSON.stringify(popi_bests);},
+    get: get,
+
+  };
+})();
+
+
+$(document).ready(function() {
+
+  stop();
+
+  $('#go-input-row').hide(); // chtelo by to ho uplne smazat, ale čte se z něho ..
+
+  Global.myDrawGraph = arborFUN($);
+
+ 
+  $('#progressfutral').hide();
+  $('#stop').hide();
+
+  $('#stdout-off').button('toggle');
+  $("[rel=tooltip]").tooltip();
+
+  $('#'+ Global.defaultTab +'-link').tab('show');
+
+  $('#opts').change(function(){
+    var numruns = $('#numruns-input').attr('value');
+    var numgens = $('#numgens-input').attr('value');
+    var popsize = $('#popsize-input').attr('value');
+
+    var problemCode = $('#problem-select').val() ;
+
+    if( problemCode === null ) { problemCode = 'ssr_old'; } 
+
+    $('#go-input').attr('value', problemCode + ' ' + numruns + ' ' + numgens + ' ' + popsize );
+  }) ;
+
+  $.ajax({
+    url : 'problems' , 
+    type: 'GET'  ,
+    success: function( problemsJSON ) {  
+        //console.log( problemsJSON );
+
+        var problems = JSON.parse( problemsJSON );
+
+        var select = $("#problem-select");
+        $.each( problems , function() {
+            select.append($("<option />")
+                  .val( this.code )
+                  .text( '[' + this.code + '] ' + this.name ));
+
+
+            var problemSegment = Global.Problems[ this.code ] ;
+
+            if( problemSegment ){ //} && problemSegment.onLoadedProblemData ){
+
+              problemSegment.onLoadedProblemData( this.data ) ;
+              problemSegment.data = this.data;
+            }
+        });
+
+        $('#opts').change();
+
+    }
+  });
+
+  $.ajax({
+    url : 'problems' , 
+    type: 'GET'  ,
+    success: function( problemsJSON ) {  
+        
+      onLoadedProblemsOpts( JSON.parse( problemsJSON ) );
+
+    }
+  });
+
+
+
+  $('#myTab a').click(function (e) {
+    e.preventDefault();
+    $( this ).tab('show');
+  });
+
+  $('#stdout-on' ).click( function(e){ Global.isLoggingOn = true ; });
+  $('#stdout-off').click( function(e){ Global.isLoggingOn = false; });
+
+
+  var initSlider = function( name , opts ){
+
+    var update = function(event, ui){
+      var newVal =  ui.value ;//$('#'+ name +'-slider').slider('value');
+
+      if( newVal <= 0 ){ newVal = 1 ; }
+
+      Global[ name ] = newVal ;
+      $('#'+ name +'-input').attr('value' , newVal );
+      $('#opts').change();
+
+
+    };
+
+    $('#'+ name +'-slider').slider({
+      min    : opts.min ,
+      max    : opts.max ,
+      value  : opts.value ,
+      step   : opts.step || 1 ,
+      slide  : update,
+    });
+
+    update(null,{ value : $('#'+ name +'-slider').slider('value') });    
+  };
+
+  initSlider( 'numruns' , { min : 1 , max : 10    , value : 4   } );
+  initSlider( 'numgens' , { min : 0 , max : 100   , value : 10  , step : 10 } );
+  initSlider( 'popsize' , { min : 0 , max : 5000  , value : 500 , step : 10 } );
+
+  drawPlot(1,Global.plotData);
+  drawPlot(2,Global.plotData);
+
+
+});
+
+
+var onLoadedProblemsOpts = function( problemsOpts ){
+
+  Global.problemsOpts = {} ;
+
+  var dropDown = $("#problem-select_");  
+
+  for( var i in problemsOpts ){
+
+    var po = problemsOpts[i];
+
+    Global.problemsOpts[ po.code ] = po; 
+
+    var dropDownOption = $('<option>').val( po.code ).text( '[' + po.code + '] ' + po.info );
+    dropDown.append( dropDownOption );
+
+    var problemSegment = Global.Problems[ po.code ] ;
+    if( problemSegment ){ 
+
+      problemSegment.data = po.data;
+      problemSegment.onLoadedProblemData( problemSegment.data ) ;
+      
+    }
+
+  }  
+
+  $('#problem-select_').on('change', function (e) {
+      var optionSelected = $("option:selected", this);
+      var valueSelected = this.value;
+      console.log(valueSelected);
+      drawProblemOpts( Global.problemsOpts[ valueSelected ] );
+  });
+
+
+  drawProblemOpts( problemsOpts[0] );
+
+};
+
+
+var drawProblemOpts = function( po ){
+
+  $('#po-container').html('');
+
+  for( var j in po.sliders ){
+
+    var sliderPropName = po.sliders[j]
+    var sliderName     = po.code + '-' + sliderPropName;
+    var slider         = po[sliderPropName];
+    var sliderLabel    = slider.name;
+
+    //console.log( sliderName + ' ' + slider.value );
+
+    $('#po-container').append(
+         '<div class="control-group">                                                             '+  
+         '  <label class="control-label" for="'+sliderName+'-input">                              '+   
+         '    <span class="label label-info">'+sliderLabel+'</span>                               '+   
+         '  </label>                                                                              '+     
+         '  <div class="controls">                                                                '+  
+         '    <table>                                                                             '+
+         '      <tr>                                                                              '+  
+         '        <td><input id="'+sliderName+'-input" type="text" class="input-for-slider"></td> '+
+         '        <td><div id="'+sliderName+'-slider" class="slider"></div></td>                  '+
+         '      </tr>                                                                             '+
+         '    </table>                                                                            '+ 
+         '  </div>                                                                                '+  
+         '</div>                                                                                  '
+         );
+
+    var slideFun = function(sliderName){
+      return function(event, ui){
+        var newVal =  ui.value ;
+
+        if( newVal <= 0 ){ newVal = 1 ; }
+        
+        $('#'+ sliderName +'-input').attr('value' , newVal ).change();
+
+      };      
+    };
+
+    var inputFun = function(sliderName,sliderPropName,po){
+      return function(){
+        var newVal = $( '#' + sliderName + '-input' ).attr('value');
+        //console.log( sliderName + ' ' + newVal );
+        po[sliderPropName].value = Number(newVal);
+      };      
+    };    
+
+    $('#'+ sliderName +'-slider').slider({
+      min    : slider.min   ,
+      max    : slider.max   ,
+      value  : slider.value ,
+      step   : slider.step  ,
+      slide  : slideFun(sliderName)
+    });
+
+    $('#'+ sliderName +'-input')
+     .attr('value' , slider.value )
+     .change( inputFun(sliderName,sliderPropName,po) );
+  }
+
+};
+
+
+var stop = function(  ){
+
+  $.ajax({
+    url : 'stop' , 
+    type: 'GET'  ,
+    success: function(){
+
+      setTimeout( 
+        function(){
+
+          $.ajax({
+            url: 'out' ,
+            type: 'GET'  ,
+            success: function( output ) {
+
+              if( output === '' ){ console.log('abc!')}
+            } 
+
+          });
+
+        } , 1000 );
+
+    }
+  });
+
+};
+
+
+
+var go_new = function(){
+
+  StatsHax.init();
+
+  Global.startTime = new Date().getTime();
+
+  $('#progressbar').css('width','0%');
+  $('#progressfutral').show('slow');
+  $('#stop').show('slow');
+
+
+  var problemCode = $('#problem-select_').val() ;
+
+
+  var po = Global.problemsOpts[problemCode] ;
+
+  Global.problemName = problemCode;
+  Global.numruns     = po.numRuns.value;
+  Global.numgens     = po.numGene.value;
+  Global.popsize     = po.popSize.value;
+
+
+  switch( Global.problemName ){
+    case 'ssr_old' : Global.fenotyp = ssr ; break;
+    default        : Global.fenotyp = undefined  ;
+  }
+
+
+  var problemSegment = Global.Problems[ problemCode ] ;
+
+  if( problemSegment ){
+
+    if( problemSegment.data ){
+      
+      if( problemSegment.data.im ){
+        Global.myDrawGraph( '#viewport' , problemSegment.data.im );
+      }
+
+    }
+
+    problemSegment.onGo();
+  }
+
+
+
+  Global.plotData = {} ;
+
+  // initing peformance curves
+  Global.performanceCurves = [] ;
+  Global.averageSizesOfTerms.sums = [];
+  Global.averageSizesOfTerms.ns   = [];
+  for( var i = 0 ; i <= Global.numgens ; i ++ ){
+    Global.performanceCurves[i] = 0;
+    Global.averageSizesOfTerms.sums[i] = 0;
+    Global.averageSizesOfTerms.ns[i]   = 0;
+  }
+
+
+
+  var sendBack = {};
+
+  var po = Global.problemsOpts[problemCode];
+
+  for( var prop in po ){
+    
+    for( var j in po.sliders ){
+      var name = po.sliders[j];
+      if( name == prop ){
+        sendBack[prop] = po[prop];
+      }
+    }
+
+    if( prop == 'code' ){
+      sendBack[prop] = po[prop];
+    }
+
+  }
+
+
+  var input = JSON.stringify( sendBack );
+  console.log( input );
+
+  $.ajax({
+    url : 'run/' + encodeURIComponent( input  ) , 
+    type: 'GET'  ,
+    success: function() {  
+        console.log( ' [PROBLEM VYTVOREN]' );
+
+        if( $('#opts_').attr('class').match(/.*(active)/ ) ){
+
+          if( Global.fenotyp !== undefined ){ // kvuli zpetny kopat..
+            $('#special-link').tab('show');
+          }else if( Global.Problems[problemCode] ){
+            $('#special-link').tab('show');
+          }else{
+            $('#stdout-link').tab('show');
+          }
+        }
+
+        setTimeout( function(){out_new(  )} , 100 );
+    }
+  });
+
+};
+
+var out_new = function(  ){
+
+
+
+  
+  $.ajax({
+    url: 'out' ,
+    type: 'GET'  ,
+    success: function( output ) {
+
+      //console.log( 'out_new : ' + output );
+
+      if( output === '' ){
+        console.log( ' [HOTOVO]' ); 
+        $('#progressfutral').hide('slow');
+        $('#stop').hide('slow');
+
+        var runTime = ( (new Date().getTime()) - Global.startTime ) * 0.001 ;
+        runCmd({type:'stdout',msg : 'Run time was ' + runTime + ' seconds.' });
+
+      } else if( output === '_' ){ //working ale zatim žadnej output
+        setTimeout( function(){out_new();} , 100 );
+      } else {
+        runCmd( JSON.parse(output) );
+        setTimeout( function(){out_new();} , 1 );
+      }
+    }
+  });
+
+};
+
+
+
+var runCmd = function(){  
+  
+  var cmdHandlers = {
+
+    multi : function( cmdObj ){
+
+      //prasárna !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+      var bestFFVal = cmdObj.cmds[0].ffvals.best ;
+
+      for( var i = 0 ; i < cmdObj.cmds.length ; i++ ){
+
+        //prasárna pokračování !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        if( i==2 ){ //jsonout
+          cmdObj.cmds[i].bestFFVal = bestFFVal;          
+        }
+
+        runCmd( cmdObj.cmds[i] );
+      }
+    },
+
+    //!!! new in V5 !!!
+    populationInfo : function (cmdObj) {
+      //console.log("[populationInfo] "+ JSON.stringify(cmdObj.popInfo) );
+
+      var xo_ok     = cmdObj.xo_ok;   
+      var xo_tooBig = cmdObj.xo_tooBig;
+      var xo_fail   = cmdObj.xo_fail;
+      var sum       = xo_ok + xo_tooBig + xo_fail;  
+      var best      = cmdObj.best;
+
+      console.log("[populationInfo]" +
+                  " ok: "     + xo_ok     +
+                  " tooBig: " + xo_tooBig +
+                  " fail: "   + xo_fail   +
+                  " (sum: "   + sum       + ")" );
+
+      console.log(JSON.stringify(best));
+
+      StatsHax.popi_inform({best:best});
+
+      //TODO work with cmdObj.irs
+    },
+
+    generationInfo : function( cmdObj ){
+
+      StatsHax.inform({
+        runI:            cmdObj.run,
+        genI:            cmdObj.i,
+        bestOfGenFitVal: cmdObj.ffvals.best,
+        avgTermSize:     cmdObj.averageTermSize,
+        isWinner:        cmdObj.isWinner
+      });
+
+      Global.actRun = cmdObj.run ;
+      Global.actGen = cmdObj.i ;
+
+      if( cmdObj.isWinner ){
+        console.log('WINNER!!!!!!!!!!!!!');
+
+        for( var i = Global.actGen ; i <= Global.numgens ; i ++ ){
+          Global.performanceCurves[i] ++ ;  
+        }
+         
+      }
+
+      if( cmdObj.averageTermSize !== undefined ){
+        Global.averageSizesOfTerms.sums[Global.actGen] += cmdObj.averageTermSize ;
+        Global.averageSizesOfTerms.ns[Global.actGen]   ++ ;
+      }
+
+      drawPerformanceCurves( Global.performanceCurves , Global.actRun , Global.popsize , cmdObj.averageTermSize );
+
+
+      var runGraphCmd = function( g , x , y ){
+        runCmd( { type  : 'graph' ,
+                  graph : g ,
+                  data :  [x,y] } );
+      };
+
+      var procent = 100*(cmdObj.i+1+(cmdObj.run-1)*(1+Global.numgens))/(Global.numruns*(1+Global.numgens)); 
+
+      // console.log( procent + '%' );
+
+      $('#progressbar').css('width' , procent + '%' );
+
+      runGraphCmd( 'best'  + cmdObj.run , cmdObj.i , cmdObj.ffvals.best  );
+      runGraphCmd( 'avg'   + cmdObj.run , cmdObj.i , cmdObj.ffvals.avg   );
+      runGraphCmd( 'worst' + cmdObj.run , cmdObj.i , cmdObj.ffvals.worst );
+
+    },
+
+    graph : function( cmdObj ){
+      var newPoints = !_.isArray( cmdObj.data[0] )  ? [cmdObj.data] : cmdObj.data ;
+      var oldPoints = Global.plotData[cmdObj.graph] ? Global.plotData[cmdObj.graph] : [] ;
+      Global.plotData[cmdObj.graph] = oldPoints.concat(newPoints);
+      drawPlot(1,Global.plotData);
+      drawPlot(2,mkPilatPlotData(Global.plotData));
+    },
+
+    stdout : function( cmdObj ){
+      if( Global.isLoggingOn ){
+        var texta = $('#texta');
+        texta.append( cmdObj.msg + '\n' );
+        scrollDown();        
+      }
+    },
+
+
+
+    jsonout : function( cmdObj ){
+
+      //console.log( 'jsonout: ' + JSON.stringify( cmdObj ) ) ;
+      
+      if( ! cmdObj.js ){ return; }
+
+      if( Global.actGen == 0 ){
+        Global.bests[ Global.actRun ] = [] ;
+      }
+
+      var solution ;
+
+      //console.log( cmdObj.kutil );
+      
+      var evalStr = "solution = " + correctToString( cmdObj.js ) ;
+      //console.log( evalStr );
+
+
+      var withObject = Global.Problems[Global.problemName].Funs || {} ;
+
+      with( withObject ){
+        eval( evalStr );
+      }
+
+      Global.bests[ Global.actRun ][ Global.actGen ] = solution ;
+
+      // kvuli zpetny kompatibilite .... 
+      if(Global.fenotyp && ! Global.Problems[Global.problemName] ){ 
+        Global.fenotyp( solution , cmdObj.bestFFVal );
+      }
+
+      if( Global.Problems[Global.problemName] ){ 
+        Global.Problems[Global.problemName].fenotyp( solution , cmdObj.bestFFVal , Global.actGen );
+      }
+
+    },
+
+  };
+
+  return function( cmdObj ){
+    //console.log( cmdObj );
+    if( cmdHandlers[ cmdObj.type ] ){
+      return cmdHandlers[ cmdObj.type ](cmdObj);  
+    } else {
+      console.log('ERROR : Command has unsupported type: "'+ cmdObj.type +'"');
+    }
+    
+  };
+
+}();
+
+
+var correctToString = function( obj ){
+  if( _.isArray( obj ) ){
+    var ret = '[';
+    for( var i in obj ){
+      ret += correctToString( obj[i] ) + ',' ;
+    }
+    return ret + ']';
+  }
+
+  return obj.toString() ;
+}
+
+
+// -- STDOUT -------------------------------------------------------------------
+
+var clrscr = function(){
+    $('textarea').html('');
+};
+
+var scrollDown = function(){
+  var texta = $('#texta');
+  texta[0].scrollTop = texta[0].scrollHeight - texta[0].clientHeight;
+};
+
+
+
+// -- GRAPHS ---------------------------------------------------------------------------------------
+
+var isBestName = function( graphName ){
+  return graphName.match(/^best.*/) != null ;
+};
+
+var transposePlotData = function( plotData , isWantedGraph ){
+  var ret = []
+  for( var graphName in plotData ){
+    if( isWantedGraph( graphName ) ){
+      var graphData = plotData[graphName];
+      for( var i in graphData ){
+        if( !ret[i] ){ ret[i] = []; }
+        ret[i].push( graphData[i][1] );
+      }
+    }
+  }
+  return ret;
+};
+
+var findBest = function( arr ){
+  var best = -Number.MAX_VALUE;
+  _.each( arr , function(x){if( x > best ){ best = x; }});  
+  return best;
+};
+
+var findWorst = function( arr ){
+  var worst = Number.MAX_VALUE;
+  _.each( arr , function(x){if( x < worst ){ worst = x; }});  
+  return worst;
+};
+
+var findAvg = function( arr ){
+  var sum = 0;
+  var num = 0;
+  _.each( arr , function(x){ sum += x ; num++ ; } );
+  return sum/num ;
+};
+
+var mkPilatPlotData = function( plotData ){
+
+  var transBest = transposePlotData( plotData , isBestName );
+
+  var ret = {
+    bestBest  : [],
+    avgBest   : [],
+    worstBest : []
+  }
+
+  for( var genI in transBest ){
+
+    var genBests = transBest[genI];
+
+    ret.bestBest .push( [ genI , findBest ( genBests ) ] );
+    ret.avgBest  .push( [ genI , findAvg  ( genBests ) ] );
+    ret.worstBest.push( [ genI , findWorst( genBests ) ] );
+
+  }
+
+  return ret ;
+
+};
+
+
+
+var flattenPlotData = function( plotData ){
+  var ret = [];
+  for( var prop in plotData ){
+    ret.push( plotData[prop] );
+  }
+  return ret;
+};
+
+var drawPlot = function( graphI , plotData ){
+  $.plot('#graph'+ graphI +'-div',  flattenPlotData( plotData ) );
+};
+
+var drawPerformanceCurves = function( curves_ , actRun , popsize , averageTermSize ){
+
+
+  var curves = checkAllTheSame( curves_ );
+  
+  //if(  )
+
+  probabs =  _.map( curves , function(x){ return x / actRun ; }   ) ;
+
+  var graf1 = []; 
+  //var 
+  graf2 = []; 
+
+  for( var i = 0 ; i < probabs.length ; i++ ){
+    graf1[i] = [i,probabs[i]];
+    graf2[i] = [i, numIndivsMustbeProcessed( probabs[i] , i , popsize )  ];
+
+  }
+
+  $.plot('#graph3-div',  [graf1] );
+
+  $.plot('#graph4-div' , [{ data: graf2 , points : { show: true }, lines : { show: true } , color: 'gray' }] );
+
+  if( averageTermSize !== undefined ){
+    //console.log('averageTermSize = ' + averageTermSize );
+
+    prum = [];
+    graf3 = []; 
+    for( var i = 0 ; i < Global.averageSizesOfTerms.sums.length ; i++ ){
+      if( Global.averageSizesOfTerms.ns[i] > 0 ){
+        graf3[i] = [i, Global.averageSizesOfTerms.sums[i] / Global.averageSizesOfTerms.ns[i] ];
+        prum[i] = Global.averageSizesOfTerms.sums[i] / Global.averageSizesOfTerms.ns[i];
+      }
+    } 
+
+    $.plot('#graph5-div' , [{ data: graf3 , points : { show: false }, lines : { show: true } , color: 'black' }] );   
+    
+  }
+
+  
+  //console.log( actRun );
+  //console.log( probabs );
+  //console.log( graf );
+
+
+};
+
+var runsRequied = function( probab ){
+
+  if( probab >= 1 ){
+    return  1 ;
+  }
+
+  return Math.ceil( Math.log(1-0.99)/Math.log(1-probab) );
+}
+
+var numIndivsMustbeProcessed = function( probab , genI , popsize ){
+  var runs = runsRequied( probab );
+  var ret = (genI+1) * popsize * runs;
+  //console.log('genI = ' + genI + ' popsize = ' + popsize + ' runsReq = ' + runs + ' .... ' + ret );
+  return ret;
+}
+
+var checkAllTheSame = function( xs ){
+  return xs;
+
+
+  var allsame = true;
+  var first = xs[0];
+  for( var i in xs ){
+    if( xs[i] != first){
+      return xs;
+    }
+  }  
+  var ret = _.map(xs,function(x){return x;});
+  ret[0] = ret[0] * 0.999999999999;
+  return ret;
+}
+
+
+
+
+//---------------------------------------------------------------------------
+</script>
+
+  </head>
+  <body>
+
+    <button onclick="stop()" id="stop" class="btn btn-danger span1">STOP</button>
+
+
+    <div class="row">&nbsp;</div>
+
+    <div class="row">
+
+      <div class="span0"></div>
+      
+      <div class="span10">
+
+        <div class="progress progress-striped active" id="progressfutral">
+          <div id="progressbar" class="bar" style="width: 40%;"></div>
+        </div>
+
+      </div>
+    </div>
+
+
+    <div class="row">
+
+      <div class="span0"></div>
+
+      <div class="span10">
+
+        <ul class="nav nav-tabs" id="myTab">
+          <li class="active"><a href="#opts_" id="opts-link">Params</a></li>
+          <!--<li><a href="#opts" id="opts-link">Params</a></li>-->
+          <li><a href="#special"  id="special-link">Phenotype</a></li>
+          <li class="dropdown">
+            <a href="#" class="dropdown-toggle" data-toggle="dropdown">Graphs<b class="caret"></b></a>
+            <ul class="dropdown-menu">
+              <li><a href="#graph1" id="graph1-link" data-toggle="tab"
+                     rel="tooltip"data-toggle="tooltip" data-placement="top" 
+                     title="Best, average and worst in every generation for each run separately.">
+                     B-A-W</a></li>
+              <li><a href="#graph2" data-toggle="tab" 
+                     rel="tooltip" data-toggle="tooltip" data-placement="top" 
+                     title="Best-best, average-best and worst-best in every generation through all runs.">
+                     BB-AB-WB</a></li>
+              <li><a href="#graph3" data-toggle="tab" 
+                     rel="tooltip" data-toggle="tooltip" data-placement="top" 
+                     title="Koza's Performace Curves">
+                     Koza's Performace Curve 1 - probabilities</a></li>
+              <li><a href="#graph4" data-toggle="tab" 
+                     rel="tooltip" data-toggle="tooltip" data-placement="top" 
+                     title="Koza's Performace Curves">
+                     Koza's Performace Curve 2 - individuals to be processed</a></li>
+              <li><a href="#graph5" data-toggle="tab" 
+                     rel="tooltip" data-toggle="tooltip" data-placement="top" 
+                     title="Average sizes of terms">
+                     Average sizes of terms</a></li>
+            </ul>
+          </li>
+          <li><a href="#stdout" id="stdout-link">stdout</a></li>
+          <li><a href="#im" id="im-link">IM</a></li>
+          
+        </ul>
+
+      </div>
+
+    </div>
+
+
+
+    <div class="row">
+
+      <div class="span0"></div>
+
+      <div class="tab-content">
+
+
+
+        <div class="tab-pane span7 active" id="opts_">
+          <div class="form-horizontal">
+
+            <div class="control-group">
+              <label class="control-label" for="problem-select_">
+                <span class="label label-info">Problem</span>
+              </label>
+              <div class="controls">
+                  <table>
+                    <tr>
+                      <td><select id="problem-select_" class="span4" ></select></td>
+                      <td><button onclick="go_new()" class="btn btn-primary span2">Start</button></td>
+                    </tr>
+                  </table>
+              </div>
+            </div>
+
+            <div id="po-container"></div>
+
+            <img src="files/logo2.png" style="display: block;margin-left: 200px; margin-top:80px;">
+
+          </div>
+        </div>
+
+
+
+
+
+        <div class="tab-pane span7" id="stdout">
+          <textarea rows="23" class="stdout" id="texta"></textarea>
+
+          <div class="alert alert-info" >
+            <b>stdout</b> is by default <b>off</b> (because You can see it in 
+            the server console), to see it here You must turn it on.
+          </div> 
+
+          <div class="btn-group" data-toggle="buttons-radio">
+            <button id="stdout-on" type="button" class="btn">On</button>
+            <button id="stdout-off" type="button" class="btn">Off</button>
+          </div>
+
+          <a class="btn" onclick="clrscr()">clear</a>
+          <a class="btn" onclick="scrollDown()">down</a>
+
+
+
+        </div>
+
+        <div class="tab-pane span7" id="graph1">
+          <div id="graph1-div" class="graph"></div>
+          <br>
+          <div class="alert alert-info"  style="width:734px">
+            <b>B</b>est, <b>A</b>verage and <b>W</b>orst in every generation for each run separately.
+          </div> 
+        </div>
+
+        <div class="tab-pane span7" id="graph2">
+          <div id="graph2-div" class="graph"></div>
+          <br>
+          <div class="alert alert-info" style="width:734px">
+            <b>B</b>est-<b>B</b>est, <b>A</b>verage-<b>B</b>est and <b>W</b>orst-<b>B</b>est 
+            in every generation through all runs.
+          </div> 
+        </div>
+
+        <div class="tab-pane span7" id="graph3">
+          <div id="graph3-div" class="graph"></div>
+          <br>
+          <div class="alert alert-info" style="width:734px">
+            Performance curve 1 - probabilities
+          </div> 
+        </div>
+
+        <div class="tab-pane span7" id="graph4">
+          <div id="graph4-div" class="graph"></div>
+          <br>
+          <div class="alert alert-info" style="width:734px">
+            Performance curve 2 - individuals to be processed
+          </div> 
+        </div>
+
+        <div class="tab-pane span7" id="graph5">
+          <div id="graph5-div" class="graph"></div>
+          <br>
+          <div class="alert alert-info" style="width:734px">
+            Average term sizes
+          </div> 
+        </div>
+
+        <div class="tab-pane span10" id="im" >
+
+          <div class="alert alert-info" >
+            This tab will be filled by <b>Inhabitation Machine</b> graph (if the problem has one).
+          </div> 
+          
+          <canvas id="viewport" width="786" height="600"></canvas>
+
+
+        </div>
+
+        <div class="tab-pane span10" id="special" >
+          <div class="alert alert-info" >
+            This tab will be filled by <b>special problem output</b> (i.e. fenotype).
+          </div> 
+        </div>
+        
+
+      </div>
+
+    </div>
+
+<!--<a href="javascript:onDownload();">Download</a>-->
+
+  </body>
+</html>
+
+
+
