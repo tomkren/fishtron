@@ -4,7 +4,7 @@ module PopulationInfo
 , initPopInfo
 , updatePopInfo
 , popInfoToJSON
-, inc_xo_ok, inc_xo_tooBig, inc_xo_fail
+, inc_xo_ok, inc_xo_tooBig, inc_xo_fail, inc_rep, inc_elite
 , popi_setBest
 ) where
 
@@ -19,6 +19,8 @@ data PopInfo = PopInfo {
     popi_xo_ok     :: Int,
     popi_xo_tooBig :: Int,
     popi_xo_fail   :: Int,
+    popi_rep       :: Int,
+    popi_elite     :: Int,
     popi_best      :: JSValue
   }
 
@@ -28,6 +30,8 @@ initPopInfo = PopInfo {
   popi_xo_ok     = 0,
   popi_xo_tooBig = 0,
   popi_xo_fail   = 0,
+  popi_rep       = 0,
+  popi_elite     = 0,
   popi_best      = jsObj []
 }
 
@@ -52,14 +56,16 @@ updatePopInfo popi ir =
 inc_xo_ok     = popiInc popi_xo_ok     set_xo_ok
 inc_xo_tooBig = popiInc popi_xo_tooBig set_xo_tooBig
 inc_xo_fail   = popiInc popi_xo_fail   set_xo_fail
-
+inc_rep       = popiInc popi_rep       set_rep
+inc_elite     = popiInc popi_elite     set_elite
 
 
 -- :: PopInfo -> Int -> PopInfo
 set_xo_ok     popi i = popi { popi_xo_ok     = i }  
 set_xo_tooBig popi i = popi { popi_xo_tooBig = i }  
 set_xo_fail   popi i = popi { popi_xo_fail   = i }  
-
+set_rep       popi i = popi { popi_rep       = i }
+set_elite     popi i = popi { popi_elite     = i }
 
 
 popiInc :: (PopInfo -> Int) -> (PopInfo -> Int -> PopInfo) -> PopInfo -> PopInfo
@@ -76,7 +82,9 @@ popInfoToJSON popi = jsObj [
     ("irs"      , jsArr . map indivRecordToJSON . popi_irs $ popi ),
     ("xo_ok"    , jsNum $ popi_xo_ok     popi ),
     ("xo_tooBig", jsNum $ popi_xo_tooBig popi ),
-    ("xo_fail"  , jsNum $ popi_xo_fail   popi )]
+    ("xo_fail"  , jsNum $ popi_xo_fail   popi ),
+    ("rep"      , jsNum $ popi_rep       popi ),
+    ("elite"    , jsNum $ popi_elite     popi )]
 
 
 

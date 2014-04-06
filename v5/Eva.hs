@@ -15,7 +15,7 @@ module Eva
 , eva_getPopInfo
 , eva_updatePopInfo
 , eva_resetPopInfo 
-, eva_inc_xo_ok, eva_inc_xo_tooBig, eva_inc_xo_fail 
+, eva_inc_xo_ok,eva_inc_xo_tooBig,eva_inc_xo_fail,eva_inc_rep,eva_inc_elite 
 , eva_popi_setBest 
 
 ) where
@@ -33,7 +33,7 @@ import Heval (hevalsWith, hevals)
 import Utils (Randable(..),Logable(..),JShow)
 
 import PopulationInfo (PopInfo, IndivRecord(..),initPopInfo, updatePopInfo,
-                       inc_xo_ok, inc_xo_tooBig, inc_xo_fail,
+                       inc_xo_ok, inc_xo_tooBig, inc_xo_fail, inc_rep, inc_elite,
                        popi_setBest)
 
 type Eva = StateT EvaState IO
@@ -72,6 +72,8 @@ eva_popi_setBest term fitVal = eva_popi_update (popi_setBest term fitVal)
 eva_inc_xo_ok     = eva_popi_update inc_xo_ok
 eva_inc_xo_tooBig = eva_popi_update inc_xo_tooBig
 eva_inc_xo_fail   = eva_popi_update inc_xo_fail
+eva_inc_rep       = eva_popi_update inc_rep
+eva_inc_elite     = eva_popi_update inc_elite
 
 eva_popi_update :: (PopInfo -> PopInfo) -> Eva ()
 eva_popi_update f = do

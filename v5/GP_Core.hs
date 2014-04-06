@@ -23,8 +23,9 @@ import Data.Maybe    ( fromJust,isJust )
 
 
 import Eva   ( Eva, runEva, evalsWith, evals, setOutputBuffer, sendJSON, flushStdout, 
-               amIStillAlive, resetAfterStop, 
-               eva_getPopInfo, eva_resetPopInfo, eva_popi_setBest )
+               amIStillAlive, resetAfterStop,
+               eva_getPopInfo,eva_resetPopInfo,
+               eva_popi_setBest,eva_inc_rep,eva_inc_elite)
 import Dist  ( Dist , mkDist, distTake_new, distGet, distMax, distMin, distAvg )
 import Dist  ( distToList )
 import Utils ( logIt, boxIt , JShow, jshow, putList, jss_size)
@@ -114,6 +115,7 @@ evolveStep runInfo p i pop = do
  terms'       <- performOps (genOps p) terms 
  ret@(pop',mWin) <- evalFF (fitFun p) (if saveBest p then ( best : terms' ) else terms' )
  logGeneration runInfo i (isJust mWin) pop'
+ (if saveBest p then eva_inc_elite else return ())
  return ret
 
 
@@ -183,7 +185,7 @@ performOps opDist terms@(t:ts) = do
     ts' <- performOps opDist ts
     return $ t' : ts'
    DiOp f -> case terms of
-    [t] -> return [t]
+    [t] -> do eva_inc_rep; return [t]
     (t1:t2:tt) -> do
      (t1',t2') <- f t1 t2
      tt'       <- performOps opDist tt
@@ -247,7 +249,7 @@ mkGenOps opt (probRep,probMut,probCro) = fmap (mkGenOp opt) d
  
 mkGenOp :: (Muta term mOpt , Cros term cOpt ) => (mOpt,cOpt) -> GenOpType -> GenOp term
 mkGenOp (mo,co) opType = case opType of
- Reproduction -> MonoOp return
+ Reproduction -> MonoOp (\term ->do eva_inc_rep; return term)
  Mutation     -> MonoOp (mutateIt mo)
  Crossover    -> DiOp   (crossIt  co)
 

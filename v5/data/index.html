@@ -554,14 +554,19 @@ var runCmd = function(){
       var xo_ok     = cmdObj.xo_ok;   
       var xo_tooBig = cmdObj.xo_tooBig;
       var xo_fail   = cmdObj.xo_fail;
-      var sum       = xo_ok + xo_tooBig + xo_fail;  
+      var rep       = cmdObj.rep;
+      var elite     = cmdObj.elite;
+      var sum       = xo_ok + xo_tooBig + xo_fail + rep + elite;  
       var best      = cmdObj.best;
 
       console.log("[populationInfo]" +
-                  " ok: "     + xo_ok     +
-                  " tooBig: " + xo_tooBig +
-                  " fail: "   + xo_fail   +
-                  " (sum: "   + sum       + ")" );
+                  " xo:"     + (xo_ok+xo_tooBig+xo_fail) +
+                  " [= ok:"  + xo_ok     +
+                  " tooBig:" + xo_tooBig +
+                  " fail:"   + xo_fail   +
+                  "] rep:"   + rep       +
+                  " elite:"  + elite     +
+                  " (sum:"   + sum       + ")" );
 
       console.log(JSON.stringify(best));
 

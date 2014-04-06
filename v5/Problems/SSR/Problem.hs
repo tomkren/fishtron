@@ -35,7 +35,7 @@ reg = PO_CTTP_ PO_CTTP {
 
   cttp_ff          = FF6 (asType::Double->Double) ff "Problems.SSR.Funs", 
   
-  cttp_saveBest    = False -- True 
+  cttp_saveBest    = True --False -- True 
   
 }
 
