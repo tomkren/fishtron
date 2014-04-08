@@ -25,7 +25,8 @@ import Data.Maybe    ( fromJust,isJust )
 import Eva   ( Eva, runEva, evalsWith, evals, setOutputBuffer, sendJSON, flushStdout, 
                amIStillAlive, resetAfterStop,
                eva_getPopInfo,eva_resetPopInfo,
-               eva_popi_setBest,eva_inc_rep,eva_inc_elite)
+               eva_popi_setBest,eva_inc_rep,eva_inc_elite,
+               eva_popi_setPop, eva_nextRC)
 import Dist  ( Dist , mkDist, distTake_new, distGet, distMax, distMin, distAvg )
 import Dist  ( distToList )
 import Utils ( logIt, boxIt , JShow, jshow, putList, jss_size)
@@ -116,6 +117,7 @@ evolveStep runInfo p i pop = do
  ret@(pop',mWin) <- evalFF (fitFun p) (if saveBest p then ( best : terms' ) else terms' )
  logGeneration runInfo i (isJust mWin) pop'
  (if saveBest p then eva_inc_elite else return ())
+
  return ret
 
 
@@ -216,8 +218,9 @@ logGeneration (actRun,allRuns) i isWinner pop = do
  logIt  $ " │ Worst   " ++ p2 w ++ " │"
  logIt  $ " └────────────────────────┘" 
  if isWinner then logIt "WINNER!!!!!!!" else return ()
+ let popiList = distToList 32 pop
  let m_averageTermSize = if True 
-                          then let popList = map fst $ distToList 32 pop
+                          then let popList = map fst $ popiList
                                    sizeOf  = fromIntegral . fromJust . jss_size
                                    len     = fromIntegral $ length popList
                                    isOK    = isJust . jss_size . head $ popList
@@ -226,8 +229,9 @@ logGeneration (actRun,allRuns) i isWinner pop = do
  boxIt   $ show best 
  stdout  <- flushStdout
  eva_popi_setBest best b
+ eva_popi_setPop popiList
  popInfo <- eva_getPopInfo
- eva_resetPopInfo 
+ eva_resetPopInfo
  sendJSON $ multiCmd [ 
   graphCmd actRun i (b,a,w) isWinner m_averageTermSize , 
   stdout , 

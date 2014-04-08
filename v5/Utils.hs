@@ -218,6 +218,8 @@ align width str =
 -- JSON-show stuff ----
 
 class (Show a) => JShow a where
+  jshow_rc :: a -> Int
+  jshow_rc _ = (-1)
   jshow_popi :: a -> JSValue
   jshow_popi _ = jsObj []
   jss_size :: a -> Maybe Int

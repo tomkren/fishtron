@@ -67,8 +67,9 @@ prove :: SearchOptions -> [CTT]
 prove so = 
   let ( so' , problemHead ) = problemHeadPreproccess so
       trees = proveWith2 so'
-   in map ( mkCTT2 problemHead . toSki . fullEtaReduce . tree2tterm ) trees   -- <============== toSki s ' je s typeCheckem .. nebo tam de optSki
-
+ --in map ( mkCTT2 (-2) problemHead . toSki . fullEtaReduce . tree2tterm ) trees   -- <============== toSki s ' je s typeCheckem .. nebo tam de optSki
+   in map (\(tree,rc)-> mkCTT2 rc problemHead (toSki . fullEtaReduce . tree2tterm $ tree) ) (zip trees [1..])
+ 
 
 problemHeadPreproccess :: SearchOptions -> ( SearchOptions , Context )
 problemHeadPreproccess so = 

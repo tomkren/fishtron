@@ -22,7 +22,7 @@ import Data.Either
 import Data.Maybe
 
 import Text.JSON (JSValue (..) , toJSObject , toJSString )
-import Utils ( JShow , jshow_js, jss_size, jshow_popi )
+import Utils ( JShow , jshow_js, jss_size, jshow_popi, jshow_rc )
 
 import JSONUtils
 
@@ -35,7 +35,7 @@ import Data.Set (Set)
 --import Data.Map (Map)
 
 
-data CTT = CTT Context TTree 
+data CTT = CTT Int Context TTree 
 
 data TTree = TTree Symbol Typ [TTree] 
 
@@ -48,7 +48,9 @@ type TTPos = [Int]
 -- převody ze stromu do JSONU
 
 cttToJSON :: CTT -> JSValue
-cttToJSON (CTT ctx ttree) = processCtx ctx (ttreeToJSON ttree)
+cttToJSON (CTT rc ctx ttree) = jsObj [
+  ("id"  , jsNum rc                           ),
+  ("term", processCtx ctx (ttreeToJSON ttree) )]
 
 ttreeToJSON :: TTree -> JSValue
 ttreeToJSON (TTree sym _ ts) = foldl (\ acc t -> jsApp acc (ttreeToJSON t)) (jsVal sym) ts
@@ -59,19 +61,20 @@ processCtx ctx body = foldr (\(x,_) acc -> jsLam x acc) body ctx
 --------------------------------------------
 
 
-mkCTT2 :: Context -> TTerm -> CTT
-mkCTT2 ctx tt = CTT ctx (fromTTerm tt)
+mkCTT2 :: Int -> Context -> TTerm -> CTT
+mkCTT2 rc ctx tt = CTT rc ctx (fromTTerm tt)
 
 
 instance Show CTT where
- show (CTT ctx ttree) = case ctx of
+ show (CTT _ ctx ttree) = case ctx of
   [] -> show ttree
   _  -> let vars = intercalate " " . map fst $ ctx
          in "\\ "++ vars ++ " -> " ++ show ttree 
 
 instance JShow CTT where
+  jshow_rc (CTT rc _ _) = rc
   jshow_popi = cttToJSON 
-  jss_size (CTT _ ttree) = Just $ ttreeSize ttree 
+  jss_size (CTT _ _ ttree) = Just $ ttreeSize ttree 
   jshow_js ctt = Just . jsStr . jsShow $ ctt
 --  jshow ctt = JSObject $ toJSObject [ 
 --   ("type"     , JSString . toJSString $ "jsonout"     ) ,
@@ -82,7 +85,7 @@ instance JShow CTT where
 
 
 jsShow :: CTT -> String
-jsShow (CTT ctx ttree) =
+jsShow (CTT _ ctx ttree) =
  let vars = intercalate "," . map fst $ ctx
   in "function("++ vars ++ "){return " ++ jsShowBody ttree ++ ";}"
 
@@ -205,7 +208,7 @@ ttreePoses2ByTyp typ t =
 mkCTT :: TTerm -> CTT
 mkCTT tt = 
  let (ctx,ttree) = mkCTT' [] tt
-  in CTT ctx ttree
+  in CTT (-1) ctx ttree
 
 mkCTT' :: [Symbol] -> TTerm -> ( Context , TTree ) 
 mkCTT' xs tt = case tt of
@@ -281,7 +284,7 @@ ctt2kutil ctt =
   (show $ Tag "kutil" [] (ctt2xmls ctt) )
 
 ctt2xmls :: CTT -> [XML]
-ctt2xmls ctt@(CTT ctx ttree) = 
+ctt2xmls ctt@(CTT _ ctx ttree) = 
   let (xmls,isInputs) = unzip $ ( map (pre2xml ttree) $ ttree2pre ctx ttree )
       idss = proccessIsIputs isInputs
       comment = Tag "object" [("type","comment"),("val", show ctt ),("pos","-33 106")] [] 
@@ -428,7 +431,7 @@ instance Show XML where
 
 -- testovací.... 
 
-ctt1@(CTT _ ttree1) = mkCTT2 [("x0",i),("x1",i)] tt1
+ctt1@(CTT _ _ ttree1) = mkCTT2 (-1) [("x0",i),("x1",i)] tt1
 
 i = Typ "I"
 

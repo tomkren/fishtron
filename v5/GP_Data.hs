@@ -5,7 +5,7 @@
 module GP_Data where
 
 import Eva (Eva,evaSplitStdGen,
-            eva_updatePopInfo, eva_inc_xo_ok, eva_inc_xo_tooBig, eva_inc_xo_fail  )
+            eva_inc_xo_ok, eva_inc_xo_tooBig, eva_inc_xo_fail, eva_popi_addXOL, eva_nextRC  )
 import GP_Core ( Gene, Muta, Cros, generateIt, mutateIt, crossIt , Prob )
 import Utils   ( getRandom, getRandomR, getRandomL, getNormal, randIf, randCase,logIt,boxIt,boxThem )
 
@@ -34,7 +34,7 @@ import Control.Monad (replicateM, liftM, liftM2, forM)
 
 import Data.List     (nub,groupBy)
 
-import PopulationInfo( IndivRecord(..) )
+import PopulationInfo( XOLType(..)  )
 
 type Len    = Int
 type Mean   = Double
@@ -186,7 +186,7 @@ cttGen n opt = case opt of
 
 
 cttCro :: CTTCro -> CTT -> CTT -> Eva (CTT,CTT)
-cttCro CTTC_Koza (CTT v1 tree1) (CTT v2 tree2) = do
+cttCro CTTC_Koza (CTT _ v1 tree1) (CTT _ v2 tree2) = do
   cPos1 <- crossPos tree1
   cPos2 <- crossPos tree2
   let sub1          = ttreeSubtree tree1 cPos1
@@ -194,7 +194,7 @@ cttCro CTTC_Koza (CTT v1 tree1) (CTT v2 tree2) = do
       (tree1',_   ) = ttreeChangeSubtree tree1 cPos1 sub2
       child1        = if ttreeDepth tree1' > maxDepth then tree1 else tree1'
       child2        = if ttreeDepth tree2' > maxDepth then tree2 else tree2'
-  return ( (CTT v1 child1) , (CTT v2 child2) )
+  return ( (CTT (-1) v1 child1) , (CTT (-1) v2 child2) )
  where
   maxDepth = 17
   crossPos :: TTree -> Eva TTPos
@@ -206,7 +206,7 @@ cttCro CTTC_Koza (CTT v1 tree1) (CTT v2 tree2) = do
    getRandomL poses
 
 cttCro2 :: CTTCro -> CTT -> CTT -> Eva (CTT,CTT)
-cttCro2 CTTC_Koza ctt1@(CTT v1 tree1) ctt2@(CTT v2 tree2) = do
+cttCro2 CTTC_Koza ctt1@(CTT _ v1 tree1) ctt2@(CTT _ v2 tree2) = do
   (cPos1,typ) <- crossPos1 tree1
   maybe_cPos2 <- crossPos2 tree2 typ
   case maybe_cPos2 of
@@ -219,7 +219,7 @@ cttCro2 CTTC_Koza ctt1@(CTT v1 tree1) ctt2@(CTT v2 tree2) = do
         (tree1',_   ) = ttreeChangeSubtree tree1 cPos1 sub2
         child1        = if ttreeDepth tree1' > maxDepth then tree1 else tree1'
         child2        = if ttreeDepth tree2' > maxDepth then tree2 else tree2'
-    return ( (CTT v1 child1) , (CTT v2 child2) )
+    return ( (CTT (-1) v1 child1) , (CTT (-1) v2 child2) )
  where
   maxDepth = 17
   crossPos1 :: TTree -> Eva (TTPos,Typ)
@@ -239,8 +239,15 @@ cttCro2 CTTC_Koza ctt1@(CTT v1 tree1) ctt2@(CTT v2 tree2) = do
     then return Nothing 
     else Just `liftM` getRandomL poses
 
+
+
+-- TODLE JE ONA:
+
+
+
+
 cttCro3 :: CTTCro -> CTT -> CTT -> Eva (CTT,CTT)
-cttCro3 CTTC_Koza ctt1@(CTT v1 tree1) ctt2@(CTT v2 tree2) = do
+cttCro3 CTTC_Koza ctt1@(CTT _ v1 tree1) ctt2@(CTT _ v2 tree2) = do
   (cPos1,typ) <- crossPos1 tree1 tree2
   maybe_cPos2 <- crossPos2 tree2 typ
   case maybe_cPos2 of
@@ -260,7 +267,14 @@ cttCro3 CTTC_Koza ctt1@(CTT v1 tree1) ctt2@(CTT v2 tree2) = do
     --eva_updatePopInfo (XoverIR)
     if tooBig1 then eva_inc_xo_tooBig else eva_inc_xo_ok
     if tooBig2 then eva_inc_xo_tooBig else eva_inc_xo_ok
-    return ( (CTT v1 child1) , (CTT v2 child2) )
+    let xolt1 = if tooBig1 then XOL_tooBig else XOL_ok
+        xolt2 = if tooBig2 then XOL_tooBig else XOL_ok
+    rc1 <- eva_nextRC 
+    rc2 <- eva_nextRC
+    let syn   = (CTT rc1 v1 child1)
+        dcera = (CTT rc2 v2 child2)
+    eva_popi_addXOL (xolt1,xolt2) [ctt1,ctt2,syn,dcera] (cPos1,cPos2)
+    return ( syn , dcera )
  where
   maxDepth = 17
   crossPos1 :: TTree  -> TTree -> Eva (TTPos,Typ)

@@ -13,10 +13,12 @@ module Eva
 , resetAfterStop
 
 , eva_getPopInfo
-, eva_updatePopInfo
 , eva_resetPopInfo 
 , eva_inc_xo_ok,eva_inc_xo_tooBig,eva_inc_xo_fail,eva_inc_rep,eva_inc_elite 
 , eva_popi_setBest 
+, eva_popi_setPop
+, eva_popi_addXOL
+, eva_nextRC
 
 ) where
 
@@ -32,9 +34,9 @@ import ServerInterface (jsEmptyObj, stdoutCmd, writeNextOutput ,OutputBuffer,Pro
 import Heval (hevalsWith, hevals)
 import Utils (Randable(..),Logable(..),JShow)
 
-import PopulationInfo (PopInfo, IndivRecord(..),initPopInfo, updatePopInfo,
-                       inc_xo_ok, inc_xo_tooBig, inc_xo_fail, inc_rep, inc_elite,
-                       popi_setBest)
+import PopulationInfo (PopInfo(..), initPopInfo, resetPopInfo,
+                       inc_xo_ok, inc_xo_tooBig, inc_xo_fail, inc_rep, inc_elite, inc_nextRC,
+                       popi_setBest, popi_setPop, XOLType, popi_addXOL)
 
 type Eva = StateT EvaState IO
 
@@ -55,15 +57,24 @@ eva_getPopInfo = do
   evaState <- get
   return $ evaPopInfo evaState
 
-eva_updatePopInfo :: IndivRecord -> Eva ()
-eva_updatePopInfo ir = do
-  evaState <- get
-  put $ evaState{ evaPopInfo = updatePopInfo (evaPopInfo evaState) ir }
-
 eva_resetPopInfo :: Eva ()
 eva_resetPopInfo = do
   evaState <- get
-  put $ evaState{ evaPopInfo = initPopInfo }
+  put $ evaState{ evaPopInfo = resetPopInfo $ evaPopInfo evaState }
+
+eva_nextRC :: Eva Int
+eva_nextRC = do
+  evaState <- get
+  let rc = popi_nextRC $ evaPopInfo evaState
+  eva_popi_update inc_nextRC
+  return rc
+
+
+eva_popi_addXOL :: (JShow term) => (XOLType,XOLType) -> [term] -> ([Int],[Int]) -> Eva ()
+eva_popi_addXOL xolt xs poses = eva_popi_update (popi_addXOL xolt xs poses)
+
+eva_popi_setPop  :: (JShow term) => [(term,Double)] -> Eva ()
+eva_popi_setPop xs = eva_popi_update (popi_setPop xs)
 
 eva_popi_setBest :: (JShow term) => term -> Double -> Eva ()
 eva_popi_setBest term fitVal = eva_popi_update (popi_setBest term fitVal) 

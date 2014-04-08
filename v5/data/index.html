@@ -36,6 +36,12 @@
 
     <script src="js/utils.js"></script>
 
+    <!--treeInspector-->
+    <link href="css/treeInspector.css" rel="stylesheet">
+    <script src="js/treeInspector.js"></script>
+    <script src="js/libs/d3.v3.min.js"></script>
+
+
     <script src="js/Problems/FlySim.js"></script>
     <script src="js/Problems/Levels.js"></script>    
 
@@ -53,6 +59,8 @@
 
 
 <script>
+
+var jumpToPOPI = true;
 
 var Global = {
   problemName : undefined,
@@ -80,6 +88,9 @@ var Global = {
 var StatsHax = (function(){
 
   var popi_bests ; // V5 new! -- pro podrobné statistiky o populaci
+  var popi_pops  ;
+  var popi_xos   ;
+  var popi_fits  ;
 
 
 
@@ -94,10 +105,148 @@ var StatsHax = (function(){
     avgSizeLog = [];
 
     popi_bests = [];
+    popi_pops  = [];
+    popi_xos   = [];
+    popi_fits  = {};
   }
   
+  function updateXoverSelect (i) {
+
+    var $xoSel = $('#xo-select');
+    $xoSel.html('');
+    _.each(popi_xos[i], function (xoLog, j) {
+      var $opt = $('<option>')
+        .val(j).html(//'['+(j+1)+'] '+
+                      xoLog.fv_rodic.toPrecision(3)+ ' → '
+                     +xoLog.fv_dite.toPrecision(3));
+      $xoSel.append($opt);
+    });
+    
+  }
+
   function popi_inform (o) {
     popi_bests.push(o.best);
+    popi_pops .push(o.pop );
+    
+    _.each(o.pop, function (fitLog) {
+      popi_fits[fitLog.id] = fitLog.fitval;
+    });
+
+    var xos = o.xos;
+
+    if (xos[0]) {
+
+      xos = _.sortBy(xos, function(xoLog){ 
+        var fv_syn   = popi_fits[xoLog.syn.id];
+        var fv_dcera = popi_fits[xoLog.dcera.id];
+        var fv_tata  = popi_fits[xoLog.tata.id];
+        var fv_mama  = popi_fits[xoLog.mama.id];
+
+
+        xoLog.fv_dite  = fv_syn  > fv_dcera ? fv_syn  : fv_dcera;
+        xoLog.fv_rodic = fv_tata > fv_mama  ? fv_tata : fv_mama ;
+        return - xoLog.fv_dite; 
+      });
+      
+      var i = popi_xos.length;
+
+      var $opt = $('<option>').val(i).html(pad(i,2)+' → '+pad(1+i,2) + 
+          ' ..... '+xos[0].fv_rodic.toPrecision(3) +' → '+ xos[0].fv_dite.toPrecision(3));
+
+      $('#gen-select').append($opt);
+
+      popi_xos.push(xos);
+
+      if (i===0) {
+        updateXoverSelect(0);
+      }
+
+      // auto-drawing pasaž
+      draw( i ,0);
+      $('#gen-select').val(i);
+      updateXoverSelect(i);
+
+    }
+
+  }
+
+  function mark (term, path, col) {
+
+    if (path.length === 0 && term.c !== 'lam') {
+      term.col = col;
+      return;
+    }
+
+    switch (term.c) {
+      case 'var' : return;
+      case 'val' : return;
+      case 'lam' : mark(term.m, path, col); return;
+      case 'app' :
+
+        var sons    = [];
+        var acc     = term;
+
+        while (acc.c == 'app') {
+          sons.unshift( acc.n );
+          acc = acc.m;
+        }
+
+        mark( sons[_.head(path)-1], _.tail(path), col);
+        return;
+      default: console.log('MARK ERROR !!!!!!!');
+    }
+  }
+
+  function draw (i,j) {
+    var xoLog = popi_xos[i][j];
+
+    var boxHeight = ($(window).height()-200) / 4 ;
+
+    //xoLog.tata.term.col = 'blue';
+    mark( xoLog.tata .term , xoLog.pos1 , 'green');
+    mark( xoLog.mama .term , xoLog.pos2 , 'red'  );
+    mark( xoLog.syn  .term , xoLog.pos1 , 'red'  );
+    mark( xoLog.dcera.term , xoLog.pos2 , 'green');
+
+    function mkOpts (name) {
+      return {
+        tree: TreeInspector.transformTree(xoLog[name].term),
+        div: '#box_'+name,
+        margin: {top: 10, right: 0, bottom: 10, left: 50},
+        width:  1920,
+        height: boxHeight,
+      };
+    }
+
+    function drawInfo (name, isBold) {
+      var id = xoLog[name].id;
+      var text = '#'+ id+': '+popi_fits[id];
+      if (isBold) {text = '<span style="color:green"><b>'+text+
+                          ' &nbsp; &nbsp; &lt;-----</b></span>';}
+      $('#info_'+name).html(text);
+    }
+
+    function subDraw (name) {
+
+      var isBold = false;
+
+      if (name === 'syn' || name === 'dcera') {
+        var id = xoLog[name].id;
+        var toDruhy = name === 'syn' ? 'dcera' : 'syn';
+        var idToDruhy = xoLog[toDruhy].id;
+        var fit        = popi_fits[id];
+        var fitToDruhy = popi_fits[idToDruhy];
+        isBold = fit >= fitToDruhy;
+      }
+
+      drawInfo(name, isBold );
+      TreeInspector.mk(mkOpts(name)); 
+    }
+
+    subDraw('tata' ); 
+    subDraw('mama' );
+    subDraw('syn'  );
+    subDraw('dcera');
   }
 
   function inform (o) {
@@ -128,7 +277,6 @@ var StatsHax = (function(){
         bestFitLog: bestFitLog,
         bestOfRun : bestOfRun ,
         avgSizeLog: avgSizeLog,
-        popi_bests: popi_bests,
       };
   }
 
@@ -137,13 +285,63 @@ var StatsHax = (function(){
     inform: inform,
     popi_inform: popi_inform,
     get_popi_bests: function(){return JSON.stringify(popi_bests);},
+    get_popi_pops : function(){return JSON.stringify(popi_pops );},
+    xos           : function(){return popi_xos  ;},
+    fit           : function(id){return popi_fits[id];},
+    updateXoverSelect:  updateXoverSelect,
+    draw:draw,
     get: get,
-
   };
 })();
 
+var log = console.log;
+
+function pad(n, width, z) {
+  z = z || '0';
+  n = n + '';
+  return n.length >= width ? n : new Array(width - n.length + 1).join(z) + n;
+}
+
 
 $(document).ready(function() {
+
+  $('#gen-select').change(function(){
+    var i = parseInt($('#gen-select').val());
+    StatsHax.updateXoverSelect(i);
+    StatsHax.draw(i,0);
+  });
+
+  $('#xo-select').change(function(){
+    var i = parseInt($('#gen-select').val());
+    var j = parseInt($( '#xo-select').val());
+    
+    StatsHax.draw(i,j);
+
+  });
+
+  $('#popi-butt').click(function () {
+    //$('#popi-textarea').html('Generating ...');
+    var text = StatsHax.get_popi_pops();
+    //console.log(text);
+    //$('#popi-textarea').html( text===undefined?'nic...':text );
+
+    var blob = new Blob([text], {type:'text/plain'});
+    var url  = URL.createObjectURL(blob);
+
+    $('#popi-file-link').attr('href', url).attr('target','_blank');
+
+  });
+
+
+
+
+
+
+
+
+
+
+
 
   stop();
 
@@ -479,12 +677,17 @@ var go_new = function(){
 
         if( $('#opts_').attr('class').match(/.*(active)/ ) ){
 
-          if( Global.fenotyp !== undefined ){ // kvuli zpetny kopat..
-            $('#special-link').tab('show');
-          }else if( Global.Problems[problemCode] ){
-            $('#special-link').tab('show');
-          }else{
-            $('#stdout-link').tab('show');
+          if (jumpToPOPI) {
+            $('#popi-link').tab('show');
+          } else {
+
+            if( Global.fenotyp !== undefined ){ // kvuli zpetny kopat..
+              $('#special-link').tab('show');
+            }else if( Global.Problems[problemCode] ){
+              $('#special-link').tab('show');
+            }else{
+              $('#stdout-link').tab('show');
+            }
           }
         }
 
@@ -558,6 +761,8 @@ var runCmd = function(){
       var elite     = cmdObj.elite;
       var sum       = xo_ok + xo_tooBig + xo_fail + rep + elite;  
       var best      = cmdObj.best;
+      var pop       = cmdObj.pop;
+      var xos       = cmdObj.xos;
 
       console.log("[populationInfo]" +
                   " xo:"     + (xo_ok+xo_tooBig+xo_fail) +
@@ -570,10 +775,25 @@ var runCmd = function(){
 
       console.log(JSON.stringify(best));
 
-      StatsHax.popi_inform({best:best});
-
-      //TODO work with cmdObj.irs
+      StatsHax.popi_inform({
+        best:best,
+        pop:pop,
+        xos:xos,
+      });
+      
     },
+
+
+
+
+
+
+
+
+
+
+
+
 
     generationInfo : function( cmdObj ){
 
@@ -940,6 +1160,7 @@ var checkAllTheSame = function( xs ){
           </li>
           <li><a href="#stdout" id="stdout-link">stdout</a></li>
           <li><a href="#im" id="im-link">IM</a></li>
+          <li><a href="#popi" id="popi-link">popInfo</a></li>
           
         </ul>
 
@@ -1056,6 +1277,42 @@ var checkAllTheSame = function( xs ){
 
 
         </div>
+
+
+
+
+
+
+         <div class="tab-pane span10" id="popi" style="font-family: 'Courier New';">
+
+            Gen:   <select id="gen-select" style="width:250px;"></select>&nbsp;
+            Xover: <select id="xo-select"></select><br>
+
+            [Táta]  <span id="info_tata"></span>  
+                    <div class="box" id="box_tata"></div>
+            [Máma]  <span id="info_mama"></span>
+                    <div class="box" id="box_mama"></div>
+            [Syn]   <span id="info_syn"></span>
+                    <div class="box" id="box_syn"></div>
+            [Dcera] <span id="info_dcera"></span>
+                    <div class="box" id="box_dcera"></div>
+
+          <br><br><br><br><br>
+          <!--<div class="alert alert-info" >
+            Here you can generate Population info to paste to TreeInspector tool...
+          </div> -->
+
+          <a id="popi-file-link">popi-file-link</a>
+          <!--<textarea id="popi-textarea"></textarea>-->
+          <input type="button" id="popi-butt" value="generate">
+
+        </div>
+
+
+
+
+
+
 
         <div class="tab-pane span10" id="special" >
           <div class="alert alert-info" >
