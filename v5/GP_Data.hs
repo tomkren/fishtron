@@ -78,13 +78,19 @@ cttermCro CTTermC_Koza ctt1@(CTTerm v1 tterm1) ctt2@(CTTerm v2 tterm2) = do
   case maybe_cPos2 of
    Nothing -> do 
     logIt "BUM!"
+    eva_inc_xo_fail
+    eva_inc_xo_fail
     return ( ctt1 , ctt2 )
    Just cPos2 -> do
     let sub1           = ttermSubtree tterm1 cPos1
         (tterm2',sub2) = ttermChangeSubtree tterm2 cPos2 sub1
         (tterm1',_   ) = ttermChangeSubtree tterm1 cPos1 sub2
-        child1        = if ttermDepth tterm1' > maxDepth then tterm1 else tterm1'
-        child2        = if ttermDepth tterm2' > maxDepth then tterm2 else tterm2'
+        tooBig1        = ttermDepth tterm1' > maxDepth
+        tooBig2        = ttermDepth tterm2' > maxDepth
+        child1        = if tooBig1 then tterm1 else tterm1'
+        child2        = if tooBig2 then tterm2 else tterm2'
+    if tooBig1 then eva_inc_xo_tooBig else eva_inc_xo_ok
+    if tooBig2 then eva_inc_xo_tooBig else eva_inc_xo_ok
     return ( (CTTerm v1 child1) , (CTTerm v2 child2) )
  where
   maxDepth = 17 * 3 -- je to proto že atTree je o přibližně tolikrat hlubší kolik je pruměrný počet argumentů funkčních sym.
@@ -121,17 +127,23 @@ cttermCro CTTermC_UNP ctt1@(CTTerm v1 preTterm1) ctt2@(CTTerm v2 preTterm2) = do
   case maybe_cPos2 of
    Nothing -> do 
     logIt "BUM!"
+    eva_inc_xo_fail
+    eva_inc_xo_fail
     return ( ctt1 , ctt2 )
    Just cPos2 -> do
     let sub1           = ttermSubtree tterm1 cPos1
         (tterm2',sub2) = ttermChangeSubtree tterm2 cPos2 sub1
         (tterm1',_   ) = ttermChangeSubtree tterm1 cPos1 sub2
-        child1        = if ttermDepth tterm1' > maxDepth then tterm1 else tterm1'
-        child2        = if ttermDepth tterm2' > maxDepth then tterm2 else tterm2'
+        tooBig1        = ttermDepth tterm1' > maxDepth
+        tooBig2        = ttermDepth tterm2' > maxDepth
+        child1         = if tooBig1 then tterm1 else tterm1'
+        child2         = if tooBig2 then tterm2 else tterm2'
         postChild1 = pack child1
         postChild2 = pack child2
     --logIt $ "\n->>>>>\n" ++ show postChild1
     --logIt $ "\n\n" ++ show postChild2 ++ "\n------------\n"
+    if tooBig1 then eva_inc_xo_tooBig else eva_inc_xo_ok
+    if tooBig2 then eva_inc_xo_tooBig else eva_inc_xo_ok
     return ( (CTTerm v1 postChild1 ) , (CTTerm v2 postChild2 ) )
  where
   maxDepth = 17 * 3 -- je to proto že atTree je o přibližně tolikrat hlubší kolik je pruměrný počet argumentů funkčních sym.

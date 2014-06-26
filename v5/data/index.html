@@ -86,12 +86,14 @@ var Global = {
 // přidáno pro dodatečné statistiky pro články
 var StatsHax = (function(){
 
+  var xo_stats   ;
+
   var popi_bests ; // V5 new! -- pro podrobné statistiky o populaci
   var popi_pops  ;
   var popi_xos   ;
   var popi_fits  ;
 
-
+  var kvik = !true;
 
   var bestFitLog ; // rostoucí (i pro problemy co nezachovavvaj nejlepšího)
   var bestOfRun  ; // uchovává maxima z jednotlivých běhů
@@ -107,6 +109,8 @@ var StatsHax = (function(){
     popi_pops  = [];
     popi_xos   = [];
     popi_fits  = {};
+
+    xo_stats = [];
   }
   
   function updateXoverSelect (i) {
@@ -123,7 +127,59 @@ var StatsHax = (function(){
     
   }
 
+
+  function xoStatsReport () {
+
+    var fails = [];
+    var procs = [];
+    var sumProc = 0;  
+
+    _.each(xo_stats, function (genArr) {
+      _.each(genArr, function (info) {
+        var x = info.fail + info.tooBig;
+        var proc = 100*x/info.sum;
+        fails.push(x);
+        procs.push(proc);
+        sumProc += proc;
+      })
+    });
+
+    return {
+      fails: fails,
+      procs: procs,
+      result: sumProc/procs.length
+    }
+
+  }
+
+ 
+
   function popi_inform (o) {
+
+    //xo stats
+
+    var run = Global.actRun-1; // budem indexovat od 0
+    var gen = Global.actGen;
+
+    if (gen >= 1) { // v 0-tý gen se nekříží..
+
+      if (xo_stats[run] === undefined) {
+        xo_stats[run] = [];
+      }
+
+      xo_stats[run].push({
+        ok     : o.xo_ok,
+        fail   : o.xo_fail,
+        tooBig : o.xo_tooBig,
+        sum    : o.xo_sum
+      }); 
+
+    }
+
+
+    if (kvik) {return;}
+
+    //rest
     popi_bests.push(o.best);
     popi_pops .push(o.pop );
     
@@ -197,15 +253,21 @@ var StatsHax = (function(){
   }
 
   function draw (i,j) {
+
+    if (kvik) {return;}
+
     var xoLog = popi_xos[i][j];
 
     var boxHeight = ($(window).height()-200) / 4 ;
 
+    var green = '#888'; //'green';
+    var red   = '#ddd'; //'red';
+
     //xoLog.tata.term.col = 'blue';
-    mark( xoLog.tata .term , xoLog.pos1 , 'green');
-    mark( xoLog.mama .term , xoLog.pos2 , 'red'  );
-    mark( xoLog.syn  .term , xoLog.pos1 , 'red'  );
-    mark( xoLog.dcera.term , xoLog.pos2 , 'green');
+    mark( xoLog.tata .term , xoLog.pos1 , green);
+    mark( xoLog.mama .term , xoLog.pos2 , red  );
+    mark( xoLog.syn  .term , xoLog.pos1 , red  );
+    mark( xoLog.dcera.term , xoLog.pos2 , green);
 
     function mkOpts (name) {
       return {
@@ -287,6 +349,8 @@ var StatsHax = (function(){
     get_popi_pops : function(){return JSON.stringify(popi_pops );},
     xos           : function(){return popi_xos  ;},
     fit           : function(id){return popi_fits[id];},
+    xo_stats      : function(){return xo_stats;},
+    xoStatsReport : xoStatsReport,
     updateXoverSelect:  updateXoverSelect,
     draw:draw,
     get: get,
@@ -778,6 +842,10 @@ var runCmd = function(){
         best:best,
         pop:pop,
         xos:xos,
+        xo_ok:xo_ok,
+        xo_fail:xo_fail,
+        xo_tooBig:xo_tooBig,
+        xo_sum: xo_ok + xo_tooBig + xo_fail
       });
       
     },
